@@ -2,24 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-import { apiRequest, clearStoredAuth, getStoredAuth } from "@/lib/api";
+import { apiRequest, getStoredAuth } from "@/lib/api";
 
-type Assessment = {
+type Stats = {
+  assessments: number;
+  organizations: number;
+  students: number;
+  coupons: number;
+  invoices: number;
+};
+
+type AssessmentCard = {
   _id: string;
   code: string;
   name: string;
-  slug: string;
-  summary: string;
-  basePrice: number;
   category: string;
   questionBankStatus: string;
-  questionCount: number;
-  sourceProject: string;
-  seedCommands: string[];
+  basePrice: number;
 };
 
-type Organization = {
+type OrgCard = {
   _id: string;
   name: string;
   slug: string;
@@ -27,300 +31,158 @@ type Organization = {
   isActive: boolean;
 };
 
-type Coupon = {
-  _id: string;
-  code: string;
-  discountType: string;
-  value: number;
-  applicableAssessmentCodes: string[];
-};
-
-type Invoice = {
-  _id: string;
-  invoiceNumber: string;
-  assessmentCode: string;
-  finalAmount: number;
-  status: string;
-};
-
 type DashboardResponse = {
-  role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT";
-  stats: {
-    assessments: number;
-    organizations: number;
-    students: number;
-    coupons: number;
-    invoices: number;
-  };
-  assessments: Assessment[];
-  organizations: Organization[];
-  coupons: Coupon[];
-  invoices: Invoice[];
+  role: string;
+  stats: Stats;
+  assessments: AssessmentCard[];
+  organizations: OrgCard[];
 };
 
-type SuperadminResponse = {
-  assessments: Assessment[];
-  organizations: Organization[];
-  users: Array<{
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  }>;
-  coupons: Coupon[];
+const statConfig = [
+  { key: "assessments", label: "Assessments",  color: "blue",   href: "/dashboard/assessments" },
+  { key: "organizations", label: "Organizations", color: "purple", href: "/dashboard/organizations" },
+  { key: "students",     label: "Users",        color: "green",  href: "/dashboard/users" },
+  { key: "coupons",      label: "Coupons",      color: "yellow", href: "/dashboard/coupons" },
+  { key: "invoices",     label: "Invoices",     color: "indigo", href: "/dashboard/ledger" },
+] as const;
+
+const colorMap: Record<string, { card: string; icon: string }> = {
+  blue:   { card: "hover:border-blue-200",   icon: "bg-blue-50 text-blue-600" },
+  purple: { card: "hover:border-purple-200", icon: "bg-purple-50 text-purple-600" },
+  green:  { card: "hover:border-green-200",  icon: "bg-green-50 text-green-600" },
+  yellow: { card: "hover:border-yellow-200", icon: "bg-yellow-50 text-yellow-600" },
+  indigo: { card: "hover:border-indigo-200", icon: "bg-indigo-50 text-indigo-600" },
 };
+
+const quickLinks = [
+  { label: "Manage Assessments", desc: "Update pricing and details",        href: "/dashboard/assessments" },
+  { label: "Question Banks",     desc: "Add & edit questions per assessment", href: "/dashboard/questions" },
+  { label: "Organizations",      desc: "Create and manage whitelabel orgs",  href: "/dashboard/organizations" },
+  { label: "Coupons & Pricing",  desc: "Generate discount coupons with GST", href: "/dashboard/coupons" },
+  { label: "Payment Ledger",     desc: "View all transactions and invoices", href: "/dashboard/ledger" },
+  { label: "Users",              desc: "Manage all platform users",          href: "/dashboard/users" },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
-  const [superadmin, setSuperadmin] = useState<SuperadminResponse | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [assessments, setAssessments] = useState<AssessmentCard[]>([]);
+  const [organizations, setOrganizations] = useState<OrgCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [orgForm, setOrgForm] = useState({ name: "", slug: "", contactEmail: "" });
-  const [couponForm, setCouponForm] = useState({ code: "", discountType: "PERCENT", value: "10", applicableAssessmentCodes: "" });
-  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
 
   const auth = useMemo(() => getStoredAuth(), []);
 
-  const load = async () => {
-    if (!auth) {
-      router.replace("/login");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const dashboardResponse = await apiRequest<DashboardResponse>("/platform/dashboard", {}, auth.token);
-      setDashboard(dashboardResponse);
-      setPriceDrafts(
-        Object.fromEntries(dashboardResponse.assessments.map((assessment) => [assessment.code, String(assessment.basePrice)]))
-      );
-
-      if (dashboardResponse.role === "SUPERADMIN") {
-        const superadminResponse = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
-        setSuperadmin(superadminResponse);
-      }
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to load dashboard");
-      clearStoredAuth();
-      router.replace("/login");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void load();
-    }, 0);
-
-    return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!auth) { router.replace("/login"); return; }
+    apiRequest<DashboardResponse>("/platform/dashboard", {}, auth.token)
+      .then((res) => {
+        setStats(res.stats);
+        setAssessments(res.assessments);
+        setOrganizations(res.organizations);
+      })
+      .catch(() => router.replace("/login"))
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!auth) {
-    return null;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+      </div>
+    );
   }
 
-  const submitOrganization = async (event: React.FormEvent) => {
-    event.preventDefault();
-    try {
-      await apiRequest<{ organization: Organization }>("/superadmin/organizations", {
-        method: "POST",
-        body: JSON.stringify(orgForm),
-      }, auth.token);
-      setMessage("Organization created.");
-      setOrgForm({ name: "", slug: "", contactEmail: "" });
-      await load();
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to create organization");
-    }
-  };
-
-  const submitCoupon = async (event: React.FormEvent) => {
-    event.preventDefault();
-    try {
-      await apiRequest<{ coupon: Coupon }>("/superadmin/coupons", {
-        method: "POST",
-        body: JSON.stringify({
-          code: couponForm.code,
-          discountType: couponForm.discountType,
-          value: Number(couponForm.value),
-          applicableAssessmentCodes: couponForm.applicableAssessmentCodes
-            .split(",")
-            .map((value) => value.trim().toUpperCase())
-            .filter(Boolean),
-        }),
-      }, auth.token);
-      setMessage("Coupon created.");
-      setCouponForm({ code: "", discountType: "PERCENT", value: "10", applicableAssessmentCodes: "" });
-      await load();
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to create coupon");
-    }
-  };
-
-  const updatePrice = async (code: string) => {
-    try {
-      await apiRequest<{ assessment: Assessment }>(`/superadmin/assessments/${code}/pricing`, {
-        method: "PATCH",
-        body: JSON.stringify({ basePrice: Number(priceDrafts[code] || 0) }),
-      }, auth.token);
-      setMessage(`Updated price for ${code}.`);
-      await load();
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to update price");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="flex flex-col gap-4 rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.25em] text-cyan-300">Project Pantheon</p>
-            <h1 className="mt-2 text-3xl font-bold">Unified assessment dashboard</h1>
-            <p className="mt-2 text-sm text-slate-300">Role: {auth.user.role} · Email: {auth.user.email}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              clearStoredAuth();
-              router.push("/login");
-            }}
-            className="rounded-2xl border border-white/15 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Welcome banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-7 text-white shadow-md">
+        <p className="text-blue-100 text-base font-medium mb-1">Project Pantheon · Superadmin Console</p>
+        <h1 className="text-3xl font-bold mb-1">Welcome back, {auth?.user.firstName}! 👋</h1>
+        <p className="text-blue-100 text-base">Manage all assessments, organizations, and whitelabel configurations from one place.</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {statConfig.map(({ key, label, color, href }) => (
+          <Link key={key} href={href}
+            className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 transition-all ${colorMap[color].card}`}
           >
-            Sign out
-          </button>
+            <div>
+              <p className="text-base text-black/80">{label}</p>
+              <p className="text-3xl font-bold text-black">{stats ? stats[key as keyof Stats] : "—"}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Quick links */}
+      <div>
+        <h2 className="text-xl font-semibold text-black mb-3">Quick Actions</h2>
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {quickLinks.map((ql) => (
+            <Link key={ql.href} href={ql.href}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow group"
+            >
+              <p className="text-base font-semibold text-black group-hover:text-blue-700 transition-colors">{ql.label}</p>
+              <p className="mt-1 text-sm text-black/80">{ql.desc}</p>
+              <div className="mt-3 text-blue-600 text-sm font-medium flex items-center gap-1">
+                Go →
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Two column: assessments + orgs */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-black">Assessment Catalog ({assessments.length})</h2>
+            <Link href="/dashboard/assessments" className="text-sm text-blue-600 hover:underline font-medium">View all</Link>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {assessments.slice(0, 6).map((a) => (
+              <div key={a._id} className="px-5 py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-base font-medium text-black truncate">{a.name}</p>
+                  <p className="text-sm text-black/70">{a.category}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
+                    a.questionBankStatus === "imported" ? "bg-green-50 text-green-700" :
+                    a.questionBankStatus === "linked" ? "bg-blue-50 text-blue-700" : "bg-yellow-50 text-yellow-700"
+                  }`}>{a.questionBankStatus}</span>
+                  <span className="text-sm text-black/80 font-medium">₹{a.basePrice}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {loading ? <div className="rounded-[28px] border border-white/10 bg-white/5 p-6">Loading dashboard...</div> : null}
-        {error ? <div className="rounded-[28px] border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div> : null}
-        {message ? <div className="rounded-[28px] border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">{message}</div> : null}
-
-        {dashboard ? (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-              {Object.entries(dashboard.stats).map(([label, value]) => (
-                <div key={label} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
-                  <p className="mt-3 text-3xl font-semibold text-white">{value}</p>
-                </div>
-              ))}
-            </div>
-
-            <section className="rounded-[28px] border border-white/10 bg-white/5 p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">Assessment catalog</h2>
-                  <p className="mt-1 text-sm text-slate-300">All assessments are registered in Pantheon and visible from one login.</p>
-                </div>
-              </div>
-              <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-                {dashboard.assessments.map((assessment) => (
-                  <article key={assessment._id} className="rounded-[24px] border border-white/10 bg-slate-900/70 p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">{assessment.category}</p>
-                        <h3 className="mt-2 text-lg font-semibold">{assessment.name}</h3>
-                      </div>
-                      <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-200">
-                        {assessment.questionBankStatus}
-                      </span>
-                    </div>
-                    <p className="mt-3 text-sm text-slate-300">{assessment.summary}</p>
-                    <dl className="mt-4 space-y-2 text-sm text-slate-300">
-                      <div className="flex justify-between gap-3"><dt>Source</dt><dd>{assessment.sourceProject}</dd></div>
-                      <div className="flex justify-between gap-3"><dt>Price</dt><dd>₹{assessment.basePrice}</dd></div>
-                      <div className="flex justify-between gap-3"><dt>Questions</dt><dd>{assessment.questionCount || "Linked to source seed"}</dd></div>
-                    </dl>
-                    {auth.user.role === "SUPERADMIN" ? (
-                      <div className="mt-4 flex gap-3">
-                        <input
-                          value={priceDrafts[assessment.code] || ""}
-                          onChange={(event) => setPriceDrafts((current) => ({ ...current, [assessment.code]: event.target.value }))}
-                          className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-cyan-400"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => void updatePrice(assessment.code)}
-                          className="rounded-2xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    ) : (
-                      <button type="button" className="mt-4 w-full rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/5">
-                        View assessment
-                      </button>
-                    )}
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            {auth.user.role === "SUPERADMIN" && superadmin ? (
-              <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-                <section className="rounded-[28px] border border-white/10 bg-white/5 p-6">
-                  <h2 className="text-xl font-semibold">Whitelabel organizations</h2>
-                  <p className="mt-1 text-sm text-slate-300">Create organizations that will later see all Pantheon tests inside their branded environment.</p>
-                  <form className="mt-5 grid gap-3 md:grid-cols-3" onSubmit={submitOrganization}>
-                    <input value={orgForm.name} onChange={(event) => setOrgForm((current) => ({ ...current, name: event.target.value }))} placeholder="Organization name" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400" />
-                    <input value={orgForm.slug} onChange={(event) => setOrgForm((current) => ({ ...current, slug: event.target.value }))} placeholder="organization-slug" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400" />
-                    <input value={orgForm.contactEmail} onChange={(event) => setOrgForm((current) => ({ ...current, contactEmail: event.target.value }))} placeholder="contact@example.com" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400" />
-                    <button type="submit" className="rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 md:col-span-3">Create organization</button>
-                  </form>
-                  <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
-                    <table className="min-w-full divide-y divide-white/10 text-sm">
-                      <thead className="bg-white/5 text-left text-slate-300"><tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Slug</th><th className="px-4 py-3">Type</th></tr></thead>
-                      <tbody className="divide-y divide-white/10">
-                        {superadmin.organizations.map((organization) => (
-                          <tr key={organization._id}>
-                            <td className="px-4 py-3">{organization.name}</td>
-                            <td className="px-4 py-3">{organization.slug}</td>
-                            <td className="px-4 py-3">{organization.type}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <h2 className="text-base font-semibold text-black">Organizations ({organizations.length})</h2>
+            <Link href="/dashboard/organizations" className="text-sm text-blue-600 hover:underline font-medium">View all</Link>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {organizations.length === 0 ? (
+              <p className="px-5 py-8 text-base text-black/70 text-center">No organizations yet.</p>
+            ) : (
+              organizations.slice(0, 6).map((org) => (
+                <div key={org._id} className="px-5 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-medium text-black truncate">{org.name}</p>
+                    <p className="text-sm text-black/70">{org.slug}</p>
                   </div>
-                </section>
-
-                <section className="rounded-[28px] border border-white/10 bg-white/5 p-6">
-                  <h2 className="text-xl font-semibold">Coupons and pricing</h2>
-                  <p className="mt-1 text-sm text-slate-300">Superadmin can set prices and generate coupons across the entire catalog.</p>
-                  <form className="mt-5 space-y-3" onSubmit={submitCoupon}>
-                    <input value={couponForm.code} onChange={(event) => setCouponForm((current) => ({ ...current, code: event.target.value }))} placeholder="WELCOME10" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400" />
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <select value={couponForm.discountType} onChange={(event) => setCouponForm((current) => ({ ...current, discountType: event.target.value }))} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400">
-                        <option value="PERCENT">Percent</option>
-                        <option value="FLAT">Flat</option>
-                      </select>
-                      <input value={couponForm.value} onChange={(event) => setCouponForm((current) => ({ ...current, value: event.target.value }))} placeholder="10" className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400" />
-                    </div>
-                    <input value={couponForm.applicableAssessmentCodes} onChange={(event) => setCouponForm((current) => ({ ...current, applicableAssessmentCodes: event.target.value }))} placeholder="CAREER_COMPASS, JOHARI_WINDOW" className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-cyan-400" />
-                    <button type="submit" className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950">Generate coupon</button>
-                  </form>
-                  <div className="mt-5 space-y-3">
-                    {superadmin.coupons.map((coupon) => (
-                      <div key={coupon._id} className="rounded-2xl border border-white/10 bg-slate-900/70 p-4 text-sm text-slate-200">
-                        <div className="flex items-center justify-between gap-3">
-                          <strong>{coupon.code}</strong>
-                          <span>{coupon.discountType} · {coupon.value}</span>
-                        </div>
-                        <p className="mt-2 text-xs text-slate-400">{coupon.applicableAssessmentCodes.length ? coupon.applicableAssessmentCodes.join(", ") : "Applies to all assessments"}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-            ) : null}
-          </>
-        ) : null}
+                  <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
+                    org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                  }`}>{org.isActive ? "Active" : "Inactive"}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
