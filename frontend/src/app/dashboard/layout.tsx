@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { clearStoredAuth, getStoredAuth } from "@/lib/api";
 
-const navItems = [
+type NavItem = {
+  label: string;
+  href: string;
+  exact: boolean;
+  icon: React.ReactNode;
+};
+
+const fullNavItems: NavItem[] = [
   {
     label: "Overview",
     href: "/dashboard",
@@ -85,11 +92,14 @@ const navItems = [
   },
 ];
 
+const orgAdminNavAllowed = new Set(["/dashboard", "/dashboard/users"]);
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [userRole, setUserRole] = useState<"SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "">("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -98,20 +108,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace("/login");
       return;
     }
-    if (auth.user.role !== "SUPERADMIN") {
+
+    if (auth.user.role !== "SUPERADMIN" && auth.user.role !== "ORG_ADMIN") {
       router.replace("/login");
       return;
     }
+
     setUserName(`${auth.user.firstName} ${auth.user.lastName}`);
     setUserEmail(auth.user.email);
+    setUserRole(auth.user.role);
   }, [router]);
+
+  const navItems = useMemo(() => {
+    if (userRole === "ORG_ADMIN") {
+      return fullNavItems.filter((item) => orgAdminNavAllowed.has(item.href));
+    }
+    return fullNavItems;
+  }, [userRole]);
+
+  useEffect(() => {
+    if (userRole === "ORG_ADMIN" && pathname.startsWith("/dashboard/coupons")) {
+      router.replace("/dashboard/users");
+    }
+  }, [userRole, pathname, router]);
 
   const handleLogout = () => {
     clearStoredAuth();
     router.replace("/login");
   };
 
-  const isActive = (item: (typeof navItems)[0]) => {
+  const isActive = (item: NavItem) => {
     if (item.exact) return pathname === item.href;
     return pathname.startsWith(item.href);
   };
@@ -137,7 +163,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-bold text-gray-900 leading-none">Project Pantheon</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Superadmin Console</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">{userRole === "ORG_ADMIN" ? "Whitelabel Console" : "Superadmin Console"}</p>
           </div>
         </div>
 

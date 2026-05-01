@@ -11,12 +11,14 @@ type User = {
   email: string;
   role: string;
   isVerified: boolean;
+  testsTaken?: number;
+  lastLoginAt?: string;
   createdAt?: string;
   organization?: { name: string; slug: string } | null;
 };
 
-type SuperadminResponse = {
-  users: User[];
+type StudentsResponse = {
+  students: User[];
 };
 
 export default function UsersPage() {
@@ -25,13 +27,15 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [currentRole, setCurrentRole] = useState<string>("");
 
   const auth = useMemo(() => getStoredAuth(), []);
 
   useEffect(() => {
     if (!auth) { router.replace("/login"); return; }
-    apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token)
-      .then((res) => setUsers(res.users))
+    setCurrentRole(auth.user.role);
+    apiRequest<StudentsResponse>("/platform/students", {}, auth.token)
+      .then((res) => setUsers(res.students))
       .catch(() => router.replace("/login"))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -56,8 +60,8 @@ export default function UsersPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-5">
       <div>
-        <h1 className="text-3xl font-bold text-black">Users</h1>
-        <p className="text-black/80 mt-1 text-base">All users registered across the Pantheon platform.</p>
+        <h1 className="text-3xl font-bold text-black">Students</h1>
+        <p className="text-black/80 mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Students from your organization." : "Students registered across the platform."}</p>
       </div>
 
       {/* Filters */}
@@ -79,15 +83,15 @@ export default function UsersPage() {
           className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         >
           <option value="ALL">All Roles</option>
-          <option value="SUPERADMIN">Superadmin</option>
-          <option value="ORG_ADMIN">Org Admin</option>
+          {currentRole !== "ORG_ADMIN" ? <option value="SUPERADMIN">Superadmin</option> : null}
+          {currentRole !== "ORG_ADMIN" ? <option value="ORG_ADMIN">Org Admin</option> : null}
           <option value="STUDENT">Student</option>
         </select>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">
-        {["SUPERADMIN", "ORG_ADMIN", "STUDENT"].map((role) => (
+        {(currentRole === "ORG_ADMIN" ? ["STUDENT"] : ["SUPERADMIN", "ORG_ADMIN", "STUDENT"]).map((role) => (
           <div key={role} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
             <p className="text-sm text-black/80 mb-1">{role.replace("_", " ")}</p>
             <p className="text-3xl font-bold text-black">{users.filter((u) => u.role === role).length}</p>
@@ -111,6 +115,7 @@ export default function UsersPage() {
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Email</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Role</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Organization</th>
+                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Verified</th>
                 </tr>
               </thead>
@@ -134,6 +139,7 @@ export default function UsersPage() {
                     <td className="px-5 py-3.5 text-black/80 text-sm">
                       {user.organization ? user.organization.name : "—"}
                     </td>
+                    <td className="px-5 py-3.5 text-black/80">{user.testsTaken ?? 0}</td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${
                         user.isVerified ? "text-green-600" : "text-gray-400"

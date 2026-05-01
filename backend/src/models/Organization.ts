@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IOrganization extends Document {
   name: string;
   slug: string;
+  website?: string;
   contactEmail?: string;
   type: "PLATFORM" | "WHITELABEL";
   isActive: boolean;
@@ -24,6 +25,7 @@ const organizationSchema = new Schema<IOrganization>(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    website: { type: String, default: undefined, trim: true },
     contactEmail: { type: String, default: undefined, lowercase: true, trim: true },
     type: { type: String, enum: ["PLATFORM", "WHITELABEL"], default: "WHITELABEL" },
     isActive: { type: Boolean, default: true },

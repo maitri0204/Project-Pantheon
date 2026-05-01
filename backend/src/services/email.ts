@@ -26,7 +26,7 @@ export const sendOtpEmail = async ({
   email: string;
   firstName: string;
   otp: string;
-  purpose: "signup" | "login";
+  purpose: "signup" | "login" | "registration";
 }): Promise<void> => {
   const transporter = getTransporter();
 
@@ -39,16 +39,93 @@ export const sendOtpEmail = async ({
   await transporter.sendMail({
     from: `"Project Pantheon" <${process.env.SMTP_USER}>`,
     to: email,
-    subject: purpose === "signup" ? "Verify your Project Pantheon account" : "Your Project Pantheon login OTP",
+    subject:
+      purpose === "signup"
+        ? "Verify your Project Pantheon account"
+        : purpose === "registration"
+          ? "Verify your organization registration email"
+          : "Your Project Pantheon login OTP",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #f8fafc; border-radius: 16px;">
         <h2 style="margin: 0 0 8px; color: #0f172a;">Project Pantheon</h2>
         <p style="margin: 0 0 16px; color: #475569;">Hello ${firstName},</p>
-        <p style="margin: 0 0 16px; color: #334155;">Use the OTP below to ${purpose === "signup" ? "verify your signup" : "continue your login"}.</p>
+        <p style="margin: 0 0 16px; color: #334155;">Use the OTP below to ${
+          purpose === "signup"
+            ? "verify your signup"
+            : purpose === "registration"
+              ? "verify your organization registration"
+              : "continue your login"
+        }.</p>
         <div style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #2563eb; text-align: center; background: white; border: 1px dashed #60a5fa; border-radius: 12px; padding: 20px;">
           ${otp}
         </div>
         <p style="margin: 16px 0 0; color: #64748b; font-size: 13px;">This OTP expires in 10 minutes.</p>
+      </div>
+    `,
+  });
+};
+
+export const sendRegistrationConfirmationEmail = async ({
+  email,
+  firstName,
+  companyName,
+  websiteLink,
+  loginEmail,
+}: {
+  email: string;
+  firstName: string;
+  companyName: string;
+  websiteLink: string;
+  loginEmail: string;
+}): Promise<void> => {
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    // eslint-disable-next-line no-console
+    console.log(`[REGISTRATION_CONFIRMATION] ${email} => Portal Login: ${websiteLink}`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Project Pantheon" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `Welcome to Project Pantheon - Your ${companyName} Whitelabel Portal is Ready`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 16px;">
+        <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <h1 style="margin: 0 0 8px; color: #2563eb; font-size: 28px;">Welcome to Project Pantheon!</h1>
+          <p style="margin: 0 0 24px; color: #64748b; font-size: 14px;">Your whitelabel portal is now live</p>
+          
+          <p style="margin: 0 0 24px; color: #334155; font-size: 15px;">Hello <strong>${firstName}</strong>,</p>
+          
+          <p style="margin: 0 0 20px; color: #334155; font-size: 15px;">Congratulations! Your organization <strong>${companyName}</strong> has been successfully registered on Project Pantheon. Your whitelabel portal is now ready to use.</p>
+          
+          <div style="background: #f0f9ff; border: 2px solid #06b6d4; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <h3 style="margin: 0 0 16px; color: #0369a1; font-size: 16px;">Your Portal Details</h3>
+            
+            <div style="margin: 0 0 12px;">
+              <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Portal Website</p>
+              <a href="${websiteLink}" style="display: inline-block; color: #2563eb; font-size: 15px; font-weight: 600; text-decoration: none; word-break: break-all;">${websiteLink}</a>
+            </div>
+            
+            <div style="margin: 0 0 12px;">
+              <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Login Email</p>
+              <p style="margin: 0; color: #334155; font-size: 15px;">${loginEmail}</p>
+            </div>
+          </div>
+          
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 24px 0;">
+            <p style="margin: 0; color: #92400e; font-size: 14px;">
+              <strong>Next Steps:</strong> Use the portal website link above to log in. Only users from your registered organization can access this whitelabel portal.
+            </p>
+          </div>
+          
+          <p style="margin: 24px 0 0; padding-top: 24px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px;">
+            If you didn't create this account or have any questions, please contact our support team.
+          </p>
+          
+          <p style="margin: 8px 0 0; color: #94a3b8; font-size: 12px;">Best regards,<br>The Project Pantheon Team</p>
+        </div>
       </div>
     `,
   });

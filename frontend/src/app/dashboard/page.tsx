@@ -65,6 +65,7 @@ const quickLinks = [
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [role, setRole] = useState<string>("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [assessments, setAssessments] = useState<AssessmentCard[]>([]);
   const [organizations, setOrganizations] = useState<OrgCard[]>([]);
@@ -76,6 +77,7 @@ export default function DashboardPage() {
     if (!auth) { router.replace("/login"); return; }
     apiRequest<DashboardResponse>("/platform/dashboard", {}, auth.token)
       .then((res) => {
+        setRole(res.role);
         setStats(res.stats);
         setAssessments(res.assessments);
         setOrganizations(res.organizations);
@@ -97,14 +99,14 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome banner */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-7 text-white shadow-md">
-        <p className="text-blue-100 text-base font-medium mb-1">Project Pantheon · Superadmin Console</p>
+        <p className="text-blue-100 text-base font-medium mb-1">Project Pantheon · {role === "ORG_ADMIN" ? "Whitelabel Console" : "Superadmin Console"}</p>
         <h1 className="text-3xl font-bold mb-1">Welcome back, {auth?.user.firstName}! 👋</h1>
         <p className="text-blue-100 text-base">Manage all assessments, organizations, and whitelabel configurations from one place.</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {statConfig.map(({ key, label, color, href }) => (
+        {statConfig.filter((item) => (role === "ORG_ADMIN" ? item.key !== "coupons" : true)).map(({ key, label, color, href }) => (
           <Link key={key} href={href}
             className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 transition-all ${colorMap[color].card}`}
           >
@@ -120,7 +122,7 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-xl font-semibold text-black mb-3">Quick Actions</h2>
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {quickLinks.map((ql) => (
+          {quickLinks.filter((ql) => (role === "ORG_ADMIN" ? ql.href !== "/dashboard/coupons" : true)).map((ql) => (
             <Link key={ql.href} href={ql.href}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow group"
             >

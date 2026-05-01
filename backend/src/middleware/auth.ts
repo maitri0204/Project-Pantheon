@@ -50,3 +50,30 @@ export const requireRoles = (...roles: UserRole[]) => (
 
   next();
 };
+
+export const optionalAuth = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+    if (!token) {
+      next();
+      return;
+    }
+
+    const payload = verifyToken(token);
+    const user = await User.findById(payload.sub).populate("organization");
+
+    if (user && user.isActive) {
+      req.user = user;
+    }
+  } catch {
+    // Continue without authenticated user when token is invalid.
+  }
+
+  next();
+};

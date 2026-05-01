@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiRequest, getStoredAuth, setStoredAuth } from "@/lib/api";
@@ -22,8 +22,17 @@ type AuthResponse = {
   };
 };
 
+type OrganizationBranding = {
+  slug?: string;
+  companyName: string;
+  logoUrl?: string;
+  primaryColor: string;
+  accentColor: string;
+};
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -34,13 +43,71 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [orgBranding, setOrgBranding] = useState<OrganizationBranding | null>(null);
+  const [organizationSlug, setOrganizationSlug] = useState<string>("");
   const refs = useRef<Array<HTMLInputElement | null>>([]);
+
+  const portalOrganizationSlug = useMemo(() => {
+    const slugFromQuery = searchParams.get("organizationSlug")?.toLowerCase().trim();
+    return slugFromQuery || organizationSlug;
+  }, [organizationSlug, searchParams]);
 
   useEffect(() => {
     if (getStoredAuth()) {
       router.replace("/dashboard");
     }
   }, [router]);
+
+  // Load organization branding if accessed from whitelabel domain
+  useEffect(() => {
+    const loadOrgBranding = async () => {
+      if (typeof window === "undefined") return;
+
+      const slugFromQuery = searchParams.get("organizationSlug")?.toLowerCase().trim();
+      if (slugFromQuery) {
+        setOrganizationSlug(slugFromQuery);
+        try {
+          const response = await apiRequest<{
+            organization: { slug: string; branding: OrganizationBranding };
+          }>(`/platform/whitelabel/${slugFromQuery}`);
+          if (response.organization?.branding) {
+            setOrgBranding({
+              ...response.organization.branding,
+              slug: response.organization.slug,
+            });
+          }
+        } catch {
+          // Fallback to default branding
+        }
+        return;
+      }
+
+      const hostname = window.location.hostname;
+      const parts = hostname.split(".");
+
+      // If not localhost/127.0.0.1, treat the first part as subdomain/slug
+      if (!["localhost", "127.0.0.1"].includes(hostname) && parts.length > 1 && parts[0] !== "www") {
+        const slug = parts[0];
+        setOrganizationSlug(slug);
+        try {
+          const response = await apiRequest<{
+            organization: { slug: string; branding: OrganizationBranding };
+          }>(`/platform/whitelabel/${slug}`);
+          if (response.organization?.branding) {
+            setOrgBranding({
+              ...response.organization.branding,
+              slug: response.organization.slug,
+            });
+          }
+        } catch (err) {
+          // Silently fail, just use default branding
+          console.debug("Failed to load organization branding");
+        }
+      }
+    };
+
+    void loadOrgBranding();
+  }, [searchParams]);
 
   useEffect(() => {
     if (cooldown <= 0) {
@@ -80,7 +147,12 @@ export default function LoginPage() {
     try {
       const response = await apiRequest<{ message: string; email: string }>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, captchaToken, captchaAnswer }),
+        body: JSON.stringify({
+          email,
+          captchaToken,
+          captchaAnswer,
+          organizationSlug: portalOrganizationSlug || undefined,
+        }),
       });
       setMessage(response.message);
       setCooldown(60);
@@ -104,7 +176,12 @@ export default function LoginPage() {
     try {
       const response = await apiRequest<{ message: string; email: string }>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, captchaToken, captchaAnswer }),
+        body: JSON.stringify({
+          email,
+          captchaToken,
+          captchaAnswer,
+          organizationSlug: portalOrganizationSlug || undefined,
+        }),
       });
       setMessage(response.message);
       setStep("otp");
@@ -128,10 +205,22 @@ export default function LoginPage() {
     try {
       const response = await apiRequest<AuthResponse>("/auth/login/verify-otp", {
         method: "POST",
-        body: JSON.stringify({ email, otp: otpValue }),
+        body: JSON.stringify({
+          email,
+          otp: otpValue,
+          organizationSlug: portalOrganizationSlug || undefined,
+        }),
       });
       setStoredAuth(response);
-      router.push("/dashboard");
+      if (portalOrganizationSlug) {
+        if (response.user.role === "ORG_ADMIN") {
+          router.push("/dashboard");
+        } else {
+          router.push(`/whitelabel/${portalOrganizationSlug}`);
+        }
+      } else {
+        router.push("/dashboard");
+      }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Unable to verify OTP");
     } finally {
@@ -140,17 +229,55 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 px-4 py-12 text-slate-900">
+    <div 
+      className="relative min-h-screen overflow-hidden px-4 py-12 text-slate-900"
+      style={{
+        background: orgBranding 
+          ? `linear-gradient(135deg, ${orgBranding.primaryColor}10 0%, ${orgBranding.accentColor}10 100%)`
+          : "linear-gradient(to bottom right, rgb(240, 249, 255) 0%, rgb(255, 255, 255) 50%, rgb(240, 248, 255) 100%)"
+      }}
+    >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-10 top-16 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
+        <div 
+          className="absolute left-10 top-16 h-72 w-72 rounded-full blur-3xl" 
+          style={{
+            backgroundColor: orgBranding ? `${orgBranding.primaryColor}40` : "rgb(96, 165, 250, 0.2)"
+          }}
+        />
+        <div 
+          className="absolute bottom-10 right-10 h-96 w-96 rounded-full blur-3xl" 
+          style={{
+            backgroundColor: orgBranding ? `${orgBranding.accentColor}40` : "rgb(34, 211, 238, 0.2)"
+          }}
+        />
       </div>
 
       <div className="relative mx-auto max-w-md">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-600 text-lg font-bold text-white shadow-lg">PP</div>
+          {orgBranding?.logoUrl ? (
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg">
+              <img 
+                src={orgBranding.logoUrl} 
+                alt="Organization logo" 
+                className="h-full w-full object-cover rounded-2xl" 
+              />
+            </div>
+          ) : (
+            <div 
+              className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-lg"
+              style={{
+                background: orgBranding 
+                  ? `linear-gradient(135deg, ${orgBranding.primaryColor}, ${orgBranding.accentColor})`
+                  : "linear-gradient(135deg, rgb(37, 99, 235), rgb(6, 182, 212))"
+              }}
+            >
+              {orgBranding ? orgBranding.companyName.substring(0, 2).toUpperCase() : "PP"}
+            </div>
+          )}
           <h1 className="text-4xl font-bold text-slate-900">Welcome</h1>
-          <p className="mt-2 text-slate-600">Project Pantheon Platform</p>
+          <p className="mt-2 text-slate-600">
+            {orgBranding ? orgBranding.companyName : "Project Pantheon Platform"}
+          </p>
         </div>
 
         <div className="rounded-3xl border border-slate-100 bg-white p-8 shadow-2xl">
@@ -199,17 +326,37 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-200 transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl px-4 py-3 font-semibold text-white shadow-lg transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                background: orgBranding
+                  ? `linear-gradient(to right, ${orgBranding.primaryColor}, ${orgBranding.accentColor})`
+                  : "linear-gradient(to right, rgb(37, 99, 235), rgb(6, 182, 212))",
+                boxShadow: orgBranding ? `0 10px 15px -3px ${orgBranding.primaryColor}20` : undefined
+              }}
             >
               {loading ? "Sending OTP..." : "Send OTP"}
             </button>
 
-            <p className="text-center text-sm text-slate-600">
-              New here?{" "}
-              <Link href="/signup" className="font-semibold text-blue-600 hover:text-blue-700">
-                Create an account
-              </Link>
-            </p>
+            {!portalOrganizationSlug ? (
+              <>
+                <p className="text-center text-sm text-slate-600">
+                  New here?{" "}
+                  <Link href="/signup" className="font-semibold hover:opacity-80" style={{ color: orgBranding?.primaryColor || "#2563eb" }}>
+                    Create an account
+                  </Link>
+                </p>
+                <p className="text-center text-sm text-slate-600">
+                  Registering a whitelabel organization?{" "}
+                  <Link href="/register" className="font-semibold hover:opacity-80" style={{ color: orgBranding?.primaryColor || "#2563eb" }}>
+                    Start here
+                  </Link>
+                </p>
+              </>
+            ) : (
+              <p className="text-center text-xs text-slate-500">
+                This login is restricted to users of this organization portal.
+              </p>
+            )}
           </form>
         ) : (
           <form className="space-y-5" onSubmit={handleVerifyOtp}>
@@ -252,7 +399,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || otpValue.length !== 6}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-200 transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl px-4 py-3 font-semibold text-white shadow-lg transition hover:translate-y-[-1px] disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                background: orgBranding
+                  ? `linear-gradient(to right, ${orgBranding.primaryColor}, ${orgBranding.accentColor})`
+                  : "linear-gradient(to right, rgb(37, 99, 235), rgb(6, 182, 212))",
+                boxShadow: orgBranding ? `0 10px 15px -3px ${orgBranding.primaryColor}20` : undefined
+              }}
             >
               {loading ? "Verifying..." : "Verify and continue"}
             </button>
@@ -263,7 +416,8 @@ export default function LoginPage() {
               ) : (
                 <button
                   type="button"
-                  className="font-semibold text-blue-600"
+                  className="font-semibold hover:opacity-80"
+                  style={{ color: orgBranding?.primaryColor || "#2563eb" }}
                   onClick={() => void resendOtp()}
                 >
                   Resend OTP
@@ -285,7 +439,7 @@ export default function LoginPage() {
         )}
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">© {new Date().getFullYear()} Project Pantheon</p>
+        <p className="mt-6 text-center text-xs text-slate-400">© {new Date().getFullYear()} {orgBranding?.companyName || "Project Pantheon"}</p>
       </div>
     </div>
   );

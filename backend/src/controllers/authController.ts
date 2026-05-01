@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 
 import Organization from "../models/Organization";
+import OrganizationRegistration from "../models/OrganizationRegistration";
 import User, { IUser } from "../models/User";
 import { PLATFORM_ORG_SLUG } from "../constants/platform";
 import { generateCaptcha, verifyCaptcha } from "../services/captcha";
-import { sendOtpEmail } from "../services/email";
+import { sendOtpEmail, sendRegistrationConfirmationEmail } from "../services/email";
 import { compareOtp, generateOtp, getOtpExpiry, hashOtp, isOtpExpired } from "../services/otp";
 import { signToken } from "../services/token";
 import { AuthRequest } from "../types/auth";
@@ -34,6 +35,404 @@ const validateCaptchaPayload = (captchaToken?: string, captchaAnswer?: string): 
 
 export const getCaptchaChallenge = (_req: Request, res: Response): void => {
   res.json({ data: generateCaptcha() });
+};
+
+const slugify = (input: string): string =>
+  input
+    .toLowerCase()
+    .trim()
+    .replace(/https?:\/\//g, "")
+    .replace(/www\./g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "")
+    .slice(0, 50);
+
+const getUniqueOrganizationSlug = async (seed: string): Promise<string> => {
+  const base = slugify(seed) || "organization";
+  let candidate = base;
+  let counter = 1;
+
+  while (await Organization.findOne({ slug: candidate })) {
+    counter += 1;
+    candidate = `${base}-${counter}`;
+  }
+
+  return candidate;
+};
+
+const normalizeUrlBase = (value: string): string => value.trim().replace(/\/+$/, "");
+
+const getPortalLoginLink = ({
+  website,
+  orgSlug,
+  frontendBaseUrl,
+}: {
+  website?: string;
+  orgSlug: string;
+  frontendBaseUrl: string;
+}): string => {
+  const encodedSlug = encodeURIComponent(orgSlug);
+
+  if (website?.trim()) {
+    const raw = website.trim();
+    const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+    try {
+      const parsed = new URL(candidate);
+      return `${parsed.origin}/login?organizationSlug=${encodedSlug}`;
+    } catch {
+      // Fallback to platform-hosted portal login URL
+    }
+  }
+
+  const base = normalizeUrlBase(frontendBaseUrl);
+  return `${base}/whitelabel/${orgSlug}/login`;
+};
+
+const getUserOrganization = (user: Awaited<ReturnType<typeof User.findOne>>) => {
+  const organization = user?.organization as
+    | {
+        _id: { toString(): string };
+        slug: string;
+        type: "PLATFORM" | "WHITELABEL";
+      }
+    | undefined;
+
+  return organization;
+};
+
+const validateWhitelabelLoginContext = ({
+  user,
+  organizationSlug,
+}: {
+  user: Awaited<ReturnType<typeof User.findOne>>;
+  organizationSlug?: string;
+}): { allowed: true } | { allowed: false; status: number; message: string } => {
+  const normalizedOrganizationSlug = organizationSlug?.toLowerCase().trim();
+  const organization = getUserOrganization(user);
+  const isWhitelabelMember =
+    Boolean(organization) &&
+    organization?.type === "WHITELABEL" &&
+    (user?.role === "ORG_ADMIN" || user?.role === "STUDENT");
+
+  if (normalizedOrganizationSlug) {
+    if (user?.role === "SUPERADMIN") {
+      return {
+        allowed: false,
+        status: 403,
+        message: "Superadmin cannot log in from an organization whitelabel portal",
+      };
+    }
+
+    if (!isWhitelabelMember) {
+      return {
+        allowed: false,
+        status: 403,
+        message: "This portal login is only for whitelabel organization users",
+      };
+    }
+
+    if (!organization || organization.slug !== normalizedOrganizationSlug) {
+      return {
+        allowed: false,
+        status: 403,
+        message: "This email is not registered under this organization portal",
+      };
+    }
+
+    return { allowed: true };
+  }
+
+  if (isWhitelabelMember) {
+    return {
+      allowed: false,
+      status: 403,
+      message: "Use your organization portal login link to continue",
+    };
+  }
+
+  return { allowed: true };
+};
+
+export const requestRegistrationOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body as { email?: string };
+
+    if (!email?.trim()) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      res.status(409).json({ message: "Email already exists" });
+      return;
+    }
+
+    const otp = generateOtp();
+    const registration = await OrganizationRegistration.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        $set: {
+          email: normalizedEmail,
+          otpHash: hashOtp(otp),
+          otpExpiresAt: getOtpExpiry(),
+          otpAttempts: 0,
+          emailVerified: false,
+          status: "OTP_SENT",
+        },
+      },
+      { returnDocument: "after", upsert: true }
+    );
+
+    await sendOtpEmail({
+      email: normalizedEmail,
+      firstName: registration.firstName || "Partner",
+      otp,
+      purpose: "registration",
+    });
+
+    res.json({ message: "OTP sent to your email", email: normalizedEmail });
+  } catch (error) {
+    console.error("Request registration OTP error:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+export const verifyRegistrationOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp } = req.body as { email?: string; otp?: string };
+
+    if (!email?.trim() || !otp?.trim()) {
+      res.status(400).json({ message: "Email and OTP are required" });
+      return;
+    }
+
+    const registration = await OrganizationRegistration.findOne({ email: email.toLowerCase().trim() });
+    if (!registration) {
+      res.status(404).json({ message: "Registration request not found" });
+      return;
+    }
+
+    if (!registration.otpHash || isOtpExpired(registration.otpExpiresAt)) {
+      res.status(400).json({ message: "OTP expired or invalid. Please request a fresh one." });
+      return;
+    }
+
+    if (!compareOtp(otp.trim(), registration.otpHash)) {
+      registration.otpAttempts += 1;
+      await registration.save();
+      res.status(400).json({ message: "Invalid OTP" });
+      return;
+    }
+
+    registration.emailVerified = true;
+    registration.status = "EMAIL_VERIFIED";
+    registration.otpHash = undefined;
+    registration.otpExpiresAt = undefined;
+    registration.otpAttempts = 0;
+    await registration.save();
+
+    res.json({ message: "Email verified successfully" });
+  } catch (error) {
+    console.error("Verify registration OTP error:", error);
+    res.status(500).json({ message: "Failed to verify OTP" });
+  }
+};
+
+export const completeOrganizationRegistration = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const body = req.body as {
+      email?: string;
+      firstName?: string;
+      middleName?: string;
+      lastName?: string;
+      designation?: string;
+      companyName?: string;
+      primaryMobile?: string;
+      alternateMobile?: string;
+      officeAddress?: string;
+      registeredAddress?: string;
+      sameAsOfficeAddress?: boolean;
+      country?: string;
+      state?: string;
+      city?: string;
+      pinCode?: string;
+      legalEntityType?: string;
+      cin?: string;
+      llpin?: string;
+      udyamNumber?: string;
+      trustRegistrationNumber?: string;
+      gstNumber?: string;
+      website?: string;
+      panIndividual?: string;
+      panCompany?: string;
+      tan?: string;
+      bankAccountName?: string;
+      accountType?: "Saving" | "Current";
+      bankAccountNumber?: string;
+      ifscCode?: string;
+      logoUrl?: string;
+    };
+
+    const normalizedEmail = body.email?.toLowerCase().trim();
+    if (!normalizedEmail) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+
+    const registration = await OrganizationRegistration.findOne({ email: normalizedEmail });
+    if (!registration || !registration.emailVerified) {
+      res.status(400).json({ message: "Verify email before submitting organization details" });
+      return;
+    }
+
+    if (await User.findOne({ email: normalizedEmail })) {
+      res.status(409).json({ message: "Email already exists" });
+      return;
+    }
+
+    if (!body.firstName?.trim() || !body.lastName?.trim() || !body.companyName?.trim()) {
+      res.status(400).json({ message: "First name, last name, and company name are required" });
+      return;
+    }
+
+    if (!body.designation?.trim() || !body.primaryMobile?.trim()) {
+      res.status(400).json({ message: "Designation and primary mobile are required" });
+      return;
+    }
+
+    if (!body.officeAddress?.trim() || !body.registeredAddress?.trim()) {
+      res.status(400).json({ message: "Office and registered address are required" });
+      return;
+    }
+
+    if (!body.country?.trim() || !body.state?.trim() || !body.city?.trim() || !body.pinCode?.trim()) {
+      res.status(400).json({ message: "Country, state, city, and PIN code are required" });
+      return;
+    }
+
+    if (!body.panIndividual?.trim() || !body.panCompany?.trim() || !body.bankAccountName?.trim()) {
+      res.status(400).json({ message: "PAN and bank account details are required" });
+      return;
+    }
+
+    if (!body.bankAccountNumber?.trim() || !body.ifscCode?.trim() || !body.accountType) {
+      res.status(400).json({ message: "Bank account number, IFSC code, and account type are required" });
+      return;
+    }
+
+    const legalEntityType = "Trust";
+    const slugSeed = body.companyName;
+    const orgSlug = await getUniqueOrganizationSlug(slugSeed);
+
+    const organization = await Organization.create({
+      name: body.companyName.trim(),
+      slug: orgSlug,
+      website: body.website?.trim() || undefined,
+      contactEmail: normalizedEmail,
+      type: "WHITELABEL",
+      isActive: true,
+      branding: {
+        companyName: body.companyName.trim(),
+        logoUrl: body.logoUrl?.trim() || undefined,
+        primaryColor: "#2563eb",
+        accentColor: "#06b6d4",
+      },
+      settings: {
+        allowSelfSignup: false,
+        assessmentCatalogVisible: true,
+      },
+    });
+
+    const user = await User.create({
+      firstName: body.firstName.trim(),
+      lastName: body.lastName.trim(),
+      email: normalizedEmail,
+      role: "ORG_ADMIN",
+      organization: organization._id,
+      isVerified: true,
+      isActive: true,
+      otpHash: undefined,
+      otpExpiresAt: undefined,
+      otpPurpose: null,
+      otpAttempts: 0,
+      lastLoginAt: new Date(),
+    });
+
+    registration.firstName = body.firstName?.trim();
+    registration.middleName = body.middleName?.trim();
+    registration.lastName = body.lastName?.trim();
+    registration.designation = body.designation?.trim();
+    registration.companyName = body.companyName?.trim();
+    registration.primaryMobile = body.primaryMobile?.trim();
+    registration.alternateMobile = body.alternateMobile?.trim();
+    registration.officeAddress = body.officeAddress?.trim();
+    registration.registeredAddress = body.registeredAddress?.trim();
+    registration.sameAsOfficeAddress = Boolean(body.sameAsOfficeAddress);
+    registration.country = body.country?.trim();
+    registration.state = body.state?.trim();
+    registration.city = body.city?.trim();
+    registration.pinCode = body.pinCode?.trim();
+    registration.legalEntityType = legalEntityType;
+    registration.cin = body.cin?.trim();
+    registration.llpin = body.llpin?.trim();
+    registration.udyamNumber = body.udyamNumber?.trim();
+    registration.trustRegistrationNumber = body.trustRegistrationNumber?.trim();
+    registration.gstNumber = body.gstNumber?.trim();
+    registration.website = body.website?.trim();
+    registration.panIndividual = body.panIndividual?.trim();
+    registration.panCompany = body.panCompany?.trim();
+    registration.tan = body.tan?.trim();
+    registration.bankAccountName = body.bankAccountName?.trim();
+    registration.accountType = body.accountType;
+    registration.bankAccountNumber = body.bankAccountNumber?.trim();
+    registration.ifscCode = body.ifscCode?.trim();
+    registration.logoUrl = body.logoUrl?.trim();
+    registration.generatedSlug = orgSlug;
+    registration.status = "COMPLETED";
+    registration.organization = organization._id;
+    await registration.save();
+
+    // Construct the website link and login URL
+    const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const websiteLink = getPortalLoginLink({
+      website: body.website?.trim(),
+      orgSlug,
+      frontendBaseUrl: baseUrl,
+    });
+
+    // Send registration confirmation email
+    try {
+      await sendRegistrationConfirmationEmail({
+        email: normalizedEmail,
+        firstName: body.firstName.trim(),
+        companyName: body.companyName.trim(),
+        websiteLink,
+        loginEmail: normalizedEmail,
+      });
+    } catch (emailError) {
+      console.error("Failed to send registration confirmation email:", emailError);
+      // Don't fail the registration if email fails, just log it
+    }
+
+    res.status(201).json({
+      message: "Organization registration completed",
+      token: signToken(user),
+      user: formatUser(user),
+      organization: {
+        id: organization._id,
+        slug: organization.slug,
+        name: organization.name,
+        website: organization.website,
+        logoUrl: organization.branding.logoUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Complete organization registration error:", error);
+    res.status(500).json({ message: "Failed to complete registration" });
+  }
 };
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
@@ -170,10 +569,11 @@ export const verifySignupOtp = async (req: Request, res: Response): Promise<void
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, captchaToken, captchaAnswer } = req.body as {
+    const { email, captchaToken, captchaAnswer, organizationSlug } = req.body as {
       email?: string;
       captchaToken?: string;
       captchaAnswer?: string;
+      organizationSlug?: string;
     };
 
     if (!email?.trim()) {
@@ -186,7 +586,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("organization");
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
@@ -199,6 +599,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     if (!user.isActive) {
       res.status(403).json({ message: "Account is inactive" });
+      return;
+    }
+
+    const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
+    if (!contextValidation.allowed) {
+      res.status(contextValidation.status).json({ message: contextValidation.message });
       return;
     }
 
@@ -225,16 +631,26 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
 export const verifyLoginOtp = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, otp } = req.body as { email?: string; otp?: string };
+    const { email, otp, organizationSlug } = req.body as {
+      email?: string;
+      otp?: string;
+      organizationSlug?: string;
+    };
 
     if (!email?.trim() || !otp?.trim()) {
       res.status(400).json({ message: "Email and OTP are required" });
       return;
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("organization");
     if (!user) {
       res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
+    if (!contextValidation.allowed) {
+      res.status(contextValidation.status).json({ message: contextValidation.message });
       return;
     }
 

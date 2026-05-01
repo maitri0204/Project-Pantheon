@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 
 const ASSESSMENTS = [
@@ -40,6 +41,7 @@ function calcPrice(base: number, coupon: Coupon | null, gst: boolean) {
 }
 
 export default function CouponsPage() {
+  const router = useRouter();
   const auth = useMemo(() => getStoredAuth(), []);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -66,7 +68,16 @@ export default function CouponsPage() {
   const preview = calcPrice(previewBase, previewCoupon, previewGst);
 
   async function load() {
-    if (!auth) return;
+    if (!auth) {
+      router.replace("/login");
+      return;
+    }
+
+    if (auth.user.role !== "SUPERADMIN") {
+      router.replace("/dashboard/users");
+      return;
+    }
+
     const [asmRes, cpRes] = await Promise.all([
       apiRequest<{ assessments: Assessment[] }>("/superadmin/dashboard", {}, auth.token),
       apiRequest<{ coupons: Coupon[] }>("/superadmin/coupons", {}, auth.token),
