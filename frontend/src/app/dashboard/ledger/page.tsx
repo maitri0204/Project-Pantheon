@@ -6,10 +6,10 @@ import { apiRequest, getStoredAuth } from "@/lib/api";
 const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string }> = {
   CAREER_COMPASS: { name: "Career Compass", color: "text-emerald-700", bg: "bg-emerald-50" },
   CAREER_DNA:     { name: "Career DNA",     color: "text-purple-700",  bg: "bg-purple-50" },
-  JOHARI_WINDOW:  { name: "Johari Window",  color: "text-amber-700",   bg: "bg-amber-50" },
+  JOHARI_WINDOW:  { name: "CLEAR",          color: "text-amber-700",   bg: "bg-amber-50" },
   LITMUS_TEST:    { name: "Litmus Test",    color: "text-blue-700",    bg: "bg-blue-50" },
-  METACOGNITION:  { name: "Metacognition",  color: "text-rose-700",    bg: "bg-rose-50" },
-  METACOGNITION_TEST: { name: "Metacognition Test", color: "text-rose-700", bg: "bg-rose-50" },
+  METACOGNITION:  { name: "TEST",           color: "text-rose-700",    bg: "bg-rose-50" },
+  METACOGNITION_TEST: { name: "TEST", color: "text-rose-700", bg: "bg-rose-50" },
 };
 
 type InvoiceUser = { _id: string; firstName: string; lastName: string; email: string };

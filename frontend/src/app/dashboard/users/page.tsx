@@ -21,6 +21,15 @@ type StudentsResponse = {
   students: User[];
 };
 
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "—";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 export default function UsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
@@ -28,6 +37,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [currentRole, setCurrentRole] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<{ from?: string; to?: string }>({});
 
   const auth = useMemo(() => getStoredAuth(), []);
 
@@ -45,7 +55,11 @@ export default function UsersPage() {
     const matchSearch =
       `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(search.toLowerCase());
     const matchRole = roleFilter === "ALL" || u.role === roleFilter;
-    return matchSearch && matchRole;
+    const createdDate = u.createdAt ? new Date(u.createdAt) : null;
+    const matchDate =
+      (!dateFilter.from || !createdDate || new Date(dateFilter.from) <= createdDate) &&
+      (!dateFilter.to || !createdDate || new Date(dateFilter.to) >= createdDate);
+    return matchSearch && matchRole && matchDate;
   });
 
   const roleBadge = (role: string) => {
@@ -73,7 +87,7 @@ export default function UsersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search users..."
+            placeholder="Search students..."
             className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
@@ -87,6 +101,18 @@ export default function UsersPage() {
           {currentRole !== "ORG_ADMIN" ? <option value="ORG_ADMIN">Org Admin</option> : null}
           <option value="STUDENT">Student</option>
         </select>
+        <input
+          type="date"
+          value={dateFilter.from || ""}
+          onChange={(e) => setDateFilter((f) => ({ ...f, from: e.target.value }))}
+          className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        />
+        <input
+          type="date"
+          value={dateFilter.to || ""}
+          onChange={(e) => setDateFilter((f) => ({ ...f, to: e.target.value }))}
+          className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        />
       </div>
 
       {/* Stats row */}
@@ -106,7 +132,7 @@ export default function UsersPage() {
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {filtered.length === 0 ? (
-            <p className="text-center text-black/70 text-base py-16">No users found.</p>
+            <p className="text-center text-black/70 text-base py-16">No students found.</p>
           ) : (
             <table className="w-full text-base">
               <thead>
@@ -116,6 +142,7 @@ export default function UsersPage() {
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Role</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Organization</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests</th>
+                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Verified</th>
                 </tr>
               </thead>
@@ -140,6 +167,7 @@ export default function UsersPage() {
                       {user.organization ? user.organization.name : "—"}
                     </td>
                     <td className="px-5 py-3.5 text-black/80">{user.testsTaken ?? 0}</td>
+                    <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(user.createdAt)}</td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium ${
                         user.isVerified ? "text-green-600" : "text-gray-400"

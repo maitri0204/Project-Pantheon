@@ -224,9 +224,9 @@ function mapJohari(raw: unknown[]): PantheonQuestion[] {
   return raw.map((q: any) => ({
     assessmentCode: "JOHARI_WINDOW",
     category: "1",
-    categoryLabel: "Johari Awareness",
+    categoryLabel: "CLEAR Awareness",
     questionNumber: Number(q.questionNumber),
-    title: "Johari Window",
+    title: "CLEAR",
     questionText: q.questionText,
     options: Array.isArray(q.options)
       ? q.options.map((o: any) => ({ label: o.label, text: o.text, score: o.score }))
@@ -312,8 +312,8 @@ async function seed() {
     await upsertQuestions(mapped);
   }
 
-  // ── Johari Window ───────────────────────────────────────────────────────────
-  console.log("📚 Seeding Johari Window questions...");
+  // ── CLEAR ──────────────────────────────────────────────────────────────────
+  console.log("📚 Seeding CLEAR questions...");
   const johariRaw = loadQuestionsFromFile(SOURCE_FILES.JOHARI_WINDOW, "johariQuestions");
   const johariMapped = mapJohari(johariRaw);
   console.log(`   Loaded ${johariMapped.length} questions`);
@@ -326,8 +326,8 @@ async function seed() {
   console.log(`   Loaded ${litmusMapped.length} questions`);
   await upsertQuestions(litmusMapped);
 
-  // ── Metacognition ───────────────────────────────────────────────────────────
-  console.log("📚 Seeding Metacognition questions...");
+  // ── TEST ───────────────────────────────────────────────────────────────────
+  console.log("📚 Seeding TEST questions...");
   const metacogRaw = loadQuestionsFromFile(SOURCE_FILES.METACOGNITION, "questions");
   const metacogMapped = mapMetacognition(metacogRaw);
   console.log(`   Loaded ${metacogMapped.length} questions`);

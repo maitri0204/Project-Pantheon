@@ -91,45 +91,24 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* ── Top Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-br from-blue-600 to-cyan-500 flex-shrink-0">
-            {orgLogoUrl ? (
-              <Image
-                src={orgLogoUrl}
-                alt={`${orgCompanyName} logo`}
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
-                {orgCompanyName.substring(0, 2).toUpperCase()}
-              </div>
-            )}
-          </div>
-          <div>
-            <p className="text-sm font-bold text-gray-900">{orgCompanyName}</p>
-            <p className="text-xs text-gray-500">Student Portal</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-gray-900">{name || "Student"}</p>
-            <p className="text-xs text-gray-500">{email}</p>
-          </div>
-          <button
-            onClick={logout}
-            className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition"
-          >
-            Sign out
-          </button>
+      <nav className="fixed top-0 left-0 right-0 z-50 h-[100px] bg-white border-b border-gray-200 flex items-center pl-7 pr-4 md:pl-25 gap-4 shadow-sm">
+        <div className="w-40 h-20 bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow overflow-hidden border border-blue-100">
+          {orgLogoUrl ? (
+            <Image
+              src={orgLogoUrl}
+              alt={`${orgCompanyName} logo`}
+              width={160}
+              height={80}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span>{orgCompanyName.substring(0, 2).toUpperCase()}</span>
+          )}
         </div>
       </nav>
 
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-4rem)] flex flex-col fixed left-0 top-16 z-30">
+      <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-100px)] flex flex-col fixed left-0 top-[100px] z-30">
         {/* Navigation */}
         <nav className="flex-1 p-4 pt-6 space-y-1">
           {links.map((item) => {
@@ -178,7 +157,7 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
       </aside>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 ml-64 pt-16 min-w-0">
+      <div className="flex-1 ml-64 pt-[100px] min-w-0">
         <main className="p-6">{children}</main>
       </div>
     </div>

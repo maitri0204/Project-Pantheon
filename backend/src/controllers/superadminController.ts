@@ -8,6 +8,51 @@ import Question from "../models/Question";
 import User from "../models/User";
 import { AuthRequest } from "../types/auth";
 
+const normalizeAssessmentCode = (code: string): string => {
+  const normalized = code.toUpperCase().trim();
+  if (normalized === "METACOGNITION") return "METACOGNITION_TEST";
+  if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
+  return normalized;
+};
+
+const getAssessmentCodeAliases = (code: string): string[] => {
+  const normalized = normalizeAssessmentCode(code);
+  if (normalized === "METACOGNITION_TEST") return ["METACOGNITION_TEST", "METACOGNITION"];
+  if (normalized === "JOHARI_WINDOW") return ["JOHARI_WINDOW", "JOHARI", "CLEAR"];
+  return [normalized];
+};
+
+const getAssessmentDisplayName = (code: string, fallbackName: string): string => {
+  const normalized = normalizeAssessmentCode(code);
+  if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
+  if (normalized === "JOHARI_WINDOW") return "CLEAR – Cognitive Lens for Emotional Awareness & Reflection";
+  return fallbackName;
+};
+
+const dedupeAssessments = <T extends { code: string; name: string }>(assessments: T[]): T[] => {
+  const byCode = new Map<string, (T & { __isExactCode: boolean })>();
+
+  for (const assessment of assessments) {
+    const originalCode = String(assessment.code || "").toUpperCase().trim();
+    const canonicalCode = normalizeAssessmentCode(originalCode);
+    const normalizedItem = {
+      ...assessment,
+      code: canonicalCode,
+      name: getAssessmentDisplayName(canonicalCode, assessment.name),
+      __isExactCode: originalCode === canonicalCode,
+    };
+
+    const existing = byCode.get(canonicalCode);
+    if (!existing || (normalizedItem.__isExactCode && !existing.__isExactCode)) {
+      byCode.set(canonicalCode, normalizedItem);
+    }
+  }
+
+  return Array.from(byCode.values())
+    .map(({ __isExactCode: _ignored, ...item }) => item as T)
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
 export const getLedger = async (_req: AuthRequest, res: Response): Promise<void> => {
   const invoices = await Invoice.find()
     .populate("user", "firstName lastName email")
@@ -61,14 +106,18 @@ export const getSuperadminDashboard = async (_req: AuthRequest, res: Response): 
     Coupon.find().sort({ createdAt: -1 }),
   ]);
 
+  const dedupedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+  );
+
   // Dynamically count questions for each assessment
   const assessmentsWithCounts = await Promise.all(
-    assessments.map(async (assessment) => {
+    dedupedAssessments.map(async (assessment) => {
       const count = await Question.countDocuments({
-        assessmentCode: assessment.code,
+        assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
         isActive: true,
       });
-      return { ...assessment.toObject(), questionCount: count };
+      return { ...assessment, questionCount: count };
     })
   );
 

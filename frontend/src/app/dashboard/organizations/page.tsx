@@ -22,6 +22,15 @@ type SuperadminResponse = {
   organizations: Organization[];
 };
 
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "—";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 const DEFAULT_FORM = { name: "", slug: "", contactEmail: "" };
 
 export default function OrganizationsPage() {
@@ -34,6 +43,7 @@ export default function OrganizationsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState<{ from?: string; to?: string }>({});
 
   const auth = useMemo(() => getStoredAuth(), []);
 
@@ -75,8 +85,10 @@ export default function OrganizationsPage() {
   };
 
   const filtered = orgs.filter((o) =>
-    o.name.toLowerCase().includes(search.toLowerCase()) ||
-    o.slug.toLowerCase().includes(search.toLowerCase())
+    (o.name.toLowerCase().includes(search.toLowerCase()) ||
+    o.slug.toLowerCase().includes(search.toLowerCase())) &&
+    (!dateFilter.from || !o.createdAt || new Date(dateFilter.from) <= new Date(o.createdAt)) &&
+    (!dateFilter.to || !o.createdAt || new Date(dateFilter.to) >= new Date(o.createdAt))
   );
 
   return (
@@ -118,6 +130,22 @@ export default function OrganizationsPage() {
         />
       </div>
 
+      {/* Date filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="date"
+          value={dateFilter.from || ""}
+          onChange={(e) => setDateFilter((f) => ({ ...f, from: e.target.value }))}
+          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        />
+        <input
+          type="date"
+          value={dateFilter.to || ""}
+          onChange={(e) => setDateFilter((f) => ({ ...f, to: e.target.value }))}
+          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        />
+      </div>
+
       {/* Table */}
       {loading ? (
         <div className="flex justify-center py-20">
@@ -149,6 +177,7 @@ export default function OrganizationsPage() {
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Slug</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Type</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Contact</th>
+                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
                   <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Status</th>
                 </tr>
               </thead>
@@ -170,6 +199,7 @@ export default function OrganizationsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-black/80">{org.contactEmail || "—"}</td>
+                    <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(org.createdAt)}</td>
                     <td className="px-5 py-3.5">
                       <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
                         org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"

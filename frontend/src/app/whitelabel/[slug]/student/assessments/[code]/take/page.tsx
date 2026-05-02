@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ChevronLeft,
@@ -46,9 +46,13 @@ type StartAttemptResponse = {
 
 export default function StudentTakeAssessmentPage() {
   const router = useRouter();
-  const params = useParams<{ slug: string; code: string }>();
-  const slug = params?.slug || "";
-  const code = (params?.code || "").toUpperCase();
+  const pathname = usePathname();
+  const params = useParams<{ slug?: string; code?: string; rest?: string[] }>();
+  const routeParts = (pathname || "").split("/").filter(Boolean);
+  const slug = params?.slug || routeParts[1] || "";
+  const fallbackCodeFromRest = Array.isArray(params?.rest) ? params.rest[2] : "";
+  const fallbackCodeFromPath = routeParts[5] || "";
+  const code = (params?.code || fallbackCodeFromRest || fallbackCodeFromPath || "").toUpperCase();
   const auth = useMemo(() => getStoredAuth(), []);
 
   const [loading, setLoading] = useState(true);
@@ -60,6 +64,7 @@ export default function StudentTakeAssessmentPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visited, setVisited] = useState<Set<number>>(new Set([0]));
   const [showInstructions, setShowInstructions] = useState(true);
+  const [activeSectionCat, setActiveSectionCat] = useState<string | null>(null);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const isSubmittingRef = useRef(false);
 
@@ -240,6 +245,8 @@ export default function StudentTakeAssessmentPage() {
     return "career-compass" as const;
   })();
 
+  const isCareerDna = assessmentVariant === "career-dna";
+
   const headerGradient = {
     "career-compass": "from-blue-600 to-cyan-600",
     "career-dna": "from-violet-600 to-fuchsia-600",
@@ -255,6 +262,71 @@ export default function StudentTakeAssessmentPage() {
     litmus: "bg-amber-50/40",
     metacognition: "bg-sky-50/40",
   }[assessmentVariant];
+
+  const sectionProgress = categoryGroups.map((group) => {
+    const answeredCount = group.questions.reduce(
+      (count, { q }) => (answers[q.questionId] ? count + 1 : count),
+      0
+    );
+
+    return {
+      ...group,
+      answeredCount,
+      totalCount: group.questions.length,
+      completed: answeredCount === group.questions.length,
+    };
+  });
+
+  const careerDnaSections = sectionProgress.map((section, index) => {
+    const unlocked = index === 0 || sectionProgress[index - 1]?.completed;
+    return {
+      ...section,
+      unlocked,
+    };
+  });
+
+  const visibleQuestionIndexes = isCareerDna && activeSectionCat
+    ? questions
+      .map((question, index) => (question.category === activeSectionCat ? index : -1))
+      .filter((index) => index >= 0)
+    : questions.map((_, index) => index);
+
+  const currentVisibleIndex = visibleQuestionIndexes.indexOf(currentIndex);
+
+  const goToPreviousVisibleQuestion = () => {
+    const targetIndex = visibleQuestionIndexes[Math.max(currentVisibleIndex - 1, 0)] ?? 0;
+    goToQuestion(targetIndex);
+  };
+
+  const goToNextVisibleQuestion = () => {
+    const targetIndex = visibleQuestionIndexes[Math.min(currentVisibleIndex + 1, visibleQuestionIndexes.length - 1)] ?? 0;
+    goToQuestion(targetIndex);
+  };
+
+  const openCareerDnaSection = (sectionCat: string) => {
+    const sectionIndexes = questions
+      .map((question, index) => (question.category === sectionCat ? index : -1))
+      .filter((index) => index >= 0);
+
+    if (!sectionIndexes.length) {
+      return;
+    }
+
+    const firstUnansweredInSection = sectionIndexes.find((index) => !answers[questions[index].questionId]);
+    const targetIndex = firstUnansweredInSection ?? sectionIndexes[0];
+
+    setActiveSectionCat(sectionCat);
+    setShowInstructions(false);
+    goToQuestion(targetIndex);
+  };
+
+  const returnToCareerDnaSections = async () => {
+    setShowInstructions(true);
+    setActiveSectionCat(null);
+    if (document.fullscreenElement) {
+      await document.exitFullscreen().catch(() => {});
+    }
+  };
 
   const renderOptions = () => {
     const options = currentQuestion.options.length > 0
@@ -489,6 +561,78 @@ export default function StudentTakeAssessmentPage() {
 
   // ── Instructions page ──────────────────────────────────────────────────────
   if (showInstructions) {
+    if (isCareerDna) {
+      return (
+        <div className={`fixed inset-0 z-[9999] ${pageTone} overflow-y-auto p-4 md:p-8`} style={{ fontFamily: "'Inter', sans-serif" }}>
+          <div className="max-w-4xl w-full mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className={`bg-gradient-to-r ${headerGradient} px-8 py-6 text-white`}>
+              <h1 className="text-2xl font-bold">{assessmentName || code}</h1>
+              <p className="text-violet-100 text-sm mt-1">
+                Continue section-wise. Fullscreen starts only after you open a subsection.
+              </p>
+            </div>
+
+            <div className="px-8 py-6 space-y-4">
+              {careerDnaSections.map((section, index) => (
+                <div key={section.cat} className="rounded-xl border border-gray-200 p-4 bg-white">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Section {index + 1}</p>
+                      <p className="text-base font-bold text-gray-900 mt-1">{section.label}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {section.answeredCount} / {section.totalCount} answered
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {section.completed && (
+                        <span className="rounded-full bg-green-100 text-green-700 px-3 py-1 text-xs font-semibold">
+                          Completed
+                        </span>
+                      )}
+                      {!section.completed && section.unlocked && (
+                        <span className="rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-semibold">
+                          In Progress
+                        </span>
+                      )}
+                      {!section.unlocked && (
+                        <span className="rounded-full bg-gray-100 text-gray-500 px-3 py-1 text-xs font-semibold">
+                          Locked
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-end">
+                    <button
+                      onClick={() => openCareerDnaSection(section.cat)}
+                      disabled={!section.unlocked}
+                      className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-700 transition disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                    >
+                      {section.completed ? "Review Section" : section.answeredCount > 0 ? "Continue Section" : "Start Section"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {allAnswered && (
+                <div className="rounded-xl border border-green-200 bg-green-50 p-4 flex items-center justify-between gap-4">
+                  <p className="text-sm text-green-800 font-medium">All sections completed. You can now submit your test.</p>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60"
+                  >
+                    {submitting ? "Submitting..." : "Submit Test"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={`fixed inset-0 z-[9999] ${pageTone} overflow-y-auto p-4 md:p-8`} style={{ fontFamily: "'Inter', sans-serif" }}>
         <div className="max-w-2xl w-full mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
@@ -580,6 +724,15 @@ export default function StudentTakeAssessmentPage() {
         </div>
 
         <div className="flex items-center gap-4">
+          {isCareerDna && activeSectionCat && (
+            <button
+              onClick={() => void returnToCareerDnaSections()}
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-violet-100 text-violet-700 hover:bg-violet-200 transition"
+            >
+              Save & Sections
+            </button>
+          )}
+
           {/* Progress */}
           <div className="text-sm font-medium text-gray-600">
             <span className="text-blue-600 font-bold">{totalAnswered}</span>
@@ -611,7 +764,7 @@ export default function StudentTakeAssessmentPage() {
             <p className="text-sm text-gray-500 font-medium mb-6">
               {currentQuestion.categoryLabel}
               <span className="text-gray-300 mx-2">·</span>
-              Question {currentIndex + 1} of {questions.length}
+              Question {(currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : currentIndex + 1)} of {visibleQuestionIndexes.length}
             </p>
 
             {/* Question card */}
@@ -639,8 +792,8 @@ export default function StudentTakeAssessmentPage() {
             {/* Navigation */}
             <div className="flex items-center justify-between mt-6">
               <button
-                onClick={() => goToQuestion(Math.max(currentIndex - 1, 0))}
-                disabled={currentIndex === 0}
+                onClick={goToPreviousVisibleQuestion}
+                disabled={currentVisibleIndex <= 0}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <ChevronLeft size={16} />
@@ -648,15 +801,22 @@ export default function StudentTakeAssessmentPage() {
               </button>
 
               <span className="text-sm text-gray-400 font-medium">
-                Question {currentIndex + 1} of {questions.length}
+                Question {(currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : currentIndex + 1)} of {visibleQuestionIndexes.length}
               </span>
 
               <button
-                onClick={() => goToQuestion(Math.min(currentIndex + 1, questions.length - 1))}
-                disabled={currentIndex === questions.length - 1}
+                onClick={() => {
+                  const isLastVisible = currentVisibleIndex >= visibleQuestionIndexes.length - 1;
+                  if (isCareerDna && isLastVisible) {
+                    void returnToCareerDnaSections();
+                    return;
+                  }
+                  goToNextVisibleQuestion();
+                }}
+                disabled={!isCareerDna && currentVisibleIndex >= visibleQuestionIndexes.length - 1}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                Next
+                {isCareerDna && currentVisibleIndex >= visibleQuestionIndexes.length - 1 ? "Save Section" : "Next"}
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -670,7 +830,10 @@ export default function StudentTakeAssessmentPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-            {categoryGroups.map((grp, grpIdx) => (
+            {(isCareerDna && activeSectionCat
+              ? categoryGroups.filter((group) => group.cat === activeSectionCat)
+              : categoryGroups
+            ).map((grp, grpIdx) => (
               <div key={grp.cat}>
                 <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
                   {grp.label}

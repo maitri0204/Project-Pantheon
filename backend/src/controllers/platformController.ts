@@ -12,6 +12,87 @@ import { evaluateAssessmentAttempt } from "../services/assessmentEvaluation";
 import { getCareerDnaSourceQuestion, parseCareerDnaCategory } from "../services/sourceAssessmentData";
 import { AuthRequest } from "../types/auth";
 
+const normalizeAssessmentCode = (code: string): string => {
+  const normalized = code.toUpperCase().trim();
+  if (normalized === "METACOGNITION") return "METACOGNITION_TEST";
+  if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
+  return normalized;
+};
+
+const getAssessmentCodeAliases = (code: string): string[] => {
+  const normalized = normalizeAssessmentCode(code);
+  if (normalized === "METACOGNITION_TEST") return ["METACOGNITION_TEST", "METACOGNITION"];
+  if (normalized === "JOHARI_WINDOW") return ["JOHARI_WINDOW", "JOHARI", "CLEAR"];
+  return [normalized];
+};
+
+const CAREER_DNA_TEST_ORDER = [
+  "APTITUDE",
+  "BEHAVIORAL_SOCIAL",
+  "CAREER_INTEREST",
+  "COGNITIVE",
+  "EMOTIONAL_INTELLIGENCE",
+  "LEARNING_STYLE",
+  "PERSONALITY",
+  "STRESS_RESILIENCE",
+];
+
+const getCareerDnaCategoryOrder = (category: string, sourceTestType?: string, partNumber?: number) => {
+  const parsed = parseCareerDnaCategory(category);
+  const resolvedTestType = sourceTestType || parsed?.testType || "";
+  const resolvedPartNumber = Number.isFinite(Number(partNumber))
+    ? Number(partNumber)
+    : Number(parsed?.partNumber ?? 1);
+  const testOrder = CAREER_DNA_TEST_ORDER.indexOf(resolvedTestType);
+
+  return {
+    testOrder: testOrder === -1 ? Number.MAX_SAFE_INTEGER : testOrder,
+    partOrder: Number.isFinite(resolvedPartNumber) ? resolvedPartNumber : Number.MAX_SAFE_INTEGER,
+  };
+};
+
+const sortCareerDnaQuestions = <T extends { category: string; questionNumber: number; sourceTestType?: string; partNumber?: number }>(
+  questions: T[]
+) => [...questions].sort((a, b) => {
+  const left = getCareerDnaCategoryOrder(a.category, a.sourceTestType, a.partNumber);
+  const right = getCareerDnaCategoryOrder(b.category, b.sourceTestType, b.partNumber);
+
+  if (left.testOrder !== right.testOrder) return left.testOrder - right.testOrder;
+  if (left.partOrder !== right.partOrder) return left.partOrder - right.partOrder;
+  return a.questionNumber - b.questionNumber;
+});
+
+const getAssessmentDisplayName = (code: string, fallbackName: string): string => {
+  const normalized = normalizeAssessmentCode(code);
+  if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
+  if (normalized === "JOHARI_WINDOW") return "CLEAR – Cognitive Lens for Emotional Awareness & Reflection";
+  return fallbackName;
+};
+
+const dedupeAssessments = <T extends { code: string; name: string }>(assessments: T[]): T[] => {
+  const byCode = new Map<string, (T & { __isExactCode: boolean })>();
+
+  for (const assessment of assessments) {
+    const originalCode = String(assessment.code || "").toUpperCase().trim();
+    const canonicalCode = normalizeAssessmentCode(originalCode);
+    const normalizedItem = {
+      ...assessment,
+      code: canonicalCode,
+      name: getAssessmentDisplayName(canonicalCode, assessment.name),
+      __isExactCode: originalCode === canonicalCode,
+    };
+
+    const existing = byCode.get(canonicalCode);
+    if (!existing || (normalizedItem.__isExactCode && !existing.__isExactCode)) {
+      byCode.set(canonicalCode, normalizedItem);
+    }
+  }
+
+  return Array.from(byCode.values())
+    .map(({ __isExactCode: _ignored, ...item }) => item as T)
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
 export const getPlatformOverview = async (_req: AuthRequest, res: Response): Promise<void> => {
   const [assessmentCount, organizationCount] = await Promise.all([
     Assessment.countDocuments({ active: true }),
@@ -35,7 +116,21 @@ export const getPlatformOverview = async (_req: AuthRequest, res: Response): Pro
 
 export const listAssessments = async (_req: AuthRequest, res: Response): Promise<void> => {
   const assessments = await Assessment.find({ active: true }).sort({ name: 1 });
-  res.json({ assessments });
+  const dedupedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+  );
+
+  const assessmentsWithCounts = await Promise.all(
+    dedupedAssessments.map(async (assessment) => {
+      const count = await Question.countDocuments({
+        assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
+        isActive: true,
+      });
+      return { ...assessment, questionCount: count };
+    })
+  );
+
+  res.json({ assessments: assessmentsWithCounts });
 };
 
 export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -65,6 +160,10 @@ export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Prom
     ? await Assessment.find({ active: true }).sort({ name: 1 })
     : [];
 
+  const normalizedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+  );
+
   res.json({
     organization: {
       id: organization._id,
@@ -74,7 +173,7 @@ export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Prom
       branding: organization.branding,
     },
     canAccessAssessments,
-    assessments,
+    assessments: normalizedAssessments,
     message: canAccessAssessments
       ? undefined
       : "Login required. Only users from this organization can view assessments.",
@@ -145,10 +244,7 @@ export const listStudents = async (req: AuthRequest, res: Response): Promise<voi
       testsTaken: invoiceCountMap.get(String(student._id)) || 0,
     }));
 
-  const studentsPayload =
-    req.user.role === "ORG_ADMIN"
-      ? studentsWithStats.filter((student) => student.testsTaken > 0)
-      : studentsWithStats;
+  const studentsPayload = studentsWithStats;
 
   res.json({
     students: studentsPayload,
@@ -215,12 +311,18 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
     StudentAssessmentAttempt.find({ user: userId, organization: organizationId }),
   ]);
 
-  const completedCodes = new Set(
-    attempts.filter((attempt) => attempt.status === "COMPLETED").map((attempt) => attempt.assessmentCode)
+  const dedupedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
   );
-  const appearedCodes = new Set(attempts.map((attempt) => attempt.assessmentCode));
 
-  const totalAssessments = assessments.length;
+  const completedCodes = new Set(
+    attempts
+      .filter((attempt) => attempt.status === "COMPLETED")
+      .map((attempt) => normalizeAssessmentCode(attempt.assessmentCode))
+  );
+  const appearedCodes = new Set(attempts.map((attempt) => normalizeAssessmentCode(attempt.assessmentCode)));
+
+  const totalAssessments = dedupedAssessments.length;
   const appeared = appearedCodes.size;
   const completed = completedCodes.size;
   const pending = Math.max(totalAssessments - completed, 0);
@@ -237,8 +339,8 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
       .slice(0, 5)
       .map((attempt) => ({
         id: attempt._id,
-        assessmentCode: attempt.assessmentCode,
-        assessmentName: attempt.assessmentName,
+        assessmentCode: normalizeAssessmentCode(attempt.assessmentCode),
+        assessmentName: getAssessmentDisplayName(attempt.assessmentCode, attempt.assessmentName),
         status: attempt.status,
         answeredCount: attempt.answeredCount,
         totalQuestions: attempt.totalQuestions,
@@ -260,11 +362,35 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
     StudentAssessmentAttempt.find({ user: userId, organization: organizationId }),
   ]);
 
-  const attemptByCode = new Map(attempts.map((attempt) => [attempt.assessmentCode, attempt]));
+  const dedupedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+  );
+
+  const attemptsByCode = new Map<string, (typeof attempts)[number]>();
+  for (const attempt of attempts) {
+    const normalizedCode = normalizeAssessmentCode(attempt.assessmentCode);
+    const existing = attemptsByCode.get(normalizedCode);
+    if (!existing || new Date(attempt.updatedAt).getTime() > new Date(existing.updatedAt).getTime()) {
+      attemptsByCode.set(normalizedCode, attempt);
+    }
+  }
+
+  const assessmentsWithCounts = await Promise.all(
+    dedupedAssessments.map(async (assessment) => {
+      const questionCount = await Question.countDocuments({
+        assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
+        isActive: true,
+      });
+      return {
+        ...assessment,
+        questionCount,
+      };
+    })
+  );
 
   res.json({
-    assessments: assessments.map((assessment) => {
-      const attempt = attemptByCode.get(assessment.code);
+    assessments: assessmentsWithCounts.map((assessment) => {
+      const attempt = attemptsByCode.get(assessment.code);
       return {
         _id: assessment._id,
         code: assessment.code,
@@ -296,6 +422,8 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
 
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
+  const canonicalCode = normalizeAssessmentCode(code);
+  const codeAliases = getAssessmentCodeAliases(code);
   if (!code) {
     res.status(400).json({ message: "Assessment code is required" });
     return;
@@ -305,8 +433,8 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
   const userId = req.user!._id;
 
   const [assessment, existingAttempt] = await Promise.all([
-    Assessment.findOne({ code, active: true }),
-    StudentAssessmentAttempt.findOne({ user: userId, organization: organizationId, assessmentCode: code }),
+    Assessment.findOne({ code: { $in: codeAliases }, active: true }),
+    StudentAssessmentAttempt.findOne({ user: userId, organization: organizationId, assessmentCode: { $in: codeAliases } }),
   ]);
 
   if (!assessment) {
@@ -321,19 +449,36 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
 
   if (existingAttempt?.status === "IN_PROGRESS") {
     const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(existingAttempt.questions);
+    const orderedQuestions = canonicalCode === "CAREER_DNA"
+      ? sortCareerDnaQuestions(hydratedQuestions)
+      : hydratedQuestions;
 
-    if (hydratedQuestions.some((question, index) => question.options !== existingAttempt.questions[index].options)) {
-      existingAttempt.questions = hydratedQuestions as typeof existingAttempt.questions;
+    const questionsReordered = orderedQuestions.some((question, index) => (
+      String(question.questionId) !== String(existingAttempt.questions[index]?.questionId)
+    ));
+
+    const shouldNormalizeAttemptMetadata =
+      existingAttempt.assessmentCode !== canonicalCode
+      || existingAttempt.assessmentName !== getAssessmentDisplayName(canonicalCode, existingAttempt.assessmentName);
+
+    if (
+      hydratedQuestions.some((question, index) => question.options !== existingAttempt.questions[index].options)
+      || questionsReordered
+      || shouldNormalizeAttemptMetadata
+    ) {
+      existingAttempt.questions = orderedQuestions as typeof existingAttempt.questions;
+      existingAttempt.assessmentCode = canonicalCode;
+      existingAttempt.assessmentName = getAssessmentDisplayName(canonicalCode, assessment?.name || existingAttempt.assessmentName);
       await existingAttempt.save();
     }
 
     res.json({
       attempt: {
         id: existingAttempt._id,
-        assessmentCode: existingAttempt.assessmentCode,
-        assessmentName: existingAttempt.assessmentName,
+        assessmentCode: canonicalCode,
+        assessmentName: getAssessmentDisplayName(canonicalCode, assessment?.name || existingAttempt.assessmentName),
         status: existingAttempt.status,
-        questions: hydratedQuestions,
+        questions: orderedQuestions,
         answeredCount: existingAttempt.answeredCount,
         totalQuestions: existingAttempt.totalQuestions,
       },
@@ -341,7 +486,10 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const questions = await Question.find({ assessmentCode: code, isActive: true }).sort({ questionNumber: 1 });
+  const rawQuestions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true });
+  const questions = canonicalCode === "CAREER_DNA"
+    ? sortCareerDnaQuestions(rawQuestions)
+    : [...rawQuestions].sort((a, b) => a.questionNumber - b.questionNumber);
   if (!questions.length) {
     res.status(400).json({ message: "No active questions found for this assessment" });
     return;
@@ -350,11 +498,11 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
   const createdAttempt = await StudentAssessmentAttempt.create({
     user: userId,
     organization: organizationId,
-    assessmentCode: code,
-    assessmentName: assessment.name,
+    assessmentCode: canonicalCode,
+    assessmentName: getAssessmentDisplayName(canonicalCode, assessment.name),
     status: "IN_PROGRESS",
     questions: questions.map((question) => {
-      const careerDnaMeta = code === "CAREER_DNA" ? parseCareerDnaCategory(question.category) : null;
+      const careerDnaMeta = canonicalCode === "CAREER_DNA" ? parseCareerDnaCategory(question.category) : null;
       const sourceQuestion = careerDnaMeta
         ? getCareerDnaSourceQuestion(careerDnaMeta.testType, careerDnaMeta.partNumber, question.questionNumber)
         : undefined;
@@ -414,19 +562,37 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
   }
 
   const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(attempt.questions);
+  const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+  const orderedQuestions = canonicalCode === "CAREER_DNA"
+    ? sortCareerDnaQuestions(hydratedQuestions)
+    : hydratedQuestions;
 
-  if (hydratedQuestions.some((question, index) => question.options !== attempt.questions[index].options)) {
-    attempt.questions = hydratedQuestions as typeof attempt.questions;
+  const questionsReordered = orderedQuestions.some((question, index) => (
+    String(question.questionId) !== String(attempt.questions[index]?.questionId)
+  ));
+
+  const shouldNormalizeAttemptMetadata =
+    attempt.assessmentCode !== canonicalCode
+    || attempt.assessmentName !== getAssessmentDisplayName(canonicalCode, attempt.assessmentName);
+
+  if (
+    hydratedQuestions.some((question, index) => question.options !== attempt.questions[index].options)
+    || questionsReordered
+    || shouldNormalizeAttemptMetadata
+  ) {
+    attempt.questions = orderedQuestions as typeof attempt.questions;
+    attempt.assessmentCode = canonicalCode;
+    attempt.assessmentName = getAssessmentDisplayName(canonicalCode, attempt.assessmentName);
     await attempt.save();
   }
 
   res.json({
     attempt: {
       id: attempt._id,
-      assessmentCode: attempt.assessmentCode,
-      assessmentName: attempt.assessmentName,
+      assessmentCode: canonicalCode,
+      assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
       status: attempt.status,
-      questions: hydratedQuestions,
+      questions: orderedQuestions,
       answeredCount: attempt.answeredCount,
       totalQuestions: attempt.totalQuestions,
       completedAt: attempt.completedAt,

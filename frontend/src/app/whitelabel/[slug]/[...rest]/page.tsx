@@ -4,9 +4,13 @@ import { useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import StudentPortalShell from "@/components/student/StudentPortalShell";
 import DashboardPage from "@/app/dashboard/page";
 import AssessmentsPage from "@/app/dashboard/assessments/page";
 import UsersPage from "@/app/dashboard/users/page";
+import StudentDashboardPage from "@/app/whitelabel/[slug]/student/dashboard/page";
+import StudentAssessmentsPage from "@/app/whitelabel/[slug]/student/assessments/page";
+import StudentTakeAssessmentPage from "@/app/whitelabel/[slug]/student/assessments/[code]/take/page";
 
 export default function WhitelabelCatchAllPage() {
   const router = useRouter();
@@ -23,20 +27,54 @@ export default function WhitelabelCatchAllPage() {
   }, [rest, router, slug]);
 
   const content = useMemo(() => {
+    if (rest[0] === "student") {
+      if (rest.length === 2 && rest[1] === "dashboard") {
+        return {
+          type: "student-shell" as const,
+          element: <StudentDashboardPage />,
+        };
+      }
+
+      if (rest.length === 2 && rest[1] === "assessments") {
+        return {
+          type: "student-shell" as const,
+          element: <StudentAssessmentsPage />,
+        };
+      }
+
+      if (rest.length === 4 && rest[1] === "assessments" && rest[3] === "take") {
+        return {
+          type: "student-fullscreen" as const,
+          element: <StudentTakeAssessmentPage />,
+        };
+      }
+
+      return null;
+    }
+
     if (rest[0] !== "dashboard") {
       return null;
     }
 
     if (rest.length === 1) {
-      return <DashboardPage />;
+      return {
+        type: "dashboard-shell" as const,
+        element: <DashboardPage />,
+      };
     }
 
     if (rest.length === 2 && rest[1] === "assessments") {
-      return <AssessmentsPage />;
+      return {
+        type: "dashboard-shell" as const,
+        element: <AssessmentsPage />,
+      };
     }
 
     if (rest.length === 2 && rest[1] === "users") {
-      return <UsersPage />;
+      return {
+        type: "dashboard-shell" as const,
+        element: <UsersPage />,
+      };
     }
 
     return null;
@@ -66,13 +104,21 @@ export default function WhitelabelCatchAllPage() {
     );
   }
 
+  if (content.type === "student-fullscreen") {
+    return content.element;
+  }
+
+  if (content.type === "student-shell") {
+    return <StudentPortalShell slug={slug}>{content.element}</StudentPortalShell>;
+  }
+
   return (
     <DashboardShell
       basePath={`/whitelabel/${slug}/dashboard`}
       loginPath={`/whitelabel/${slug}/login`}
       expectedOrgSlug={slug}
     >
-      {content}
+      {content.element}
     </DashboardShell>
   );
 }

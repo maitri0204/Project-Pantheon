@@ -24,6 +24,20 @@ type SuperadminResponse = {
   assessments: Assessment[];
 };
 
+const normalizeAssessmentCodeForDisplay = (code: string) => {
+  const normalized = String(code || "").toUpperCase().trim();
+  if (normalized === "METACOGNITION" || normalized === "METACOGNITION_TEST") return "TEST";
+  if (normalized === "JOHARI_WINDOW" || normalized === "JOHARI" || normalized === "CLEAR") return "CLEAR";
+  return normalized;
+};
+
+const normalizeAssessmentCategoryForDisplay = (category: string, code: string) => {
+  const normalizedCode = String(code || "").toUpperCase().trim();
+  if (normalizedCode === "METACOGNITION" || normalizedCode === "METACOGNITION_TEST") return "TEST";
+  if (normalizedCode === "JOHARI_WINDOW" || normalizedCode === "JOHARI" || normalizedCode === "CLEAR") return "CLEAR";
+  return category;
+};
+
 export default function AssessmentsPage() {
   const router = useRouter();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -35,24 +49,40 @@ export default function AssessmentsPage() {
   const [search, setSearch] = useState("");
 
   const auth = useMemo(() => getStoredAuth(), []);
-  const isOrgAdmin = auth?.user.role === "ORG_ADMIN";
+  const [isOrgAdmin, setIsOrgAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const a = getStoredAuth();
+    if (!a) {
+      router.replace("/login");
+      return;
+    }
+
+    setIsOrgAdmin(a.user.role === "ORG_ADMIN");
+  }, []);
 
   const load = async () => {
-    if (!auth) { router.replace("/login"); return; }
+    const currentAuth = getStoredAuth();
+    if (!currentAuth) {
+      router.replace("/login");
+      return;
+    }
+
+    const orgAdmin = currentAuth.user.role === "ORG_ADMIN";
     setLoading(true);
     try {
       let list: Assessment[];
-      if (isOrgAdmin) {
-        const res = await apiRequest<SuperadminResponse>("/platform/assessments", {}, auth.token);
+      if (orgAdmin) {
+        const res = await apiRequest<SuperadminResponse>("/platform/assessments", {}, currentAuth.token);
         list = res.assessments;
       } else {
-        const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
+        const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, currentAuth.token);
         list = res.assessments;
       }
       setAssessments(list);
       setPriceDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.basePrice)])));
     } catch {
-      if (!isOrgAdmin) router.replace("/login");
+      router.replace("/login");
     } finally {
       setLoading(false);
     }
@@ -100,7 +130,7 @@ export default function AssessmentsPage() {
       <div>
         <h1 className="text-3xl font-bold text-black">Assessments</h1>
         <p className="text-black/80 mt-1 text-base">
-          {isOrgAdmin
+          {isOrgAdmin === true
             ? "View all available assessments. Pricing and configuration are read-only for organization users."
             : "View all assessments and update their pricing."}
         </p>
@@ -131,7 +161,7 @@ export default function AssessmentsPage() {
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 gap-5">
           {filtered.map((a) => (
             <div
               key={a._id}
@@ -139,9 +169,9 @@ export default function AssessmentsPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 space-y-1">
-                  <p className="text-sm text-black/70 uppercase tracking-wide">{a.category}</p>
+                  <p className="text-sm text-black/70 uppercase tracking-wide">{normalizeAssessmentCategoryForDisplay(a.category, a.code)}</p>
                   <h3 className="text-2xl font-bold text-black leading-tight">{a.name}</h3>
-                  <p className="text-sm text-black/70 font-mono">{a.code}</p>
+                  <p className="text-sm text-black/70 font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
                 </div>
                 <span className={`flex-shrink-0 text-sm rounded-full px-3 py-1.5 font-semibold ${statusBadge(a.questionBankStatus)}`}>
                   {a.questionBankStatus}
@@ -152,25 +182,21 @@ export default function AssessmentsPage() {
 
               <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-sm">
                 <div className="space-y-0.5">
-                  <dt className="text-black/70">Source</dt>
-                  <dd className="font-semibold text-black break-words">{a.sourceProject}</dd>
-                </div>
-                <div className="space-y-0.5 text-right">
                   <dt className="text-black/70">Questions</dt>
                   <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "—"}</dd>
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 text-right">
                   <dt className="text-black/70">Currency</dt>
                   <dd className="font-semibold text-black">{a.currency}</dd>
                 </div>
-                <div className="space-y-0.5 text-right">
+                <div className="space-y-0.5">
                   <dt className="text-black/70">Status</dt>
                   <dd className={`font-semibold ${a.active ? "text-green-700" : "text-black/60"}`}>{a.active ? "Active" : "Inactive"}</dd>
                 </div>
               </dl>
 
               {/* Pricing */}
-              {!isOrgAdmin && (
+              {isOrgAdmin === false && (
               <div className="pt-3 border-t border-gray-200">
                 <label className="text-sm text-black/80 font-semibold mb-2 block">Base Price (₹)</label>
                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
@@ -193,7 +219,7 @@ export default function AssessmentsPage() {
                 </div>
               </div>
               )}
-              {isOrgAdmin && (
+              {isOrgAdmin === true && (
               <div className="pt-3 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-black/80 font-semibold">Base Price</span>

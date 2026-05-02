@@ -7,9 +7,9 @@ import { apiRequest, getStoredAuth } from "@/lib/api";
 const ASSESSMENTS = [
   { code: "CAREER_COMPASS", name: "Career Compass", color: "emerald" },
   { code: "CAREER_DNA", name: "Career DNA", color: "purple" },
-  { code: "JOHARI_WINDOW", name: "Johari Window", color: "amber" },
+  { code: "JOHARI_WINDOW", name: "CLEAR", color: "amber" },
   { code: "LITMUS_TEST", name: "Litmus Test", color: "blue" },
-  { code: "METACOGNITION_TEST", name: "Metacognition Test", color: "rose" },
+  { code: "METACOGNITION_TEST", name: "TEST", color: "rose" },
 ] as const;
 
 const COLOR_CLASSES: Record<string, string> = {

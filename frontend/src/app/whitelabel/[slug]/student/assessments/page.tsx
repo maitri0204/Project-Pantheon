@@ -26,6 +26,20 @@ type StudentAssessmentsResponse = {
   }>;
 };
 
+const normalizeAssessmentCodeForDisplay = (code: string) => {
+  const normalized = String(code || "").toUpperCase().trim();
+  if (normalized === "METACOGNITION" || normalized === "METACOGNITION_TEST") return "TEST";
+  if (normalized === "JOHARI_WINDOW" || normalized === "JOHARI" || normalized === "CLEAR") return "CLEAR";
+  return normalized;
+};
+
+const normalizeAssessmentCategoryForDisplay = (category: string, code: string) => {
+  const normalizedCode = String(code || "").toUpperCase().trim();
+  if (normalizedCode === "METACOGNITION" || normalizedCode === "METACOGNITION_TEST") return "TEST";
+  if (normalizedCode === "JOHARI_WINDOW" || normalizedCode === "JOHARI" || normalizedCode === "CLEAR") return "CLEAR";
+  return category;
+};
+
 export default function StudentAssessmentsPage() {
   const router = useRouter();
   const params = useParams<{ slug: string }>();
@@ -87,7 +101,7 @@ export default function StudentAssessmentsPage() {
         <p className="mt-1 text-sm text-slate-600">Choose an assessment and click Take Test to start in full-screen mode.</p>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2">
         {data.assessments.map((assessment) => {
           const completed = assessment.attempt?.status === "COMPLETED";
 
@@ -95,9 +109,9 @@ export default function StudentAssessmentsPage() {
             <div key={assessment._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{assessment.category}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{normalizeAssessmentCategoryForDisplay(assessment.category, assessment.code)}</p>
                   <h3 className="text-xl font-bold text-slate-900">{assessment.name}</h3>
-                  <p className="mt-1 text-xs font-mono text-slate-500">{assessment.code}</p>
+                  <p className="mt-1 text-xs font-mono text-slate-500">{normalizeAssessmentCodeForDisplay(assessment.code)}</p>
                 </div>
                 <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${completed ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
                   {completed ? "Completed" : "Available"}
