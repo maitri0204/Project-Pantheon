@@ -35,18 +35,24 @@ export default function AssessmentsPage() {
   const [search, setSearch] = useState("");
 
   const auth = useMemo(() => getStoredAuth(), []);
+  const isOrgAdmin = auth?.user.role === "ORG_ADMIN";
 
   const load = async () => {
     if (!auth) { router.replace("/login"); return; }
     setLoading(true);
     try {
-      const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
-      setAssessments(res.assessments);
-      setPriceDrafts(
-        Object.fromEntries(res.assessments.map((a) => [a.code, String(a.basePrice)]))
-      );
+      let list: Assessment[];
+      if (isOrgAdmin) {
+        const res = await apiRequest<SuperadminResponse>("/platform/assessments", {}, auth.token);
+        list = res.assessments;
+      } else {
+        const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
+        list = res.assessments;
+      }
+      setAssessments(list);
+      setPriceDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.basePrice)])));
     } catch {
-      router.replace("/login");
+      if (!isOrgAdmin) router.replace("/login");
     } finally {
       setLoading(false);
     }
@@ -93,7 +99,11 @@ export default function AssessmentsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-black">Assessments</h1>
-        <p className="text-black/80 mt-1 text-base">View all assessments and update their pricing.</p>
+        <p className="text-black/80 mt-1 text-base">
+          {isOrgAdmin
+            ? "View all available assessments. Pricing and configuration are read-only for organization users."
+            : "View all assessments and update their pricing."}
+        </p>
       </div>
 
       {message && (
@@ -123,7 +133,10 @@ export default function AssessmentsPage() {
       ) : (
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map((a) => (
-            <div key={a._id} className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
+            <div
+              key={a._id}
+              className="bg-white/95 rounded-2xl border border-blue-100 shadow-[0_10px_26px_-14px_rgba(37,99,235,0.45)] hover:shadow-[0_18px_35px_-18px_rgba(37,99,235,0.5)] transition-shadow p-6 flex flex-col gap-4"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 space-y-1">
                   <p className="text-sm text-black/70 uppercase tracking-wide">{a.category}</p>
@@ -144,7 +157,7 @@ export default function AssessmentsPage() {
                 </div>
                 <div className="space-y-0.5 text-right">
                   <dt className="text-black/70">Questions</dt>
-                  <dd className="font-semibold text-black">{a.questionCount || "—"}</dd>
+                  <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "—"}</dd>
                 </div>
                 <div className="space-y-0.5">
                   <dt className="text-black/70">Currency</dt>
@@ -157,9 +170,10 @@ export default function AssessmentsPage() {
               </dl>
 
               {/* Pricing */}
+              {!isOrgAdmin && (
               <div className="pt-3 border-t border-gray-200">
                 <label className="text-sm text-black/80 font-semibold mb-2 block">Base Price (₹)</label>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
                   <input
                     type="number"
                     min={0}
@@ -167,17 +181,26 @@ export default function AssessmentsPage() {
                     onChange={(e) =>
                       setPriceDrafts((prev) => ({ ...prev, [a.code]: e.target.value }))
                     }
-                    className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={() => void updatePrice(a.code)}
                     disabled={saving === a.code}
-                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-base font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                    className="w-full sm:w-auto sm:min-w-[106px] px-5 py-2.5 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl text-base font-semibold shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50"
                   >
                     {saving === a.code ? "..." : "Save"}
                   </button>
                 </div>
               </div>
+              )}
+              {isOrgAdmin && (
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-black/80 font-semibold">Base Price</span>
+                  <span className="text-lg font-bold text-black">₹{priceDrafts[a.code] ?? a.basePrice}</span>
+                </div>
+              </div>
+              )}
             </div>
           ))}
 

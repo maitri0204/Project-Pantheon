@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Project Pantheon",
-  description: "Unified whitelabel assessment platform",
+  title: "Assessment",
+  description: "Assessment platform",
 };
 
 export default function RootLayout({

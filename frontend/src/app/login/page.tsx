@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense } from "react";
 
 import { apiRequest, getStoredAuth, setStoredAuth } from "@/lib/api";
 
@@ -30,7 +31,7 @@ type OrganizationBranding = {
   accentColor: string;
 };
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("email");
@@ -42,28 +43,47 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!error) return;
+    const t = window.setTimeout(() => setError(null), 4000);
+    return () => window.clearTimeout(t);
+  }, [error]);
   const [cooldown, setCooldown] = useState(0);
   const [orgBranding, setOrgBranding] = useState<OrganizationBranding | null>(null);
   const [organizationSlug, setOrganizationSlug] = useState<string>("");
   const refs = useRef<Array<HTMLInputElement | null>>([]);
 
   const portalOrganizationSlug = useMemo(() => {
-    const slugFromQuery = searchParams.get("organizationSlug")?.toLowerCase().trim();
+    const slugFromQuery = searchParams?.get("organizationSlug")?.toLowerCase().trim();
     return slugFromQuery || organizationSlug;
   }, [organizationSlug, searchParams]);
 
   useEffect(() => {
-    if (getStoredAuth()) {
-      router.replace("/dashboard");
+    const auth = getStoredAuth();
+    if (!auth) {
+      return;
     }
-  }, [router]);
+
+    if (auth.user.role === "ORG_ADMIN" && (portalOrganizationSlug || auth.orgSlug)) {
+      router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/dashboard`);
+      return;
+    }
+
+    if (auth.user.role === "STUDENT" && (portalOrganizationSlug || auth.orgSlug)) {
+      router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/student/dashboard`);
+      return;
+    }
+
+    router.replace("/dashboard");
+  }, [portalOrganizationSlug, router]);
 
   // Load organization branding if accessed from whitelabel domain
   useEffect(() => {
     const loadOrgBranding = async () => {
       if (typeof window === "undefined") return;
 
-      const slugFromQuery = searchParams.get("organizationSlug")?.toLowerCase().trim();
+      const slugFromQuery = searchParams?.get("organizationSlug")?.toLowerCase().trim();
       if (slugFromQuery) {
         setOrganizationSlug(slugFromQuery);
         try {
@@ -211,13 +231,24 @@ export default function LoginPage() {
           organizationSlug: portalOrganizationSlug || undefined,
         }),
       });
-      setStoredAuth(response);
+      setStoredAuth({
+        ...response,
+        ...(portalOrganizationSlug && response.user.role !== "SUPERADMIN" && orgBranding
+          ? {
+            orgCompanyName: orgBranding.companyName,
+            orgSlug: portalOrganizationSlug,
+            orgLogoUrl: orgBranding.logoUrl,
+          }
+          : {}),
+      });
       if (portalOrganizationSlug) {
-        if (response.user.role === "ORG_ADMIN") {
-          router.push("/dashboard");
-        } else {
-          router.push(`/whitelabel/${portalOrganizationSlug}`);
-        }
+        router.push(
+          response.user.role === "ORG_ADMIN"
+            ? `/whitelabel/${portalOrganizationSlug}/dashboard`
+            : response.user.role === "STUDENT"
+              ? `/whitelabel/${portalOrganizationSlug}/student/dashboard`
+              : `/whitelabel/${portalOrganizationSlug}`
+        );
       } else {
         router.push("/dashboard");
       }
@@ -442,5 +473,13 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-xs text-slate-400">© {new Date().getFullYear()} {orgBranding?.companyName || "Project Pantheon"}</p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageInner />
+    </Suspense>
   );
 }

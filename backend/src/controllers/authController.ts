@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 import Organization from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
+import StudentRegistrationTemp from "../models/StudentRegistrationTemp";
 import User, { IUser } from "../models/User";
 import { PLATFORM_ORG_SLUG } from "../constants/platform";
 import { generateCaptcha, verifyCaptcha } from "../services/captcha";
@@ -120,7 +121,7 @@ const validateWhitelabelLoginContext = ({
       return {
         allowed: false,
         status: 403,
-        message: "Superadmin cannot log in from an organization whitelabel portal",
+        message: "You cannot log in from an organization whitelabel portal",
       };
     }
 
@@ -697,4 +698,186 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       organization: req.user.organization,
     },
   });
+};
+
+export const studentRegister = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const body = req.body as {
+      organizationSlug?: string;
+      firstName?: string;
+      middleName?: string;
+      lastName?: string;
+      gender?: string;
+      email?: string;
+      phone?: string;
+      phoneCode?: string;
+      institutionName?: string;
+      grade?: string;
+      country?: string;
+      state?: string;
+      city?: string;
+    };
+
+    const orgSlug = body.organizationSlug?.toLowerCase().trim();
+    if (!orgSlug) {
+      res.status(400).json({ message: "Organization identifier is required" });
+      return;
+    }
+
+    if (!body.firstName?.trim() || !body.lastName?.trim()) {
+      res.status(400).json({ message: "First name and last name are required" });
+      return;
+    }
+
+    if (!body.email?.trim()) {
+      res.status(400).json({ message: "Email is required" });
+      return;
+    }
+
+    if (!body.phone?.trim()) {
+      res.status(400).json({ message: "Phone number is required" });
+      return;
+    }
+
+    const normalizedEmail = body.email.toLowerCase().trim();
+
+    const organization = await Organization.findOne({ slug: orgSlug, isActive: true, type: "WHITELABEL" });
+    if (!organization) {
+      res.status(404).json({ message: "Organization portal not found" });
+      return;
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      res.status(409).json({ message: "Email already registered. Please log in via the portal." });
+      return;
+    }
+
+    const otp = generateOtp();
+
+    await StudentRegistrationTemp.findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        $set: {
+          organization: organization._id,
+          organizationSlug: orgSlug,
+          firstName: body.firstName.trim(),
+          middleName: body.middleName?.trim() || undefined,
+          lastName: body.lastName.trim(),
+          gender: body.gender?.trim() || undefined,
+          email: normalizedEmail,
+          phone: body.phone.trim(),
+          phoneCode: body.phoneCode?.trim() || "+91",
+          grade: body.grade?.trim() || undefined,
+          country: body.country?.trim() || undefined,
+          state: body.state?.trim() || undefined,
+          city: body.city?.trim() || undefined,
+          institutionName: body.institutionName?.trim() || organization.branding.companyName,
+          otpHash: hashOtp(otp),
+          otpExpiresAt: getOtpExpiry(5),
+          otpAttempts: 0,
+        },
+      },
+      { upsert: true }
+    );
+
+    await sendOtpEmail({
+      email: normalizedEmail,
+      firstName: body.firstName.trim(),
+      otp,
+      purpose: "registration",
+    });
+
+    res.status(201).json({
+      message: "OTP sent to your email. Please verify to complete registration.",
+      email: normalizedEmail,
+    });
+  } catch (error) {
+    console.error("Student register error:", error);
+    res.status(500).json({ message: "Registration failed. Please try again." });
+  }
+};
+
+export const verifyStudentRegisterOtp = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp } = req.body as { email?: string; otp?: string };
+
+    if (!email?.trim() || !otp?.trim()) {
+      res.status(400).json({ message: "Email and OTP are required" });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const pending = await StudentRegistrationTemp.findOne({ email: normalizedEmail });
+
+    if (!pending) {
+      res.status(404).json({ message: "Registration not found. Please register again." });
+      return;
+    }
+
+    if (!pending.otpHash || isOtpExpired(pending.otpExpiresAt)) {
+      await StudentRegistrationTemp.deleteOne({ _id: pending._id });
+      res.status(400).json({ message: "OTP expired. Please register again." });
+      return;
+    }
+
+    if (!compareOtp(otp.trim(), pending.otpHash)) {
+      pending.otpAttempts += 1;
+
+      if (pending.otpAttempts >= 5) {
+        await StudentRegistrationTemp.deleteOne({ _id: pending._id });
+        res.status(429).json({ message: "Too many invalid attempts. Please register again." });
+        return;
+      }
+
+      await pending.save();
+      res.status(400).json({ message: "Invalid OTP" });
+      return;
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      await StudentRegistrationTemp.deleteOne({ _id: pending._id });
+      res.status(409).json({ message: "Email already registered. Please log in via the portal." });
+      return;
+    }
+
+    const user = await User.create({
+      firstName: pending.firstName,
+      middleName: pending.middleName,
+      lastName: pending.lastName,
+      email: pending.email,
+      gender: pending.gender,
+      phone: pending.phone,
+      phoneCode: pending.phoneCode,
+      grade: pending.grade,
+      country: pending.country,
+      state: pending.state,
+      city: pending.city,
+      institutionName: pending.institutionName,
+      role: "STUDENT",
+      organization: pending.organization,
+      isVerified: true,
+      isActive: true,
+      otpHash: undefined,
+      otpExpiresAt: undefined,
+      otpPurpose: null,
+      otpAttempts: 0,
+    });
+
+    await StudentRegistrationTemp.deleteOne({ _id: pending._id });
+
+    await user.populate("organization");
+    const org = user.organization as unknown as { slug: string } | undefined;
+
+    res.json({
+      message: "Registration successful! Redirecting to your dashboard.",
+      token: signToken(user),
+      user: formatUser(user),
+      organizationSlug: org?.slug,
+    });
+  } catch (error) {
+    console.error("Verify student register OTP error:", error);
+    res.status(500).json({ message: "Verification failed. Please try again." });
+  }
 };

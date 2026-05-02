@@ -207,18 +207,29 @@ export const listQuestions = async (req: Request, res: Response): Promise<void> 
 export const createQuestion = async (req: Request, res: Response): Promise<void> => {
   try {
     const code = String(req.params.code || "").toUpperCase();
-    const { category, categoryLabel, questionNumber, title, questionText } = req.body as {
+    const { category, categoryLabel, questionNumber, title, questionText, options } = req.body as {
       category?: string;
       categoryLabel?: string;
       questionNumber?: number;
       title?: string;
       questionText?: string;
+      options?: Array<{ label?: string; text?: string; score?: number }>;
     };
 
     if (!category?.trim() || !title?.trim() || !questionText?.trim() || typeof questionNumber !== "number") {
       res.status(400).json({ message: "category, questionNumber, title, and questionText are required" });
       return;
     }
+
+    const normalizedOptions = Array.isArray(options)
+      ? options
+          .map((option) => ({
+            label: String(option.label || "").trim(),
+            text: String(option.text || "").trim(),
+            score: typeof option.score === "number" ? option.score : undefined,
+          }))
+          .filter((option) => option.label && option.text)
+      : [];
 
     const question = await Question.create({
       assessmentCode: code,
@@ -227,6 +238,7 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
       questionNumber,
       title: title.trim(),
       questionText: questionText.trim(),
+      options: normalizedOptions,
     });
 
     res.status(201).json({ question });
@@ -243,12 +255,13 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
 export const updateQuestion = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = String(req.params.id || "");
-    const { title, questionText, category, categoryLabel, questionNumber } = req.body as {
+    const { title, questionText, category, categoryLabel, questionNumber, options } = req.body as {
       title?: string;
       questionText?: string;
       category?: string;
       categoryLabel?: string;
       questionNumber?: number;
+      options?: Array<{ label?: string; text?: string; score?: number }>;
     };
 
     const update: Record<string, unknown> = {};
@@ -257,6 +270,15 @@ export const updateQuestion = async (req: Request, res: Response): Promise<void>
     if (category?.trim()) update.category = category.trim();
     if (categoryLabel?.trim()) update.categoryLabel = categoryLabel.trim();
     if (typeof questionNumber === "number") update.questionNumber = questionNumber;
+    if (Array.isArray(options)) {
+      update.options = options
+        .map((option) => ({
+          label: String(option.label || "").trim(),
+          text: String(option.text || "").trim(),
+          score: typeof option.score === "number" ? option.score : undefined,
+        }))
+        .filter((option) => option.label && option.text);
+    }
 
     const question = await Question.findByIdAndUpdate(id, { $set: update }, { new: true });
     if (!question) {

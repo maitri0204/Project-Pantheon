@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { getStoredAuth } from "@/lib/api";
 
 export default function WhitelabelLoginRedirectPage() {
   const router = useRouter();
@@ -11,6 +12,22 @@ export default function WhitelabelLoginRedirectPage() {
     const slug = params?.slug;
     if (!slug) {
       router.replace("/login");
+      return;
+    }
+
+    const auth = getStoredAuth();
+    if (auth?.user.role === "ORG_ADMIN" && auth.orgSlug === slug) {
+      router.replace(`/whitelabel/${slug}/dashboard`);
+      return;
+    }
+
+    if (auth?.user.role === "STUDENT" && auth.orgSlug === slug) {
+      router.replace(`/whitelabel/${slug}/student/dashboard`);
+      return;
+    }
+
+    if (auth) {
+      router.replace("/dashboard");
       return;
     }
 

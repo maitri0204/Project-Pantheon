@@ -7,9 +7,11 @@ import {
   login,
   requestRegistrationOtp,
   signup,
+  studentRegister,
   verifyRegistrationOtp,
   verifyLoginOtp,
   verifySignupOtp,
+  verifyStudentRegisterOtp,
 } from "../controllers/authController";
 import { requireAuth } from "../middleware/auth";
 
@@ -23,6 +25,8 @@ router.post("/signup", signup);
 router.post("/signup/verify-otp", verifySignupOtp);
 router.post("/login", login);
 router.post("/login/verify-otp", verifyLoginOtp);
+router.post("/student-register", studentRegister);
+router.post("/student-register/verify-otp", verifyStudentRegisterOtp);
 router.get("/me", requireAuth, getMe);
 
 export default router;

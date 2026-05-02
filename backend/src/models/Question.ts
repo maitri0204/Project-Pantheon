@@ -1,5 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export interface IQuestionOption {
+  label: string;   // "A", "B", "C", "D", "E" or "1"-"5"
+  text: string;    // "Always", "Strongly Disagree", etc.
+  score?: number;  // numeric score if applicable
+}
+
 export interface IQuestion extends Document {
   assessmentCode: string;  // e.g. "LITMUS_TEST", "CAREER_COMPASS"
   category: string;        // e.g. style key "K","S","E","P","J" or section name
@@ -7,6 +13,7 @@ export interface IQuestion extends Document {
   questionNumber: number;
   title: string;
   questionText: string;
+  options: IQuestionOption[];
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -20,6 +27,16 @@ const questionSchema = new Schema<IQuestion>(
     questionNumber: { type: Number, required: true },
     title: { type: String, required: true, trim: true },
     questionText: { type: String, required: true, trim: true },
+    options: {
+      type: [
+        {
+          label: { type: String, required: true },
+          text: { type: String, required: true },
+          score: { type: Number, default: undefined },
+        },
+      ],
+      default: [],
+    },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

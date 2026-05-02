@@ -30,6 +30,16 @@ const questionSchema = new mongoose.Schema(
     questionNumber: { type: Number, required: true },
     title: { type: String, default: "" },
     questionText: { type: String, required: true },
+    options: {
+      type: [
+        {
+          label: { type: String, required: true },
+          text: { type: String, required: true },
+          score: { type: Number, default: undefined },
+        },
+      ],
+      default: [],
+    },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
@@ -144,6 +154,15 @@ function loadQuestionsFromFile(
   }
 }
 
+// ─── Default options for assessments that use a fixed option set ─────────────
+const LITMUS_OPTIONS = [
+  { label: "1", text: "Strongly Disagree", score: 1 },
+  { label: "2", text: "Disagree", score: 2 },
+  { label: "3", text: "Neutral", score: 3 },
+  { label: "4", text: "Agree", score: 4 },
+  { label: "5", text: "Strongly Agree", score: 5 },
+];
+
 // ─── Litmus Test style name map ───────────────────────────────────────────────
 const LITMUS_STYLE_NAMES: Record<string, string> = {
   K: "King",
@@ -154,6 +173,12 @@ const LITMUS_STYLE_NAMES: Record<string, string> = {
 };
 
 // ─── Map questions to Pantheon format ────────────────────────────────────────
+interface PantheonQuestionOption {
+  label: string;
+  text: string;
+  score?: number;
+}
+
 interface PantheonQuestion {
   assessmentCode: string;
   category: string;
@@ -161,6 +186,7 @@ interface PantheonQuestion {
   questionNumber: number;
   title: string;
   questionText: string;
+  options: PantheonQuestionOption[];
   isActive: boolean;
 }
 
@@ -172,6 +198,9 @@ function mapCareerCompass(raw: unknown[]): PantheonQuestion[] {
     questionNumber: Number(q.questionNumber),
     title: q.partName ?? "",
     questionText: q.questionText,
+    options: Array.isArray(q.options)
+      ? q.options.map((o: any) => ({ label: o.label, text: o.text, score: o.score }))
+      : [],
     isActive: true,
   }));
 }
@@ -184,6 +213,9 @@ function mapCareerDNA(raw: unknown[], testType: string): PantheonQuestion[] {
     questionNumber: Number(q.questionNumber),
     title: q.partName ?? "",
     questionText: q.questionText,
+    options: Array.isArray(q.options)
+      ? q.options.map((o: any) => ({ label: o.label, text: o.text, score: o.score }))
+      : [],
     isActive: true,
   }));
 }
@@ -196,6 +228,9 @@ function mapJohari(raw: unknown[]): PantheonQuestion[] {
     questionNumber: Number(q.questionNumber),
     title: "Johari Window",
     questionText: q.questionText,
+    options: Array.isArray(q.options)
+      ? q.options.map((o: any) => ({ label: o.label, text: o.text, score: o.score }))
+      : [],
     isActive: true,
   }));
 }
@@ -208,6 +243,7 @@ function mapLitmus(raw: unknown[]): PantheonQuestion[] {
     questionNumber: Number(q.questionNumber),
     title: q.title ?? "",
     questionText: q.questionText,
+    options: LITMUS_OPTIONS,  // fixed 1-5 rating options
     isActive: true,
   }));
 }
@@ -220,6 +256,9 @@ function mapMetacognition(raw: unknown[]): PantheonQuestion[] {
     questionNumber: Number(q.questionNumber),
     title: q.parameter ?? "",
     questionText: q.questionText,
+    options: Array.isArray(q.options)
+      ? q.options.map((o: any) => ({ label: o.label, text: o.text, score: o.score }))
+      : [],
     isActive: true,
   }));
 }

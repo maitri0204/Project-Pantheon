@@ -27,6 +27,9 @@ export type StoredAuth = {
     organizationId: string | null;
     isVerified: boolean;
   };
+  orgCompanyName?: string;
+  orgSlug?: string;
+  orgLogoUrl?: string;
 };
 
 export const getStoredAuth = (): StoredAuth | null => {

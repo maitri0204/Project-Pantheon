@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function RegistrationSuccessPage() {
+function RegistrationSuccessPageInner() {
   const searchParams = useSearchParams();
   const email = searchParams?.get("email") || "your registered email";
 
@@ -49,5 +50,13 @@ export default function RegistrationSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegistrationSuccessPage() {
+  return (
+    <Suspense>
+      <RegistrationSuccessPageInner />
+    </Suspense>
   );
 }

@@ -5,10 +5,19 @@ export type OtpPurpose = "SIGNUP" | "LOGIN" | null;
 
 export interface IUser extends Document {
   firstName: string;
+  middleName?: string;
   lastName: string;
   email: string;
   role: UserRole;
   organization?: mongoose.Types.ObjectId;
+  gender?: string;
+  phone?: string;
+  phoneCode?: string;
+  grade?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  institutionName?: string;
   isVerified: boolean;
   isActive: boolean;
   otpHash?: string;
@@ -23,10 +32,19 @@ export interface IUser extends Document {
 const userSchema = new Schema<IUser>(
   {
     firstName: { type: String, required: true, trim: true },
+    middleName: { type: String, default: undefined, trim: true },
     lastName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     role: { type: String, enum: ["SUPERADMIN", "ORG_ADMIN", "STUDENT"], default: "STUDENT" },
     organization: { type: Schema.Types.ObjectId, ref: "Organization", default: undefined },
+    gender: { type: String, default: undefined },
+    phone: { type: String, default: undefined },
+    phoneCode: { type: String, default: undefined },
+    grade: { type: String, default: undefined },
+    country: { type: String, default: undefined },
+    state: { type: String, default: undefined },
+    city: { type: String, default: undefined },
+    institutionName: { type: String, default: undefined },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     otpHash: { type: String, default: undefined },
