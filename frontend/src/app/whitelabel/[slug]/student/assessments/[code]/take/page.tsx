@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   AlertTriangle,
   ChevronLeft,
@@ -41,6 +42,114 @@ type StartAttemptResponse = {
     answeredCount: number;
     totalQuestions: number;
   };
+};
+
+const CAREER_DNA_SECTION_META = [
+  {
+    type: "COGNITIVE",
+    title: "Cognitive Ability Assessment",
+    description: "Verbal reasoning, numerical reasoning, spatial reasoning, and memory & processing speed.",
+  },
+  {
+    type: "APTITUDE",
+    title: "Aptitude Tests",
+    description: "Logical reasoning, numerical aptitude, verbal aptitude, mechanical aptitude, and creativity.",
+  },
+  {
+    type: "PERSONALITY",
+    title: "Personality Assessment",
+    description: "Energy source, information processing, decision making, work style, and reflection patterns.",
+  },
+  {
+    type: "CAREER_INTEREST",
+    title: "Career Interest Assessment",
+    description: "RIASEC career themes across realistic, investigative, artistic, social, enterprising, and conventional interests.",
+  },
+  {
+    type: "EMOTIONAL_INTELLIGENCE",
+    title: "Emotional Intelligence Assessment",
+    description: "Self-awareness, emotional regulation, empathy, and social skills.",
+  },
+  {
+    type: "LEARNING_STYLE",
+    title: "Learning Style Assessment",
+    description: "Visual, auditory, reading-writing, kinesthetic, logical, social, solitary, and musical learning preferences.",
+  },
+  {
+    type: "BEHAVIORAL_SOCIAL",
+    title: "Behavioral and Social Skills Assessment",
+    description: "Adaptability, teamwork, leadership skills, and communication skills.",
+  },
+  {
+    type: "STRESS_RESILIENCE",
+    title: "Stress and Resilience Assessment",
+    description: "Stress awareness, coping strategies, problem-solving, and resilience skills.",
+  },
+] as const;
+
+const CAREER_DNA_SECTION_VISUALS: Record<string, {
+  image: string;
+  borderColor: string;
+  chipColor: string;
+}> = {
+  COGNITIVE: {
+    image: "/CognitiveIntelligence.jpeg",
+    borderColor: "border-violet-200",
+    chipColor: "bg-violet-50 text-violet-700 border-violet-100",
+  },
+  APTITUDE: {
+    image: "/Aptitude.jpeg",
+    borderColor: "border-cyan-200",
+    chipColor: "bg-cyan-50 text-cyan-700 border-cyan-100",
+  },
+  PERSONALITY: {
+    image: "/PersonalityType.jpeg",
+    borderColor: "border-rose-200",
+    chipColor: "bg-rose-50 text-rose-700 border-rose-100",
+  },
+  CAREER_INTEREST: {
+    image: "/CareerInterest.jpeg",
+    borderColor: "border-amber-200",
+    chipColor: "bg-amber-50 text-amber-700 border-amber-100",
+  },
+  EMOTIONAL_INTELLIGENCE: {
+    image: "/EmotionalIntelligence.jpeg",
+    borderColor: "border-pink-200",
+    chipColor: "bg-pink-50 text-pink-700 border-pink-100",
+  },
+  LEARNING_STYLE: {
+    image: "/LearningStyle.jpeg",
+    borderColor: "border-emerald-200",
+    chipColor: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  },
+  BEHAVIORAL_SOCIAL: {
+    image: "/Behavioural.jpeg",
+    borderColor: "border-blue-200",
+    chipColor: "bg-blue-50 text-blue-700 border-blue-100",
+  },
+  STRESS_RESILIENCE: {
+    image: "/Stress&Resilience.jpeg",
+    borderColor: "border-teal-200",
+    chipColor: "bg-teal-50 text-teal-700 border-teal-100",
+  },
+};
+
+const getCareerDnaTestType = (question: AttemptQuestion): string => {
+  if (question.sourceTestType) {
+    return question.sourceTestType;
+  }
+
+  const match = String(question.category || "").match(/^(.*)_\d+$/);
+  return match?.[1] || String(question.category || "");
+};
+
+const getCareerDnaPartNumber = (question: AttemptQuestion): number => {
+  if (Number.isFinite(Number(question.partNumber))) {
+    return Number(question.partNumber);
+  }
+
+  const match = String(question.category || "").match(/_(\d+)$/);
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
 };
 
 export default function StudentTakeAssessmentPage() {
@@ -329,21 +438,74 @@ export default function StudentTakeAssessmentPage() {
     };
   });
 
-  const careerDnaSections = sectionProgress.map((section, index) => {
-    const unlocked = index === 0 || sectionProgress[index - 1]?.completed;
+  const careerDnaSections = CAREER_DNA_SECTION_META.map((sectionMeta) => {
+    const sectionQuestions = questions
+      .map((question, index) => ({ question, index }))
+      .filter(({ question }) => getCareerDnaTestType(question) === sectionMeta.type);
+
+    const partMap = new Map<string, {
+      cat: string;
+      label: string;
+      partNumber: number;
+      totalCount: number;
+      answeredCount: number;
+    }>();
+
+    sectionQuestions.forEach(({ question }) => {
+      const key = question.category;
+      const existing = partMap.get(key);
+      const nextAnswered = answers[question.questionId] ? 1 : 0;
+      if (existing) {
+        existing.totalCount += 1;
+        existing.answeredCount += nextAnswered;
+        return;
+      }
+
+      partMap.set(key, {
+        cat: key,
+        label: question.categoryLabel,
+        partNumber: getCareerDnaPartNumber(question),
+        totalCount: 1,
+        answeredCount: nextAnswered,
+      });
+    });
+
+    const parts = Array.from(partMap.values()).sort((a, b) => a.partNumber - b.partNumber);
+    const answeredCount = parts.reduce((sum, part) => sum + part.answeredCount, 0);
+    const totalCount = parts.reduce((sum, part) => sum + part.totalCount, 0);
+
     return {
-      ...section,
-      unlocked,
+      cat: sectionMeta.type,
+      label: sectionMeta.title,
+      description: sectionMeta.description,
+      questions: sectionQuestions,
+      parts,
+      answeredCount,
+      totalCount,
+      completed: totalCount > 0 && answeredCount === totalCount,
     };
-  });
+  }).filter((section) => section.totalCount > 0).map((section, index, arr) => ({
+    ...section,
+    unlocked: index === 0 || arr[index - 1]?.completed,
+  }));
+
+  const visibleNavigatorGroups = isCareerDna && activeSectionCat
+    ? categoryGroups.filter((group) => getCareerDnaTestType(group.questions[0]?.q) === activeSectionCat)
+    : categoryGroups;
+
+  const activeCareerDnaSection = isCareerDna
+    ? careerDnaSections.find((section) => section.cat === activeSectionCat)
+    : null;
 
   const visibleQuestionIndexes = isCareerDna && activeSectionCat
     ? questions
-      .map((question, index) => (question.category === activeSectionCat ? index : -1))
+      .map((question, index) => (getCareerDnaTestType(question) === activeSectionCat ? index : -1))
       .filter((index) => index >= 0)
     : questions.map((_, index) => index);
 
   const currentVisibleIndex = visibleQuestionIndexes.indexOf(currentIndex);
+  const displayQuestionNumber = currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : currentIndex + 1;
+  const displayQuestionTotal = visibleQuestionIndexes.length;
 
   const goToPreviousVisibleQuestion = () => {
     const targetIndex = visibleQuestionIndexes[Math.max(currentVisibleIndex - 1, 0)] ?? 0;
@@ -361,7 +523,7 @@ export default function StudentTakeAssessmentPage() {
 
   const openCareerDnaSection = (sectionCat: string) => {
     const sectionIndexes = questions
-      .map((question, index) => (question.category === sectionCat ? index : -1))
+      .map((question, index) => (getCareerDnaTestType(question) === sectionCat ? index : -1))
       .filter((index) => index >= 0);
 
     if (!sectionIndexes.length) {
@@ -630,43 +792,74 @@ export default function StudentTakeAssessmentPage() {
 
             <div className="px-8 py-6 space-y-4">
               {careerDnaSections.map((section, index) => (
-                <div key={section.cat} className="rounded-xl border border-gray-200 p-4 bg-white">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
+                <div
+                  key={section.cat}
+                  className={`rounded-2xl border bg-white shadow-sm overflow-hidden ${CAREER_DNA_SECTION_VISUALS[section.cat]?.borderColor || "border-gray-200"}`}
+                >
+                  <div className="flex flex-col md:flex-row">
+                    <div className="relative h-36 md:h-auto md:w-44 shrink-0">
+                      <Image
+                        src={CAREER_DNA_SECTION_VISUALS[section.cat]?.image || "/next.svg"}
+                        alt={section.label}
+                        fill
+                        className="object-cover"
+                      />
+                      <span className="absolute top-2 left-2 w-7 h-7 rounded-md bg-black/45 text-white flex items-center justify-center text-xs font-bold backdrop-blur-sm">
+                        {index + 1}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 p-4 lg:p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-wide text-violet-600">Section {index + 1}</p>
                       <p className="text-base font-bold text-gray-900 mt-1">{section.label}</p>
+                      <p className="text-sm text-gray-500 mt-1">{section.description}</p>
                       <p className="text-sm text-gray-500 mt-1">
                         {section.answeredCount} / {section.totalCount} answered
                       </p>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      {section.completed && (
-                        <span className="rounded-full bg-green-100 text-green-700 px-3 py-1 text-xs font-semibold">
-                          Completed
-                        </span>
-                      )}
-                      {!section.completed && section.unlocked && (
-                        <span className="rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-semibold">
-                          In Progress
-                        </span>
-                      )}
-                      {!section.unlocked && (
-                        <span className="rounded-full bg-gray-100 text-gray-500 px-3 py-1 text-xs font-semibold">
-                          Locked
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {section.parts.map((part) => (
+                          <span
+                            key={part.cat}
+                            className={`rounded-full border px-3 py-1 text-xs font-medium ${CAREER_DNA_SECTION_VISUALS[section.cat]?.chipColor || "border-violet-100 bg-violet-50 text-violet-700"}`}
+                          >
+                            Part {part.partNumber}: {part.label}
+                          </span>
+                        ))}
+                      </div>
+                        </div>
 
-                  <div className="mt-4 flex items-center justify-end">
-                    <button
-                      onClick={() => openCareerDnaSection(section.cat)}
-                      disabled={!section.unlocked}
-                      className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-700 transition disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                    >
-                      {section.completed ? "Review Section" : section.answeredCount > 0 ? "Continue Section" : "Start Section"}
-                    </button>
+                        <div className="flex items-center gap-2">
+                          {section.completed && (
+                            <span className="rounded-full bg-green-100 text-green-700 px-3 py-1 text-xs font-semibold">
+                              Completed
+                            </span>
+                          )}
+                          {!section.completed && section.unlocked && (
+                            <span className="rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-semibold">
+                              In Progress
+                            </span>
+                          )}
+                          {!section.unlocked && (
+                            <span className="rounded-full bg-gray-100 text-gray-500 px-3 py-1 text-xs font-semibold">
+                              Locked
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center justify-end">
+                        <button
+                          onClick={() => openCareerDnaSection(section.cat)}
+                          disabled={!section.unlocked}
+                          className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-700 transition disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        >
+                          {section.completed ? "Review Section" : section.answeredCount > 0 ? "Continue Section" : "Start Section"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -772,7 +965,7 @@ export default function StudentTakeAssessmentPage() {
     >
       {/* ── Header ── */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 min-w-0">
           <div className="border-r border-gray-200 pr-4">
             <h1 className="text-base font-bold text-gray-900">{assessmentName || code}</h1>
             <p className="text-xs text-gray-500">Answer all {questions.length} questions — every question is compulsory</p>
@@ -800,13 +993,15 @@ export default function StudentTakeAssessmentPage() {
       {/* ── Body ── */}
       <div className="flex-1 flex overflow-hidden">
         {/* ── Question Area ── */}
-        <main className="flex-1 flex flex-col p-8 overflow-y-auto">
+        <main className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto min-w-0">
           <div className="w-full">
             {/* Breadcrumb */}
             <p className="text-sm text-gray-500 font-medium mb-6">
-              {currentQuestion.categoryLabel}
+              {isCareerDna && activeCareerDnaSection
+                ? `${activeCareerDnaSection.label} · ${currentQuestion.categoryLabel}`
+                : currentQuestion.categoryLabel}
               <span className="text-gray-300 mx-2">·</span>
-              Question {(currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : currentIndex + 1)} of {visibleQuestionIndexes.length}
+              Question {displayQuestionNumber} of {displayQuestionTotal}
             </p>
 
             {/* Question card */}
@@ -820,7 +1015,7 @@ export default function StudentTakeAssessmentPage() {
 
               <div className="flex items-start gap-4 mb-8">
                 <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                  {currentIndex + 1}
+                  {displayQuestionNumber}
                 </span>
                 <p className="text-lg text-gray-800 leading-relaxed font-medium pt-1.5">
                   {currentQuestion.questionText}
@@ -843,7 +1038,7 @@ export default function StudentTakeAssessmentPage() {
               </button>
 
               <span className="text-sm text-gray-400 font-medium">
-                Question {(currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : currentIndex + 1)} of {visibleQuestionIndexes.length}
+                Question {displayQuestionNumber} of {displayQuestionTotal}
               </span>
 
               <button
@@ -867,35 +1062,62 @@ export default function StudentTakeAssessmentPage() {
                 <ChevronRight size={16} />
               </button>
             </div>
+
+            <div className="mt-6 lg:hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Question Navigator</h3>
+              <div className="space-y-5">
+                {visibleNavigatorGroups.map((grp, grpIdx) => (
+                  <div key={grp.cat}>
+                    <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
+                      {grp.label}
+                    </p>
+                    <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+                      {grp.questions.map(({ q, idx }) => {
+                        const sectionQuestionNumber = visibleQuestionIndexes.indexOf(idx) + 1;
+                        return (
+                        <button
+                          key={q.questionId}
+                          onClick={() => void ensureJohariDefaultAnswerForCurrent().finally(() => goToQuestion(idx))}
+                          className={`h-10 rounded-full text-xs font-bold transition-all cursor-pointer ${getCircleColor(idx, q)}`}
+                        >
+                          {sectionQuestionNumber > 0 ? sectionQuestionNumber : idx + 1}
+                        </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </main>
 
         {/* ── Question Navigator Sidebar ── */}
-        <aside className="w-80 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col overflow-hidden">
+        <aside className="hidden lg:flex w-80 flex-shrink-0 bg-white border-l border-gray-200 flex-col overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Question Navigator</h3>
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
-            {(isCareerDna && activeSectionCat
-              ? categoryGroups.filter((group) => group.cat === activeSectionCat)
-              : categoryGroups
-            ).map((grp, grpIdx) => (
+            {visibleNavigatorGroups.map((grp, grpIdx) => (
               <div key={grp.cat}>
                 <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
                   {grp.label}
                 </p>
                 <div className="grid grid-cols-6 gap-2">
-                  {grp.questions.map(({ q, idx }) => (
+                  {grp.questions.map(({ q, idx }) => {
+                    const sectionQuestionNumber = visibleQuestionIndexes.indexOf(idx) + 1;
+                    return (
                     <button
                       key={q.questionId}
                       onClick={() => void ensureJohariDefaultAnswerForCurrent().finally(() => goToQuestion(idx))}
                       className={`w-10 h-10 rounded-full text-xs font-bold transition-all cursor-pointer ${getCircleColor(idx, q)}`}
-                      title={`Q${idx + 1}`}
+                      title={`Q${sectionQuestionNumber > 0 ? sectionQuestionNumber : idx + 1}`}
                     >
-                      {idx + 1}
+                      {sectionQuestionNumber > 0 ? sectionQuestionNumber : idx + 1}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}

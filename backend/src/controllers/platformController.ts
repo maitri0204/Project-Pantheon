@@ -5,7 +5,7 @@ import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
 import Organization from "../models/Organization";
 import Question from "../models/Question";
-import StudentAssessmentAttempt from "../models/StudentAssessmentAttempt";
+import StudentAssessmentAttempt, { IAttemptQuestion } from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
 import { DEFAULT_SUPERADMIN_EMAIL } from "../constants/platform";
 import { evaluateAssessmentAttempt } from "../services/assessmentEvaluation";
@@ -36,6 +36,111 @@ const CAREER_DNA_TEST_ORDER = [
   "PERSONALITY",
   "STRESS_RESILIENCE",
 ];
+
+const CAREER_DNA_NON_HALVED_TEST_TYPES = new Set(["PERSONALITY"]);
+
+const shuffleArray = <T,>(items: T[]): T[] => {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+};
+
+const buildCareerDnaQuestionSetForAttempt = <T extends {
+  category: string;
+  questionNumber: number;
+  sourceTestType?: string;
+  partNumber?: number;
+}>(questions: T[]): T[] => {
+  if (!questions.length) {
+    return questions;
+  }
+
+  const grouped = new Map<string, {
+    category: string;
+    testType: string;
+    partNumber: number;
+    items: T[];
+  }>();
+
+  for (const question of questions) {
+    const parsed = parseCareerDnaCategory(question.category);
+    const testType = question.sourceTestType || parsed?.testType || "";
+    const partNumber = Number.isFinite(Number(question.partNumber))
+      ? Number(question.partNumber)
+      : Number(parsed?.partNumber ?? 1);
+    const key = String(question.category || `${testType}::${partNumber}`);
+
+    const group = grouped.get(key);
+    if (group) {
+      group.items.push(question);
+      continue;
+    }
+
+    grouped.set(key, {
+      category: key,
+      testType,
+      partNumber,
+      items: [question],
+    });
+  }
+
+  const orderedGroups = Array.from(grouped.values()).sort((a, b) => {
+    const leftOrder = CAREER_DNA_TEST_ORDER.indexOf(a.testType);
+    const rightOrder = CAREER_DNA_TEST_ORDER.indexOf(b.testType);
+
+    const normalizedLeftOrder = leftOrder === -1 ? Number.MAX_SAFE_INTEGER : leftOrder;
+    const normalizedRightOrder = rightOrder === -1 ? Number.MAX_SAFE_INTEGER : rightOrder;
+
+    if (normalizedLeftOrder !== normalizedRightOrder) {
+      return normalizedLeftOrder - normalizedRightOrder;
+    }
+
+    return a.partNumber - b.partNumber;
+  });
+
+  return orderedGroups.flatMap((group) => {
+    const shuffled = shuffleArray(group.items);
+    const isNonHalved = CAREER_DNA_NON_HALVED_TEST_TYPES.has(group.testType);
+    const takeCount = isNonHalved
+      ? shuffled.length
+      : Math.max(1, Math.floor(shuffled.length / 2));
+
+    return shuffled.slice(0, takeCount);
+  });
+};
+
+const mapQuestionBankToAttemptQuestions = (
+  questions: Array<{
+    _id: IAttemptQuestion["questionId"];
+    questionNumber: number;
+    category: string;
+    categoryLabel: string;
+    questionText: string;
+    options?: Array<{ label: string; text: string; score?: number }>;
+  }>,
+  canonicalCode: string
+): IAttemptQuestion[] => questions.map((question) => {
+  const careerDnaMeta = canonicalCode === "CAREER_DNA" ? parseCareerDnaCategory(question.category) : null;
+  const sourceQuestion = careerDnaMeta
+    ? getCareerDnaSourceQuestion(careerDnaMeta.testType, careerDnaMeta.partNumber, question.questionNumber)
+    : undefined;
+
+  return {
+    questionId: question._id,
+    questionNumber: question.questionNumber,
+    category: question.category,
+    categoryLabel: question.categoryLabel,
+    questionText: question.questionText,
+    sourceTestType: sourceQuestion?.testType,
+    partNumber: sourceQuestion?.partNumber,
+    passage: sourceQuestion?.passage,
+    options: question.options ?? [],
+    answer: undefined,
+  };
+});
 
 const getCareerDnaCategoryOrder = (category: string, sourceTestType?: string, partNumber?: number) => {
   const parsed = parseCareerDnaCategory(category);
@@ -513,11 +618,46 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
 
   if (existingAttempt?.status === "IN_PROGRESS") {
     const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(existingAttempt.questions);
-    const orderedQuestions = await orderQuestionsByDatabaseInsertion(hydratedQuestions);
+    let orderedQuestions = canonicalCode === "CAREER_DNA"
+      ? [...hydratedQuestions]
+      : await orderQuestionsByDatabaseInsertion(hydratedQuestions);
+
+    if (canonicalCode === "CAREER_DNA" && existingAttempt.answeredCount === 0) {
+      const sourceQuestions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true })
+        .sort({ createdAt: 1, _id: 1 });
+
+      if (sourceQuestions.length) {
+        const sourceAttemptQuestions = mapQuestionBankToAttemptQuestions(sourceQuestions, canonicalCode);
+        const sampledCareerDnaQuestions = buildCareerDnaQuestionSetForAttempt(sourceAttemptQuestions);
+        const expectedCareerDnaQuestionCount = sampledCareerDnaQuestions.length;
+
+        const expectedCategoryCounts = sampledCareerDnaQuestions.reduce((acc, question) => {
+          const key = String(question.category || "");
+          acc.set(key, (acc.get(key) || 0) + 1);
+          return acc;
+        }, new Map<string, number>());
+
+        const currentCategoryCounts = orderedQuestions.reduce((acc, question) => {
+          const key = String(question.category || "");
+          acc.set(key, (acc.get(key) || 0) + 1);
+          return acc;
+        }, new Map<string, number>());
+
+        const hasDistributionMismatch =
+          expectedCategoryCounts.size !== currentCategoryCounts.size
+          || Array.from(expectedCategoryCounts.entries()).some(([category, count]) => (
+            (currentCategoryCounts.get(category) || 0) !== count
+          ));
+
+        if (existingAttempt.totalQuestions !== expectedCareerDnaQuestionCount || hasDistributionMismatch) {
+          orderedQuestions = sampledCareerDnaQuestions;
+        }
+      }
+    }
 
     const questionsReordered = orderedQuestions.some((question, index) => (
       String(question.questionId) !== String(existingAttempt.questions[index]?.questionId)
-    ));
+    )) || orderedQuestions.length !== existingAttempt.questions.length;
 
     const shouldNormalizeAttemptMetadata =
       existingAttempt.assessmentCode !== canonicalCode
@@ -528,10 +668,24 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
       || questionsReordered
       || shouldNormalizeAttemptMetadata
     ) {
+      const nextAssessmentName = getAssessmentDisplayName(canonicalCode, assessment?.name || existingAttempt.assessmentName);
+
+      await StudentAssessmentAttempt.updateOne(
+        { _id: existingAttempt._id },
+        {
+          $set: {
+            questions: orderedQuestions,
+            totalQuestions: orderedQuestions.length,
+            assessmentCode: canonicalCode,
+            assessmentName: nextAssessmentName,
+          },
+        }
+      );
+
       existingAttempt.questions = orderedQuestions as typeof existingAttempt.questions;
+      existingAttempt.totalQuestions = orderedQuestions.length;
       existingAttempt.assessmentCode = canonicalCode;
-      existingAttempt.assessmentName = getAssessmentDisplayName(canonicalCode, assessment?.name || existingAttempt.assessmentName);
-      await existingAttempt.save();
+      existingAttempt.assessmentName = nextAssessmentName;
     }
 
     res.json({
@@ -555,33 +709,21 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
+  const attemptQuestions = mapQuestionBankToAttemptQuestions(questions, canonicalCode);
+
+  const selectedAttemptQuestions = canonicalCode === "CAREER_DNA"
+    ? buildCareerDnaQuestionSetForAttempt(attemptQuestions)
+    : attemptQuestions;
+
   const createdAttempt = await StudentAssessmentAttempt.create({
     user: userId,
     organization: organizationId,
     assessmentCode: canonicalCode,
     assessmentName: getAssessmentDisplayName(canonicalCode, assessment.name),
     status: "IN_PROGRESS",
-    questions: questions.map((question) => {
-      const careerDnaMeta = canonicalCode === "CAREER_DNA" ? parseCareerDnaCategory(question.category) : null;
-      const sourceQuestion = careerDnaMeta
-        ? getCareerDnaSourceQuestion(careerDnaMeta.testType, careerDnaMeta.partNumber, question.questionNumber)
-        : undefined;
-
-      return {
-        questionId: question._id,
-        questionNumber: question.questionNumber,
-        category: question.category,
-        categoryLabel: question.categoryLabel,
-        questionText: question.questionText,
-        sourceTestType: sourceQuestion?.testType,
-        partNumber: sourceQuestion?.partNumber,
-        passage: sourceQuestion?.passage,
-        options: question.options ?? [],
-        answer: undefined,
-      };
-    }),
+    questions: selectedAttemptQuestions,
     answeredCount: 0,
-    totalQuestions: questions.length,
+    totalQuestions: selectedAttemptQuestions.length,
     startedAt: new Date(),
   });
 
@@ -623,7 +765,9 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
 
   const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(attempt.questions);
   const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
-  const orderedQuestions = await orderQuestionsByDatabaseInsertion(hydratedQuestions);
+  const orderedQuestions = canonicalCode === "CAREER_DNA"
+    ? hydratedQuestions
+    : await orderQuestionsByDatabaseInsertion(hydratedQuestions);
 
   const questionsReordered = orderedQuestions.some((question, index) => (
     String(question.questionId) !== String(attempt.questions[index]?.questionId)

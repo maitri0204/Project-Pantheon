@@ -94,7 +94,7 @@ export default function OrganizationsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-black">Organizations</h1>
           <p className="text-black/80 mt-1 text-base">Manage whitelabel organizations that can host the Pantheon platform.</p>
@@ -131,7 +131,7 @@ export default function OrganizationsPage() {
       </div>
 
       {/* Date filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input
           type="date"
           value={dateFilter.from || ""}
@@ -170,47 +170,91 @@ export default function OrganizationsPage() {
               </button>
             </div>
           ) : (
-            <table className="w-full text-base">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Name</th>
-                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Slug</th>
-                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Type</th>
-                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Contact</th>
-                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
-                  <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
+            <>
+              <div className="grid gap-4 p-4 md:hidden">
                 {filtered.map((org) => (
-                  <tr key={org._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm flex-shrink-0">
+                  <div key={org._id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm flex-shrink-0">
                           {org.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-medium text-black">{org.name}</span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-black truncate">{org.name}</p>
+                          <p className="text-xs text-black/60 font-mono truncate">{org.slug}</p>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-black/80 font-mono text-sm">{org.slug}</td>
-                    <td className="px-5 py-3.5">
-                      <span className="bg-purple-50 text-purple-700 text-xs rounded-full px-2.5 py-0.5 font-medium">
-                        {org.type}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-black/80">{org.contactEmail || "—"}</td>
-                    <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(org.createdAt)}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
+                      <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium whitespace-nowrap ${
                         org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
                       }`}>
                         {org.isActive ? "Active" : "Inactive"}
                       </span>
-                    </td>
-                  </tr>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Type</p>
+                        <span className="mt-1 inline-flex bg-purple-50 text-purple-700 text-xs rounded-full px-2.5 py-0.5 font-medium">
+                          {org.type}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Contact</p>
+                        <p className="mt-1 text-black/80 break-all">{org.contactEmail || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Added On</p>
+                        <p className="mt-1 text-black/80">{formatDate(org.createdAt)}</p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full min-w-[760px] text-base">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Name</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Slug</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Type</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Contact</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filtered.map((org) => (
+                      <tr key={org._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm flex-shrink-0">
+                              {org.name.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="font-medium text-black">{org.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3.5 text-black/80 font-mono text-sm">{org.slug}</td>
+                        <td className="px-5 py-3.5">
+                          <span className="bg-purple-50 text-purple-700 text-xs rounded-full px-2.5 py-0.5 font-medium">
+                            {org.type}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-black/80">{org.contactEmail || "—"}</td>
+                        <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(org.createdAt)}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
+                            org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                          }`}>
+                            {org.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}

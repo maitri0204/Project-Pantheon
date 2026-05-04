@@ -155,6 +155,7 @@ export default function DashboardShell({
   const [orgCompanyName, setOrgCompanyName] = useState("");
   const [orgLogoUrl, setOrgLogoUrl] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
 
   const toHref = (suffix: string) => `${basePath}${suffix}`;
 
@@ -190,6 +191,7 @@ export default function DashboardShell({
     setUserRole(auth.user.role);
     setOrgCompanyName(auth.orgCompanyName || "");
     setOrgLogoUrl(auth.orgLogoUrl || "");
+    setAuthResolved(true);
 
     if (auth.user.role === "ORG_ADMIN" && auth.orgSlug && (!auth.orgLogoUrl || !auth.orgCompanyName)) {
       void apiRequest<OrgBrandingResponse>(`/platform/whitelabel/${auth.orgSlug}`, {}, auth.token)
@@ -233,7 +235,21 @@ export default function DashboardShell({
     if (!isAllowed) {
       router.replace(toHref("/users"));
     }
-  }, [pathname, router, userRole]);
+  }, [pathname, router, userRole, basePath]);
+
+  if (!authResolved) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+          <div>
+            <p className="text-base font-semibold text-slate-900">Loading dashboard...</p>
+            <p className="text-sm text-slate-500">Preparing the correct workspace for your account.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     clearStoredAuth();
@@ -352,7 +368,7 @@ export default function DashboardShell({
       </aside>
 
       <div className="md:ml-64 pt-[100px] min-h-screen">
-        <main className="p-6">{children}</main>
+        <main className="p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

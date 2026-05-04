@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Suspense } from "react";
 
-import { apiRequest, getStoredAuth, setStoredAuth } from "@/lib/api";
+import { apiRequest, clearStoredAuth, getStoredAuth, setStoredAuth } from "@/lib/api";
 
 type Step = "email" | "otp";
 
@@ -60,22 +60,49 @@ function LoginPageInner() {
   }, [organizationSlug, searchParams]);
 
   useEffect(() => {
-    const auth = getStoredAuth();
-    if (!auth) {
-      return;
-    }
+    let cancelled = false;
 
-    if (auth.user.role === "ORG_ADMIN" && (portalOrganizationSlug || auth.orgSlug)) {
-      router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/dashboard`);
-      return;
-    }
+    const validateAndRedirect = async () => {
+      const auth = getStoredAuth();
+      if (!auth) {
+        return;
+      }
 
-    if (auth.user.role === "STUDENT" && (portalOrganizationSlug || auth.orgSlug)) {
-      router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/student/dashboard`);
-      return;
-    }
+      const validationPath = auth.user.role === "STUDENT"
+        ? "/platform/student/dashboard"
+        : "/platform/dashboard";
 
-    router.replace("/dashboard");
+      try {
+        await apiRequest(validationPath, {}, auth.token);
+      } catch {
+        if (!cancelled) {
+          clearStoredAuth();
+        }
+        return;
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      if (auth.user.role === "ORG_ADMIN" && (portalOrganizationSlug || auth.orgSlug)) {
+        router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/dashboard`);
+        return;
+      }
+
+      if (auth.user.role === "STUDENT" && (portalOrganizationSlug || auth.orgSlug)) {
+        router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/student/dashboard`);
+        return;
+      }
+
+      router.replace("/dashboard");
+    };
+
+    void validateAndRedirect();
+
+    return () => {
+      cancelled = true;
+    };
   }, [portalOrganizationSlug, router]);
 
   // Load organization branding if accessed from whitelabel domain

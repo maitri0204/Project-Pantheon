@@ -90,6 +90,9 @@ export const apiRequest = async <T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      clearStoredAuth();
+    }
     throw new Error(data.message || "Request failed");
   }
 

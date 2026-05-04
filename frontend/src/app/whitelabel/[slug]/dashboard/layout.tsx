@@ -1,17 +1,18 @@
-"use client";
-
-import { useParams } from "next/navigation";
-
 import DashboardShell from "@/components/dashboard/DashboardShell";
 
-export default function WhitelabelDashboardLayout({ children }: { children: React.ReactNode }) {
-  const params = useParams<{ slug: string }>();
-  const slug = params?.slug ?? "";
+export default async function WhitelabelDashboardLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug = "" } = await params;
 
   return (
     <DashboardShell
       basePath={`/whitelabel/${slug}/dashboard`}
-      loginPath={slug ? `/whitelabel/${slug}/login` : "/login"}
+      loginPath={`/whitelabel/${slug}/login`}
       expectedOrgSlug={slug || undefined}
     >
       {children}
