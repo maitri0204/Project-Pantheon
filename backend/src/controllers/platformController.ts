@@ -279,6 +279,43 @@ const hydrateAttemptQuestionsWithOptions = async <T extends {
   }));
 };
 
+const orderQuestionsByDatabaseInsertion = async <T extends { questionId: unknown }>(questions: T[]) => {
+  if (!questions.length) {
+    return questions;
+  }
+
+  const originalIndexMap = new Map<string, number>(
+    questions.map((question, index) => [String(question.questionId), index])
+  );
+
+  const orderedQuestionIds = await Question.find({
+    _id: { $in: questions.map((question) => question.questionId) },
+  })
+    .select({ _id: 1 })
+    .sort({ createdAt: 1, _id: 1 });
+
+  const databaseOrderMap = new Map(
+    orderedQuestionIds.map((question, index) => [String(question._id), index])
+  );
+
+  return [...questions].sort((a, b) => {
+    const aId = String(a.questionId);
+    const bId = String(b.questionId);
+
+    const aDbOrder = databaseOrderMap.get(aId);
+    const bDbOrder = databaseOrderMap.get(bId);
+
+    if (aDbOrder !== undefined && bDbOrder !== undefined) {
+      return aDbOrder - bDbOrder;
+    }
+
+    if (aDbOrder !== undefined) return -1;
+    if (bDbOrder !== undefined) return 1;
+
+    return (originalIndexMap.get(aId) ?? 0) - (originalIndexMap.get(bId) ?? 0);
+  });
+};
+
 const requireStudentUser = (req: AuthRequest, res: Response): boolean => {
   if (!req.user) {
     res.status(401).json({ message: "Authentication required" });
@@ -346,6 +383,33 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
         totalQuestions: attempt.totalQuestions,
         updatedAt: attempt.updatedAt,
       })),
+  });
+};
+
+export const listStudentResults = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const attempts = await StudentAssessmentAttempt.find({
+    user: req.user!._id,
+    organization: req.user!.organization,
+    status: "COMPLETED",
+  }).sort({ completedAt: -1, updatedAt: -1 });
+
+  res.json({
+    results: attempts.map((attempt) => {
+      const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+      return {
+        id: attempt._id,
+        assessmentCode: canonicalCode,
+        assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
+        answeredCount: attempt.answeredCount,
+        totalQuestions: attempt.totalQuestions,
+        completedAt: attempt.completedAt,
+        createdAt: attempt.createdAt,
+      };
+    }),
   });
 };
 
@@ -449,9 +513,7 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
 
   if (existingAttempt?.status === "IN_PROGRESS") {
     const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(existingAttempt.questions);
-    const orderedQuestions = canonicalCode === "CAREER_DNA"
-      ? sortCareerDnaQuestions(hydratedQuestions)
-      : hydratedQuestions;
+    const orderedQuestions = await orderQuestionsByDatabaseInsertion(hydratedQuestions);
 
     const questionsReordered = orderedQuestions.some((question, index) => (
       String(question.questionId) !== String(existingAttempt.questions[index]?.questionId)
@@ -486,10 +548,8 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const rawQuestions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true });
-  const questions = canonicalCode === "CAREER_DNA"
-    ? sortCareerDnaQuestions(rawQuestions)
-    : [...rawQuestions].sort((a, b) => a.questionNumber - b.questionNumber);
+  const questions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true })
+    .sort({ createdAt: 1, _id: 1 });
   if (!questions.length) {
     res.status(400).json({ message: "No active questions found for this assessment" });
     return;
@@ -563,9 +623,7 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
 
   const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(attempt.questions);
   const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
-  const orderedQuestions = canonicalCode === "CAREER_DNA"
-    ? sortCareerDnaQuestions(hydratedQuestions)
-    : hydratedQuestions;
+  const orderedQuestions = await orderQuestionsByDatabaseInsertion(hydratedQuestions);
 
   const questionsReordered = orderedQuestions.some((question, index) => (
     String(question.questionId) !== String(attempt.questions[index]?.questionId)
@@ -702,5 +760,54 @@ export const submitStudentAttempt = async (req: AuthRequest, res: Response): Pro
     message: "Assessment submitted successfully",
     attemptId: attempt._id,
     evaluation: attempt.evaluation,
+  });
+};
+
+export const getStudentAttemptReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  const attempt = await StudentAssessmentAttempt.findOne({
+    _id: attemptId,
+    user: req.user!._id,
+    organization: req.user!.organization,
+  });
+
+  if (!attempt) {
+    res.status(404).json({ message: "Attempt not found" });
+    return;
+  }
+
+  const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+
+  if (attempt.status !== "COMPLETED") {
+    res.status(400).json({ message: "Report is available only after test submission" });
+    return;
+  }
+
+  if (!attempt.evaluation) {
+    attempt.evaluation = await evaluateAssessmentAttempt(attempt);
+    await attempt.save();
+  }
+
+  res.json({
+    report: {
+      attemptId: attempt._id,
+      assessmentCode: canonicalCode,
+      assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
+      status: attempt.status,
+      answeredCount: attempt.answeredCount,
+      totalQuestions: attempt.totalQuestions,
+      submittedAt: attempt.completedAt,
+      evaluation: attempt.evaluation,
+    },
   });
 };

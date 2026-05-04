@@ -86,6 +86,11 @@ export default function StudentAssessmentsPage() {
     }
   };
 
+  const openReport = (assessmentCode: string, attemptId?: string) => {
+    if (!attemptId) return;
+    router.push(`/whitelabel/${slug}/student/assessments/${assessmentCode}/result?attemptId=${attemptId}`);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -104,6 +109,7 @@ export default function StudentAssessmentsPage() {
       <div className="grid gap-5 sm:grid-cols-2">
         {data.assessments.map((assessment) => {
           const completed = assessment.attempt?.status === "COMPLETED";
+          const canViewReport = completed && assessment.code !== "CAREER_DNA";
 
           return (
             <div key={assessment._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -126,11 +132,17 @@ export default function StudentAssessmentsPage() {
               </div>
 
               <button
-                onClick={() => void startTest(assessment.code)}
-                disabled={completed || startingCode === assessment.code}
+                onClick={() => {
+                  if (canViewReport) {
+                    openReport(assessment.code, assessment.attempt?.id);
+                    return;
+                  }
+                  void startTest(assessment.code);
+                }}
+                disabled={(!canViewReport && completed) || startingCode === assessment.code}
                 className="mt-4 w-full rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
               >
-                {completed ? "Already Completed" : startingCode === assessment.code ? "Starting…" : "Take Test"}
+                {canViewReport ? "View Report" : completed ? "Already Completed" : startingCode === assessment.code ? "Starting…" : "Take Test"}
               </button>
             </div>
           );

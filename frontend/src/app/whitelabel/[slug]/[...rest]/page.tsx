@@ -10,7 +10,9 @@ import AssessmentsPage from "@/app/dashboard/assessments/page";
 import UsersPage from "@/app/dashboard/users/page";
 import StudentDashboardPage from "@/app/whitelabel/[slug]/student/dashboard/page";
 import StudentAssessmentsPage from "@/app/whitelabel/[slug]/student/assessments/page";
+import StudentResultsPage from "@/app/whitelabel/[slug]/student/results/page";
 import StudentTakeAssessmentPage from "@/app/whitelabel/[slug]/student/assessments/[code]/take/page";
+import StudentAssessmentResultPage from "@/app/whitelabel/[slug]/student/assessments/[code]/result/page";
 
 export default function WhitelabelCatchAllPage() {
   const router = useRouter();
@@ -42,10 +44,24 @@ export default function WhitelabelCatchAllPage() {
         };
       }
 
+      if (rest.length === 2 && rest[1] === "results") {
+        return {
+          type: "student-shell" as const,
+          element: <StudentResultsPage />,
+        };
+      }
+
       if (rest.length === 4 && rest[1] === "assessments" && rest[3] === "take") {
         return {
           type: "student-fullscreen" as const,
           element: <StudentTakeAssessmentPage />,
+        };
+      }
+
+      if (rest.length === 4 && rest[1] === "assessments" && rest[3] === "result") {
+        return {
+          type: "student-shell" as const,
+          element: <StudentAssessmentResultPage />,
         };
       }
 

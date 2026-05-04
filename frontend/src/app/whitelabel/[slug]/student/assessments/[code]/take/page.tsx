@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Loader2,
   Maximize,
-  Send,
 } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
@@ -185,6 +184,33 @@ export default function StudentTakeAssessmentPage() {
     setVisited((prev) => new Set(prev).add(idx));
   };
 
+  const ensureJohariDefaultAnswerForCurrent = async () => {
+    if (assessmentVariant !== "johari" || !currentQuestion?.questionId) {
+      return;
+    }
+
+    if (answers[currentQuestion.questionId]) {
+      return;
+    }
+
+    const defaultAnswer = "3";
+    setAnswers((prev) => ({ ...prev, [currentQuestion.questionId]: defaultAnswer }));
+
+    if (!attemptId || !auth?.token) {
+      return;
+    }
+
+    try {
+      await apiRequest(
+        `/platform/student/attempts/${attemptId}/answers`,
+        { method: "PATCH", body: JSON.stringify({ answers: [{ questionId: currentQuestion.questionId, answer: defaultAnswer }] }) },
+        auth.token
+      );
+    } catch {
+      // non-blocking
+    }
+  };
+
   const handleSubmit = async () => {
     const unanswered = questions.filter((q) => !answers[q.questionId]);
     if (unanswered.length > 0) {
@@ -197,14 +223,21 @@ export default function StudentTakeAssessmentPage() {
     setSubmitting(true);
     isSubmittingRef.current = true;
     try {
-      await apiRequest(
+      const response = await apiRequest<{ attemptId: string }>(
         `/platform/student/attempts/${attemptId}/submit`,
         { method: "POST" },
         auth!.token
       );
       if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
       alert("Assessment submitted successfully!");
-      router.replace(`/whitelabel/${slug}/student/dashboard`);
+
+      if (code === "CAREER_DNA") {
+        router.replace(`/whitelabel/${slug}/student/dashboard`);
+        return;
+      }
+
+      const submittedAttemptId = response?.attemptId || attemptId;
+      router.replace(`/whitelabel/${slug}/student/assessments/${code}/result?attemptId=${submittedAttemptId}`);
     } catch (error) {
       isSubmittingRef.current = false;
       alert(error instanceof Error ? error.message : "Submission failed");
@@ -295,12 +328,16 @@ export default function StudentTakeAssessmentPage() {
 
   const goToPreviousVisibleQuestion = () => {
     const targetIndex = visibleQuestionIndexes[Math.max(currentVisibleIndex - 1, 0)] ?? 0;
-    goToQuestion(targetIndex);
+    void ensureJohariDefaultAnswerForCurrent().finally(() => {
+      goToQuestion(targetIndex);
+    });
   };
 
   const goToNextVisibleQuestion = () => {
     const targetIndex = visibleQuestionIndexes[Math.min(currentVisibleIndex + 1, visibleQuestionIndexes.length - 1)] ?? 0;
-    goToQuestion(targetIndex);
+    void ensureJohariDefaultAnswerForCurrent().finally(() => {
+      goToQuestion(targetIndex);
+    });
   };
 
   const openCareerDnaSection = (sectionCat: string) => {
@@ -726,7 +763,7 @@ export default function StudentTakeAssessmentPage() {
         <div className="flex items-center gap-4">
           {isCareerDna && activeSectionCat && (
             <button
-              onClick={() => void returnToCareerDnaSections()}
+              onClick={() => void ensureJohariDefaultAnswerForCurrent().finally(() => returnToCareerDnaSections())}
               className="px-4 py-2 rounded-xl text-sm font-semibold bg-violet-100 text-violet-700 hover:bg-violet-200 transition"
             >
               Save & Sections
@@ -738,20 +775,6 @@ export default function StudentTakeAssessmentPage() {
             <span className="text-blue-600 font-bold">{totalAnswered}</span>
             <span className="text-gray-400"> / {questions.length}</span>
           </div>
-
-          {/* Submit button */}
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || !allAnswered}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition cursor-pointer ${
-              allAnswered
-                ? "bg-green-600 text-white hover:bg-green-700 shadow-md"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={14} />}
-            Submit Test
-          </button>
         </div>
       </header>
 
@@ -806,17 +829,22 @@ export default function StudentTakeAssessmentPage() {
 
               <button
                 onClick={() => {
+                  if (allAnswered && !submitting) {
+                    void handleSubmit();
+                    return;
+                  }
+
                   const isLastVisible = currentVisibleIndex >= visibleQuestionIndexes.length - 1;
                   if (isCareerDna && isLastVisible) {
-                    void returnToCareerDnaSections();
+                    void ensureJohariDefaultAnswerForCurrent().finally(() => returnToCareerDnaSections());
                     return;
                   }
                   goToNextVisibleQuestion();
                 }}
-                disabled={!isCareerDna && currentVisibleIndex >= visibleQuestionIndexes.length - 1}
+                disabled={submitting || (!allAnswered && !isCareerDna && currentVisibleIndex >= visibleQuestionIndexes.length - 1)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
-                {isCareerDna && currentVisibleIndex >= visibleQuestionIndexes.length - 1 ? "Save Section" : "Next"}
+                {submitting ? "Submitting..." : allAnswered ? "Submit Test" : isCareerDna && currentVisibleIndex >= visibleQuestionIndexes.length - 1 ? "Save Section" : "Next"}
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -842,7 +870,7 @@ export default function StudentTakeAssessmentPage() {
                   {grp.questions.map(({ q, idx }) => (
                     <button
                       key={q.questionId}
-                      onClick={() => goToQuestion(idx)}
+                      onClick={() => void ensureJohariDefaultAnswerForCurrent().finally(() => goToQuestion(idx))}
                       className={`w-10 h-10 rounded-full text-xs font-bold transition-all cursor-pointer ${getCircleColor(idx, q)}`}
                       title={`Q${idx + 1}`}
                     >
