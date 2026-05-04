@@ -64,7 +64,7 @@ export async function generateCareerCompassReport(args: {
     { label: "Counselor Name", value: "Administered by ADMITra" },
   ];
 
-  const infoCardHeight = infoFields.length * 30 - 5;
+  const infoCardHeight = Math.max(165, infoFields.length * 30 + 18);
 
   pdf.setFillColor(255, 255, 255);
   pdf.roundedRect(20, 60, 170, infoCardHeight, 6, 6, "F");

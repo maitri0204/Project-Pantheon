@@ -293,21 +293,21 @@ export default function StudentAssessmentResultPage() {
       const subjects = PERSONALITY_SUBJECTS[personalityType] || [];
 
       return (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl p-8 text-white">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
-                <Brain size={36} className="text-white opacity-80" />
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Your Test Result</h1>
+                <p className="text-gray-500 mt-1">Submitted on {new Date(report.submittedAt || "").toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-white/80 uppercase tracking-widest font-bold mb-1">Your Personality Type</p>
-                <h1 className="text-3xl font-black text-white">{PERSONALITY_NAMES[personalityType] || personalityType}</h1>
-                <p className="mt-2 text-sm text-white/80">{formatDateTime(report.submittedAt)}</p>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Personality Type</p>
+                <p className="text-2xl font-bold text-blue-600">{PERSONALITY_NAMES[personalityType] || personalityType}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <div className="text-center mb-10">
               <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Personality Profile</h2>
               <p className="text-lg font-bold text-gray-600 mt-2">{PERSONALITY_NAMES[personalityType] || personalityType}</p>
@@ -358,34 +358,34 @@ export default function StudentAssessmentResultPage() {
           </div>
 
           {description && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="text-base font-semibold text-slate-900 mb-2">About This Personality</h2>
-              <p className="text-sm text-slate-700 leading-relaxed">{description}</p>
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-gray-900 mb-2">About This Personality</h2>
+              <p className="text-sm text-gray-700 leading-relaxed">{description}</p>
             </div>
           )}
 
-          <div className="rounded-2xl overflow-hidden shadow-sm border border-amber-100">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5 flex items-center justify-between">
+          <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-200 bg-white">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-white">Your Career Pathway</h2>
-                <p className="text-sm text-amber-100 mt-0.5">Tailored for {PERSONALITY_NAMES[personalityType] || personalityType}</p>
+                <p className="text-sm text-blue-100 mt-0.5">Tailored for {PERSONALITY_NAMES[personalityType] || personalityType}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center"><Briefcase size={22} className="text-white" /></div>
             </div>
-            <div className="bg-white grid grid-cols-1 md:grid-cols-2 divide-x divide-amber-50">
+            <div className="bg-white grid grid-cols-1 md:grid-cols-2 divide-x divide-slate-100">
               <div className="p-5">
-                <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center"><GraduationCap size={14} className="text-amber-600" /></div><span className="text-xs font-black text-gray-500 uppercase tracking-[0.15em]">Suggested Stream</span></div>
+                <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center"><GraduationCap size={14} className="text-blue-600" /></div><span className="text-xs font-black text-gray-500 uppercase tracking-[0.15em]">Suggested Stream</span></div>
                 <p className="text-2xl font-black text-gray-800 mt-1">{stream}</p>
               </div>
               <div className="p-5">
-                <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center"><BookOpen size={14} className="text-orange-500" /></div><span className="text-xs font-black text-gray-500 uppercase tracking-[0.15em]">Suggested Subjects</span></div>
-                <div className="flex flex-wrap gap-1.5 mt-1">{subjects.map((sub) => <span key={sub} className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-100">{sub}</span>)}</div>
+                <div className="flex items-center gap-2 mb-2"><div className="w-7 h-7 rounded-lg bg-cyan-50 flex items-center justify-center"><BookOpen size={14} className="text-cyan-600" /></div><span className="text-xs font-black text-gray-500 uppercase tracking-[0.15em]">Suggested Subjects</span></div>
+                <div className="flex flex-wrap gap-1.5 mt-1">{subjects.map((sub) => <span key={sub} className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-100">{sub}</span>)}</div>
               </div>
             </div>
             {careers.length > 0 && (
-              <div className="bg-gradient-to-b from-orange-50/60 to-amber-50/30 p-5 border-t border-amber-100">
+              <div className="bg-gradient-to-b from-blue-50/70 to-cyan-50/50 p-5 border-t border-blue-100">
                 <p className="text-sm font-black text-gray-600 uppercase tracking-[0.15em] mb-3">Top 10 Recommended Careers</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">{careers.map((career, i) => <div key={career} className="flex items-center gap-3 bg-white rounded-xl px-3.5 py-3 border border-amber-100/70 shadow-sm"><span className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-sm font-black text-white">{i + 1}</span><span className="text-base font-semibold text-gray-800">{career}</span></div>)}</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">{careers.map((career, i) => <div key={career} className="flex items-center gap-3 bg-white rounded-xl px-3.5 py-3 border border-blue-100 shadow-sm"><span className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-sm font-black text-white">{i + 1}</span><span className="text-base font-semibold text-gray-800">{career}</span></div>)}</div>
               </div>
             )}
           </div>
@@ -488,24 +488,40 @@ export default function StudentAssessmentResultPage() {
       const secondary = sortedStyles[1];
 
       return (
-        <div className="space-y-6 w-full">
-          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl p-6 text-white shadow-lg">
-            <p className="text-blue-100 text-sm mb-1">{new Date(report.submittedAt || "").toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
-            <h1 className="text-2xl font-bold mb-3">Assessment Result</h1>
-            <div className="flex flex-wrap gap-3">
-              <div className="bg-white/20 rounded-xl px-4 py-2 text-center"><p className="text-xs text-blue-100">Total Score</p><p className="text-xl font-bold">{totalScore}/150</p></div>
-              <div className="bg-white/20 rounded-xl px-4 py-2 text-center"><p className="text-xs text-blue-100">Dominant Style</p><p className="text-xl font-bold">{STYLE_LABELS[dominantStyle]}</p></div>
+        <div className="max-w-5xl mx-auto space-y-8 w-full">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Your Test Result</h1>
+                <p className="text-gray-500 mt-1">Submitted on {new Date(report.submittedAt || "").toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-4xl font-bold text-blue-600">{totalScore}</p>
+                <p className="text-sm text-gray-500">out of 150</p>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-              <p className="text-xs font-semibold text-amber-600 mb-1 uppercase tracking-wide">★ Primary Style</p>
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <p className="text-xs font-semibold text-blue-600 mb-1 uppercase tracking-wide">Primary Style</p>
               <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: STYLE_COLORS[primary.style] }}>{primary.style}</div><div><p className="font-bold text-gray-900">{STYLE_LABELS[primary.style]}</p><p className="text-sm text-gray-500">Score: {primary.score}/30</p></div></div>
             </div>
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
-              <p className="text-xs font-semibold text-green-600 mb-1 uppercase tracking-wide">◆ Secondary Style</p>
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <p className="text-xs font-semibold text-cyan-600 mb-1 uppercase tracking-wide">Secondary Style</p>
               <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: STYLE_COLORS[secondary.style] }}>{secondary.style}</div><div><p className="font-bold text-gray-900">{STYLE_LABELS[secondary.style]}</p><p className="text-sm text-gray-500">Score: {secondary.score}/30</p></div></div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">Style Scores</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {sortedStyles.map(({ style, score }, index) => (
+                <div key={style} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 flex items-center justify-between text-sm">
+                  <span className="text-slate-700">{style} · {STYLE_LABELS[style] || style}</span>
+                  <span className="font-semibold text-slate-900">{score}{index === 0 ? " (Primary)" : ""}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -584,9 +600,15 @@ export default function StudentAssessmentResultPage() {
       </button>
 
       <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold">{report.assessmentName}</h1>
-        <p className="mt-1 text-blue-100 text-sm">Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered</p>
-        <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{report.assessmentName}</h1>
+            <p className="mt-1 text-blue-100 text-sm">
+              Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered
+            </p>
+            <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
+          </div>
+        </div>
       </div>
 
       {normalizedCode !== "CAREER_DNA" && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { BarChart3, CalendarClock, Sparkles } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
 
@@ -57,31 +58,52 @@ export default function StudentResultsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Results</h1>
-        <p className="mt-1 text-sm text-slate-600">View all completed assessment reports.</p>
+      <div className="relative overflow-hidden rounded-3xl border border-blue-200/70 bg-gradient-to-br from-blue-600 via-cyan-600 to-indigo-700 p-6 md:p-8 text-white shadow-[0_28px_70px_-30px_rgba(37,99,235,0.75)]">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-cyan-300/30 blur-2xl" />
+
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-100">Student Dashboard</p>
+            <h1 className="mt-1 text-3xl md:text-4xl font-black tracking-tight">Your Results</h1>
+            <p className="mt-2 text-sm md:text-base text-blue-100/95">View all completed assessment reports in one place.</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 w-full md:w-auto md:min-w-[280px]">
+            <div className="rounded-2xl border border-white/25 bg-white/15 backdrop-blur-md p-3 md:p-4">
+              <div className="flex items-center gap-2 text-blue-100"><BarChart3 className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Completed</span></div>
+              <p className="mt-2 text-2xl font-black">{results.length}</p>
+            </div>
+            <div className="rounded-2xl border border-white/25 bg-white/15 backdrop-blur-md p-3 md:p-4">
+              <div className="flex items-center gap-2 text-blue-100"><Sparkles className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Reports</span></div>
+              <p className="mt-2 text-2xl font-black">{results.filter((result) => result.assessmentCode !== "CAREER_DNA").length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {results.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-10 text-center text-slate-600">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-12 text-center text-slate-600 shadow-sm">
           No completed assessments yet.
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           {results.map((result) => {
             const canViewReport = result.assessmentCode !== "CAREER_DNA";
             return (
-              <div key={result.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div key={result.id} className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_14px_30px_-22px_rgba(30,64,175,0.65)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_45px_-24px_rgba(37,99,235,0.75)]">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-blue-100/60 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{normalizeDisplayCode(result.assessmentCode)}</p>
-                    <h3 className="text-lg font-bold text-slate-900">{result.assessmentName}</h3>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-600">{normalizeDisplayCode(result.assessmentCode)}</p>
+                    <h3 className="text-lg font-bold text-slate-900 mt-0.5">{result.assessmentName}</h3>
                     <p className="mt-1 text-sm text-slate-600">
                       {result.answeredCount}/{result.totalQuestions} answered
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-500 border border-slate-100">
+                      <CalendarClock className="h-3.5 w-3.5" />
                       Completed {result.completedAt ? new Date(result.completedAt).toLocaleString("en-IN") : "—"}
-                    </p>
+                    </div>
                   </div>
 
                   <button
@@ -90,7 +112,7 @@ export default function StudentResultsPage() {
                       router.push(`/whitelabel/${slug}/student/assessments/${result.assessmentCode}/result?attemptId=${result.id}`);
                     }}
                     disabled={!canViewReport}
-                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.9)] hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {canViewReport ? "View Report" : "Report Not Available"}
                   </button>
