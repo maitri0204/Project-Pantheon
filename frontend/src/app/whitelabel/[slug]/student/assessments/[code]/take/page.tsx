@@ -223,13 +223,32 @@ export default function StudentTakeAssessmentPage() {
     setSubmitting(true);
     isSubmittingRef.current = true;
     try {
+      if (attemptId && auth?.token) {
+        const payload = questions
+          .map((question) => ({ questionId: question.questionId, answer: answers[question.questionId] }))
+          .filter((entry) => entry.answer);
+
+        if (payload.length > 0) {
+          await apiRequest(
+            `/platform/student/attempts/${attemptId}/answers`,
+            { method: "PATCH", body: JSON.stringify({ answers: payload }) },
+            auth.token
+          );
+        }
+      }
+
       const response = await apiRequest<{ attemptId: string }>(
         `/platform/student/attempts/${attemptId}/submit`,
         { method: "POST" },
         auth!.token
       );
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
-      alert("Assessment submitted successfully!");
+
+      if (document.fullscreenElement) {
+        await Promise.race([
+          document.exitFullscreen().catch(() => undefined),
+          new Promise((resolve) => setTimeout(resolve, 800)),
+        ]);
+      }
 
       if (code === "CAREER_DNA") {
         router.replace(`/whitelabel/${slug}/student/dashboard`);

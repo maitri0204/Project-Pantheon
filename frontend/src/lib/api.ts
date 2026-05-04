@@ -26,6 +26,8 @@ export type StoredAuth = {
     role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT";
     organizationId: string | null;
     isVerified: boolean;
+    grade?: string;
+    institutionName?: string;
   };
   orgCompanyName?: string;
   orgSlug?: string;

@@ -23,6 +23,8 @@ export async function generateCareerCompassReport(args: {
   studentName: string;
   submittedAt?: string;
   personalityType: string;
+  classGrade?: string;
+  schoolName?: string;
 }): Promise<void> {
   const { default: jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
@@ -54,20 +56,22 @@ export async function generateCareerCompassReport(args: {
   pdf.setFont("helvetica", "bold");
   pdf.text("Student Information", pageWidth / 2, 28, { align: "center" });
 
-  pdf.setFillColor(255, 255, 255);
-  pdf.roundedRect(20, 60, 170, 165, 6, 6, "F");
-  pdf.setDrawColor(255, 189, 89);
-  pdf.setLineWidth(0.5);
-  pdf.roundedRect(20, 60, 170, 165, 6, 6, "S");
-  pdf.setLineWidth(0.2);
-
   const infoFields = [
     { label: "Student Name", value: args.studentName || "—" },
+    { label: "Class / Grade", value: args.classGrade || "—" },
+    { label: "Institute Name", value: args.schoolName || "—" },
     { label: "Date of Assessment", value: args.submittedAt || "—" },
-    { label: "Personality Type", value: PERSONALITY_NAMES[pt] || pt },
-    { label: "Suggested Stream", value: PERSONALITY_STREAMS[pt] || "—" },
     { label: "Counselor Name", value: "Administered by ADMITra" },
   ];
+
+  const infoCardHeight = infoFields.length * 30 - 5;
+
+  pdf.setFillColor(255, 255, 255);
+  pdf.roundedRect(20, 60, 170, infoCardHeight, 6, 6, "F");
+  pdf.setDrawColor(255, 189, 89);
+  pdf.setLineWidth(0.5);
+  pdf.roundedRect(20, 60, 170, infoCardHeight, 6, 6, "S");
+  pdf.setLineWidth(0.2);
 
   let yPos = 80;
   infoFields.forEach((field, idx) => {

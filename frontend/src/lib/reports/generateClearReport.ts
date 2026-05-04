@@ -5,9 +5,60 @@ import jsPDF from "jspdf";
    ═══════════════════════════════════════════════ */
 export interface ReportData {
   studentName: string;
+  classGrade?: string;
+  schoolName?: string;
+  submittedAt?: string;
   sfScore: number;   // Solicits Feedback  (0-50)
   sdScore: number;   // Self-Disclosure     (0-50)
   dominantQuadrant: string;
+}
+
+function drawPage2(pdf: jsPDF, data: ReportData, W: number, H: number) {
+  pdf.setFillColor(255, 255, 255);
+  pdf.rect(0, 0, W, H, "F");
+  pdf.setFillColor(8, 145, 178);
+  pdf.rect(0, 0, W, 3, "F");
+
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(22);
+  pdf.text("Student Information", W / 2, 32, { align: "center" });
+
+  pdf.setDrawColor(8, 145, 178);
+  pdf.setLineWidth(0.6);
+  pdf.roundedRect(20, 52, W - 40, 162, 4, 4, "S");
+
+  const infoFields = [
+    { label: "Student Name", value: data.studentName || "—" },
+    { label: "Class / Grade", value: data.classGrade || "—" },
+    { label: "Institute Name", value: data.schoolName || "—" },
+    { label: "Date of Assessment", value: data.submittedAt || "—" },
+    { label: "Counselor Name", value: "Administered by ADMITra" },
+  ];
+
+  let y = 70;
+  infoFields.forEach((field, index) => {
+    pdf.setFillColor(8, 145, 178);
+    pdf.rect(28, y - 4, 3, 16, "F");
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.setTextColor(71, 85, 105);
+    pdf.text(field.label.toUpperCase(), 38, y);
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(15);
+    pdf.setTextColor(15, 23, 42);
+    pdf.text(String(field.value), 38, y + 9);
+
+    if (index < infoFields.length - 1) {
+      pdf.setDrawColor(203, 213, 225);
+      pdf.setLineWidth(0.2);
+      pdf.line(37, y + 14, W - 28, y + 14);
+    }
+
+    y += 28;
+  });
 }
 
 /* ═══════════════════════════════════════════════
@@ -304,7 +355,7 @@ export async function generateClearReport(data: ReportData, options?: { returnBl
   const H = 297;
 
   /* load all static page images in parallel */
-  const pageNums = [1, 2, 3, 4, 6, 7, 8, 9, 10];
+  const pageNums = [1, 3, 4, 6, 7, 8, 9, 10];
   const entries = await Promise.all(
     pageNums.map(async (n) => {
       try {
@@ -319,12 +370,21 @@ export async function generateClearReport(data: ReportData, options?: { returnBl
 
   let needsNewPage = false;
 
-  /* Pages 1-4 */
-  for (let i = 1; i <= 4; i++) {
-    if (!images[i]) continue;
-    if (needsNewPage) pdf.addPage();
-    pdf.addImage(images[i], "JPEG", 0, 0, W, H);
+  if (images[1]) {
+    pdf.addImage(images[1], "JPEG", 0, 0, W, H);
     needsNewPage = true;
+  }
+
+  /* Page 2 — dynamic student info */
+  if (needsNewPage) pdf.addPage();
+  drawPage2(pdf, data, W, H);
+  needsNewPage = true;
+
+  /* Pages 3-4 */
+  for (let i = 3; i <= 4; i++) {
+    if (!images[i]) continue;
+    pdf.addPage();
+    pdf.addImage(images[i], "JPEG", 0, 0, W, H);
   }
 
   /* Page 5 — dynamic graph + descriptions */

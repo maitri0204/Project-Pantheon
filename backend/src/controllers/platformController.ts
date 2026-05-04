@@ -798,6 +798,8 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
     await attempt.save();
   }
 
+  const student = await User.findById(req.user!._id).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 });
+
   res.json({
     report: {
       attemptId: attempt._id,
@@ -808,6 +810,14 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
       totalQuestions: attempt.totalQuestions,
       submittedAt: attempt.completedAt,
       evaluation: attempt.evaluation,
+      student: student
+        ? {
+            firstName: student.firstName,
+            lastName: student.lastName,
+            grade: student.grade,
+            institutionName: student.institutionName,
+          }
+        : undefined,
     },
   });
 };

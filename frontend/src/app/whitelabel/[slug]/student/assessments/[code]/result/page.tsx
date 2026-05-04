@@ -13,6 +13,7 @@ import QuadrantGraph, { QuadrantLegend } from "@/components/reports/QuadrantGrap
 import {
   DOMAIN_INFO,
   DIMENSION_COLORS,
+  DIMENSION_STYLES,
   LETTER_CODES,
   PERSONALITY_CAREERS,
   PERSONALITY_NAMES,
@@ -30,6 +31,12 @@ type ReportResponse = {
     totalQuestions: number;
     submittedAt?: string;
     evaluation: Record<string, unknown>;
+    student?: {
+      firstName?: string;
+      lastName?: string;
+      grade?: string;
+      institutionName?: string;
+    };
   };
 };
 
@@ -144,6 +151,10 @@ export default function StudentAssessmentResultPage() {
 
   const evaluation = report.evaluation as Record<string, unknown>;
   const normalizedCode = String(report.assessmentCode || code).toUpperCase();
+  const profileFromReport = report.student || {};
+  const profileFromAuth = (auth?.user || {}) as { grade?: string; institutionName?: string };
+  const classGrade = profileFromReport.grade || profileFromAuth.grade || "";
+  const schoolName = profileFromReport.institutionName || profileFromAuth.institutionName || "";
 
   const downloadDetailedReport = async () => {
     if (!report) return;
@@ -153,6 +164,9 @@ export default function StudentAssessmentResultPage() {
       if (normalizedCode === "JOHARI_WINDOW") {
         await generateClearReport({
           studentName: `${auth?.user.firstName || ""} ${auth?.user.lastName || ""}`.trim() || "Student",
+          classGrade,
+          schoolName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
           sfScore: toNumber(evaluation.solicitsFeedbackScore),
           sdScore: toNumber(evaluation.selfDisclosureScore),
           dominantQuadrant: String(evaluation.dominantQuadrant || "Open Area"),
@@ -165,6 +179,8 @@ export default function StudentAssessmentResultPage() {
           studentName: `${auth?.user.firstName || ""} ${auth?.user.lastName || ""}`.trim() || "Student",
           submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
           personalityType: String(evaluation.personalityType || "UNKNOWN"),
+          classGrade,
+          schoolName,
         });
         return;
       }
@@ -175,6 +191,8 @@ export default function StudentAssessmentResultPage() {
           studentName: `${auth?.user.firstName || ""} ${auth?.user.lastName || ""}`.trim() || "Student",
           email: auth?.user.email || "",
           submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          classGrade,
+          schoolName,
           totalScore: toNumber(evaluation.totalScore),
           domainScores: {
             domain1: toNumber(domainScores.domain1),
@@ -289,26 +307,54 @@ export default function StudentAssessmentResultPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <h2 className="text-base font-semibold text-slate-900 mb-3">Dimension Breakdown</h2>
-            <div className="space-y-3">
-              {dimensions.map((d, index) => (
-                <div key={index} className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-800">{String(d.pair || "")}</span>
-                    <span className="text-xs text-slate-500">Winner: {String(d.winner || "—")}</span>
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-slate-700">
-                    <span>{LETTER_CODES[String(d.letterA || "A")]} · {String(d.nameA || "")}</span>
-                    <strong>{String(d.percentA || 0)}%</strong>
-                  </div>
-                  <div className="mt-1 flex items-center justify-between text-slate-700">
-                    <span>{LETTER_CODES[String(d.letterB || "B")]} · {String(d.nameB || "")}</span>
-                    <strong>{String(d.percentB || 0)}%</strong>
-                  </div>
-                </div>
-              ))}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10">
+            <div className="text-center mb-10">
+              <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Personality Profile</h2>
+              <p className="text-lg font-bold text-gray-600 mt-2">{PERSONALITY_NAMES[personalityType] || personalityType}</p>
             </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {dimensions.map((dim, index) => {
+                const pair = String(dim.pair || "");
+                const letterA = String(dim.letterA || "A");
+                const letterB = String(dim.letterB || "B");
+                const winner = String(dim.winner || "");
+                const percentA = toNumber(dim.percentA, 0);
+                const percentB = toNumber(dim.percentB, 0);
+                const styleLabel = DIMENSION_STYLES[pair] || pair;
+                const col = DIMENSION_COLORS[pair] || { a: "#6c5ce7", b: "#00b894" };
+                const aWins = winner === letterA;
+
+                return (
+                  <div key={`${pair}-${index}`} className="flex flex-col items-center border-r border-gray-100 last:border-r-0 px-2">
+                    <span className="text-sm font-bold text-gray-400 uppercase tracking-[0.15em] mb-6 text-center">{styleLabel}</span>
+                    <span className="text-lg font-black mb-3" style={{ color: col.a }}>{percentA}%</span>
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-lg font-black"
+                      style={{
+                        backgroundColor: aWins ? col.a : `${col.a}15`,
+                        color: aWins ? "white" : col.a,
+                        boxShadow: aWins ? `0 6px 20px ${col.a}40` : "none",
+                      }}
+                    >
+                      {LETTER_CODES[letterA] ?? letterA}
+                    </div>
+                    <div className="my-3 text-2xl font-bold" style={{ color: `${col.a}40` }}>↕</div>
+                    <div
+                      className="w-20 h-20 rounded-full flex items-center justify-center text-lg font-black"
+                      style={{
+                        backgroundColor: !aWins ? col.b : `${col.b}15`,
+                        color: !aWins ? "white" : col.b,
+                        boxShadow: !aWins ? `0 6px 20px ${col.b}40` : "none",
+                      }}
+                    >
+                      {LETTER_CODES[letterB] ?? letterB}
+                    </div>
+                    <span className="text-lg font-black mt-3" style={{ color: col.b }}>{percentB}%</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-center text-sm font-black text-gray-300 uppercase tracking-[0.3em] mt-10">Personality Type</p>
           </div>
 
           {description && (
@@ -357,7 +403,7 @@ export default function StudentAssessmentResultPage() {
 
       return (
         <div className="space-y-4 max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">Solicits Feedback</p>
               <p className="text-2xl font-bold text-slate-900 mt-1">{sf}</p>
@@ -365,10 +411,6 @@ export default function StudentAssessmentResultPage() {
             <div className="rounded-xl border border-slate-200 bg-white p-4">
               <p className="text-xs text-slate-500">Self Disclosure</p>
               <p className="text-2xl font-bold text-slate-900 mt-1">{sd}</p>
-            </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-              <p className="text-xs text-emerald-700">Dominant Quadrant</p>
-              <p className="text-lg font-bold text-emerald-900 mt-1">{dominant}</p>
             </div>
           </div>
 
@@ -431,16 +473,6 @@ export default function StudentAssessmentResultPage() {
               </svg>
             </div>
           </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h2 className="text-base font-semibold text-slate-900 mb-3">Quadrant Distribution</h2>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg bg-slate-50 p-3">Open: <strong>{String(quadrants.open ?? 0)}%</strong></div>
-              <div className="rounded-lg bg-slate-50 p-3">Blind: <strong>{String(quadrants.blind ?? 0)}%</strong></div>
-              <div className="rounded-lg bg-slate-50 p-3">Hidden: <strong>{String(quadrants.hidden ?? 0)}%</strong></div>
-              <div className="rounded-lg bg-slate-50 p-3">Unknown: <strong>{String(quadrants.unknown ?? 0)}%</strong></div>
-            </div>
-          </div>
         </div>
       );
     }
@@ -474,18 +506,6 @@ export default function StudentAssessmentResultPage() {
             <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
               <p className="text-xs font-semibold text-green-600 mb-1 uppercase tracking-wide">◆ Secondary Style</p>
               <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold" style={{ backgroundColor: STYLE_COLORS[secondary.style] }}>{secondary.style}</div><div><p className="font-bold text-gray-900">{STYLE_LABELS[secondary.style]}</p><p className="text-sm text-gray-500">Score: {secondary.score}/30</p></div></div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <h2 className="text-base font-semibold text-slate-900 mb-3">Style Scores</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-              {sortedStyles.map(({ style, score }, index) => (
-                <div key={style} className="rounded-lg bg-slate-50 px-3 py-2 flex items-center justify-between">
-                  <span>{style} · {STYLE_LABELS[style] || style}</span>
-                  <strong>{score}{index === 0 ? " (Primary)" : ""}</strong>
-                </div>
-              ))}
             </div>
           </div>
         </div>

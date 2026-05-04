@@ -19,6 +19,8 @@ const formatUser = (user: IUser) => ({
   role: user.role,
   organizationId: user.organization ? user.organization.toString() : null,
   isVerified: user.isVerified,
+  grade: user.grade,
+  institutionName: user.institutionName,
 });
 
 const validateCaptchaPayload = (captchaToken?: string, captchaAnswer?: string): boolean => {
