@@ -170,7 +170,7 @@ const sortCareerDnaQuestions = <T extends { category: string; questionNumber: nu
 const getAssessmentDisplayName = (code: string, fallbackName: string): string => {
   const normalized = normalizeAssessmentCode(code);
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
-  if (normalized === "JOHARI_WINDOW") return "CLEAR – Cognitive Lens for Emotional Awareness & Reflection";
+  if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
   return fallbackName;
 };
 
@@ -194,8 +194,19 @@ const dedupeAssessments = <T extends { code: string; name: string }>(assessments
   }
 
   return Array.from(byCode.values())
-    .map(({ __isExactCode: _ignored, ...item }) => item as T)
+    .map(({ __isExactCode: _ignored, ...item }) => item as unknown as T)
     .sort((a, b) => a.name.localeCompare(b.name));
+};
+
+type AssessmentCatalogItem = {
+  _id: unknown;
+  code: string;
+  name: string;
+  slug?: string;
+  summary?: string;
+  category?: string;
+  sourceProject?: string;
+  active?: boolean;
 };
 
 export const getPlatformOverview = async (_req: AuthRequest, res: Response): Promise<void> => {
@@ -222,7 +233,7 @@ export const getPlatformOverview = async (_req: AuthRequest, res: Response): Pro
 export const listAssessments = async (_req: AuthRequest, res: Response): Promise<void> => {
   const assessments = await Assessment.find({ active: true }).sort({ name: 1 });
   const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
   const assessmentsWithCounts = await Promise.all(
@@ -266,7 +277,7 @@ export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Prom
     : [];
 
   const normalizedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
   res.json({
@@ -336,28 +347,202 @@ export const listStudents = async (req: AuthRequest, res: Response): Promise<voi
     .sort({ createdAt: -1 });
 
   const studentIds = students.map((student) => student._id);
-  const invoiceCounts = await Invoice.aggregate<{ _id: string; count: number }>([
-    { $match: { user: { $in: studentIds } } },
-    { $group: { _id: "$user", count: { $sum: 1 } } },
+  const attemptCounts = await StudentAssessmentAttempt.aggregate<{
+    _id: { user: string; status: "COMPLETED" | "IN_PROGRESS" };
+    count: number;
+  }>([
+    { $match: { user: { $in: studentIds }, status: { $in: ["COMPLETED", "IN_PROGRESS"] } } },
+    { $group: { _id: { user: "$user", status: "$status" }, count: { $sum: 1 } } },
   ]);
 
-  const invoiceCountMap = new Map(invoiceCounts.map((row) => [String(row._id), row.count]));
+  const completedByStudent = new Map<string, number>();
+  const pendingByStudent = new Map<string, number>();
+
+  attemptCounts.forEach((row) => {
+    const userId = String(row._id.user);
+    if (row._id.status === "COMPLETED") {
+      completedByStudent.set(userId, row.count);
+      return;
+    }
+    pendingByStudent.set(userId, row.count);
+  });
 
   const studentsWithStats = students
-    .map((student) => ({
-      ...student.toObject(),
-      testsTaken: invoiceCountMap.get(String(student._id)) || 0,
-    }));
+    .map((student) => {
+      const testsCompleted = completedByStudent.get(String(student._id)) || 0;
+      const testsPending = pendingByStudent.get(String(student._id)) || 0;
+
+      return {
+        ...student.toObject(),
+        testsTaken: testsCompleted,
+        testsCompleted,
+        testsPending,
+      };
+    });
+
+  const summary = studentsWithStats.reduce((acc, student) => {
+    acc.studentCount += 1;
+    acc.testsCompleted += Number(student.testsCompleted || 0);
+    acc.testsPending += Number(student.testsPending || 0);
+    return acc;
+  }, { studentCount: 0, testsCompleted: 0, testsPending: 0 });
 
   const studentsPayload = studentsWithStats;
 
   res.json({
     students: studentsPayload,
+    summary,
+  });
+};
+
+const getScopedStudentRecord = async (req: AuthRequest, studentId: string) => {
+  if (!req.user) {
+    return null;
+  }
+
+  const student = await User.findById(studentId).populate("organization", "name slug");
+  if (!student || student.role !== "STUDENT") {
+    return null;
+  }
+
+  const studentOrgId = student.organization && typeof student.organization === "object"
+    ? String((student.organization as { _id?: { toString(): string } })._id || "")
+    : String(student.organization || "");
+
+  const requesterOrgId = req.user.organization && typeof req.user.organization === "object"
+    ? String((req.user.organization as { _id?: { toString(): string } })._id || "")
+    : String(req.user.organization || "");
+
+  if (req.user.role !== "SUPERADMIN" && studentOrgId !== requesterOrgId) {
+    return null;
+  }
+
+  return student;
+};
+
+const buildAttemptReportPayload = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+  studentId: string
+) => {
+  const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+
+  if (!attempt.evaluation) {
+    attempt.evaluation = await evaluateAssessmentAttempt(attempt);
+    await attempt.save();
+  }
+
+  const student = await User.findById(studentId).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 });
+
+  return {
+    attemptId: attempt._id,
+    assessmentCode: canonicalCode,
+    assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
+    status: attempt.status,
+    answeredCount: attempt.answeredCount,
+    totalQuestions: attempt.totalQuestions,
+    submittedAt: attempt.completedAt,
+    evaluation: attempt.evaluation,
+    student: student
+      ? {
+          firstName: student.firstName,
+          lastName: student.lastName,
+          grade: student.grade,
+          institutionName: student.institutionName,
+        }
+      : undefined,
+  };
+};
+
+export const getStudentDetailsForAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  if (!studentId) {
+    res.status(400).json({ message: "Student ID is required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  const attempts = await StudentAssessmentAttempt.find({
+    user: student._id,
+    organization: student.organization,
+    status: "COMPLETED",
+  }).sort({ completedAt: -1, updatedAt: -1 });
+
+  res.json({
+    student: {
+      ...student.toObject(),
+      testsTaken: attempts.length,
+    },
+    results: attempts.map((attempt) => {
+      const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+      return {
+        id: attempt._id,
+        assessmentCode: canonicalCode,
+        assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
+        answeredCount: attempt.answeredCount,
+        totalQuestions: attempt.totalQuestions,
+        completedAt: attempt.completedAt,
+        createdAt: attempt.createdAt,
+      };
+    }),
+  });
+};
+
+export const getStudentAttemptReportForAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+
+  if (!studentId || !attemptId) {
+    res.status(400).json({ message: "Student ID and attempt ID are required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  const attempt = await StudentAssessmentAttempt.findOne({
+    _id: attemptId,
+    user: student._id,
+    organization: student.organization,
+  });
+
+  if (!attempt) {
+    res.status(404).json({ message: "Attempt not found" });
+    return;
+  }
+
+  if (attempt.status !== "COMPLETED") {
+    res.status(400).json({ message: "Report is available only after test submission" });
+    return;
+  }
+
+  res.json({
+    report: await buildAttemptReportPayload(attempt, String(student._id)),
   });
 };
 
 const hydrateAttemptQuestionsWithOptions = async <T extends {
-  questionId: unknown;
+  questionId: IAttemptQuestion["questionId"] | string;
   options?: Array<{ label: string; text: string; score?: number }>;
 }>(questions: T[]) => {
   const missingOptions = questions.filter((question) => !Array.isArray(question.options) || question.options.length === 0);
@@ -384,7 +569,7 @@ const hydrateAttemptQuestionsWithOptions = async <T extends {
   }));
 };
 
-const orderQuestionsByDatabaseInsertion = async <T extends { questionId: unknown }>(questions: T[]) => {
+const orderQuestionsByDatabaseInsertion = async <T extends { questionId: IAttemptQuestion["questionId"] | string }>(questions: T[]) => {
   if (!questions.length) {
     return questions;
   }
@@ -454,7 +639,7 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
   ]);
 
   const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
   const completedCodes = new Set(
@@ -532,7 +717,7 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
   ]);
 
   const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+    assessments.map((assessment) => assessment.toObject() as unknown as AssessmentCatalogItem)
   );
 
   const attemptsByCode = new Map<string, (typeof attempts)[number]>();

@@ -98,7 +98,7 @@ export const DEFAULT_ASSESSMENTS: AssessmentSeedDefinition[] = [
   {
     code: "JOHARI_WINDOW",
     slug: "johari-window",
-    name: "CLEAR – Cognitive Lens for Emotional Awareness & Reflection",
+    name: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
     category: "self-awareness",
     summary: "Self-awareness assessment using quadrant scoring.",
     sourceProject: "Project-Johari_Window",

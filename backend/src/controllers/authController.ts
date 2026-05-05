@@ -21,6 +21,7 @@ const formatUser = (user: IUser) => ({
   isVerified: user.isVerified,
   grade: user.grade,
   institutionName: user.institutionName,
+  division: user.division,
 });
 
 const validateCaptchaPayload = (captchaToken?: string, captchaAnswer?: string): boolean => {
@@ -715,6 +716,7 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
       phoneCode?: string;
       institutionName?: string;
       grade?: string;
+      division?: string;
       country?: string;
       state?: string;
       city?: string;
@@ -771,6 +773,7 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
           phone: body.phone.trim(),
           phoneCode: body.phoneCode?.trim() || "+91",
           grade: body.grade?.trim() || undefined,
+          division: body.division?.trim() || undefined,
           country: body.country?.trim() || undefined,
           state: body.state?.trim() || undefined,
           city: body.city?.trim() || undefined,
@@ -853,6 +856,7 @@ export const verifyStudentRegisterOtp = async (req: Request, res: Response): Pro
       phone: pending.phone,
       phoneCode: pending.phoneCode,
       grade: pending.grade,
+      division: pending.division,
       country: pending.country,
       state: pending.state,
       city: pending.city,

@@ -142,20 +142,20 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
 
         {/* User info + Logout */}
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 mb-3 p-2">
-            <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
               <span className="text-white text-sm font-bold">
                 {name ? name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase() : "ST"}
               </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{name || "Student"}</p>
-              <p className="text-xs text-gray-500 truncate">{email}</p>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-gray-900 truncate">{name || "Student"}</p>
+              <p className="text-[11px] text-gray-400 truncate">{email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

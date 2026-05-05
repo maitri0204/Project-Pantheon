@@ -2,6 +2,8 @@ import { Router } from "express";
 
 import {
   getStudentAttempt,
+  getStudentAttemptReportForAdmin,
+  getStudentDetailsForAdmin,
   getStudentDashboard,
   getDashboard,
   getStudentAttemptReport,
@@ -24,6 +26,8 @@ router.get("/assessments", listAssessments);
 router.get("/whitelabel/:slug", optionalAuth, getWhitelabelPortal);
 router.get("/dashboard", requireAuth, getDashboard);
 router.get("/students", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listStudents);
+router.get("/students/:studentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentDetailsForAdmin);
+router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT"), getStudentDashboard);
 router.get("/student/results", requireAuth, requireRoles("STUDENT"), listStudentResults);
 router.get("/student/assessments", requireAuth, requireRoles("STUDENT"), listStudentAssessments);

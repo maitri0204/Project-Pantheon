@@ -36,7 +36,7 @@ const OTHER_GRADE_VALUE = "Other";
 type FormState = {
   firstName: string; middleName: string; lastName: string;
   gender: string; email: string; phoneCode: string; phone: string;
-  institutionName: string; grade: string; country: string; state: string; city: string;
+  institutionName: string; grade: string; division: string; country: string; state: string; city: string;
 };
 type Step = "form" | "otp" | "success";
 
@@ -82,6 +82,7 @@ export default function StudentRegisterPage() {
   const [form, setForm] = useState<FormState>({
     firstName:"", middleName:"", lastName:"", gender:"", email:"",
     phoneCode:"+91", phone:"", institutionName:"", grade:"",
+    division:"",
     country:"", state:"", city:"",
   });
   const [otherGrade, setOtherGrade] = useState("");
@@ -304,7 +305,7 @@ export default function StudentRegisterPage() {
 
                 <SectionDivider icon="🎓" label="Academic" />
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   <FieldWrap label="Institution Name">
                     <input type="text" value={form.institutionName} readOnly className={`${inputCls} cursor-not-allowed bg-slate-50 text-slate-500`} />
                   </FieldWrap>
@@ -325,6 +326,17 @@ export default function StudentRegisterPage() {
                       <option value="">Select grade</option>
                       {GRADE_OPTIONS.map((g)=><option key={g} value={g}>{g}</option>)}
                     </select>
+                  </FieldWrap>
+
+                  <FieldWrap label="Division">
+                    <input
+                      type="text"
+                      value={form.division}
+                      onChange={(e)=>setField("division",e.target.value.toUpperCase().slice(0,3))}
+                      className={inputCls}
+                      style={ringStyle}
+                      placeholder="A"
+                    />
                   </FieldWrap>
 
                   {form.grade === OTHER_GRADE_VALUE && (

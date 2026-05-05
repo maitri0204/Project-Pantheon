@@ -18,6 +18,7 @@ export interface IUser extends Document {
   state?: string;
   city?: string;
   institutionName?: string;
+  division?: string;
   isVerified: boolean;
   isActive: boolean;
   otpHash?: string;
@@ -45,6 +46,7 @@ const userSchema = new Schema<IUser>(
     state: { type: String, default: undefined },
     city: { type: String, default: undefined },
     institutionName: { type: String, default: undefined },
+    division: { type: String, default: undefined, trim: true },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
     otpHash: { type: String, default: undefined },

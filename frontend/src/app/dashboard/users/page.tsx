@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 
 type User = {
@@ -9,9 +9,11 @@ type User = {
   firstName: string;
   lastName: string;
   email: string;
-  role: string;
-  isVerified: boolean;
+  grade?: string;
+  division?: string;
   testsTaken?: number;
+  testsCompleted?: number;
+  testsPending?: number;
   lastLoginAt?: string;
   createdAt?: string;
   organization?: { name: string; slug: string } | null;
@@ -19,6 +21,11 @@ type User = {
 
 type StudentsResponse = {
   students: User[];
+  summary?: {
+    studentCount: number;
+    testsCompleted: number;
+    testsPending: number;
+  };
 };
 
 const formatDate = (dateString?: string) => {
@@ -35,9 +42,11 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("ALL");
+  const [organizationFilter, setOrganizationFilter] = useState("ALL");
+  const [gradeFilter, setGradeFilter] = useState("ALL");
+  const [divisionFilter, setDivisionFilter] = useState("ALL");
   const [currentRole, setCurrentRole] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<{ from?: string; to?: string }>({});
+  const pathname = usePathname();
 
   const auth = useMemo(() => getStoredAuth(), []);
 
@@ -53,23 +62,43 @@ export default function UsersPage() {
 
   const filtered = users.filter((u) => {
     const matchSearch =
-      `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(search.toLowerCase());
-    const matchRole = roleFilter === "ALL" || u.role === roleFilter;
-    const createdDate = u.createdAt ? new Date(u.createdAt) : null;
-    const matchDate =
-      (!dateFilter.from || !createdDate || new Date(dateFilter.from) <= createdDate) &&
-      (!dateFilter.to || !createdDate || new Date(dateFilter.to) >= createdDate);
-    return matchSearch && matchRole && matchDate;
+      `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase());
+    const matchOrganization = organizationFilter === "ALL" || (u.organization?.slug || "") === organizationFilter;
+    const matchGrade = gradeFilter === "ALL" || (u.grade || "") === gradeFilter;
+    const matchDivision = divisionFilter === "ALL" || (u.division || "") === divisionFilter;
+    return matchSearch && matchOrganization && matchGrade && matchDivision;
   });
 
-  const roleBadge = (role: string) => {
-    const map: Record<string, string> = {
-      SUPERADMIN: "bg-red-50 text-red-700",
-      ORG_ADMIN: "bg-purple-50 text-purple-700",
-      STUDENT: "bg-blue-50 text-blue-700",
-    };
-    return map[role] ?? "bg-gray-100 text-gray-600";
-  };
+  const organizations = useMemo(
+    () => Array.from(new Map(users
+      .filter((u) => u.organization?.slug && u.organization?.name)
+      .map((u) => [u.organization!.slug, u.organization!.name])).entries()),
+    [users]
+  );
+
+  const grades = useMemo(
+    () => Array.from(new Set(users.map((u) => u.grade).filter((grade): grade is string => Boolean(grade)))).sort(),
+    [users]
+  );
+
+  const divisions = useMemo(
+    () => Array.from(new Set(users.map((u) => u.division).filter((division): division is string => Boolean(division)))).sort(),
+    [users]
+  );
+
+  const stats = useMemo(() => {
+    return filtered.reduce(
+      (acc, user) => {
+        acc.studentCount += 1;
+        acc.testsCompleted += user.testsCompleted ?? user.testsTaken ?? 0;
+        acc.testsPending += user.testsPending ?? 0;
+        return acc;
+      },
+      { studentCount: 0, testsCompleted: 0, testsPending: 0 }
+    );
+  }, [filtered]);
+
+  const detailsBasePath = pathname || "/dashboard/users";
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
@@ -79,7 +108,7 @@ export default function UsersPage() {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_180px_180px_180px] gap-3">
+      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px_180px_180px]" : "lg:grid-cols-[minmax(0,1fr)_180px_180px]"}`}>
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -87,42 +116,58 @@ export default function UsersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search students..."
+            placeholder="Search by student name..."
             className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
+        {currentRole === "SUPERADMIN" ? (
+          <select
+            value={organizationFilter}
+            onChange={(e) => setOrganizationFilter(e.target.value)}
+            className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value="ALL">All Organizations</option>
+            {organizations.map(([slug, name]) => (
+              <option key={slug} value={slug}>{name}</option>
+            ))}
+          </select>
+        ) : null}
         <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          value={gradeFilter}
+          onChange={(e) => setGradeFilter(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         >
-          <option value="ALL">All Roles</option>
-          {currentRole !== "ORG_ADMIN" ? <option value="SUPERADMIN">Superadmin</option> : null}
-          {currentRole !== "ORG_ADMIN" ? <option value="ORG_ADMIN">Org Admin</option> : null}
-          <option value="STUDENT">Student</option>
+          <option value="ALL">All Grades</option>
+          {grades.map((grade) => (
+            <option key={grade} value={grade}>{grade}</option>
+          ))}
         </select>
-        <input
-          type="date"
-          value={dateFilter.from || ""}
-          onChange={(e) => setDateFilter((f) => ({ ...f, from: e.target.value }))}
+        <select
+          value={divisionFilter}
+          onChange={(e) => setDivisionFilter(e.target.value)}
           className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        />
-        <input
-          type="date"
-          value={dateFilter.to || ""}
-          onChange={(e) => setDateFilter((f) => ({ ...f, to: e.target.value }))}
-          className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        />
+        >
+          <option value="ALL">All Divisions</option>
+          {divisions.map((division) => (
+            <option key={division} value={division}>{division}</option>
+          ))}
+        </select>
       </div>
 
       {/* Stats row */}
-      <div className={`grid gap-4 ${currentRole === "ORG_ADMIN" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
-        {(currentRole === "ORG_ADMIN" ? ["STUDENT"] : ["SUPERADMIN", "ORG_ADMIN", "STUDENT"]).map((role) => (
-          <div key={role} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-            <p className="text-sm text-black/80 mb-1">{role.replace("_", " ")}</p>
-            <p className="text-3xl font-bold text-black">{users.filter((u) => u.role === role).length}</p>
-          </div>
-        ))}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-sm text-black/80 mb-1">Students</p>
+          <p className="text-3xl font-bold text-black">{stats.studentCount}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-sm text-black/80 mb-1">Tests Completed</p>
+          <p className="text-3xl font-bold text-black">{stats.testsCompleted}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <p className="text-sm text-black/80 mb-1">Tests Pending</p>
+          <p className="text-3xl font-bold text-black">{stats.testsPending}</p>
+        </div>
       </div>
 
       {loading ? (
@@ -148,9 +193,6 @@ export default function UsersPage() {
                           <p className="text-sm text-black/70 break-all">{user.email}</p>
                         </div>
                       </div>
-                      <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium whitespace-nowrap ${roleBadge(user.role)}`}>
-                        {user.role}
-                      </span>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -159,22 +201,26 @@ export default function UsersPage() {
                         <p className="mt-1 text-black/80">{user.organization ? user.organization.name : "—"}</p>
                       </div>
                       <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Grade</p>
+                        <p className="mt-1 text-black/80">{user.grade || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Division</p>
+                        <p className="mt-1 text-black/80">{user.division || "—"}</p>
+                      </div>
+                      <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Tests</p>
-                        <p className="mt-1 text-black/80">{user.testsTaken ?? 0}</p>
+                        <p className="mt-1 text-black/80">{user.testsCompleted ?? user.testsTaken ?? 0} completed</p>
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Added On</p>
-                        <p className="mt-1 text-black/80">{formatDate(user.createdAt)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Status</p>
-                        <span className={`mt-1 inline-flex items-center gap-1 text-xs font-medium ${
-                          user.isVerified ? "text-green-600" : "text-gray-400"
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${user.isVerified ? "bg-green-500" : "bg-gray-300"}`} />
-                          {user.isVerified ? "Verified" : "Pending"}
-                        </span>
-                      </div>
+                    </div>
+
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
+                        className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
+                      >
+                        View Detail
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -186,11 +232,13 @@ export default function UsersPage() {
                     <tr className="bg-gray-50 border-b border-gray-100">
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Name</th>
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Email</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Role</th>
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Organization</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Grade</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Division</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests Completed</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests Pending</th>
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Verified</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -205,23 +253,21 @@ export default function UsersPage() {
                           </div>
                         </td>
                         <td className="px-5 py-3.5 text-black/80">{user.email}</td>
-                        <td className="px-5 py-3.5">
-                          <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${roleBadge(user.role)}`}>
-                            {user.role}
-                          </span>
-                        </td>
                         <td className="px-5 py-3.5 text-black/80 text-sm">
                           {user.organization ? user.organization.name : "—"}
                         </td>
-                        <td className="px-5 py-3.5 text-black/80">{user.testsTaken ?? 0}</td>
+                        <td className="px-5 py-3.5 text-black/80">{user.grade || "—"}</td>
+                        <td className="px-5 py-3.5 text-black/80">{user.division || "—"}</td>
+                        <td className="px-5 py-3.5 text-black/80">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
+                        <td className="px-5 py-3.5 text-black/80">{user.testsPending ?? 0}</td>
                         <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(user.createdAt)}</td>
                         <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${
-                            user.isVerified ? "text-green-600" : "text-gray-400"
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${user.isVerified ? "bg-green-500" : "bg-gray-300"}`} />
-                            {user.isVerified ? "Verified" : "Pending"}
-                          </span>
+                          <button
+                            onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
+                            className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                          >
+                            View Detail
+                          </button>
                         </td>
                       </tr>
                     ))}

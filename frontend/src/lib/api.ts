@@ -28,6 +28,7 @@ export type StoredAuth = {
     isVerified: boolean;
     grade?: string;
     institutionName?: string;
+    division?: string;
   };
   orgCompanyName?: string;
   orgSlug?: string;

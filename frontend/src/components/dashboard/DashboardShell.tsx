@@ -292,12 +292,6 @@ export default function DashboardShell({
               <span>{userRole === "ORG_ADMIN" && orgCompanyName ? orgCompanyName.substring(0, 2).toUpperCase() : "PP"}</span>
             )}
           </div>
-          <div className="hidden sm:block">
-            {/* <p className="text-sm font-bold text-gray-900 leading-none">
-              {userRole === "ORG_ADMIN" && orgCompanyName ? orgCompanyName : "Assessment"}
-            </p> */}
-            {userRole === "SUPERADMIN" && <p className="text-[11px] text-gray-400 mt-0.5">Superadmin Console</p>}
-          </div>
         </div>
 
         <div className="flex-1" />

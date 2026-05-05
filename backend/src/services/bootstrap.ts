@@ -17,12 +17,12 @@ const LEGACY_ASSESSMENT_ALIASES: Array<{ alias: string; canonical: string; canon
   {
     alias: "CLEAR",
     canonical: "JOHARI_WINDOW",
-    canonicalName: "CLEAR – Cognitive Lens for Emotional Awareness & Reflection",
+    canonicalName: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
   },
   {
     alias: "JOHARI",
     canonical: "JOHARI_WINDOW",
-    canonicalName: "CLEAR – Cognitive Lens for Emotional Awareness & Reflection",
+    canonicalName: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
   },
   {
     alias: "METACOGNITION",

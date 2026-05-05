@@ -12,6 +12,7 @@ export interface IStudentRegistrationTemp extends Document {
   phoneCode?: string;
   institutionName?: string;
   grade?: string;
+  division?: string;
   country?: string;
   state?: string;
   city?: string;
@@ -35,6 +36,7 @@ const studentRegistrationTempSchema = new Schema<IStudentRegistrationTemp>(
     phoneCode: { type: String, default: "+91", trim: true },
     institutionName: { type: String, default: undefined, trim: true },
     grade: { type: String, default: undefined, trim: true },
+    division: { type: String, default: undefined, trim: true },
     country: { type: String, default: undefined, trim: true },
     state: { type: String, default: undefined, trim: true },
     city: { type: String, default: undefined, trim: true },

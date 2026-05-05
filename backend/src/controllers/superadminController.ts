@@ -25,7 +25,7 @@ const getAssessmentCodeAliases = (code: string): string[] => {
 const getAssessmentDisplayName = (code: string, fallbackName: string): string => {
   const normalized = normalizeAssessmentCode(code);
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
-  if (normalized === "JOHARI_WINDOW") return "CLEAR – Cognitive Lens for Emotional Awareness & Reflection";
+  if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
   return fallbackName;
 };
 
@@ -49,7 +49,7 @@ const dedupeAssessments = <T extends { code: string; name: string }>(assessments
   }
 
   return Array.from(byCode.values())
-    .map(({ __isExactCode: _ignored, ...item }) => item as T)
+    .map(({ __isExactCode: _ignored, ...item }) => item as unknown as T)
     .sort((a, b) => a.name.localeCompare(b.name));
 };
 
@@ -107,7 +107,7 @@ export const getSuperadminDashboard = async (_req: AuthRequest, res: Response): 
   ]);
 
   const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as Record<string, unknown> as { code: string; name: string })
+    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
   // Dynamically count questions for each assessment
