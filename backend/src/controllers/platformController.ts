@@ -4,6 +4,7 @@ import Assessment from "../models/Assessment";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
 import Organization from "../models/Organization";
+import OrganizationRegistration from "../models/OrganizationRegistration";
 import Question from "../models/Question";
 import StudentAssessmentAttempt, { IAttemptQuestion } from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
@@ -431,7 +432,33 @@ const buildAttemptReportPayload = async (
     await attempt.save();
   }
 
-  const student = await User.findById(studentId).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 });
+  const [student, organization, orgAdmin, organizationRegistration] = await Promise.all([
+    User.findById(studentId).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 }),
+    Organization.findById(attempt.organization).select({
+      name: 1,
+      website: 1,
+      contactEmail: 1,
+      branding: 1,
+    }),
+    User.findOne({
+      role: "ORG_ADMIN",
+      organization: attempt.organization,
+      isActive: true,
+    })
+      .sort({ createdAt: 1 })
+      .select({ firstName: 1, lastName: 1, email: 1, phone: 1, phoneCode: 1 }),
+    OrganizationRegistration.findOne({ organization: attempt.organization })
+      .sort({ updatedAt: -1 })
+      .select({ firstName: 1, lastName: 1, primaryMobile: 1, email: 1, website: 1 }),
+  ]);
+
+  const representativeName = `${orgAdmin?.firstName || organizationRegistration?.firstName || ""} ${orgAdmin?.lastName || organizationRegistration?.lastName || ""}`.trim() || undefined;
+
+  const contactPhone = `${orgAdmin?.phoneCode || ""}${orgAdmin?.phone || organizationRegistration?.primaryMobile || ""}`.trim() || undefined;
+
+  const contactEmail = organization?.contactEmail || orgAdmin?.email || organizationRegistration?.email || undefined;
+
+  const website = organization?.website || organizationRegistration?.website || undefined;
 
   return {
     attemptId: attempt._id,
@@ -448,6 +475,17 @@ const buildAttemptReportPayload = async (
           lastName: student.lastName,
           grade: student.grade,
           institutionName: student.institutionName,
+        }
+      : undefined,
+    organization: organization
+      ? {
+          name: organization.name,
+          companyName: organization.branding?.companyName || organization.name,
+          logoUrl: organization.branding?.logoUrl,
+          website,
+          contactEmail,
+          contactPhone,
+          representativeName,
         }
       : undefined,
   };
@@ -1115,38 +1153,12 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
     return;
   }
 
-  const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
-
   if (attempt.status !== "COMPLETED") {
     res.status(400).json({ message: "Report is available only after test submission" });
     return;
   }
 
-  if (!attempt.evaluation) {
-    attempt.evaluation = await evaluateAssessmentAttempt(attempt);
-    await attempt.save();
-  }
-
-  const student = await User.findById(req.user!._id).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 });
-
   res.json({
-    report: {
-      attemptId: attempt._id,
-      assessmentCode: canonicalCode,
-      assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
-      status: attempt.status,
-      answeredCount: attempt.answeredCount,
-      totalQuestions: attempt.totalQuestions,
-      submittedAt: attempt.completedAt,
-      evaluation: attempt.evaluation,
-      student: student
-        ? {
-            firstName: student.firstName,
-            lastName: student.lastName,
-            grade: student.grade,
-            institutionName: student.institutionName,
-          }
-        : undefined,
-    },
+    report: await buildAttemptReportPayload(attempt, String(req.user!._id)),
   });
 };

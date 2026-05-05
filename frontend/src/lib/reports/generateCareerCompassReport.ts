@@ -1,6 +1,15 @@
 import { PERSONALITY_CAREERS, PERSONALITY_NAMES, PERSONALITY_STREAMS, PERSONALITY_SUBJECTS } from "@/lib/reports/reportConstants";
 import { PERSONALITY_CONTENT } from "@/lib/reports/personalityContent";
 
+type OrganizationBranding = {
+  organizationName?: string;
+  logoUrl?: string;
+  website?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  representativeName?: string;
+};
+
 async function loadImageAsJpeg(src: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -19,12 +28,89 @@ async function loadImageAsJpeg(src: string): Promise<string> {
   });
 }
 
+const toAbsoluteUrl = (value?: string): string => {
+  if (!value) return "";
+  if (/^data:image\//i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (typeof window !== "undefined") return `${window.location.origin}${value.startsWith("/") ? "" : "/"}${value}`;
+  return value;
+};
+
+const toFirstLastName = (value?: string): string => {
+  const cleaned = String(value || "").replace(/\s+/g, " ").trim();
+  if (!cleaned) return "—";
+  const parts = cleaned.split(" ").filter(Boolean);
+  if (parts.length <= 2) return parts.join(" ");
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+};
+
+const normalizeWebsite = (value?: string): string => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+};
+
+const applyOrganizationBranding = (
+  pdf: any,
+  pageNumber: number,
+  pageHeight: number,
+  branding: OrganizationBranding,
+  logoDataUrl?: string,
+  includeFooterContact?: boolean,
+) => {
+  pdf.setPage(pageNumber);
+
+  const website = normalizeWebsite(branding.website) || "—";
+  const interpretedBy = toFirstLastName(branding.representativeName);
+
+  // ── Logo area (same coordinates as CLEAR) ──
+  const logoArea = includeFooterContact
+    ? { x: 56, y: 202, width: 98, height: 44 }
+    : { x: 116, y: 8, width: 80, height: 28 };
+
+  if (logoDataUrl) {
+    const tmpImg = new Image();
+    tmpImg.src = logoDataUrl;
+    const nw = tmpImg.naturalWidth || logoArea.width;
+    const nh = tmpImg.naturalHeight || logoArea.height;
+    const ratio = nw / nh;
+    const maxW = logoArea.width - 4;
+    const maxH = logoArea.height - 4;
+    let dw = maxW;
+    let dh = dw / ratio;
+    if (dh > maxH) { dh = maxH; dw = dh * ratio; }
+    const ox = logoArea.x + (logoArea.width - dw) / 2;
+    const oy = logoArea.y + (logoArea.height - dh) / 2;
+    pdf.addImage(logoDataUrl, "JPEG", ox, oy, dw, dh, undefined, "FAST");
+  }
+
+  // ── Website ──
+  pdf.setTextColor(30, 41, 59);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  pdf.text(website, 105, pageHeight - 9.5, { align: "center" });
+
+  if (!includeFooterContact) {
+    pdf.setFontSize(12);
+    pdf.text(interpretedBy, 18, 259);
+    return;
+  }
+
+  // ── Last page phone/email ──
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  pdf.text(`Phone: ${branding.contactPhone || "—"}`, 16, 256.5);
+  pdf.text(`Email: ${branding.contactEmail || "—"}`, 108, 256.5);
+};
+
 export async function generateCareerCompassReport(args: {
   studentName: string;
   submittedAt?: string;
   personalityType: string;
   classGrade?: string;
   schoolName?: string;
+  organizationBranding?: OrganizationBranding;
 }): Promise<void> {
   const { default: jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
@@ -42,6 +128,15 @@ export async function generateCareerCompassReport(args: {
   };
 
   const pt = args.personalityType || "UNKNOWN";
+  let organizationLogo: string | undefined;
+  if (args.organizationBranding?.logoUrl) {
+    try {
+      organizationLogo = await loadImageAsJpeg(toAbsoluteUrl(args.organizationBranding.logoUrl));
+    } catch {
+      organizationLogo = undefined;
+    }
+  }
+
   await addImagePage("/career/1.png");
 
   pdf.addPage();
@@ -61,7 +156,7 @@ export async function generateCareerCompassReport(args: {
     { label: "Class / Grade", value: args.classGrade || "—" },
     { label: "Institute Name", value: args.schoolName || "—" },
     { label: "Date of Assessment", value: args.submittedAt || "—" },
-    { label: "Counselor Name", value: "Administered by ADMITra" },
+    { label: "Counselor Name", value: args.organizationBranding?.representativeName || args.organizationBranding?.organizationName || "Administered by Organization" },
   ];
 
   const infoCardHeight = Math.max(165, infoFields.length * 30 + 18);
@@ -295,5 +390,10 @@ export async function generateCareerCompassReport(args: {
 
   pdf.addPage();
   await addImagePage("/career/7.png");
+
+  const totalPages = pdf.getNumberOfPages();
+  applyOrganizationBranding(pdf, 1, pageHeight, args.organizationBranding || {}, organizationLogo, false);
+  applyOrganizationBranding(pdf, totalPages, pageHeight, args.organizationBranding || {}, organizationLogo, true);
+
   pdf.save("Career_Compass_Report.pdf");
 }

@@ -37,6 +37,15 @@ type ReportResponse = {
       grade?: string;
       institutionName?: string;
     };
+    organization?: {
+      name?: string;
+      companyName?: string;
+      logoUrl?: string;
+      website?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      representativeName?: string;
+    };
   };
 };
 
@@ -152,6 +161,15 @@ export default function AssessmentReportView({
   const classGrade = profileFromReport.grade || profileFromAuth.grade || "";
   const schoolName = profileFromReport.institutionName || profileFromAuth.institutionName || "";
   const reportStudentName = `${profileFromReport.firstName || profileFromAuth.firstName || ""} ${profileFromReport.lastName || profileFromAuth.lastName || ""}`.trim() || "Student";
+  const orgProfile = report.organization || {};
+  const reportBranding = {
+    organizationName: orgProfile.companyName || orgProfile.name || "",
+    logoUrl: orgProfile.logoUrl || "",
+    website: orgProfile.website || "",
+    contactEmail: orgProfile.contactEmail || "",
+    contactPhone: orgProfile.contactPhone || "",
+    representativeName: orgProfile.representativeName || "",
+  };
 
   const downloadDetailedReport = async () => {
     setDownloading(true);
@@ -165,6 +183,7 @@ export default function AssessmentReportView({
           sfScore: toNumber(evaluation.solicitsFeedbackScore),
           sdScore: toNumber(evaluation.selfDisclosureScore),
           dominantQuadrant: String(evaluation.dominantQuadrant || "Open Area"),
+          organizationBranding: reportBranding,
         });
         return;
       }
@@ -176,6 +195,7 @@ export default function AssessmentReportView({
           personalityType: String(evaluation.personalityType || "UNKNOWN"),
           classGrade,
           schoolName,
+          organizationBranding: reportBranding,
         });
         return;
       }
@@ -196,6 +216,7 @@ export default function AssessmentReportView({
             domain4: toNumber(domainScores.domain4),
             domain5: toNumber(domainScores.domain5),
           },
+          organizationBranding: reportBranding,
         });
         return;
       }
@@ -211,6 +232,7 @@ export default function AssessmentReportView({
             P: toNumber(styleScores.P),
             J: toNumber(styleScores.J),
           },
+          organizationBranding: reportBranding,
         });
         return;
       }

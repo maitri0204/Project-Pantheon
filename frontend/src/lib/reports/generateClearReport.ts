@@ -11,6 +11,14 @@ export interface ReportData {
   sfScore: number;   // Solicits Feedback  (0-50)
   sdScore: number;   // Self-Disclosure     (0-50)
   dominantQuadrant: string;
+  organizationBranding?: {
+    organizationName?: string;
+    logoUrl?: string;
+    website?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    representativeName?: string;
+  };
 }
 
 function drawPage2(pdf: jsPDF, data: ReportData, W: number, H: number) {
@@ -33,7 +41,13 @@ function drawPage2(pdf: jsPDF, data: ReportData, W: number, H: number) {
     { label: "Class / Grade", value: data.classGrade || "—" },
     { label: "Institute Name", value: data.schoolName || "—" },
     { label: "Date of Assessment", value: data.submittedAt || "—" },
-    { label: "Counselor Name", value: "Administered by ADMITra" },
+    {
+      label: "Counselor Name",
+      value:
+        data.organizationBranding?.representativeName
+        || data.organizationBranding?.organizationName
+        || "Administered by Organization",
+    },
   ];
 
   let y = 70;
@@ -81,6 +95,83 @@ function loadImageAsDataURL(src: string): Promise<string> {
     img.src = src;
   });
 }
+
+const toAbsoluteUrl = (value?: string): string => {
+  if (!value) return "";
+  if (/^data:image\//i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (typeof window !== "undefined") return `${window.location.origin}${value.startsWith("/") ? "" : "/"}${value}`;
+  return value;
+};
+
+const toFirstLastName = (value?: string): string => {
+  const cleaned = String(value || "").replace(/\s+/g, " ").trim();
+  if (!cleaned) return "—";
+  const parts = cleaned.split(" ").filter(Boolean);
+  if (parts.length <= 2) return parts.join(" ");
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+};
+
+const normalizeWebsite = (value?: string): string => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+};
+
+const applyOrganizationBranding = (
+  pdf: jsPDF,
+  pageNumber: number,
+  pageHeight: number,
+  branding: NonNullable<ReportData["organizationBranding"]>,
+  logoDataUrl?: string,
+  includeFooterContact?: boolean,
+) => {
+  pdf.setPage(pageNumber);
+  const white: [number, number, number] = [255, 255, 255];
+  const website = normalizeWebsite(branding.website) || "—";
+  const interpretedBy = toFirstLastName(branding.representativeName);
+
+  // ── Logo area ──
+  const logoArea = includeFooterContact
+    ? { x: 56, y: 202, width: 98, height: 44 }
+    : { x: 116, y: 8, width: 80, height: 28 };
+
+  if (logoDataUrl) {
+    const tmpImg = new Image();
+    tmpImg.src = logoDataUrl;
+    const nw = tmpImg.naturalWidth || logoArea.width;
+    const nh = tmpImg.naturalHeight || logoArea.height;
+    const ratio = nw / nh;
+    const maxW = logoArea.width - 4;
+    const maxH = logoArea.height - 4;
+    let dw = maxW;
+    let dh = dw / ratio;
+    if (dh > maxH) { dh = maxH; dw = dh * ratio; }
+    const ox = logoArea.x + (logoArea.width - dw) / 2;
+    const oy = logoArea.y + (logoArea.height - dh) / 2;
+    pdf.addImage(logoDataUrl, "JPEG", ox, oy, dw, dh, undefined, "FAST");
+  }
+
+  // ── Website ──
+  pdf.setTextColor(30, 41, 59);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  pdf.text(website, 105, pageHeight - 9.5, { align: "center" });
+
+  if (!includeFooterContact) {
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(12);
+    pdf.text(interpretedBy, 18, 259);
+    return;
+  }
+
+  // ── Last page phone/email ──
+  pdf.setTextColor(15, 23, 42);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(12);
+  pdf.text(`Phone: ${branding.contactPhone || "—"}`, 16, 256.5);
+  pdf.text(`Email: ${branding.contactEmail || "—"}`, 108, 256.5);
+};
 
 /* ═══════════════════════════════════════════════
    Quadrant metadata
@@ -368,6 +459,15 @@ export async function generateClearReport(data: ReportData, options?: { returnBl
   );
   const images = Object.fromEntries(entries.filter(([, v]) => v !== null)) as Record<number, string>;
 
+  let organizationLogo: string | undefined;
+  if (data.organizationBranding?.logoUrl) {
+    try {
+      organizationLogo = await loadImageAsDataURL(toAbsoluteUrl(data.organizationBranding.logoUrl));
+    } catch {
+      organizationLogo = undefined;
+    }
+  }
+
   let needsNewPage = false;
 
   if (images[1]) {
@@ -442,6 +542,10 @@ export async function generateClearReport(data: ReportData, options?: { returnBl
   }
 
   /* Download or return blob */
+  const totalPages = pdf.getNumberOfPages();
+  applyOrganizationBranding(pdf, 1, H, data.organizationBranding || {}, organizationLogo, false);
+  applyOrganizationBranding(pdf, totalPages, H, data.organizationBranding || {}, organizationLogo, true);
+
   const safe = data.studentName.replace(/[^a-zA-Z0-9_\- ]/g, "").replace(/\s+/g, "_");
   if (options?.returnBlob) {
     return pdf.output("blob");

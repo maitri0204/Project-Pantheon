@@ -26,6 +26,14 @@ interface ReportData {
   classGrade?: string;
   schoolName?: string;
   board?: string;
+  organizationBranding?: {
+    organizationName?: string;
+    logoUrl?: string;
+    website?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    representativeName?: string;
+  };
 }
 
 // ── Color constants ──
@@ -40,6 +48,9 @@ const GRAY_500 = [107, 114, 128];
 // ── Helpers ──
 
 async function fetchImageAsDataURL(url: string): Promise<string> {
+  if (/^data:image\//i.test(url)) {
+    return url;
+  }
   // Use absolute URL so this works in both localhost and production deployments
   const absoluteUrl =
     typeof window !== "undefined" && url.startsWith("/")
@@ -91,7 +102,13 @@ function compressImageToJPEG(
 }
 
 /** Adds border, top accent bar, and footer bar to a dynamic page */
-function addPageChrome(doc: jsPDF) {
+const normalizeWebsite = (value?: string): string => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+};
+
+function addPageChrome(doc: jsPDF, website?: string) {
   const w = doc.internal.pageSize.getWidth();
   const h = doc.internal.pageSize.getHeight();
   doc.setDrawColor(0, 123, 194);
@@ -103,7 +120,7 @@ function addPageChrome(doc: jsPDF) {
   doc.rect(10, h - 22, w - 20, 12, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
-  doc.text("https://test.admitra.io", w / 2, h - 14, { align: "center" });
+  doc.text(normalizeWebsite(website) || "—", w / 2, h - 14, { align: "center" });
 }
 
 // ────────────────────────────────────────────
@@ -111,7 +128,7 @@ function addPageChrome(doc: jsPDF) {
 // ────────────────────────────────────────────
 function addStudentInfoPage(doc: jsPDF, data: ReportData) {
   doc.addPage();
-  addPageChrome(doc);
+  addPageChrome(doc, data.organizationBranding?.website);
 
   const w = doc.internal.pageSize.getWidth();
   let y = 45;
@@ -132,7 +149,13 @@ function addStudentInfoPage(doc: jsPDF, data: ReportData) {
     { label: "Class / Grade", value: data.classGrade || "—" },
     { label: "School Name", value: data.schoolName || "—" },
     { label: "Date of Assessment", value: data.submittedAt },
-    { label: "Counselor Name", value: "Administered by ADMITra" },
+    {
+      label: "Counselor Name",
+      value:
+        data.organizationBranding?.representativeName
+        || data.organizationBranding?.organizationName
+        || "Administered by Organization",
+    },
   ];
 
   const boxX = 30;
@@ -403,6 +426,87 @@ function addImagePage(doc: jsPDF, imgDataUrl: string, format: string = "PNG") {
   doc.addImage(imgDataUrl, format, 0, 0, w, h, undefined, "FAST");
 }
 
+const toAbsoluteUrl = (value?: string): string => {
+  if (!value) return "";
+  if (/^data:image\//i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) return value;
+  if (typeof window !== "undefined") return `${window.location.origin}${value.startsWith("/") ? "" : "/"}${value}`;
+  return value;
+};
+
+const toFirstLastName = (value?: string): string => {
+  const cleaned = String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return "—";
+  const parts = cleaned.split(" ").filter(Boolean);
+  if (parts.length <= 2) return parts.join(" ");
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+};
+
+function applyOrganizationBranding(
+  doc: jsPDF,
+  pageNumber: number,
+  branding: NonNullable<ReportData["organizationBranding"]>,
+  logoDataUrl?: string,
+  includeFooterContact?: boolean,
+) {
+  doc.setPage(pageNumber);
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+  const firstPageBg: [number, number, number] = [236, 237, 239];
+  const lastPageBg: [number, number, number] = [236, 237, 239];
+
+  const website = normalizeWebsite(branding.website) || "—";
+  const interpretedBy = toFirstLastName(branding.representativeName);
+  const phone = branding.contactPhone || "—";
+  const email = branding.contactEmail || "—";
+
+  // 1) Logo area
+  //    First page: covers "KAREERstudio – Powered by ADMITra" in the centre area
+  //    Last page:  covers the brand block near the bottom
+  const logoArea = includeFooterContact
+    ? { x: 56, y: 205, width: 98, height: 46 }
+    : { x: 40, y: 34, width: 130, height: 46 };
+
+  if (logoDataUrl) {
+    const tmpImg = new Image();
+    tmpImg.src = logoDataUrl;
+    const nw = tmpImg.naturalWidth || logoArea.width;
+    const nh = tmpImg.naturalHeight || logoArea.height;
+    const ratio = nw / nh;
+    const maxW = logoArea.width - 6;
+    const maxH = logoArea.height - 6;
+    let dw = maxW;
+    let dh = dw / ratio;
+    if (dh > maxH) { dh = maxH; dw = dh * ratio; }
+    const ox = logoArea.x + (logoArea.width - dw) / 2;
+    const oy = logoArea.y + (logoArea.height - dh) / 2;
+    doc.addImage(logoDataUrl, "JPEG", ox, oy, dw, dh, undefined, "FAST");
+  }
+
+  // 2) Website
+  doc.setTextColor(30, 41, 59);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(website, w / 2, h - 9.5, { align: "center" });
+
+  if (!includeFooterContact) {
+    // 3) "Interpreted by"
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(interpretedBy, 18, 259);
+    return;
+  }
+
+  // 4) Last-page phone/email
+  doc.setTextColor(15, 23, 42);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(`Phone: ${phone}`, 16, 256.5);
+  doc.text(`Email: ${email}`, 108, 256.5);
+}
+
 // ────────────────────────────────────────────
 //  MAIN EXPORT
 // ────────────────────────────────────────────
@@ -461,6 +565,16 @@ export async function generateMetacognitionReport(
     imageMap.set(num, imageDataUrls[i]);
   });
 
+  let organizationLogo: string | undefined;
+  if (data.organizationBranding?.logoUrl) {
+    try {
+      const logoData = await fetchImageAsDataURL(toAbsoluteUrl(data.organizationBranding.logoUrl));
+      organizationLogo = await compressImageToJPEG(logoData, options?.returnBlob ? 0.72 : 0.82);
+    } catch {
+      organizationLogo = undefined;
+    }
+  }
+
   // ── Page 1 — Cover (first page of doc, no addPage needed) ──
   doc.addImage(imageMap.get(1)!, imgFormat, 0, 0, w, h);
 
@@ -487,6 +601,10 @@ export async function generateMetacognitionReport(
 
   // ── Page 24 — Common ending page ──
   addImagePage(doc, imageMap.get(24)!, imgFormat);
+
+  const totalPages = doc.getNumberOfPages();
+  applyOrganizationBranding(doc, 1, data.organizationBranding || {}, organizationLogo, false);
+  applyOrganizationBranding(doc, totalPages, data.organizationBranding || {}, organizationLogo, true);
 
   // Save and/or return blob
   const fileName = `TEST_Detailed_Report_${data.studentName.replace(/\s+/g, "_")}.pdf`;
