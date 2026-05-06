@@ -12,6 +12,17 @@ const ASSESSMENTS = [
   { code: "METACOGNITION_TEST", name: "TEST", color: "rose" },
 ] as const;
 
+function getAssessmentDisplayName(code: string, fallback?: string): string {
+  const assessmentMap: Record<string, string> = {
+    CAREER_COMPASS: "COMPASS - Career Exploration & Planning Assessment",
+    CAREER_DNA: "DNA - Career Path Discovery Navigator",
+    JOHARI_WINDOW: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
+    LITMUS_TEST: "LITMUS - Learning & Innovation Through Assessment",
+    METACOGNITION_TEST: "TEST - Thinking & Expression Skills Test",
+  };
+  return assessmentMap[code] || fallback || code;
+}
+
 const COLOR_CLASSES: Record<string, string> = {
   emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
   purple: "bg-purple-50 text-purple-700 border-purple-200",
@@ -27,6 +38,23 @@ type Coupon = {
 };
 type PricingMap = Record<string, number>;
 type GstMap = Record<string, boolean>;
+type RoleMode = "SUPERADMIN" | "ORG_ADMIN";
+type OrganizationCouponSummaryItem = {
+  assessmentCode: string;
+  assessmentName: string;
+  prefix: string;
+  totalCoupons: number;
+  usedCoupons: number;
+  remainingCoupons: number;
+  isConfigured: boolean;
+  isActive: boolean;
+  usedByStudents?: Array<{
+    couponCode: string;
+    studentName: string;
+    studentEmail?: string;
+    usedAt?: string;
+  }>;
+};
 const GST_RATE = 0.18;
 
 function calcPrice(base: number, coupon: Coupon | null, gst: boolean) {
@@ -43,6 +71,8 @@ function calcPrice(base: number, coupon: Coupon | null, gst: boolean) {
 export default function CouponsPage() {
   const router = useRouter();
   const auth = useMemo(() => getStoredAuth(), []);
+  const [mode, setMode] = useState<RoleMode>("SUPERADMIN");
+  const [orgSummary, setOrgSummary] = useState<OrganizationCouponSummaryItem[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [pricing, setPricing] = useState<PricingMap>({});
@@ -73,10 +103,24 @@ export default function CouponsPage() {
       return;
     }
 
+    if (auth.user.role === "ORG_ADMIN") {
+      const summaryRes = await apiRequest<{ summary: OrganizationCouponSummaryItem[] }>(
+        "/platform/organization/coupons/summary",
+        {},
+        auth.token
+      );
+      setMode("ORG_ADMIN");
+      setOrgSummary(summaryRes.summary || []);
+      setLoading(false);
+      return;
+    }
+
     if (auth.user.role !== "SUPERADMIN") {
       router.replace("/dashboard/users");
       return;
     }
+
+    setMode("SUPERADMIN");
 
     const [asmRes, cpRes] = await Promise.all([
       apiRequest<{ assessments: Assessment[] }>("/superadmin/dashboard", {}, auth.token),
@@ -156,6 +200,152 @@ export default function CouponsPage() {
   function isExpired(c: Coupon) { return c.expiresAt ? new Date(c.expiresAt) < new Date() : false; }
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>;
+
+  if (mode === "ORG_ADMIN") {
+    const totalCoupons = orgSummary.reduce((sum, item) => sum + item.totalCoupons, 0);
+    const totalUsed = orgSummary.reduce((sum, item) => sum + item.usedCoupons, 0);
+    const totalRemaining = orgSummary.reduce((sum, item) => sum + item.remainingCoupons, 0);
+
+    return (
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div>
+          <h1 className="text-3xl font-bold text-black">Coupons</h1>
+          <p className="text-base text-black/80 mt-1">Your organization&apos;s coupon allocation across all assessments.</p>
+        </div>
+
+        {/* Summary boxes */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-1">
+            <p className="text-sm text-gray-500 font-medium">Total Coupons</p>
+            <p className="text-4xl font-bold text-slate-900 mt-1">{totalCoupons}</p>
+            <p className="text-xs text-gray-400 mt-1">Across all assessments</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-1">
+            <p className="text-sm text-gray-500 font-medium">Total Used</p>
+            <p className="text-4xl font-bold text-emerald-600 mt-1">{totalUsed}</p>
+            <p className="text-xs text-gray-400 mt-1">Allocated to students</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-1">
+            <p className="text-sm text-gray-500 font-medium">Total Remaining</p>
+            <p className="text-4xl font-bold text-blue-600 mt-1">{totalRemaining}</p>
+            <p className="text-xs text-gray-400 mt-1">Available to allocate</p>
+          </div>
+        </div>
+
+        {/* Test-wise breakdown */}
+        <div>
+          <h2 className="text-xl font-bold text-black mb-3">Assessment Configuration</h2>
+          <div className="space-y-4">
+            {orgSummary.map((item) => {
+              const usedPct = item.totalCoupons > 0 ? Math.round((item.usedCoupons / item.totalCoupons) * 100) : 0;
+              const displayName = getAssessmentDisplayName(item.assessmentCode, item.assessmentName);
+              const shortName = displayName.split(" - ")[0];
+              const colorMap: Record<string, { bg: string; ring: string; text: string; accent: string }> = {
+                CAREER_COMPASS: { bg: "from-emerald-50 to-emerald-100", ring: "ring-emerald-200", text: "text-emerald-700", accent: "bg-emerald-500" },
+                CAREER_DNA: { bg: "from-purple-50 to-purple-100", ring: "ring-purple-200", text: "text-purple-700", accent: "bg-purple-500" },
+                JOHARI_WINDOW: { bg: "from-amber-50 to-amber-100", ring: "ring-amber-200", text: "text-amber-700", accent: "bg-amber-500" },
+                LITMUS_TEST: { bg: "from-blue-50 to-blue-100", ring: "ring-blue-200", text: "text-blue-700", accent: "bg-blue-500" },
+                METACOGNITION_TEST: { bg: "from-rose-50 to-rose-100", ring: "ring-rose-200", text: "text-rose-700", accent: "bg-rose-500" },
+              };
+              const colors = colorMap[item.assessmentCode] || colorMap.CAREER_COMPASS;
+
+              return (
+                <div
+                  key={item.assessmentCode}
+                  className={`bg-gradient-to-br ${colors.bg} rounded-3xl border-2 ${colors.ring} shadow-lg hover:shadow-2xl transition-all duration-300 p-6 backdrop-blur-sm`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className={`w-12 h-12 rounded-2xl ${colors.accent} flex items-center justify-center text-white font-bold text-lg shadow-lg`}>
+                          {shortName.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className={`font-bold text-lg ${colors.text}`}>{shortName}</p>
+                          <p className={`text-xs ${colors.text} opacity-70 font-medium mt-0.5`}>
+                            {item.isConfigured ? `Prefix: ${item.prefix || "—"}` : "Not configured"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-3 py-1.5 rounded-full font-bold whitespace-nowrap shadow-md ${
+                      item.isConfigured && item.isActive
+                        ? "bg-green-500 text-white"
+                        : item.isConfigured
+                        ? "bg-amber-500 text-white"
+                        : "bg-gray-400 text-white"
+                    }`}>
+                      {item.isConfigured ? (item.isActive ? "●  Active" : "◯  Disabled") : "Not Set"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
+                      <p className={`text-2xl font-bold ${colors.text}`}>{item.totalCoupons}</p>
+                      <p className="text-xs text-gray-600 font-medium mt-0.5">Total</p>
+                    </div>
+                    <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
+                      <p className="text-2xl font-bold text-emerald-600">{item.usedCoupons}</p>
+                      <p className="text-xs text-gray-600 font-medium mt-0.5">Used</p>
+                    </div>
+                    <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
+                      <p className="text-2xl font-bold text-blue-600">{item.remainingCoupons}</p>
+                      <p className="text-xs text-gray-600 font-medium mt-0.5">Remaining</p>
+                    </div>
+                  </div>
+
+                  {item.isConfigured && item.totalCoupons > 0 && (
+                    <div>
+                      <div className="flex justify-between text-xs font-semibold text-gray-600 mb-2">
+                        <span>Allocation Progress</span>
+                        <span>{usedPct}%</span>
+                      </div>
+                      <div className="h-3 bg-white/50 rounded-full overflow-hidden shadow-inner">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 shadow-lg ${
+                            usedPct >= 90
+                              ? "bg-gradient-to-r from-red-400 to-red-500"
+                              : usedPct >= 60
+                                ? "bg-gradient-to-r from-amber-400 to-amber-500"
+                                : "bg-gradient-to-r from-emerald-400 to-emerald-500"
+                          }`}
+                          style={{ width: `${usedPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {!!item.usedByStudents?.length && (
+                    <div className="mt-5 bg-white/55 backdrop-blur rounded-2xl p-4 shadow-md border border-white/60">
+                      <p className="text-sm font-bold text-gray-700 mb-2">Used coupons by students</p>
+                      <div className="space-y-2 max-h-52 overflow-auto pr-1">
+                        {item.usedByStudents.map((usage, index) => (
+                          <div key={`${usage.couponCode}-${index}`} className="flex items-center justify-between gap-3 bg-white/80 rounded-xl px-3 py-2 border border-gray-100">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-gray-800 truncate">{usage.studentName}</p>
+                              <p className="text-xs text-gray-500 font-medium truncate">{usage.studentEmail || "—"}</p>
+                            </div>
+                            <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1 whitespace-nowrap">
+                              {usage.couponCode}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {orgSummary.length === 0 && (
+              <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 shadow-sm px-8 py-16 text-center">
+                <p className="text-gray-600 font-semibold">No coupon data available for your organization.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">

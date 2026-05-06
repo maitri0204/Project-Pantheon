@@ -4,6 +4,7 @@ import {
   getStudentAttempt,
   getStudentAttemptReportForAdmin,
   getStudentDetailsForAdmin,
+  getOrganizationCouponSummary,
   getStudentDashboard,
   getDashboard,
   getStudentAttemptReport,
@@ -31,6 +32,7 @@ router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requi
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT"), getStudentDashboard);
 router.get("/student/results", requireAuth, requireRoles("STUDENT"), listStudentResults);
 router.get("/student/assessments", requireAuth, requireRoles("STUDENT"), listStudentAssessments);
+router.get("/organization/coupons/summary", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationCouponSummary);
 router.post("/student/assessments/:code/start", requireAuth, requireRoles("STUDENT"), startStudentAssessment);
 router.get("/student/attempts/:attemptId", requireAuth, requireRoles("STUDENT"), getStudentAttempt);
 router.get("/student/attempts/:attemptId/report", requireAuth, requireRoles("STUDENT"), getStudentAttemptReport);

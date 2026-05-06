@@ -4,6 +4,9 @@ import Assessment from "../models/Assessment";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
 import Organization from "../models/Organization";
+import OrganizationRegistration from "../models/OrganizationRegistration";
+import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
+import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
 import Question from "../models/Question";
 import User from "../models/User";
 import { AuthRequest } from "../types/auth";
@@ -163,6 +166,204 @@ export const createOrganization = async (req: AuthRequest, res: Response): Promi
 
     console.error("Create organization error:", error);
     res.status(500).json({ message: "Failed to create organization" });
+  }
+};
+
+const formatSequentialCouponCode = (prefix: string, sequence: number): string => {
+  const safePrefix = String(prefix || "").trim().toUpperCase();
+  return `${safePrefix}${Math.max(1, Number(sequence) || 1)}`;
+};
+
+export const getOrganizationCouponDetails = async (req: AuthRequest, res: Response): Promise<void> => {
+  const organizationId = String(req.params.organizationId || "").trim();
+  if (!organizationId) {
+    res.status(400).json({ message: "Organization ID is required" });
+    return;
+  }
+
+  const organization = await Organization.findById(organizationId);
+
+  if (!organization) {
+    res.status(404).json({ message: "Organization not found" });
+    return;
+  }
+
+  const [assessments, configs, usageRows, registration] = await Promise.all([
+    Assessment.find({ active: true }).sort({ name: 1 }),
+    OrganizationCouponConfig.find({ organization: organization._id }).sort({ assessmentCode: 1 }),
+    OrganizationCouponUsage.aggregate<{ _id: string; used: number }>([
+      { $match: { organization: organization._id } },
+      { $group: { _id: "$assessmentCode", used: { $sum: 1 } } },
+    ]),
+    OrganizationRegistration.findOne({ organization: organization._id }).sort({ updatedAt: -1 }),
+  ]);
+
+  const dedupedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
+  );
+
+  const configByCode = new Map(configs.map((config) => [normalizeAssessmentCode(config.assessmentCode), config]));
+  const usedByCode = new Map(usageRows.map((row) => [normalizeAssessmentCode(row._id), row.used]));
+
+  const couponSummary = dedupedAssessments.map((assessment) => {
+    const config = configByCode.get(assessment.code);
+    const usedCoupons = usedByCode.get(assessment.code) || 0;
+    const totalCoupons = config?.totalCoupons || 0;
+    const remainingCoupons = Math.max(totalCoupons - usedCoupons, 0);
+
+    return {
+      assessmentCode: assessment.code,
+      assessmentName: assessment.name,
+      configId: config ? String(config._id) : undefined,
+      prefix: config?.prefix || "",
+      nextCouponCode: config ? formatSequentialCouponCode(config.prefix, Math.min(config.nextSequence, config.totalCoupons)) : "",
+      totalCoupons,
+      usedCoupons,
+      remainingCoupons,
+      isConfigured: Boolean(config),
+      isActive: config?.isActive ?? false,
+    };
+  });
+
+  res.json({
+    organization: {
+      _id: organization._id,
+      name: organization.name,
+      slug: organization.slug,
+      website: organization.website,
+      type: organization.type,
+      isActive: organization.isActive,
+      contactEmail: organization.contactEmail,
+      phoneNumber: registration?.primaryMobile,
+      contactPersonName: [registration?.firstName, registration?.middleName, registration?.lastName]
+        .filter((value) => Boolean(String(value || "").trim()))
+        .join(" "),
+      companyName: registration?.companyName || organization.branding?.companyName || organization.name,
+      createdAt: organization.createdAt,
+    },
+    couponSummary,
+  });
+};
+
+export const createOrganizationCouponConfig = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: "Authentication required" });
+      return;
+    }
+
+    const organizationId = String(req.params.organizationId || "").trim();
+    const {
+      assessmentCode,
+      prefix,
+      totalCoupons,
+      isActive,
+    } = req.body as {
+      assessmentCode?: string;
+      prefix?: string;
+      totalCoupons?: number;
+      isActive?: boolean;
+    };
+
+    const normalizedAssessmentCode = normalizeAssessmentCode(String(assessmentCode || "").trim().toUpperCase());
+    const normalizedPrefix = String(prefix || "").trim().toUpperCase();
+    const parsedTotalCoupons = Number(totalCoupons);
+
+    if (!organizationId || !normalizedAssessmentCode || !normalizedPrefix || !Number.isFinite(parsedTotalCoupons) || parsedTotalCoupons < 1) {
+      res.status(400).json({ message: "organizationId, assessmentCode, prefix and totalCoupons (>=1) are required" });
+      return;
+    }
+
+    const existing = await OrganizationCouponConfig.findOne({
+      organization: organizationId,
+      assessmentCode: normalizedAssessmentCode,
+    });
+    if (existing) {
+      res.status(409).json({ message: "Coupon configuration already exists for this assessment" });
+      return;
+    }
+
+    const config = await OrganizationCouponConfig.create({
+      organization: organizationId,
+      assessmentCode: normalizedAssessmentCode,
+      prefix: normalizedPrefix,
+      totalCoupons: parsedTotalCoupons,
+      nextSequence: 1,
+      isActive: typeof isActive === "boolean" ? isActive : true,
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json({ config });
+  } catch (error) {
+    console.error("Create organization coupon config error:", error);
+    res.status(500).json({ message: "Failed to create organization coupon configuration" });
+  }
+};
+
+export const updateOrganizationCouponConfig = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const organizationId = String(req.params.organizationId || "").trim();
+    const configId = String(req.params.configId || "").trim();
+    if (!organizationId || !configId) {
+      res.status(400).json({ message: "Organization and config IDs are required" });
+      return;
+    }
+
+    const {
+      prefix,
+      totalCoupons,
+      isActive,
+    } = req.body as {
+      prefix?: string;
+      totalCoupons?: number;
+      isActive?: boolean;
+    };
+
+    const config = await OrganizationCouponConfig.findOne({ _id: configId, organization: organizationId });
+    if (!config) {
+      res.status(404).json({ message: "Coupon configuration not found" });
+      return;
+    }
+
+    const usedCoupons = await OrganizationCouponUsage.countDocuments({ config: config._id });
+
+    if (prefix !== undefined) {
+      const normalizedPrefix = String(prefix || "").trim().toUpperCase();
+      if (!normalizedPrefix) {
+        res.status(400).json({ message: "Prefix cannot be empty" });
+        return;
+      }
+      if (usedCoupons > 0 && normalizedPrefix !== config.prefix) {
+        res.status(400).json({ message: "Prefix cannot be changed after coupon usage starts" });
+        return;
+      }
+      config.prefix = normalizedPrefix;
+    }
+
+    if (totalCoupons !== undefined) {
+      const parsedTotalCoupons = Number(totalCoupons);
+      if (!Number.isFinite(parsedTotalCoupons) || parsedTotalCoupons < 1) {
+        res.status(400).json({ message: "totalCoupons must be a number >= 1" });
+        return;
+      }
+      if (parsedTotalCoupons < usedCoupons) {
+        res.status(400).json({ message: `totalCoupons cannot be less than used coupons (${usedCoupons})` });
+        return;
+      }
+      config.totalCoupons = parsedTotalCoupons;
+      config.nextSequence = Math.max(config.nextSequence, usedCoupons + 1);
+    }
+
+    if (typeof isActive === "boolean") {
+      config.isActive = isActive;
+    }
+
+    await config.save();
+
+    res.json({ config });
+  } catch (error) {
+    console.error("Update organization coupon config error:", error);
+    res.status(500).json({ message: "Failed to update organization coupon configuration" });
   }
 };
 

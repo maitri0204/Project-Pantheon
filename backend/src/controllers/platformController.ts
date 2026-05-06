@@ -1,10 +1,13 @@
 import { Response } from "express";
+import mongoose from "mongoose";
 
 import Assessment from "../models/Assessment";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
 import Organization from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
+import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
+import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
 import Question from "../models/Question";
 import StudentAssessmentAttempt, { IAttemptQuestion } from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
@@ -663,13 +666,172 @@ const requireStudentUser = (req: AuthRequest, res: Response): boolean => {
   return true;
 };
 
+const buildSequentialCouponCode = (prefix: string, sequence: number): string => {
+  const safePrefix = String(prefix || "").trim().toUpperCase();
+  return `${safePrefix}${Math.max(1, Number(sequence) || 1)}`;
+};
+
+const allocateOrganizationCouponForStudent = async (args: {
+  organizationId: mongoose.Types.ObjectId | string;
+  userId: mongoose.Types.ObjectId | string;
+  assessmentCode: string;
+}): Promise<{ couponCode?: string; configId?: string }> => {
+  const { organizationId, userId, assessmentCode } = args;
+  const organizationScope = organizationId as mongoose.Types.ObjectId | string;
+  const userScope = userId as mongoose.Types.ObjectId | string;
+
+  const config = await OrganizationCouponConfig.findOne({
+    organization: organizationScope,
+    assessmentCode,
+    isActive: true,
+  });
+
+  if (!config) {
+    return {};
+  }
+
+  const existingUsage = await OrganizationCouponUsage.findOne({
+    organization: organizationScope,
+    user: userScope,
+    assessmentCode,
+  });
+
+  if (existingUsage) {
+    return {
+      couponCode: existingUsage.couponCode,
+      configId: String(config._id),
+    };
+  }
+
+  const allocatedConfig = await OrganizationCouponConfig.findOneAndUpdate(
+    {
+      _id: config._id,
+      isActive: true,
+      $expr: { $lte: ["$nextSequence", "$totalCoupons"] },
+    },
+    { $inc: { nextSequence: 1 } },
+    { new: false }
+  );
+
+  if (!allocatedConfig) {
+    throw new Error("No coupons remaining for this assessment in your organization.");
+  }
+
+  const sequence = Number(allocatedConfig.nextSequence || 1);
+  const couponCode = buildSequentialCouponCode(allocatedConfig.prefix, sequence);
+
+  try {
+    await OrganizationCouponUsage.create({
+      config: allocatedConfig._id,
+      organization: organizationScope,
+      user: userScope,
+      assessmentCode,
+      couponCode,
+      sequence,
+      usedAt: new Date(),
+    });
+  } catch {
+    const fallback = await OrganizationCouponUsage.findOne({
+      organization: organizationScope,
+      user: userScope,
+      assessmentCode,
+    });
+    if (fallback) {
+      return {
+        couponCode: fallback.couponCode,
+        configId: String(allocatedConfig._id),
+      };
+    }
+    throw new Error("Unable to allocate coupon for this assessment.");
+  }
+
+  return {
+    couponCode,
+    configId: String(allocatedConfig._id),
+  };
+};
+
+export const getOrganizationCouponSummary = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || !req.user.organization) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const orgId = req.user.organization;
+  const [assessments, configs, usageRows, usageDetails] = await Promise.all([
+    Assessment.find({ active: true }).sort({ name: 1 }),
+    OrganizationCouponConfig.find({ organization: orgId }).sort({ assessmentCode: 1 }),
+    OrganizationCouponUsage.aggregate<{ _id: string; used: number }>([
+      { $match: { organization: orgId } },
+      { $group: { _id: "$assessmentCode", used: { $sum: 1 } } },
+    ]),
+    OrganizationCouponUsage.find({ organization: orgId })
+      .populate("user", "firstName middleName lastName email")
+      .sort({ usedAt: -1 })
+      .lean(),
+  ]);
+
+  const dedupedAssessments = dedupeAssessments(
+    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
+  );
+
+  const configByCode = new Map(configs.map((config) => [normalizeAssessmentCode(config.assessmentCode), config]));
+  const usedByCode = new Map(usageRows.map((row) => [normalizeAssessmentCode(row._id), row.used]));
+  const usageByCode = new Map<string, Array<{ couponCode: string; studentName: string; studentEmail: string; usedAt?: Date }>>();
+
+  usageDetails.forEach((usage) => {
+    const code = normalizeAssessmentCode(String(usage.assessmentCode || ""));
+    const user = usage.user as unknown as {
+      firstName?: string;
+      middleName?: string;
+      lastName?: string;
+      email?: string;
+    };
+
+    const studentName = [user?.firstName, user?.middleName, user?.lastName]
+      .map((part) => String(part || "").trim())
+      .filter(Boolean)
+      .join(" ") || user?.email || "Unknown Student";
+
+    const items = usageByCode.get(code) || [];
+    items.push({
+      couponCode: String(usage.couponCode || ""),
+      studentName,
+      studentEmail: String(user?.email || ""),
+      usedAt: usage.usedAt ? new Date(usage.usedAt) : undefined,
+    });
+    usageByCode.set(code, items);
+  });
+
+  const summary = dedupedAssessments.map((assessment) => {
+    const config = configByCode.get(assessment.code);
+    const totalCoupons = config?.totalCoupons || 0;
+    const usedCoupons = usedByCode.get(assessment.code) || 0;
+
+    return {
+      assessmentCode: assessment.code,
+      assessmentName: assessment.name,
+      prefix: config?.prefix || "—",
+      totalCoupons,
+      usedCoupons,
+      remainingCoupons: Math.max(totalCoupons - usedCoupons, 0),
+      isConfigured: Boolean(config),
+      isActive: config?.isActive ?? false,
+      configId: config ? String(config._id) : undefined,
+      usedByStudents: (usageByCode.get(assessment.code) || []).slice(0, 50),
+    };
+  });
+
+  res.json({ summary });
+};
+
 export const getStudentDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
   if (!requireStudentUser(req, res)) {
     return;
   }
 
-  const organizationId = req.user!.organization;
-  const userId = req.user!._id;
+  const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
+  const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
   const [assessments, attempts] = await Promise.all([
     Assessment.find({ active: true }).sort({ name: 1 }),
@@ -746,8 +908,8 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const organizationId = req.user!.organization;
-  const userId = req.user!._id;
+  const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
+  const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
   const [assessments, attempts] = await Promise.all([
     Assessment.find({ active: true }).sort({ name: 1 }),
@@ -821,8 +983,8 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const organizationId = req.user!.organization;
-  const userId = req.user!._id;
+  const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
+  const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
   const [assessment, existingAttempt] = await Promise.all([
     Assessment.findOne({ code: { $in: codeAliases }, active: true }),
@@ -938,6 +1100,23 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     ? buildCareerDnaQuestionSetForAttempt(attemptQuestions)
     : attemptQuestions;
 
+  let allocatedCouponCode: string | undefined;
+  let allocatedConfigId: string | undefined;
+  try {
+    const allocation = await allocateOrganizationCouponForStudent({
+      organizationId,
+      userId,
+      assessmentCode: canonicalCode,
+    });
+    allocatedCouponCode = allocation.couponCode;
+    allocatedConfigId = allocation.configId;
+  } catch (error) {
+    res.status(409).json({
+      message: error instanceof Error ? error.message : "Unable to allocate coupon",
+    });
+    return;
+  }
+
   const createdAttempt = await StudentAssessmentAttempt.create({
     user: userId,
     organization: organizationId,
@@ -950,6 +1129,18 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     startedAt: new Date(),
   });
 
+  if (allocatedCouponCode && allocatedConfigId) {
+    await OrganizationCouponUsage.updateOne(
+      {
+        organization: organizationId,
+        user: userId,
+        assessmentCode: canonicalCode,
+        couponCode: allocatedCouponCode,
+      },
+      { $set: { attempt: createdAttempt._id } }
+    );
+  }
+
   res.status(201).json({
     attempt: {
       id: createdAttempt._id,
@@ -959,6 +1150,7 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
       questions: createdAttempt.questions,
       answeredCount: createdAttempt.answeredCount,
       totalQuestions: createdAttempt.totalQuestions,
+      couponCode: allocatedCouponCode,
     },
   });
 };

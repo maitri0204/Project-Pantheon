@@ -3,15 +3,18 @@ import { Router } from "express";
 import {
   createCoupon,
   createOrganization,
+  createOrganizationCouponConfig,
   createQuestion,
   deleteCoupon,
   deleteQuestion,
   getLedger,
+  getOrganizationCouponDetails,
   getSuperadminDashboard,
   listCoupons,
   listQuestions,
   updateAssessmentPricing,
   updateCoupon,
+  updateOrganizationCouponConfig,
   updateQuestion,
 } from "../controllers/superadminController";
 import { requireAuth, requireRoles } from "../middleware/auth";
@@ -21,6 +24,9 @@ const router = Router();
 router.use(requireAuth, requireRoles("SUPERADMIN"));
 router.get("/dashboard", getSuperadminDashboard);
 router.post("/organizations", createOrganization);
+router.get("/organizations/:organizationId/coupons", getOrganizationCouponDetails);
+router.post("/organizations/:organizationId/coupons", createOrganizationCouponConfig);
+router.patch("/organizations/:organizationId/coupons/:configId", updateOrganizationCouponConfig);
 router.get("/coupons", listCoupons);
 router.post("/coupons", createCoupon);
 router.patch("/coupons/:id", updateCoupon);

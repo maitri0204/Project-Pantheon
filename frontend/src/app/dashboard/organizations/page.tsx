@@ -19,6 +19,7 @@ type Organization = {
 };
 
 type SuperadminResponse = {
+  assessments: Array<{ code: string; name: string }>;
   organizations: Organization[];
 };
 
@@ -31,17 +32,11 @@ const formatDate = (dateString?: string) => {
   });
 };
 
-const DEFAULT_FORM = { name: "", slug: "", contactEmail: "" };
-
 export default function OrganizationsPage() {
   const router = useRouter();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(DEFAULT_FORM);
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<{ from?: string; to?: string }>({});
 
@@ -62,31 +57,9 @@ export default function OrganizationsPage() {
 
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!auth) return;
-    setSubmitting(true);
-    setMessage(null);
-    setError(null);
-    try {
-      await apiRequest("/superadmin/organizations", {
-        method: "POST",
-        body: JSON.stringify(form),
-      }, auth.token);
-      setMessage("Organization created successfully.");
-      setForm(DEFAULT_FORM);
-      setShowForm(false);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create organization");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const filtered = orgs.filter((o) =>
     (o.name.toLowerCase().includes(search.toLowerCase()) ||
-    o.slug.toLowerCase().includes(search.toLowerCase())) &&
+      o.slug.toLowerCase().includes(search.toLowerCase())) &&
     (!dateFilter.from || !o.createdAt || new Date(dateFilter.from) <= new Date(o.createdAt)) &&
     (!dateFilter.to || !o.createdAt || new Date(dateFilter.to) >= new Date(o.createdAt))
   );
@@ -99,24 +72,11 @@ export default function OrganizationsPage() {
           <h1 className="text-3xl font-bold text-black">Organizations</h1>
           <p className="text-black/80 mt-1 text-base">Manage whitelabel organizations that can host the Pantheon platform.</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-base font-semibold hover:bg-blue-700 transition flex-shrink-0"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          New Organization
-        </button>
       </div>
 
       {message && (
         <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl">{message}</div>
       )}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{error}</div>
-      )}
-
       {/* Search */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,15 +122,10 @@ export default function OrganizationsPage() {
                 </svg>
               </div>
               <p className="text-black/80 text-base">No organizations found.</p>
-              <button
-                onClick={() => setShowForm(true)}
-                className="mt-3 text-blue-600 text-base font-medium hover:underline"
-              >
-                Create your first organization
-              </button>
             </div>
           ) : (
             <>
+              {/* Mobile cards */}
               <div className="grid gap-4 p-4 md:hidden">
                 {filtered.map((org) => (
                   <div key={org._id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 shadow-sm">
@@ -190,7 +145,6 @@ export default function OrganizationsPage() {
                         {org.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
-
                     <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Type</p>
@@ -207,10 +161,19 @@ export default function OrganizationsPage() {
                         <p className="mt-1 text-black/80">{formatDate(org.createdAt)}</p>
                       </div>
                     </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={() => router.push(`/dashboard/organizations/${org._id}`)}
+                        className="w-full px-3 py-2 rounded-xl border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 text-sm font-semibold"
+                      >
+                        View Details
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
 
+              {/* Desktop table */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full min-w-[760px] text-base">
                   <thead>
@@ -221,6 +184,7 @@ export default function OrganizationsPage() {
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Contact</th>
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
                       <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Status</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -249,6 +213,14 @@ export default function OrganizationsPage() {
                             {org.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
+                        <td className="px-5 py-3.5">
+                          <button
+                            onClick={() => router.push(`/dashboard/organizations/${org._id}`)}
+                            className="px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 text-xs font-semibold"
+                          >
+                            View Details
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -259,79 +231,6 @@ export default function OrganizationsPage() {
         </div>
       )}
 
-      {/* Create modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-gray-900">Create Organization</h3>
-              <button
-                onClick={() => { setShowForm(false); setError(null); }}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Organization Name *</label>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Acme Corp"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Slug *</label>
-                <input
-                  required
-                  value={form.slug}
-                  onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))}
-                  placeholder="acme-corp"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-400 mt-1">Used in URLs — lowercase, hyphenated.</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Email</label>
-                <input
-                  type="email"
-                  value={form.contactEmail}
-                  onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
-                  placeholder="contact@acme.com"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2.5 rounded-xl">{error}</div>
-              )}
-
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => { setShowForm(false); setError(null); }}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {submitting ? "Creating..." : "Create Organization"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
