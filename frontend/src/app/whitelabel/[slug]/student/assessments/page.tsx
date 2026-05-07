@@ -342,8 +342,9 @@ export default function StudentAssessmentsPage() {
               <div className="flex justify-between"><span className="text-slate-600">GST</span><span className="font-semibold">₹{(pricing?.gstAmount ?? 0).toFixed(2)}</span></div>
               <div className="border-t border-slate-200 pt-2 flex justify-between text-base">
                 <span className="font-bold text-slate-900">Total payable</span>
-                <span className="font-bold text-blue-700">₹{(pricing?.finalAmount ?? 0).toFixed(2)}</span>
+                <span className="font-bold text-blue-700">₹{Math.round(pricing?.finalAmount ?? 0)}</span>
               </div>
+              <p className="pt-1 text-xs text-slate-500">* Final amount is rounded off to nearest integer.</p>
             </div>
 
             <div className="mt-5 flex gap-3">

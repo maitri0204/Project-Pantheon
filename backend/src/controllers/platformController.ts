@@ -877,7 +877,8 @@ const computeAssessmentPricing = async (args: {
 
   const gstAmount = assessment.gstEnabled ? basePrice * GST_RATE : 0;
   const priceWithGst = basePrice + gstAmount;
-  const finalAmount = Math.max(priceWithGst - discountAmount, 0);
+  const rawFinalAmount = Math.max(priceWithGst - discountAmount, 0);
+  const finalAmount = Math.round(rawFinalAmount);
 
   return {
     assessment: {
@@ -890,7 +891,7 @@ const computeAssessmentPricing = async (args: {
     couponCode,
     discountAmount: Number(discountAmount.toFixed(2)),
     gstAmount: Number(gstAmount.toFixed(2)),
-    finalAmount: Number(finalAmount.toFixed(2)),
+    finalAmount: finalAmount,
   };
 };
 
