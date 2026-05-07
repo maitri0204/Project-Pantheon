@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiRequest, clearStoredAuth, getStoredAuth, setStoredAuth } from "@/lib/api";
@@ -36,7 +36,6 @@ type LoginPageContentProps = {
 
 export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageContentProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -59,9 +58,8 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
 
   const portalOrganizationSlug = useMemo(() => {
     const forcedSlug = forcedOrganizationSlug?.toLowerCase().trim();
-    const slugFromQuery = searchParams?.get("organizationSlug")?.toLowerCase().trim();
-    return forcedSlug || slugFromQuery || organizationSlug;
-  }, [forcedOrganizationSlug, organizationSlug, searchParams]);
+    return forcedSlug || organizationSlug;
+  }, [forcedOrganizationSlug, organizationSlug]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,8 +112,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
       if (typeof window === "undefined") return;
 
       const forcedSlug = forcedOrganizationSlug?.toLowerCase().trim();
-      const slugFromQuery = searchParams?.get("organizationSlug")?.toLowerCase().trim();
-      const requestedSlug = forcedSlug || slugFromQuery;
+      const requestedSlug = forcedSlug;
 
       if (requestedSlug) {
         setOrganizationSlug(requestedSlug);
@@ -172,7 +169,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
     };
 
     void loadOrgBranding();
-  }, [forcedOrganizationSlug, searchParams]);
+  }, [forcedOrganizationSlug]);
 
   useEffect(() => {
     if (cooldown <= 0) {

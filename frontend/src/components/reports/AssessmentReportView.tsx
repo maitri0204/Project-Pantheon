@@ -99,6 +99,28 @@ const formatDateTime = (value?: string) => {
   return date.toLocaleString("en-IN");
 };
 
+const blobToBase64 = async (blob: Blob): Promise<string> => {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Unable to convert report to base64"));
+      }
+    };
+    reader.onerror = () => reject(new Error("Unable to convert report to base64"));
+    reader.readAsDataURL(blob);
+  });
+
+  const base64 = dataUrl.split(",")[1];
+  if (!base64) {
+    throw new Error("Unable to encode report PDF");
+  }
+
+  return base64;
+};
+
 const toNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -319,8 +341,7 @@ export default function AssessmentReportView({
 
       if (!pdfBlob) throw new Error("Failed to generate PDF");
 
-      const arrayBuffer = await pdfBlob.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const base64 = await blobToBase64(pdfBlob);
       const safeName = `${normalizeDisplayCode(report.assessmentCode)}_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf`;
 
       await apiRequest(

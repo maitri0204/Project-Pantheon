@@ -129,7 +129,6 @@ export default function StudentAssessmentsPage() {
       );
       setPricing(response);
     } catch (error) {
-      setPricing(null);
       window.alert(error instanceof Error ? error.message : "Unable to calculate price");
     } finally {
       setPricingLoading(false);
