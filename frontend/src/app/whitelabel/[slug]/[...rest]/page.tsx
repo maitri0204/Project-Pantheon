@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useMemo } from "react";
+import { useParams } from "next/navigation";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import StudentPortalShell from "@/components/student/StudentPortalShell";
@@ -15,18 +15,9 @@ import StudentTakeAssessmentPage from "@/app/whitelabel/[slug]/student/assessmen
 import StudentAssessmentResultPage from "@/app/whitelabel/[slug]/student/assessments/[code]/result/page";
 
 export default function WhitelabelCatchAllPage() {
-  const router = useRouter();
   const params = useParams() as { slug?: string; rest?: string[] };
   const slug = params?.slug ?? "";
   const rest = params?.rest ?? [];
-
-  useEffect(() => {
-    if (!slug || rest[0] !== "login") {
-      return;
-    }
-
-    router.replace(`/login?organizationSlug=${encodeURIComponent(slug)}`);
-  }, [rest, router, slug]);
 
   const content = useMemo(() => {
     if (rest[0] === "student") {

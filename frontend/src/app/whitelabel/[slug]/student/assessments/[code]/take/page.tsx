@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   AlertTriangle,
@@ -154,6 +154,7 @@ const getCareerDnaPartNumber = (question: AttemptQuestion): number => {
 
 export default function StudentTakeAssessmentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const pathname = usePathname();
   const params = useParams<{ slug?: string; code?: string; rest?: string[] }>();
   const routeParts = (pathname || "").split("/").filter(Boolean);
@@ -161,6 +162,7 @@ export default function StudentTakeAssessmentPage() {
   const fallbackCodeFromRest = Array.isArray(params?.rest) ? params.rest[2] : "";
   const fallbackCodeFromPath = routeParts[5] || "";
   const code = (params?.code || fallbackCodeFromRest || fallbackCodeFromPath || "").toUpperCase();
+  const paymentSessionId = searchParams?.get("paymentSessionId") || undefined;
   const auth = useMemo(() => getStoredAuth(), []);
 
   const [loading, setLoading] = useState(true);
@@ -184,7 +186,7 @@ export default function StudentTakeAssessmentPage() {
 
     apiRequest<StartAttemptResponse>(
       `/platform/student/assessments/${code}/start`,
-      { method: "POST" },
+      { method: "POST", body: JSON.stringify({ paymentSessionId }) },
       auth.token
     )
       .then((response) => {
@@ -211,7 +213,7 @@ export default function StudentTakeAssessmentPage() {
         router.replace(`/whitelabel/${slug}/student/assessments`);
       })
       .finally(() => setLoading(false));
-  }, [auth?.token, code, router, slug]);
+  }, [auth?.token, code, paymentSessionId, router, slug]);
 
   // ── Fullscreen management ──────────────────────────────────────────────────
   const enterFullscreen = useCallback(async () => {

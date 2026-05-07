@@ -220,6 +220,7 @@ export const getOrganizationCouponDetails = async (req: AuthRequest, res: Respon
       totalCoupons,
       usedCoupons,
       remainingCoupons,
+      discountAmount: config?.discountAmount ?? 0,
       isConfigured: Boolean(config),
       isActive: config?.isActive ?? false,
     };
@@ -258,11 +259,13 @@ export const createOrganizationCouponConfig = async (req: AuthRequest, res: Resp
       prefix,
       totalCoupons,
       isActive,
+      discountAmount,
     } = req.body as {
       assessmentCode?: string;
       prefix?: string;
       totalCoupons?: number;
       isActive?: boolean;
+      discountAmount?: number;
     };
 
     const normalizedAssessmentCode = normalizeAssessmentCode(String(assessmentCode || "").trim().toUpperCase());
@@ -289,6 +292,7 @@ export const createOrganizationCouponConfig = async (req: AuthRequest, res: Resp
       prefix: normalizedPrefix,
       totalCoupons: parsedTotalCoupons,
       nextSequence: 1,
+      discountAmount: (typeof discountAmount === "number" && discountAmount >= 0) ? discountAmount : 0,
       isActive: typeof isActive === "boolean" ? isActive : true,
       createdBy: req.user._id,
     });
@@ -313,10 +317,12 @@ export const updateOrganizationCouponConfig = async (req: AuthRequest, res: Resp
       prefix,
       totalCoupons,
       isActive,
+      discountAmount,
     } = req.body as {
       prefix?: string;
       totalCoupons?: number;
       isActive?: boolean;
+      discountAmount?: number;
     };
 
     const config = await OrganizationCouponConfig.findOne({ _id: configId, organization: organizationId });
@@ -356,6 +362,10 @@ export const updateOrganizationCouponConfig = async (req: AuthRequest, res: Resp
 
     if (typeof isActive === "boolean") {
       config.isActive = isActive;
+    }
+
+    if (typeof discountAmount === "number" && discountAmount >= 0) {
+      config.discountAmount = discountAmount;
     }
 
     await config.save();

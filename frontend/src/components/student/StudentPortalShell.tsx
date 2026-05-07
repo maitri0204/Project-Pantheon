@@ -102,14 +102,14 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
     <div className="min-h-screen flex bg-gray-50">
       {/* ── Top Navbar ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 h-[100px] bg-white border-b border-gray-200 flex items-center pl-7 pr-4 md:pl-25 gap-4 shadow-sm">
-        <div className="w-40 h-20 bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow overflow-hidden border border-blue-100">
+        <div className="w-[200px] h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
           {orgLogoUrl ? (
             <Image
               src={orgLogoUrl}
               alt={`${orgCompanyName} logo`}
-              width={160}
-              height={80}
-              className="h-full w-full object-cover"
+              width={200}
+              height={84}
+              className="h-full w-full object-contain"
             />
           ) : (
             <span>{orgCompanyName.substring(0, 2).toUpperCase()}</span>

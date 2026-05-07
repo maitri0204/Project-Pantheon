@@ -130,3 +130,49 @@ export const sendRegistrationConfirmationEmail = async ({
     `,
   });
 };
+
+export const sendAssessmentReportToStudent = async ({
+  email,
+  firstName,
+  assessmentName,
+  pdfBuffer,
+  fileName,
+}: {
+  email: string;
+  firstName: string;
+  assessmentName: string;
+  pdfBuffer: Buffer;
+  fileName: string;
+}): Promise<void> => {
+  const transporter = getTransporter();
+  const safeName = firstName.replace(/[<>"]/g, "");
+
+  if (!transporter) {
+    // eslint-disable-next-line no-console
+    console.log(`[EMAIL_REPORT] Would send report "${fileName}" to ${email}`);
+    return;
+  }
+
+  await transporter.sendMail({
+    from: `"Project Pantheon" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `Your ${assessmentName} Report`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px; background: #f8fafc; border-radius: 16px;">
+        <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <h2 style="margin: 0 0 8px; color: #2563eb;">Your Report is Ready!</h2>
+          <p style="margin: 0 0 16px; color: #334155;">Hi <strong>${safeName}</strong>, congratulations on completing the <strong>${assessmentName}</strong>!</p>
+          <p style="margin: 0 0 16px; color: #475569; font-size: 14px;">Your detailed report has been attached to this email as a PDF. Please find it below.</p>
+          <p style="margin: 24px 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px;">This is an automated email from Project Pantheon. Please do not reply.</p>
+        </div>
+      </div>
+    `,
+    attachments: [
+      {
+        filename: fileName,
+        content: pdfBuffer,
+        contentType: "application/pdf",
+      },
+    ],
+  });
+};

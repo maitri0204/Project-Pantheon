@@ -1,9 +1,12 @@
 import { Response } from "express";
 import mongoose from "mongoose";
+import crypto from "crypto";
+import Razorpay from "razorpay";
 
 import Assessment from "../models/Assessment";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
+import AssessmentPaymentSession from "../models/AssessmentPaymentSession";
 import Organization from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
 import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
@@ -14,6 +17,7 @@ import User from "../models/User";
 import { DEFAULT_SUPERADMIN_EMAIL } from "../constants/platform";
 import { evaluateAssessmentAttempt } from "../services/assessmentEvaluation";
 import { getCareerDnaSourceQuestion, parseCareerDnaCategory } from "../services/sourceAssessmentData";
+import { sendAssessmentReportToStudent } from "../services/email";
 import { AuthRequest } from "../types/auth";
 
 const normalizeAssessmentCode = (code: string): string => {
@@ -253,20 +257,22 @@ export const listAssessments = async (_req: AuthRequest, res: Response): Promise
   res.json({ assessments: assessmentsWithCounts });
 };
 
-export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Promise<void> => {
-  const slugParam = req.params.slug;
-  const slug = typeof slugParam === "string" ? slugParam.toLowerCase().trim() : "";
-  if (!slug) {
-    res.status(400).json({ message: "Organization slug is required" });
-    return;
+const normalizeHostName = (value?: string): string => {
+  const raw = String(value || "").trim().toLowerCase();
+  if (!raw) {
+    return "";
   }
 
-  const organization = await Organization.findOne({ slug, isActive: true, type: "WHITELABEL" });
-  if (!organization) {
-    res.status(404).json({ message: "Whitelabel organization not found" });
-    return;
-  }
+  const candidate = /^https?:\/\//.test(raw) ? raw : `https://${raw}`;
 
+  try {
+    return new URL(candidate).hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return raw.replace(/^https?:\/\//, "").split("/")[0].split(":")[0].replace(/^www\./, "");
+  }
+};
+
+const buildWhitelabelPortalPayload = async (req: AuthRequest, organization: InstanceType<typeof Organization>) => {
   const userOrgId = req.user?.organization && typeof req.user.organization === "object"
     ? String((req.user.organization as { _id: { toString(): string } })._id)
     : null;
@@ -284,7 +290,7 @@ export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Prom
     assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
-  res.json({
+  return {
     organization: {
       id: organization._id,
       name: organization.name,
@@ -297,7 +303,49 @@ export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Prom
     message: canAccessAssessments
       ? undefined
       : "Login required. Only users from this organization can view assessments.",
+  };
+};
+
+export const getWhitelabelPortal = async (req: AuthRequest, res: Response): Promise<void> => {
+  const slugParam = req.params.slug;
+  const slug = typeof slugParam === "string" ? slugParam.toLowerCase().trim() : "";
+  if (!slug) {
+    res.status(400).json({ message: "Organization slug is required" });
+    return;
+  }
+
+  const organization = await Organization.findOne({ slug, isActive: true, type: "WHITELABEL" });
+  if (!organization) {
+    res.status(404).json({ message: "Whitelabel organization not found" });
+    return;
+  }
+
+  res.json(await buildWhitelabelPortalPayload(req, organization));
+};
+
+export const getWhitelabelPortalByHost = async (req: AuthRequest, res: Response): Promise<void> => {
+  const hostParam = typeof req.query.host === "string" ? req.query.host : "";
+  const normalizedHost = normalizeHostName(hostParam);
+
+  if (!normalizedHost) {
+    res.status(400).json({ message: "Host is required" });
+    return;
+  }
+
+  const organizations = await Organization.find({
+    isActive: true,
+    type: "WHITELABEL",
+    website: { $exists: true, $ne: null },
   });
+
+  const organization = organizations.find((item) => normalizeHostName(item.website) === normalizedHost);
+
+  if (!organization) {
+    res.status(404).json({ message: "Whitelabel organization not found for this host" });
+    return;
+  }
+
+  res.json(await buildWhitelabelPortalPayload(req, organization));
 };
 
 export const getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -666,6 +714,186 @@ const requireStudentUser = (req: AuthRequest, res: Response): boolean => {
   return true;
 };
 
+const getReferenceId = (value: unknown): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || undefined;
+  }
+
+  if (value instanceof mongoose.Types.ObjectId) {
+    return value.toString();
+  }
+
+  if (typeof value === "object" && value !== null && "_id" in value) {
+    const nestedId = (value as { _id?: unknown })._id;
+    if (typeof nestedId === "string") {
+      const trimmed = nestedId.trim();
+      return trimmed || undefined;
+    }
+    if (nestedId instanceof mongoose.Types.ObjectId) {
+      return nestedId.toString();
+    }
+    if (nestedId && typeof nestedId === "object" && typeof (nestedId as { toString?: () => string }).toString === "function") {
+      return (nestedId as { toString: () => string }).toString();
+    }
+  }
+
+  if (typeof (value as { toString?: () => string }).toString === "function") {
+    const stringified = (value as { toString: () => string }).toString();
+    if (stringified && stringified !== "[object Object]") {
+      return stringified;
+    }
+  }
+
+  return undefined;
+};
+
+const GST_RATE = 0.18;
+
+type AssessmentPricing = {
+  assessment: {
+    code: string;
+    name: string;
+    basePrice: number;
+    gstEnabled: boolean;
+    currency: string;
+  };
+  couponCode?: string;
+  discountAmount: number;
+  gstAmount: number;
+  finalAmount: number;
+};
+
+const generateInvoiceNumber = () => `INV-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`;
+
+const getRazorpayClient = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    return null;
+  }
+  return new Razorpay({ key_id: keyId, key_secret: keySecret });
+};
+
+const computeAssessmentPricing = async (args: {
+  assessmentCode: string;
+  couponCode?: string;
+  userId?: mongoose.Types.ObjectId | string;
+  organizationId?: mongoose.Types.ObjectId | string;
+}): Promise<AssessmentPricing> => {
+  const canonicalCode = normalizeAssessmentCode(args.assessmentCode);
+  const aliases = getAssessmentCodeAliases(canonicalCode);
+  const organizationId = getReferenceId(args.organizationId);
+  const userId = getReferenceId(args.userId);
+  const assessment = await Assessment.findOne({ code: { $in: aliases }, active: true });
+
+  if (!assessment) {
+    throw new Error("Assessment not found");
+  }
+
+  const basePrice = Math.max(0, Number(assessment.basePrice || 0));
+  const couponInput = String(args.couponCode || "").trim().toUpperCase();
+  let couponCode: string | undefined;
+  let discountAmount = 0;
+
+  if (couponInput) {
+    const applyGlobalCoupon = async () => {
+      const coupon = await Coupon.findOne({ code: couponInput, isActive: true });
+      if (!coupon) {
+        throw new Error("Invalid coupon code");
+      }
+
+      if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
+        throw new Error("Coupon has expired");
+      }
+
+      const applicableSet = new Set((coupon.applicableAssessmentCodes || []).map((code) => normalizeAssessmentCode(code)));
+      const isApplicable = applicableSet.has(canonicalCode) || aliases.some((alias) => applicableSet.has(alias));
+      if (!isApplicable) {
+        throw new Error("Coupon is not applicable for this assessment");
+      }
+
+      discountAmount = coupon.discountType === "PERCENT"
+        ? (basePrice * Number(coupon.value || 0)) / 100
+        : Number(coupon.value || 0);
+
+      discountAmount = Math.min(Math.max(discountAmount, 0), basePrice);
+      couponCode = coupon.code;
+    };
+
+    // First, try to validate organization-scoped coupon for this student context.
+    if (organizationId && userId) {
+      const organizationScope = organizationId;
+      const userScope = userId;
+
+      const config = await OrganizationCouponConfig.findOne({
+        organization: organizationScope,
+        assessmentCode: canonicalCode,
+        isActive: true,
+      });
+
+      if (config) {
+        const normalizedPrefix = String(config.prefix || "").trim().toUpperCase();
+        const suffix = couponInput.startsWith(normalizedPrefix)
+          ? couponInput.slice(normalizedPrefix.length)
+          : "";
+        const sequence = Number(suffix);
+        const isOrgSequentialCoupon =
+          Boolean(normalizedPrefix) &&
+          couponInput.startsWith(normalizedPrefix) &&
+          /^\d+$/.test(suffix) &&
+          Number.isInteger(sequence) &&
+          sequence >= 1 &&
+          sequence <= Number(config.totalCoupons || 0);
+
+        if (isOrgSequentialCoupon) {
+          const existingUsage = await OrganizationCouponUsage.findOne({
+            organization: organizationScope,
+            assessmentCode: canonicalCode,
+            couponCode: couponInput,
+          });
+
+          if (existingUsage && String(existingUsage.user) !== userScope) {
+            throw new Error("This coupon has already been used.");
+          }
+
+          const configDiscount = Number(config.discountAmount || 0);
+          discountAmount = configDiscount > 0 ? Math.min(configDiscount, basePrice) : basePrice;
+          couponCode = couponInput;
+        } else {
+          await applyGlobalCoupon();
+        }
+      } else {
+        await applyGlobalCoupon();
+      }
+    } else {
+      await applyGlobalCoupon();
+    }
+  }
+
+  const discounted = Math.max(basePrice - discountAmount, 0);
+  const gstAmount = assessment.gstEnabled ? discounted * GST_RATE : 0;
+  const finalAmount = discounted + gstAmount;
+
+  return {
+    assessment: {
+      code: canonicalCode,
+      name: getAssessmentDisplayName(canonicalCode, assessment.name),
+      basePrice,
+      gstEnabled: Boolean(assessment.gstEnabled),
+      currency: assessment.currency || "INR",
+    },
+    couponCode,
+    discountAmount: Number(discountAmount.toFixed(2)),
+    gstAmount: Number(gstAmount.toFixed(2)),
+    finalAmount: Number(finalAmount.toFixed(2)),
+  };
+};
+
 const buildSequentialCouponCode = (prefix: string, sequence: number): string => {
   const safePrefix = String(prefix || "").trim().toUpperCase();
   return `${safePrefix}${Math.max(1, Number(sequence) || 1)}`;
@@ -677,8 +905,12 @@ const allocateOrganizationCouponForStudent = async (args: {
   assessmentCode: string;
 }): Promise<{ couponCode?: string; configId?: string }> => {
   const { organizationId, userId, assessmentCode } = args;
-  const organizationScope = organizationId as mongoose.Types.ObjectId | string;
-  const userScope = userId as mongoose.Types.ObjectId | string;
+  const organizationScope = getReferenceId(organizationId);
+  const userScope = getReferenceId(userId);
+
+  if (!organizationScope || !userScope) {
+    throw new Error("Student organization details are invalid.");
+  }
 
   const config = await OrganizationCouponConfig.findOne({
     organization: organizationScope,
@@ -969,6 +1201,228 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
   });
 };
 
+export const getStudentAssessmentPricing = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const codeParam = req.params.code;
+  const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
+  if (!code) {
+    res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  const couponCode = typeof req.query.couponCode === "string" ? req.query.couponCode : undefined;
+  const organizationId = getReferenceId(req.user?.organization);
+  const userId = getReferenceId(req.user?._id);
+
+  if (!organizationId || !userId) {
+    res.status(400).json({ message: "Student organization details are invalid" });
+    return;
+  }
+
+  try {
+    const pricing = await computeAssessmentPricing({ 
+      assessmentCode: code, 
+      couponCode,
+      userId,
+      organizationId,
+    });
+    res.json(pricing);
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unable to calculate pricing" });
+  }
+};
+
+export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const codeParam = req.params.code;
+  const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
+  if (!code) {
+    res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  const { couponCode } = req.body as { couponCode?: string };
+  const organizationId = getReferenceId(req.user?.organization);
+  const userId = getReferenceId(req.user?._id);
+
+  if (!organizationId || !userId) {
+    res.status(400).json({ message: "Student organization details are invalid" });
+    return;
+  }
+
+  try {
+    const pricing = await computeAssessmentPricing({ 
+      assessmentCode: code, 
+      couponCode,
+      userId,
+      organizationId,
+    });
+
+    const paymentSession = await AssessmentPaymentSession.create({
+      user: userId,
+      organization: organizationId,
+      assessmentCode: pricing.assessment.code,
+      couponCode: pricing.couponCode,
+      amount: pricing.assessment.basePrice,
+      discountAmount: pricing.discountAmount,
+      finalAmount: pricing.finalAmount,
+      gstAmount: pricing.gstAmount,
+      currency: pricing.assessment.currency || "INR",
+      status: pricing.finalAmount <= 0 ? "PAID" : "CREATED",
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+    });
+
+    if (pricing.finalAmount <= 0) {
+      const invoice = await Invoice.create({
+        invoiceNumber: generateInvoiceNumber(),
+        user: userId,
+        organization: organizationId,
+        assessmentCode: pricing.assessment.code,
+        amount: pricing.assessment.basePrice,
+        discountAmount: pricing.discountAmount,
+        finalAmount: pricing.finalAmount,
+        currency: pricing.assessment.currency || "INR",
+        couponCode: pricing.couponCode,
+        status: "PAID",
+      });
+
+      paymentSession.invoice = invoice._id;
+      await paymentSession.save();
+
+      res.json({
+        paymentRequired: false,
+        paymentSessionId: String(paymentSession._id),
+        pricing,
+      });
+      return;
+    }
+
+    const razorpay = getRazorpayClient();
+    if (!razorpay || !process.env.RAZORPAY_KEY_ID) {
+      res.status(500).json({ message: "Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in backend env." });
+      return;
+    }
+
+    const order = await razorpay.orders.create({
+      amount: Math.round(pricing.finalAmount * 100),
+      currency: pricing.assessment.currency || "INR",
+      receipt: `assess_${paymentSession._id}`,
+      notes: {
+        assessmentCode: pricing.assessment.code,
+        studentEmail: req.user!.email,
+      },
+    });
+
+    paymentSession.razorpayOrderId = order.id;
+    await paymentSession.save();
+
+    res.json({
+      paymentRequired: true,
+      keyId: process.env.RAZORPAY_KEY_ID,
+      paymentSessionId: String(paymentSession._id),
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      },
+      pricing,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unable to create payment order" });
+  }
+};
+
+export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const codeParam = req.params.code;
+  const code = typeof codeParam === "string" ? normalizeAssessmentCode(codeParam) : "";
+  const {
+    paymentSessionId,
+    razorpay_payment_id,
+    razorpay_order_id,
+    razorpay_signature,
+  } = req.body as {
+    paymentSessionId?: string;
+    razorpay_payment_id?: string;
+    razorpay_order_id?: string;
+    razorpay_signature?: string;
+  };
+
+  if (!paymentSessionId) {
+    res.status(400).json({ message: "paymentSessionId is required" });
+    return;
+  }
+
+  const session = await AssessmentPaymentSession.findOne({
+    _id: paymentSessionId,
+    user: req.user!._id,
+    organization: req.user!.organization,
+    assessmentCode: code,
+  });
+
+  if (!session) {
+    res.status(404).json({ message: "Payment session not found" });
+    return;
+  }
+
+  if (session.status === "PAID" || session.status === "CONSUMED") {
+    res.json({ message: "Payment already verified", paymentSessionId: String(session._id) });
+    return;
+  }
+
+  if (!session.razorpayOrderId) {
+    res.status(400).json({ message: "Razorpay order is missing for this session" });
+    return;
+  }
+
+  if (!process.env.RAZORPAY_KEY_SECRET) {
+    res.status(500).json({ message: "Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in backend env." });
+    return;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest("hex");
+
+  if (!razorpay_signature || expected !== razorpay_signature || razorpay_order_id !== session.razorpayOrderId) {
+    session.status = "FAILED";
+    await session.save();
+    res.status(400).json({ message: "Payment verification failed" });
+    return;
+  }
+
+  const invoice = await Invoice.create({
+    invoiceNumber: generateInvoiceNumber(),
+    user: req.user!._id,
+    organization: req.user!.organization,
+    assessmentCode: session.assessmentCode,
+    amount: session.amount,
+    discountAmount: session.discountAmount,
+    finalAmount: session.finalAmount,
+    currency: session.currency,
+    couponCode: session.couponCode,
+    status: "PAID",
+  });
+
+  session.status = "PAID";
+  session.razorpayPaymentId = razorpay_payment_id;
+  session.razorpaySignature = razorpay_signature;
+  session.invoice = invoice._id;
+  await session.save();
+
+  res.json({ message: "Payment verified", paymentSessionId: String(session._id) });
+};
+
 export const startStudentAssessment = async (req: AuthRequest, res: Response): Promise<void> => {
   if (!requireStudentUser(req, res)) {
     return;
@@ -983,8 +1437,14 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
-  const userId = req.user!._id as mongoose.Types.ObjectId | string;
+  const organizationId = getReferenceId(req.user?.organization);
+  const userId = getReferenceId(req.user?._id);
+  const { paymentSessionId } = req.body as { paymentSessionId?: string };
+
+  if (!organizationId || !userId) {
+    res.status(400).json({ message: "Student organization details are invalid" });
+    return;
+  }
 
   const [assessment, existingAttempt] = await Promise.all([
     Assessment.findOne({ code: { $in: codeAliases }, active: true }),
@@ -1100,6 +1560,22 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     ? buildCareerDnaQuestionSetForAttempt(attemptQuestions)
     : attemptQuestions;
 
+  const paidSession = await AssessmentPaymentSession.findOne({
+    _id: paymentSessionId,
+    user: userId,
+    organization: organizationId,
+    assessmentCode: canonicalCode,
+    status: "PAID",
+    expiresAt: { $gte: new Date() },
+  });
+
+  if (!paidSession) {
+    res.status(402).json({
+      message: "Payment is required before starting this test. Please complete checkout.",
+    });
+    return;
+  }
+
   let allocatedCouponCode: string | undefined;
   let allocatedConfigId: string | undefined;
   try {
@@ -1140,6 +1616,10 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
       { $set: { attempt: createdAttempt._id } }
     );
   }
+
+  paidSession.status = "CONSUMED";
+  paidSession.attempt = createdAttempt._id;
+  await paidSession.save();
 
   res.status(201).json({
     attempt: {
@@ -1353,4 +1833,48 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
   res.json({
     report: await buildAttemptReportPayload(attempt, String(req.user!._id)),
   });
+};
+
+export const emailStudentAttemptReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  const { pdfBase64, fileName } = req.body as { pdfBase64?: string; fileName?: string };
+  if (!pdfBase64) {
+    res.status(400).json({ message: "pdfBase64 is required" });
+    return;
+  }
+
+  const attempt = await StudentAssessmentAttempt.findOne({
+    _id: attemptId,
+    user: req.user!._id,
+  });
+
+  if (!attempt || attempt.status !== "COMPLETED") {
+    res.status(404).json({ message: "Completed attempt not found" });
+    return;
+  }
+
+  const student = await User.findById(req.user!._id).lean();
+  if (!student?.email) {
+    res.status(400).json({ message: "Student email not found" });
+    return;
+  }
+
+  const pdfBuffer = Buffer.from(pdfBase64, "base64");
+  const safeName = `${attempt.assessmentCode}_Report_${String(student.firstName || "Student").replace(/\s+/g, "_")}.pdf`;
+
+  await sendAssessmentReportToStudent({
+    email: student.email,
+    firstName: student.firstName || "Student",
+    assessmentName: attempt.assessmentName || attempt.assessmentCode,
+    pdfBuffer,
+    fileName: fileName || safeName,
+  });
+
+  res.json({ message: "Report sent to your email successfully" });
 };

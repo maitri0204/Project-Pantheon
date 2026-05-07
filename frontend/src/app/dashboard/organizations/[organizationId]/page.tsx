@@ -27,6 +27,7 @@ type OrganizationCouponSummaryItem = {
   totalCoupons: number;
   usedCoupons: number;
   remainingCoupons: number;
+  discountAmount: number;
   isConfigured: boolean;
   isActive: boolean;
 };
@@ -81,7 +82,7 @@ export default function OrganizationDetailsPage() {
 
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [couponSummary, setCouponSummary] = useState<OrganizationCouponSummaryItem[]>([]);
-  const [couponDrafts, setCouponDrafts] = useState<Record<string, { prefix: string; totalCoupons: string; isActive: boolean }>>({});
+  const [couponDrafts, setCouponDrafts] = useState<Record<string, { prefix: string; totalCoupons: string; discountAmount: string; isActive: boolean }>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -98,11 +99,12 @@ export default function OrganizationDetailsPage() {
       );
       setOrganization(res.organization);
       setCouponSummary(res.couponSummary || []);
-      const drafts: Record<string, { prefix: string; totalCoupons: string; isActive: boolean }> = {};
+      const drafts: Record<string, { prefix: string; totalCoupons: string; discountAmount: string; isActive: boolean }> = {};
       (res.couponSummary || []).forEach((item) => {
         drafts[item.assessmentCode] = {
           prefix: item.prefix || item.assessmentCode.replace(/_TEST$|_WINDOW$/g, "").replace(/[^A-Z]/g, "").slice(0, 10),
           totalCoupons: String(item.totalCoupons || ""),
+          discountAmount: String(item.discountAmount ?? ""),
           isActive: item.isActive,
         };
       });
@@ -134,6 +136,7 @@ export default function OrganizationDetailsPage() {
           body: JSON.stringify({
             prefix: draft.prefix.trim().toUpperCase(),
             totalCoupons: Number(draft.totalCoupons),
+            discountAmount: draft.discountAmount.trim() !== "" ? Number(draft.discountAmount) : 0,
             isActive: draft.isActive,
           }),
         }, auth.token);
@@ -144,6 +147,7 @@ export default function OrganizationDetailsPage() {
             assessmentCode: item.assessmentCode,
             prefix: draft.prefix.trim().toUpperCase(),
             totalCoupons: Number(draft.totalCoupons),
+            discountAmount: draft.discountAmount.trim() !== "" ? Number(draft.discountAmount) : 0,
             isActive: draft.isActive,
           }),
         }, auth.token);
@@ -285,6 +289,7 @@ export default function OrganizationDetailsPage() {
             const draft = couponDrafts[item.assessmentCode] || {
               prefix: item.prefix || item.assessmentCode,
               totalCoupons: String(item.totalCoupons || ""),
+              discountAmount: String(item.discountAmount ?? ""),
               isActive: item.isActive,
             };
             const usedPct = item.totalCoupons > 0 ? Math.round((item.usedCoupons / item.totalCoupons) * 100) : 0;
@@ -368,7 +373,7 @@ export default function OrganizationDetailsPage() {
 
                 {/* Configuration inputs */}
                 <div className="bg-white/50 backdrop-blur rounded-2xl p-4 shadow-md border border-white/60">
-                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+                  <div className="grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Prefix</label>
                       <input
@@ -378,7 +383,6 @@ export default function OrganizationDetailsPage() {
                           [item.assessmentCode]: { ...draft, prefix: e.target.value.toUpperCase() },
                         }))}
                         placeholder="e.g. CC"
-                        maxLength={4}
                         className={`w-full border-2 ${colors.ring} rounded-xl px-3 py-2.5 text-sm font-bold font-mono focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all ${colors.text}`}
                       />
                     </div>
@@ -393,6 +397,20 @@ export default function OrganizationDetailsPage() {
                           [item.assessmentCode]: { ...draft, totalCoupons: e.target.value },
                         }))}
                         placeholder="100"
+                        className="w-full border-2 border-gray-300 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Discount (₹)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={draft.discountAmount}
+                        onChange={(e) => setCouponDrafts((prev) => ({
+                          ...prev,
+                          [item.assessmentCode]: { ...draft, discountAmount: e.target.value },
+                        }))}
+                        placeholder="0 = free"
                         className="w-full border-2 border-gray-300 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
                       />
                     </div>
@@ -415,7 +433,7 @@ export default function OrganizationDetailsPage() {
                     <button
                       onClick={() => void saveCouponConfig(item)}
                       disabled={saving === item.assessmentCode}
-                      className="col-span-1 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-sm hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+                      className="col-span-2 sm:col-span-1 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-sm hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
                     >
                       {saving === item.assessmentCode ? "Saving..." : item.configId ? "Update" : "Create"}
                     </button>

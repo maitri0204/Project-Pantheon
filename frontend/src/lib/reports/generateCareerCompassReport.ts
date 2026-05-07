@@ -111,7 +111,7 @@ export async function generateCareerCompassReport(args: {
   classGrade?: string;
   schoolName?: string;
   organizationBranding?: OrganizationBranding;
-}): Promise<void> {
+}, options?: { returnBlob?: boolean }): Promise<void | Blob> {
   const { default: jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
   const pageWidth = 210;
@@ -395,5 +395,6 @@ export async function generateCareerCompassReport(args: {
   applyOrganizationBranding(pdf, 1, pageHeight, args.organizationBranding || {}, organizationLogo, false);
   applyOrganizationBranding(pdf, totalPages, pageHeight, args.organizationBranding || {}, organizationLogo, true);
 
+  if (options?.returnBlob) return pdf.output("blob");
   pdf.save("Career_Compass_Report.pdf");
 }

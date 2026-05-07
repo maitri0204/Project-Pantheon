@@ -281,12 +281,12 @@ export default function DashboardShell({
         </button>
 
         <div className="flex items-center gap-3 md:ml-1">
-          <div className="w-40 h-20 bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow overflow-hidden border border-blue-100">
+          <div className="w-[200px] h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
             {userRole === "ORG_ADMIN" && orgLogoUrl ? (
               <img
                 src={orgLogoUrl}
                 alt={`${orgCompanyName || "Organization"} logo`}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             ) : (
               <span>{userRole === "ORG_ADMIN" && orgCompanyName ? orgCompanyName.substring(0, 2).toUpperCase() : "PP"}</span>

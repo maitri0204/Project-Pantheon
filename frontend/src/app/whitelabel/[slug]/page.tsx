@@ -98,10 +98,10 @@ export default function WhitelabelPortalPage() {
                 <img
                   src={organization.branding.logoUrl}
                   alt={`${organization.name} logo`}
-                  className="h-14 w-14 rounded object-cover border border-gray-200"
+                  className="h-18 w-18 object-contain"
                 />
               ) : (
-                <div className="h-14 w-14 rounded bg-gray-100 border border-gray-200" />
+                <div className="h-18 w-18 bg-gray-100 border border-gray-200" />
               )}
               <div>
                 <h1 className="text-3xl font-bold text-black">{organization.branding.companyName || organization.name}</h1>

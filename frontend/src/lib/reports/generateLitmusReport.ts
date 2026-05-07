@@ -42,7 +42,7 @@ export async function generateLitmusReport(args: {
     contactPhone?: string;
     representativeName?: string;
   };
-}): Promise<void> {
+}, options?: { returnBlob?: boolean }): Promise<void | Blob> {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib") as any;
   const templateUrl = `${window.location.origin}/litmus/Litmus%20Test.pdf`;
   const response = await fetch(templateUrl);
@@ -196,6 +196,7 @@ export async function generateLitmusReport(args: {
 
   const bytes = await pdfDoc.save();
   const blob = new Blob([bytes], { type: "application/pdf" });
+  if (options?.returnBlob) return blob;
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

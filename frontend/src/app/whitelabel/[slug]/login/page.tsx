@@ -1,42 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { getStoredAuth } from "@/lib/api";
+import { useParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function WhitelabelLoginRedirectPage() {
-  const router = useRouter();
+import LoginPageContent from "@/components/auth/LoginPageContent";
+
+function WhitelabelLoginPageInner() {
   const params = useParams<{ slug: string }>();
+  const slug = (params?.slug || "").toLowerCase().trim();
 
-  useEffect(() => {
-    const slug = params?.slug;
-    if (!slug) {
-      router.replace("/login");
-      return;
-    }
+  return <LoginPageContent forcedOrganizationSlug={slug} />;
+}
 
-    const auth = getStoredAuth();
-    if (auth?.user.role === "ORG_ADMIN" && auth.orgSlug === slug) {
-      router.replace(`/whitelabel/${slug}/dashboard`);
-      return;
-    }
-
-    if (auth?.user.role === "STUDENT" && auth.orgSlug === slug) {
-      router.replace(`/whitelabel/${slug}/student/dashboard`);
-      return;
-    }
-
-    if (auth) {
-      router.replace("/dashboard");
-      return;
-    }
-
-    router.replace(`/login?organizationSlug=${encodeURIComponent(slug)}`);
-  }, [params?.slug, router]);
-
+export default function WhitelabelLoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-    </div>
+    <Suspense>
+      <WhitelabelLoginPageInner />
+    </Suspense>
   );
 }
+

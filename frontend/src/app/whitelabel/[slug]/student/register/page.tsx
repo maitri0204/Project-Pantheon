@@ -176,7 +176,7 @@ export default function StudentRegisterPage() {
   const ringStyle = { "--tw-ring-color": primary } as React.CSSProperties;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl items-start justify-center px-4 py-10 sm:px-6">
         <div className="w-full">
           {step === "success" && (
@@ -245,10 +245,10 @@ export default function StudentRegisterPage() {
               <div className="relative overflow-hidden px-8 py-8 text-center sm:px-10" style={{ background: `linear-gradient(135deg,${primary}18 0%,${accent}0a 100%)` }}>
                 <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full blur-3xl opacity-30" style={{ background: accent }} />
                 <div className="relative flex flex-col items-center gap-5">
-                  <div className="flex h-32 w-36 items-center justify-center overflow-hidden border-2 border-white shadow-2xl" style={{ background: `linear-gradient(135deg,${primary},${accent})` }}>
+                  <div className="flex h-32 w-36 items-center justify-center overflow-hidden">
                     {organization.branding.logoUrl
-                      ? <img src={organization.branding.logoUrl} alt="logo" className="h-full w-full object-cover" />
-                      : <span className="text-5xl font-black text-white">{organization.branding.companyName.charAt(0)}</span>}
+                      ? <img src={organization.branding.logoUrl} alt="logo" className="h-full w-full object-contain" />
+                      : <span className="text-5xl font-black text-slate-900">{organization.branding.companyName.charAt(0)}</span>}
                   </div>
                   <h1 className="text-2xl font-black leading-tight text-slate-900 sm:text-3xl">Create your account</h1>
                   <p className="text-sm text-slate-500">
@@ -389,7 +389,7 @@ export default function StudentRegisterPage() {
             </div>
           )}
 
-          <p className="mt-6 text-center text-xs text-slate-400">© 2026 {organization.branding.companyName}. Powered by Project Pantheon.</p>
+          <p className="mt-6 text-center text-xs text-slate-400">© 2026 {organization.branding.companyName}.</p>
         </div>
       </div>
 

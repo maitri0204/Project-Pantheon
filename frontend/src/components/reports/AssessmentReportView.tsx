@@ -118,6 +118,8 @@ export default function AssessmentReportView({
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [emailing, setEmailing] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(false);
 
   useEffect(() => {
     if (!auth?.token) {
@@ -252,6 +254,86 @@ export default function AssessmentReportView({
       setError(e instanceof Error ? e.message : "Failed to generate report PDF");
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const emailDetailedReport = async () => {
+    if (!report || !auth?.token) return;
+    setEmailing(true);
+    setEmailSuccess(false);
+    try {
+      let pdfBlob: Blob | undefined;
+
+      if (normalizedCode === "JOHARI_WINDOW") {
+        pdfBlob = await generateClearReport({
+          studentName: reportStudentName, classGrade, schoolName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          sfScore: toNumber(evaluation.solicitsFeedbackScore),
+          sdScore: toNumber(evaluation.selfDisclosureScore),
+          dominantQuadrant: String(evaluation.dominantQuadrant || "Open Area"),
+          organizationBranding: reportBranding,
+        }, { returnBlob: true }) as Blob | undefined;
+      } else if (normalizedCode === "CAREER_COMPASS") {
+        pdfBlob = await generateCareerCompassReport({
+          studentName: reportStudentName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          personalityType: String(evaluation.personalityType || "UNKNOWN"),
+          classGrade, schoolName, organizationBranding: reportBranding,
+        }, { returnBlob: true }) as Blob | undefined;
+      } else if (normalizedCode === "METACOGNITION_TEST") {
+        const domainScores = (evaluation.domainScores || {}) as Record<string, number>;
+        pdfBlob = await generateMetacognitionReport({
+          studentName: reportStudentName,
+          email: profileFromAuth.email || auth?.user?.email || "",
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          classGrade, schoolName,
+          totalScore: toNumber(evaluation.totalScore),
+          domainScores: {
+            domain1: toNumber(domainScores.domain1), domain2: toNumber(domainScores.domain2),
+            domain3: toNumber(domainScores.domain3), domain4: toNumber(domainScores.domain4),
+            domain5: toNumber(domainScores.domain5),
+          },
+          organizationBranding: reportBranding,
+        }, { returnBlob: true }) as Blob | undefined;
+      } else if (normalizedCode === "LITMUS_TEST") {
+        const styleScores = (evaluation.styleScores || {}) as Record<string, number>;
+        pdfBlob = await generateLitmusReport({
+          studentName: reportStudentName,
+          styleScores: {
+            K: toNumber(styleScores.K), S: toNumber(styleScores.S), E: toNumber(styleScores.E),
+            P: toNumber(styleScores.P), J: toNumber(styleScores.J),
+          },
+          organizationBranding: reportBranding,
+        }, { returnBlob: true }) as Blob | undefined;
+      } else {
+        const { default: jsPDF } = await import("jspdf");
+        const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
+        pdf.setFont("helvetica", "bold"); pdf.setFontSize(18);
+        pdf.text(`${report.assessmentName} Report`, 15, 20);
+        pdf.setFont("helvetica", "normal"); pdf.setFontSize(11);
+        pdf.text(`Submitted: ${formatDateTime(report.submittedAt)}`, 15, 30);
+        pdf.text(`Answered: ${report.answeredCount}/${report.totalQuestions}`, 15, 37);
+        pdf.text(`Attempt ID: ${report.attemptId}`, 15, 44);
+        pdfBlob = pdf.output("blob");
+      }
+
+      if (!pdfBlob) throw new Error("Failed to generate PDF");
+
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const safeName = `${normalizeDisplayCode(report.assessmentCode)}_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf`;
+
+      await apiRequest(
+        `/platform/student/attempts/${report.attemptId}/email-report`,
+        { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName: safeName }) },
+        auth.token,
+      );
+      setEmailSuccess(true);
+      setTimeout(() => setEmailSuccess(false), 5000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send report email");
+    } finally {
+      setEmailing(false);
     }
   };
 
@@ -457,9 +539,12 @@ export default function AssessmentReportView({
       </div>
 
       {normalizedCode !== "CAREER_DNA" && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-3">
           <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
             {downloading ? "Generating Report..." : "Download Detailed Report"}
+          </button>
+          <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+            {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
           </button>
         </div>
       )}

@@ -8,8 +8,8 @@ export default function Home() {
           <a href="/login" className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">
             Login
           </a>
-          <a href="/signup" className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">
-            Signup
+          <a href="/register" className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">
+            Register Organization
           </a>
         </div>
       </section>

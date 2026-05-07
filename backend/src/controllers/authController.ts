@@ -83,7 +83,7 @@ const getPortalLoginLink = ({
 
     try {
       const parsed = new URL(candidate);
-      return `${parsed.origin}/login?organizationSlug=${encodedSlug}`;
+      return `${parsed.origin}/login`;
     } catch {
       // Fallback to platform-hosted portal login URL
     }

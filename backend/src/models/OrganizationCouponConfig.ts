@@ -6,6 +6,7 @@ export interface IOrganizationCouponConfig extends Document {
   prefix: string;
   totalCoupons: number;
   nextSequence: number;
+  discountAmount: number;
   isActive: boolean;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -19,6 +20,7 @@ const organizationCouponConfigSchema = new Schema<IOrganizationCouponConfig>(
     prefix: { type: String, required: true, uppercase: true, trim: true },
     totalCoupons: { type: Number, required: true, min: 1 },
     nextSequence: { type: Number, default: 1, min: 1 },
+    discountAmount: { type: Number, default: 0, min: 0 },
     isActive: { type: Boolean, default: true },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   },
