@@ -875,9 +875,9 @@ const computeAssessmentPricing = async (args: {
     }
   }
 
-  const discounted = Math.max(basePrice - discountAmount, 0);
-  const gstAmount = assessment.gstEnabled ? discounted * GST_RATE : 0;
-  const finalAmount = discounted + gstAmount;
+  const gstAmount = assessment.gstEnabled ? basePrice * GST_RATE : 0;
+  const priceWithGst = basePrice + gstAmount;
+  const finalAmount = Math.max(priceWithGst - discountAmount, 0);
 
   return {
     assessment: {

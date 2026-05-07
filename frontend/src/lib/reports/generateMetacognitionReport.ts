@@ -609,11 +609,11 @@ export async function generateMetacognitionReport(
   // Save and/or return blob
   const fileName = `TEST_Detailed_Report_${data.studentName.replace(/\s+/g, "_")}.pdf`;
 
-  if (!options?.skipSave) {
-    doc.save(fileName);
-  }
-
   if (options?.returnBlob) {
     return doc.output("blob");
+  }
+
+  if (!options?.skipSave) {
+    doc.save(fileName);
   }
 }
