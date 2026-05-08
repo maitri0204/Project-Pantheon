@@ -59,13 +59,59 @@ const dedupeAssessments = <T extends { code: string; name: string }>(assessments
 export const getLedger = async (_req: AuthRequest, res: Response): Promise<void> => {
   const invoices = await Invoice.find()
     .populate("user", "firstName lastName email phone grade institutionName city state country")
-    .populate("organization", "name slug contactEmail website branding.companyName")
+    .populate("organization", "name slug contactEmail website branding.companyName branding.logoUrl")
     .sort({ createdAt: 1 });
+
+  const organizationIds = Array.from(
+    new Set(
+      invoices
+        .map((invoice) => {
+          const organization = invoice.organization as { _id?: { toString(): string } } | null;
+          return organization?._id ? String(organization._id) : null;
+        })
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  const organizationRegistrations = organizationIds.length
+    ? await OrganizationRegistration.find({ organization: { $in: organizationIds } })
+      .select("organization primaryMobile officeAddress state country gstNumber panCompany")
+      .lean()
+    : [];
+
+  const registrationByOrganizationId = new Map(
+    organizationRegistrations
+      .filter((registration) => registration.organization)
+      .map((registration) => [String(registration.organization), registration])
+  );
 
   let runningBalance = 0;
   const rows = invoices.map((inv) => {
     runningBalance += inv.finalAmount ?? 0;
-    return { ...inv.toObject(), runningBalance };
+    const row = inv.toObject() as {
+      organization?: {
+        _id?: { toString(): string };
+      };
+    } & Record<string, unknown>;
+
+    const organizationId = row.organization?._id ? String(row.organization._id) : null;
+    const registration = organizationId ? registrationByOrganizationId.get(organizationId) : undefined;
+
+    return {
+      ...row,
+      organization: row.organization
+        ? {
+          ...row.organization,
+          phone: registration?.primaryMobile,
+          officeAddress: registration?.officeAddress,
+          state: registration?.state,
+          country: registration?.country,
+          panNumber: registration?.panCompany,
+          gstNumber: registration?.gstNumber,
+        }
+        : row.organization,
+      runningBalance,
+    };
   });
 
   const totalGross = invoices.reduce((s, i) => s + (i.amount ?? 0), 0);

@@ -14,7 +14,23 @@ const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string 
 };
 
 type InvoiceUser = { _id: string; firstName: string; lastName: string; email: string; phone?: string; grade?: string; institutionName?: string; city?: string; state?: string; country?: string };
-type InvoiceOrg  = { _id: string; name: string; slug: string; contactEmail?: string; companyName?: string };
+type InvoiceOrg  = {
+  _id: string;
+  name: string;
+  slug: string;
+  contactEmail?: string;
+  companyName?: string;
+  phone?: string;
+  officeAddress?: string;
+  state?: string;
+  country?: string;
+  panNumber?: string;
+  gstNumber?: string;
+  branding?: {
+    companyName?: string;
+    logoUrl?: string;
+  };
+};
 
 type Invoice = {
   _id: string;
@@ -265,7 +281,20 @@ export default function LedgerPage() {
                                 state: inv.user.state,
                                 country: inv.user.country,
                               },
-                              organization: inv.organization ? { name: inv.organization.name, contactEmail: inv.organization.contactEmail, companyName: inv.organization.companyName } : undefined,
+                              organization: inv.organization
+                                ? {
+                                  name: inv.organization.name,
+                                  contactEmail: inv.organization.contactEmail,
+                                  companyName: inv.organization.companyName || inv.organization.branding?.companyName,
+                                  logoUrl: inv.organization.branding?.logoUrl,
+                                  officeAddress: inv.organization.officeAddress,
+                                  state: inv.organization.state,
+                                  country: inv.organization.country,
+                                  phone: inv.organization.phone,
+                                  panNumber: inv.organization.panNumber,
+                                  gstNumber: inv.organization.gstNumber,
+                                }
+                                : undefined,
                             })}
                             className="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-medium transition-colors"
                           >

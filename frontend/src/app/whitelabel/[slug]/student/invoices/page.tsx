@@ -33,7 +33,21 @@ type InvoiceItem = {
     phone?: string; grade?: string; institutionName?: string;
     city?: string; state?: string; country?: string;
   };
-  organization?: { name?: string; contactEmail?: string; companyName?: string };
+  organization?: {
+    name?: string;
+    contactEmail?: string;
+    companyName?: string;
+    phone?: string;
+    officeAddress?: string;
+    state?: string;
+    country?: string;
+    panNumber?: string;
+    gstNumber?: string;
+    branding?: {
+      companyName?: string;
+      logoUrl?: string;
+    };
+  };
 };
 
 function fmt(n: number) {
@@ -137,7 +151,18 @@ export default function StudentInvoicesPage() {
                                 country: inv.user.country,
                               },
                               organization: inv.organization
-                                ? { name: inv.organization.name ?? "", companyName: inv.organization.companyName, contactEmail: inv.organization.contactEmail }
+                                ? {
+                                  name: inv.organization.name ?? "",
+                                  companyName: inv.organization.companyName || inv.organization.branding?.companyName,
+                                  contactEmail: inv.organization.contactEmail,
+                                  logoUrl: inv.organization.branding?.logoUrl,
+                                  officeAddress: inv.organization.officeAddress,
+                                  state: inv.organization.state,
+                                  country: inv.organization.country,
+                                  phone: inv.organization.phone,
+                                  panNumber: inv.organization.panNumber,
+                                  gstNumber: inv.organization.gstNumber,
+                                }
                                 : undefined,
                           })}
                           className="text-xs px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg font-medium transition-colors"

@@ -789,8 +789,15 @@ type InvoiceOrganizationSummary = {
   slug: string;
   contactEmail?: string;
   website?: string;
+  phone?: string;
+  officeAddress?: string;
+  state?: string;
+  country?: string;
+  panNumber?: string;
+  gstNumber?: string;
   branding?: {
     companyName?: string;
+    logoUrl?: string;
   };
 };
 
@@ -817,8 +824,33 @@ type InvoiceListItem = {
 const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<InvoiceListItem[]> => {
   const invoices = await Invoice.find(query)
     .populate("user", "firstName lastName email phone grade institutionName city state country")
-    .populate("organization", "name slug contactEmail website branding.companyName")
+    .populate("organization", "name slug contactEmail website branding.companyName branding.logoUrl")
     .sort({ createdAt: -1 });
+
+  const organizationIds = Array.from(
+    new Set(
+      invoices
+        .map((invoice) => {
+          const organization = invoice.organization as mongoose.Types.ObjectId | { _id?: mongoose.Types.ObjectId } | null;
+          if (!organization) return null;
+          if (organization instanceof mongoose.Types.ObjectId) return String(organization);
+          return organization._id ? String(organization._id) : null;
+        })
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  const organizationRegistrations = organizationIds.length
+    ? await OrganizationRegistration.find({ organization: { $in: organizationIds } })
+      .select("organization primaryMobile officeAddress state country gstNumber panCompany")
+      .lean()
+    : [];
+
+  const registrationByOrganizationId = new Map(
+    organizationRegistrations
+      .filter((registration) => registration.organization)
+      .map((registration) => [String(registration.organization), registration])
+  );
 
   const invoiceIds = invoices.map((invoice) => invoice._id);
   const sessions = invoiceIds.length
@@ -867,6 +899,7 @@ const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<In
         website?: string;
         branding?: {
           companyName?: string;
+          logoUrl?: string;
         };
       };
     };
@@ -910,8 +943,15 @@ const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<In
         slug: String(invoice.organization.slug || ""),
         contactEmail: invoice.organization.contactEmail,
         website: invoice.organization.website,
+        phone: registrationByOrganizationId.get(String(invoice.organization._id))?.primaryMobile,
+        officeAddress: registrationByOrganizationId.get(String(invoice.organization._id))?.officeAddress,
+        state: registrationByOrganizationId.get(String(invoice.organization._id))?.state,
+        country: registrationByOrganizationId.get(String(invoice.organization._id))?.country,
+        panNumber: registrationByOrganizationId.get(String(invoice.organization._id))?.panCompany,
+        gstNumber: registrationByOrganizationId.get(String(invoice.organization._id))?.gstNumber,
         branding: {
           companyName: invoice.organization.branding?.companyName,
+          logoUrl: invoice.organization.branding?.logoUrl,
         },
       } : null,
     };

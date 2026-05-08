@@ -40,6 +40,13 @@ export interface PantheonInvoiceOrg {
   companyName?: string;
   contactEmail?: string;
   website?: string;
+  phone?: string;
+  officeAddress?: string;
+  state?: string;
+  country?: string;
+  panNumber?: string;
+  gstNumber?: string;
+  logoUrl?: string;
 }
 
 export interface PantheonInvoiceRecord {
@@ -60,7 +67,23 @@ export interface PantheonInvoiceData {
   organization?: PantheonInvoiceOrg;
 }
 
-export function generatePantheonInvoice({ invoice, user }: PantheonInvoiceData): void {
+const toDataUrl = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url, { cache: "force-cache" });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === "string" ? reader.result : null);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+export async function generatePantheonInvoice({ invoice, user, organization }: PantheonInvoiceData): Promise<void> {
   const doc = new jsPDF("p", "mm", "a4");
   const W = 210;
   const margin = 15;
@@ -118,8 +141,21 @@ export function generatePantheonInvoice({ invoice, user }: PantheonInvoiceData):
   doc.text(`Invoice No: ${invoiceNo}`, margin, 30);
   doc.text(`Date: ${dateStr}`, margin, 36);
 
+  let logoSource = LOGO_IMG;
+  if (organization?.logoUrl) {
+    const normalizedLogo = organization.logoUrl.trim();
+    if (normalizedLogo.startsWith("data:image")) {
+      logoSource = normalizedLogo;
+    } else {
+      const dataUrl = await toDataUrl(normalizedLogo);
+      if (dataUrl) {
+        logoSource = dataUrl;
+      }
+    }
+  }
+
   try {
-    doc.addImage(LOGO_IMG, "PNG", W - margin - 50, 14, 50, 17);
+    doc.addImage(logoSource, "PNG", W - margin - 50, 14, 50, 17);
   } catch (_e) {}
 
   y = 52;
@@ -166,17 +202,17 @@ export function generatePantheonInvoice({ invoice, user }: PantheonInvoiceData):
 
   doc.setTextColor(...navy);
   doc.setFontSize(10);
-  doc.text("ADMITra", billByX + 6, y + 16);
+  doc.text(organization?.companyName || organization?.name || "Organization", billByX + 6, y + 16);
 
   doc.setTextColor(...darkGray);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text("Suite #303, Rajshree Center, Opp. Hotel Effotel,", billByX + 6, y + 23);
-  doc.text("Near Kalaghoda, Sayajigunj, Vadodara - 390020", billByX + 6, y + 29);
-  doc.text("Gujarat, India", billByX + 6, y + 35);
-  doc.text("hello@admitra.io | +91 7777 07 1711", billByX + 6, y + 41);
-  doc.text("PAN: AAZFK7452R", billByX + 6, y + 47);
-  doc.text("GST No: ASDFGHJKL", billByX + 6, y + 53);
+  const addressLines = doc.splitTextToSize(organization?.officeAddress || "-", colW - 12).slice(0, 2);
+  doc.text(addressLines, billByX + 6, y + 23);
+  doc.text(`${organization?.state || "-"}, ${organization?.country || "-"}`, billByX + 6, y + 35);
+  doc.text(`${organization?.contactEmail || "-"} | ${organization?.phone || "-"}`, billByX + 6, y + 41);
+  doc.text(`PAN: ${organization?.panNumber || "-"}`, billByX + 6, y + 47);
+  doc.text(`GST: ${organization?.gstNumber || "-"}`, billByX + 6, y + 53);
 
   y += billBoxH + 8;
 
@@ -364,25 +400,7 @@ export function generatePantheonInvoice({ invoice, user }: PantheonInvoiceData):
     y += gstRowH + 6;
   }
 
-  // Payment details
-  doc.setFillColor(245, 247, 250);
-  doc.roundedRect(margin, y, contentW, 32, 3, 3, "F");
-  doc.setTextColor(...accentBlue);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
-  doc.text("PAYMENT DETAILS", margin + 6, y + 8);
-
-  doc.setTextColor(...darkGray);
-  doc.setFontSize(7.5);
-  doc.setFont("helvetica", "normal");
-  doc.text("Beneficiary: KAREER Studio", margin + 6, y + 15);
-  doc.text("Axis Bank Current Account Number: 923020061117712", margin + 6, y + 21);
-  doc.text("SAVLI BRANCH, VADODARA  |  IFSC: UTIB0004011  |  SWIFT: AXISINBB013", margin + 6, y + 27);
-
-  doc.text("UPI ID: 7777071711@okbizaxis", margin + contentW - 65, y + 15);
-  doc.text("UPI Number: +91 7777 07 1711", margin + contentW - 65, y + 21);
-
-  y += 40;
+  y += 4;
 
   // Terms & Conditions
   doc.setTextColor(...navy);
