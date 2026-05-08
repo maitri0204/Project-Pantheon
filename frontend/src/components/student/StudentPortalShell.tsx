@@ -63,6 +63,7 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
   const [orgCompanyName, setOrgCompanyName] = useState("Organization");
   const [orgLogoUrl, setOrgLogoUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const auth = getStoredAuth();
@@ -102,17 +103,26 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center app-surface">
         <div className="w-10 h-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex app-surface">
       {/* ── Top Navbar ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-[100px] bg-white border-b border-gray-200 flex items-center pl-7 pr-4 md:pl-25 gap-4 shadow-sm">
-        <div className="w-[200px] h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-[84px] sm:h-[96px] bg-white/95 backdrop-blur border-b border-gray-200 flex items-center pl-4 pr-3 sm:pl-7 sm:pr-4 md:pl-25 gap-3 sm:gap-4 shadow-sm">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <div className="w-[140px] h-[56px] sm:w-[180px] sm:h-[72px] md:w-[200px] md:h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl">
           {orgLogoUrl ? (
             <Image
               src={orgLogoUrl}
@@ -127,8 +137,15 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
         </div>
       </nav>
 
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-100px)] flex flex-col fixed left-0 top-[100px] z-30">
+      <aside className={`fixed left-0 top-[84px] sm:top-[96px] z-40 w-64 bg-white/95 backdrop-blur border-r border-gray-200 h-[calc(100vh-84px)] sm:h-[calc(100vh-96px)] flex flex-col shadow-sm transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
         {/* Navigation */}
         <nav className="flex-1 p-4 pt-6 space-y-1">
           {links.map((item) => {
@@ -137,6 +154,7 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md"
@@ -177,8 +195,10 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
       </aside>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 ml-64 pt-[100px] min-w-0">
-        <main className="p-6">{children}</main>
+      <div className="flex-1 md:ml-64 pt-[84px] sm:pt-[96px] min-w-0">
+        <main className="p-3 sm:p-5 md:p-6">
+          <div className="content-wrap app-panel p-3 sm:p-5 md:p-6">{children}</div>
+        </main>
       </div>
     </div>
   );

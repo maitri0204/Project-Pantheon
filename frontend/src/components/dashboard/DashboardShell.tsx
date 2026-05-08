@@ -269,8 +269,8 @@ export default function DashboardShell({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="fixed top-0 left-0 right-0 z-50 h-[100px] bg-white border-b border-gray-200 flex items-center pl-7 pr-4 md:pl-25 gap-4 shadow-sm">
+    <div className="min-h-screen app-surface">
+      <header className="fixed top-0 left-0 right-0 z-50 h-[84px] sm:h-[96px] bg-white/95 backdrop-blur border-b border-gray-200 flex items-center pl-4 pr-3 sm:pl-7 sm:pr-4 md:pl-25 gap-3 sm:gap-4 shadow-sm">
         <button
           onClick={() => setSidebarOpen(true)}
           className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-500"
@@ -280,8 +280,8 @@ export default function DashboardShell({
           </svg>
         </button>
 
-        <div className="flex items-center gap-3 md:ml-1">
-          <div className="w-[200px] h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+        <div className="flex items-center gap-3 md:ml-1 min-w-0">
+          <div className="w-[140px] h-[56px] sm:w-[180px] sm:h-[72px] md:w-[200px] md:h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl">
             {userRole === "ORG_ADMIN" && orgLogoUrl ? (
               <img
                 src={orgLogoUrl}
@@ -296,7 +296,7 @@ export default function DashboardShell({
 
         <div className="flex-1" />
 
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-base font-bold shadow flex-shrink-0 mr-4">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-base font-bold shadow flex-shrink-0 mr-1 sm:mr-4">
           {userName.charAt(0).toUpperCase() || "S"}
         </div>
       </header>
@@ -309,7 +309,7 @@ export default function DashboardShell({
       )}
 
       <aside
-        className={`fixed top-[100px] left-0 z-40 h-[calc(100vh-100px)] w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm transition-transform duration-300 ${
+        className={`fixed top-[84px] sm:top-[96px] left-0 z-40 h-[calc(100vh-84px)] sm:h-[calc(100vh-96px)] w-64 bg-white/95 backdrop-blur border-r border-gray-200 flex flex-col shadow-sm transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
@@ -361,8 +361,10 @@ export default function DashboardShell({
         </div>
       </aside>
 
-      <div className="md:ml-64 pt-[100px] min-h-screen">
-        <main className="p-4 sm:p-6">{children}</main>
+      <div className="md:ml-64 pt-[84px] sm:pt-[96px] min-h-screen">
+        <main className="p-3 sm:p-5 md:p-6">
+          <div className="content-wrap app-panel p-3 sm:p-5 md:p-6">{children}</div>
+        </main>
       </div>
     </div>
   );
