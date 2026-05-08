@@ -8,6 +8,8 @@ import {
   getStudentDashboard,
   getDashboard,
   getStudentAssessmentPricing,
+  listStudentInvoices,
+  listOrganizationInvoices,
   getStudentAttemptReport,
   listStudentResults,
   getPlatformOverview,
@@ -37,10 +39,12 @@ router.get("/students/:studentId", requireAuth, requireRoles("SUPERADMIN", "ORG_
 router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT"), getStudentDashboard);
 router.get("/student/results", requireAuth, requireRoles("STUDENT"), listStudentResults);
+router.get("/student/invoices", requireAuth, requireRoles("STUDENT"), listStudentInvoices);
 router.get("/student/assessments", requireAuth, requireRoles("STUDENT"), listStudentAssessments);
 router.get("/student/assessments/:code/pricing", requireAuth, requireRoles("STUDENT"), getStudentAssessmentPricing);
 router.post("/student/assessments/:code/payment/order", requireAuth, requireRoles("STUDENT"), createStudentAssessmentPaymentOrder);
 router.post("/student/assessments/:code/payment/verify", requireAuth, requireRoles("STUDENT"), verifyStudentAssessmentPayment);
+router.get("/organization/invoices", requireAuth, requireRoles("ORG_ADMIN"), listOrganizationInvoices);
 router.get("/organization/coupons/summary", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationCouponSummary);
 router.post("/student/assessments/:code/start", requireAuth, requireRoles("STUDENT"), startStudentAssessment);
 router.get("/student/attempts/:attemptId", requireAuth, requireRoles("STUDENT"), getStudentAttempt);

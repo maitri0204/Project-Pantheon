@@ -389,7 +389,7 @@ export default function StudentRegisterPage() {
             </div>
           )}
 
-          <p className="mt-6 text-center text-xs text-slate-400">© 2026 {organization.branding.companyName}.</p>
+          <p className="mt-6 text-center text-xs text-slate-400">© 2026 {organization.branding.companyName}</p>
         </div>
       </div>
 

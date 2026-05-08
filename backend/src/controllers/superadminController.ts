@@ -58,8 +58,8 @@ const dedupeAssessments = <T extends { code: string; name: string }>(assessments
 
 export const getLedger = async (_req: AuthRequest, res: Response): Promise<void> => {
   const invoices = await Invoice.find()
-    .populate("user", "firstName lastName email")
-    .populate("organization", "name slug")
+    .populate("user", "firstName lastName email phone grade institutionName city state country")
+    .populate("organization", "name slug contactEmail website branding.companyName")
     .sort({ createdAt: 1 });
 
   let runningBalance = 0;

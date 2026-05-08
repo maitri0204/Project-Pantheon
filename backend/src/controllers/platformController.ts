@@ -770,6 +770,154 @@ type AssessmentPricing = {
 
 const generateInvoiceNumber = () => `INV-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`;
 
+type InvoiceUserSummary = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  grade?: string;
+  institutionName?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+};
+
+type InvoiceOrganizationSummary = {
+  _id: string;
+  name: string;
+  slug: string;
+  contactEmail?: string;
+  website?: string;
+  branding?: {
+    companyName?: string;
+  };
+};
+
+type InvoiceListItem = {
+  _id: string;
+  invoiceNumber: string;
+  assessmentCode: string;
+  assessmentName: string;
+  amount: number;
+  discountAmount: number;
+  gstAmount: number;
+  finalAmount: number;
+  currency: string;
+  couponCode?: string;
+  paymentMethod: "RAZORPAY" | "FREE";
+  paymentReference?: string;
+  status: "DRAFT" | "PAID" | "VOID";
+  createdAt: Date;
+  updatedAt: Date;
+  user: InvoiceUserSummary | null;
+  organization: InvoiceOrganizationSummary | null;
+};
+
+const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<InvoiceListItem[]> => {
+  const invoices = await Invoice.find(query)
+    .populate("user", "firstName lastName email phone grade institutionName city state country")
+    .populate("organization", "name slug contactEmail website branding.companyName")
+    .sort({ createdAt: -1 });
+
+  const invoiceIds = invoices.map((invoice) => invoice._id);
+  const sessions = invoiceIds.length
+    ? await AssessmentPaymentSession.find({ invoice: { $in: invoiceIds } }).select("invoice razorpayPaymentId")
+    : [];
+
+  const sessionByInvoiceId = new Map(
+    sessions
+      .filter((session) => session.invoice)
+      .map((session) => [String(session.invoice), session])
+  );
+
+  return invoices.map((invoiceDoc) => {
+    const invoice = invoiceDoc.toObject() as {
+      _id: mongoose.Types.ObjectId;
+      invoiceNumber: string;
+      assessmentCode: string;
+      amount: number;
+      discountAmount?: number;
+      gstAmount?: number;
+      finalAmount: number;
+      currency: string;
+      couponCode?: string;
+      paymentMethod?: "RAZORPAY" | "FREE";
+      paymentReference?: string;
+      status: "DRAFT" | "PAID" | "VOID";
+      createdAt: Date;
+      updatedAt: Date;
+      user?: {
+        _id: mongoose.Types.ObjectId;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+        grade?: string;
+        institutionName?: string;
+        city?: string;
+        state?: string;
+        country?: string;
+      };
+      organization?: {
+        _id: mongoose.Types.ObjectId;
+        name?: string;
+        slug?: string;
+        contactEmail?: string;
+        website?: string;
+        branding?: {
+          companyName?: string;
+        };
+      };
+    };
+
+    const session = sessionByInvoiceId.get(String(invoice._id));
+    const paymentReference = invoice.paymentReference || session?.razorpayPaymentId || undefined;
+    const paymentMethod = invoice.paymentMethod || (paymentReference ? "RAZORPAY" : "FREE");
+    const normalizedCode = normalizeAssessmentCode(invoice.assessmentCode);
+
+    return {
+      _id: String(invoice._id),
+      invoiceNumber: invoice.invoiceNumber,
+      assessmentCode: normalizedCode,
+      assessmentName: getAssessmentDisplayName(normalizedCode, normalizedCode),
+      amount: Number(invoice.amount || 0),
+      discountAmount: Number(invoice.discountAmount || 0),
+      gstAmount: Number(invoice.gstAmount || 0),
+      finalAmount: Number(invoice.finalAmount || 0),
+      currency: invoice.currency || "INR",
+      couponCode: invoice.couponCode,
+      paymentMethod,
+      paymentReference,
+      status: invoice.status,
+      createdAt: invoice.createdAt,
+      updatedAt: invoice.updatedAt,
+      user: invoice.user ? {
+        _id: String(invoice.user._id),
+        firstName: String(invoice.user.firstName || ""),
+        lastName: String(invoice.user.lastName || ""),
+        email: String(invoice.user.email || ""),
+        phone: invoice.user.phone,
+        grade: invoice.user.grade,
+        institutionName: invoice.user.institutionName,
+        city: invoice.user.city,
+        state: invoice.user.state,
+        country: invoice.user.country,
+      } : null,
+      organization: invoice.organization ? {
+        _id: String(invoice.organization._id),
+        name: String(invoice.organization.name || ""),
+        slug: String(invoice.organization.slug || ""),
+        contactEmail: invoice.organization.contactEmail,
+        website: invoice.organization.website,
+        branding: {
+          companyName: invoice.organization.branding?.companyName,
+        },
+      } : null,
+    };
+  });
+};
+
 const getRazorpayClient = () => {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -1236,6 +1384,44 @@ export const getStudentAssessmentPricing = async (req: AuthRequest, res: Respons
   }
 };
 
+export const listStudentInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const invoices = await buildInvoiceListItems({
+    user: req.user!._id,
+    organization: req.user!.organization,
+    status: "PAID",
+  });
+
+  res.json({ invoices });
+};
+
+export const listOrganizationInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  if (req.user.role !== "ORG_ADMIN") {
+    res.status(403).json({ message: "Access denied" });
+    return;
+  }
+
+  if (!req.user.organization) {
+    res.status(400).json({ message: "Organization is missing" });
+    return;
+  }
+
+  const invoices = await buildInvoiceListItems({
+    organization: req.user.organization,
+    status: "PAID",
+  });
+
+  res.json({ invoices });
+};
+
 export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   if (!requireStudentUser(req, res)) {
     return;
@@ -1287,9 +1473,12 @@ export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res:
         assessmentCode: pricing.assessment.code,
         amount: pricing.assessment.basePrice,
         discountAmount: pricing.discountAmount,
+        gstAmount: pricing.gstAmount,
         finalAmount: pricing.finalAmount,
         currency: pricing.assessment.currency || "INR",
         couponCode: pricing.couponCode,
+        paymentMethod: "FREE",
+        paymentReference: `FREE-${paymentSession._id}`,
         status: "PAID",
       });
 
@@ -1409,9 +1598,12 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     assessmentCode: session.assessmentCode,
     amount: session.amount,
     discountAmount: session.discountAmount,
+    gstAmount: session.gstAmount,
     finalAmount: session.finalAmount,
     currency: session.currency,
     couponCode: session.couponCode,
+    paymentMethod: "RAZORPAY",
+    paymentReference: razorpay_payment_id,
     status: "PAID",
   });
 

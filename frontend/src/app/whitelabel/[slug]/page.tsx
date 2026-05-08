@@ -215,7 +215,7 @@ export default function WhitelabelPortalPage() {
         )}
 
         <div className="text-center text-sm text-gray-600 py-4">
-          <p>© 2026 {organization.branding.companyName || organization.name}. Powered by Assessment.</p>
+          <p>© 2026 {organization.branding.companyName || organization.name}</p>
         </div>
       </div>
     </div>

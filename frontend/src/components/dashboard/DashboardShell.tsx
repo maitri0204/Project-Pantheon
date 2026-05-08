@@ -138,7 +138,7 @@ const navDefinitions: NavDefinition[] = [
   },
 ];
 
-const orgAdminAllowedSuffixes = new Set(["", "/assessments", "/users", "/coupons"]);
+const orgAdminAllowedSuffixes = new Set(["", "/assessments", "/users", "/coupons", "/ledger"]);
 
 export default function DashboardShell({
   children,

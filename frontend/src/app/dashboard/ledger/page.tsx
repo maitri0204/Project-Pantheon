@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { generatePantheonInvoice } from "@/lib/generateInvoice";
 
 const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string }> = {
   CAREER_COMPASS: { name: "Career Compass", color: "text-emerald-700", bg: "bg-emerald-50" },
@@ -12,8 +13,8 @@ const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string 
   METACOGNITION_TEST: { name: "TEST", color: "text-rose-700", bg: "bg-rose-50" },
 };
 
-type InvoiceUser = { _id: string; firstName: string; lastName: string; email: string };
-type InvoiceOrg  = { _id: string; name: string; slug: string };
+type InvoiceUser = { _id: string; firstName: string; lastName: string; email: string; phone?: string; grade?: string; institutionName?: string; city?: string; state?: string; country?: string };
+type InvoiceOrg  = { _id: string; name: string; slug: string; contactEmail?: string; companyName?: string };
 
 type Invoice = {
   _id: string;
@@ -23,9 +24,12 @@ type Invoice = {
   assessmentCode: string;
   amount: number;
   discountAmount: number;
+  gstAmount: number;
   finalAmount: number;
   currency: string;
   couponCode?: string;
+  paymentMethod: "RAZORPAY" | "FREE";
+  paymentReference?: string;
   status: "DRAFT" | "PAID" | "VOID";
   createdAt: string;
   runningBalance: number;
@@ -201,6 +205,7 @@ export default function LedgerPage() {
                   <th className="px-4 py-3 text-right">Running</th>
                   <th className="px-4 py-3 text-left">Status</th>
                   <th className="px-4 py-3 text-left">Coupon</th>
+                  <th className="px-4 py-3 text-center">PDF</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -235,6 +240,39 @@ export default function LedgerPage() {
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}>{inv.status}</span>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
+                      <td className="px-4 py-3 text-center">
+                        {inv.status === "PAID" && inv.user && (
+                          <button
+                            onClick={() => generatePantheonInvoice({
+                              invoice: {
+                                invoiceNo: inv.invoiceNumber,
+                                invoiceDate: new Date(inv.createdAt).toLocaleDateString("en-IN"),
+                                description: ASSESSMENT_META[inv.assessmentCode]?.name ?? inv.assessmentCode,
+                                amount: inv.amount,
+                                discountAmount: inv.discountAmount,
+                                gstAmount: inv.gstAmount ?? 0,
+                                finalAmount: inv.finalAmount,
+                                paymentMethod: inv.paymentMethod,
+                                paymentReference: inv.paymentReference,
+                              },
+                              user: {
+                                name: `${inv.user.firstName} ${inv.user.lastName}`,
+                                email: inv.user.email,
+                                mobile: inv.user.phone,
+                                phone: inv.user.phone,
+                                institutionName: inv.user.institutionName,
+                                city: inv.user.city,
+                                state: inv.user.state,
+                                country: inv.user.country,
+                              },
+                              organization: inv.organization ? { name: inv.organization.name, contactEmail: inv.organization.contactEmail, companyName: inv.organization.companyName } : undefined,
+                            })}
+                            className="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg font-medium transition-colors"
+                          >
+                            ↓ PDF
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -247,7 +285,7 @@ export default function LedgerPage() {
                   <td className="px-4 py-3 text-right text-green-700">{filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "—"}</td>
                   <td className="px-4 py-3 text-right text-gray-900">{fmt(filteredSummary.net)}</td>
                   <td className="px-4 py-3 text-right text-indigo-700">{fmt(filteredWithBalance.at(-1)?.runningBalance ?? 0)}</td>
-                  <td colSpan={2} />
+                  <td colSpan={3} />
                 </tr>
               </tfoot>
             </table>
