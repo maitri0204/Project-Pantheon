@@ -9,10 +9,10 @@ const seed = async (): Promise<void> => {
   try {
     await connectDB();
     await bootstrapPlatform();
-    console.log("Project Pantheon platform seed completed successfully.");
+    console.log("Assessment Centre platform seed completed successfully.");
     process.exit(0);
   } catch (error) {
-    console.error("Project Pantheon platform seed failed:", error);
+    console.error("Assessment Centre platform seed failed:", error);
     process.exit(1);
   }
 };

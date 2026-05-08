@@ -37,17 +37,17 @@ export const sendOtpEmail = async ({
   }
 
   await transporter.sendMail({
-    from: `"Project Pantheon" <${process.env.SMTP_USER}>`,
+    from: `"Assessment Centre" <${process.env.SMTP_USER}>`,
     to: email,
     subject:
       purpose === "signup"
-        ? "Verify your Project Pantheon account"
+        ? "Verify your Assessment Centre account"
         : purpose === "registration"
           ? "Verify your organization registration email"
-          : "Your Project Pantheon login OTP",
+          : "Your Assessment Centre login OTP",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #f8fafc; border-radius: 16px;">
-        <h2 style="margin: 0 0 8px; color: #0f172a;">Project Pantheon</h2>
+        <h2 style="margin: 0 0 8px; color: #0f172a;">Assessment Centre</h2>
         <p style="margin: 0 0 16px; color: #475569;">Hello ${firstName},</p>
         <p style="margin: 0 0 16px; color: #334155;">Use the OTP below to ${
           purpose === "signup"
@@ -87,18 +87,18 @@ export const sendRegistrationConfirmationEmail = async ({
   }
 
   await transporter.sendMail({
-    from: `"Project Pantheon" <${process.env.SMTP_USER}>`,
+    from: `"Assessment Centre" <${process.env.SMTP_USER}>`,
     to: email,
-    subject: `Welcome to Project Pantheon - Your ${companyName} Whitelabel Portal is Ready`,
+    subject: `Welcome to Assessment Centre - Your ${companyName} Whitelabel Portal is Ready`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 16px;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <h1 style="margin: 0 0 8px; color: #2563eb; font-size: 28px;">Welcome to Project Pantheon!</h1>
+          <h1 style="margin: 0 0 8px; color: #2563eb; font-size: 28px;">Welcome to Assessment Centre!</h1>
           <p style="margin: 0 0 24px; color: #64748b; font-size: 14px;">Your whitelabel portal is now live</p>
           
           <p style="margin: 0 0 24px; color: #334155; font-size: 15px;">Hello <strong>${firstName}</strong>,</p>
           
-          <p style="margin: 0 0 20px; color: #334155; font-size: 15px;">Congratulations! Your organization <strong>${companyName}</strong> has been successfully registered on Project Pantheon. Your whitelabel portal is now ready to use.</p>
+          <p style="margin: 0 0 20px; color: #334155; font-size: 15px;">Congratulations! Your organization <strong>${companyName}</strong> has been successfully registered on Assessment Centre. Your whitelabel portal is now ready to use.</p>
           
           <div style="background: #f0f9ff; border: 2px solid #06b6d4; border-radius: 8px; padding: 20px; margin: 24px 0;">
             <h3 style="margin: 0 0 16px; color: #0369a1; font-size: 16px;">Your Portal Details</h3>
@@ -124,7 +124,7 @@ export const sendRegistrationConfirmationEmail = async ({
             If you didn't create this account or have any questions, please contact our support team.
           </p>
           
-          <p style="margin: 8px 0 0; color: #94a3b8; font-size: 12px;">Best regards,<br>The Project Pantheon Team</p>
+          <p style="margin: 8px 0 0; color: #94a3b8; font-size: 12px;">Best regards,<br>The Assessment Centre Team</p>
         </div>
       </div>
     `,
@@ -154,7 +154,7 @@ export const sendAssessmentReportToStudent = async ({
   }
 
   await transporter.sendMail({
-    from: `"Project Pantheon" <${process.env.SMTP_USER}>`,
+    from: `"Assessment Centre" <${process.env.SMTP_USER}>`,
     to: email,
     subject: `Your ${assessmentName} Report`,
     html: `
@@ -163,7 +163,7 @@ export const sendAssessmentReportToStudent = async ({
           <h2 style="margin: 0 0 8px; color: #2563eb;">Your Report is Ready!</h2>
           <p style="margin: 0 0 16px; color: #334155;">Hi <strong>${safeName}</strong>, congratulations on completing the <strong>${assessmentName}</strong>!</p>
           <p style="margin: 0 0 16px; color: #475569; font-size: 14px;">Your detailed report has been attached to this email as a PDF. Please find it below.</p>
-          <p style="margin: 24px 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px;">This is an automated email from Project Pantheon. Please do not reply.</p>
+          <p style="margin: 24px 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0; color: #94a3b8; font-size: 12px;">This is an automated email from Assessment Centre. Please do not reply.</p>
         </div>
       </div>
     `,

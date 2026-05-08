@@ -26,7 +26,7 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 app.get("/api/health", (_req, res) => {
-  res.status(200).json({ message: "Project Pantheon backend is running" });
+  res.status(200).json({ message: "Assessment Centre backend is running" });
 });
 
 app.use("/api", apiRoutes);

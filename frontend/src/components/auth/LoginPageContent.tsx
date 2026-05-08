@@ -344,12 +344,12 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
                   : "linear-gradient(135deg, rgb(37, 99, 235), rgb(6, 182, 212))"
               }}
             >
-              {orgBranding ? orgBranding.companyName.substring(0, 2).toUpperCase() : "PP"}
+              {orgBranding ? orgBranding.companyName.substring(0, 2).toUpperCase() : "AC"}
             </div>
           )}
           <h1 className="text-4xl font-bold text-slate-900">Welcome</h1>
           <p className="mt-2 text-slate-600">
-            {orgBranding ? orgBranding.companyName : "Project Pantheon Platform"}
+            {orgBranding ? orgBranding.companyName : "Assessment Centre Platform"}
           </p>
         </div>
 
@@ -503,7 +503,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
           )}
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400">© {new Date().getFullYear()} {orgBranding?.companyName || "Project Pantheon"}</p>
+        <p className="mt-6 text-center text-xs text-slate-400">© {new Date().getFullYear()} {orgBranding?.companyName || "Assessment Centre"}</p>
       </div>
     </div>
   );

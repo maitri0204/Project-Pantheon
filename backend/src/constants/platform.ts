@@ -1,7 +1,7 @@
 export const DEFAULT_SUPERADMIN_EMAIL = "maitripatel2608@gmail.com";
 export const DEFAULT_SUPERADMIN_NAME = "Maitri Patel";
 export const PLATFORM_ORG_SLUG = "project-pantheon";
-export const PLATFORM_ORG_NAME = "Project Pantheon";
+export const PLATFORM_ORG_NAME = "Assessment Centre";
 
 export type AssessmentSeedDefinition = {
   code: string;

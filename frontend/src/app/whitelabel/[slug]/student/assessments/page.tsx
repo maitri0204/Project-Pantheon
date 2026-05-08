@@ -197,7 +197,7 @@ export default function StudentAssessmentsPage() {
         key: orderResponse.keyId,
         amount: orderResponse.order.amount,
         currency: orderResponse.order.currency,
-        name: "Project Pantheon",
+        name: "Assessment Centre",
         description: `${orderResponse.pricing.assessment.name} Assessment`,
         order_id: orderResponse.order.id,
         prefill: {
