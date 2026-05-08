@@ -86,6 +86,44 @@ const toDataUrl = async (url: string): Promise<string | null> => {
   }
 };
 
+const STATE_CANONICAL_MAP: Record<string, string> = {
+  gj: "gujarat",
+  gujarat: "gujarat",
+  mh: "maharashtra",
+  maharashtra: "maharashtra",
+  dl: "delhi",
+  delhi: "delhi",
+  ka: "karnataka",
+  karnataka: "karnataka",
+  tn: "tamilnadu",
+  tamilnadu: "tamilnadu",
+  rj: "rajasthan",
+  rajasthan: "rajasthan",
+};
+
+const normalizeState = (value?: string): string => {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z]/g, "");
+
+  if (!normalized) return "";
+  return STATE_CANONICAL_MAP[normalized] || normalized;
+};
+
+const formatBillByPhone = (value?: string): string => {
+  const raw = String(value || "").trim();
+  if (!raw) return "-";
+
+  const digits = raw.replace(/\D/g, "");
+  const local10 = digits.length >= 10 ? digits.slice(-10) : "";
+  if (local10.length === 10) {
+    return `+91 ${local10.slice(0, 5)} ${local10.slice(5)}`;
+  }
+
+  return raw;
+};
+
 export async function generatePantheonInvoice({ invoice, user, organization }: PantheonInvoiceData): Promise<void> {
   const doc = new jsPDF("p", "mm", "a4");
   const W = 210;
@@ -99,7 +137,9 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
 
   const invoiceNo = invoice.invoiceNo;
   const assessmentName = invoice.description;
-  const isGujarat = (user.state || "").toLowerCase().includes("gujarat");
+  const billedToState = normalizeState(user.state);
+  const billedByState = normalizeState(organization?.state);
+  const isSameState = Boolean(billedToState && billedByState && billedToState === billedByState);
   const gstAmount = invoice.gstAmount || 0;
   const gstApplicable = gstAmount > 0;
   const discountAmount = invoice.discountAmount || 0;
@@ -111,7 +151,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   let igst = 0;
 
   if (gstApplicable) {
-    if (isGujarat) {
+    if (isSameState) {
       cgst = Math.round((gstAmount / 2) * 100) / 100;
       sgst = Math.round((gstAmount - cgst) * 100) / 100;
     } else {
@@ -224,11 +264,16 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   const addressLines = doc.splitTextToSize(organization?.officeAddress || "-", colW - 12).slice(0, 2);
-  doc.text(addressLines, billByX + 6, y + 23);
-  doc.text(`${organization?.state || "-"}, ${organization?.country || "-"}`, billByX + 6, y + 35);
-  doc.text(`${organization?.contactEmail || "-"} | ${organization?.phone || "-"}`, billByX + 6, y + 41);
-  doc.text(`PAN: ${organization?.panNumber || "-"}`, billByX + 6, y + 47);
-  doc.text(`GST: ${organization?.gstNumber || "-"}`, billByX + 6, y + 53);
+  const detailStartY = y + 23;
+  addressLines.forEach((line, index) => {
+    doc.text(String(line), billByX + 6, detailStartY + index * 6);
+  });
+
+  const afterAddressY = detailStartY + Math.max(addressLines.length, 1) * 6;
+  doc.text(`${organization?.state || "-"}, ${organization?.country || "-"}`, billByX + 6, afterAddressY);
+  doc.text(`${organization?.contactEmail || "-"} | ${formatBillByPhone(organization?.phone)}`, billByX + 6, afterAddressY + 6);
+  doc.text(`PAN: ${organization?.panNumber || "-"}`, billByX + 6, afterAddressY + 12);
+  doc.text(`GST: ${organization?.gstNumber || "-"}`, billByX + 6, afterAddressY + 18);
 
   y += billBoxH + 8;
 
@@ -321,7 +366,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   y += totRowH;
 
   if (gstApplicable) {
-    if (isGujarat) {
+    if (isSameState) {
       doc.rect(totalsTableX, y, labelW, totRowH, "S");
       doc.rect(totalsTableX + labelW, y, valW, totRowH, "S");
       doc.text("CGST (9%)", totalsTableX + 3, y + 5.5);
@@ -377,7 +422,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
 
   // GST breakdown
   if (gstApplicable) {
-    const gstColW = contentW / (isGujarat ? 3 : 2);
+    const gstColW = contentW / (isSameState ? 3 : 2);
     const gstRowH = 9;
 
     doc.setFillColor(245, 247, 250);
@@ -388,7 +433,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("Taxable Value", margin + 4, y + 6);
-    if (isGujarat) {
+    if (isSameState) {
       doc.line(margin + gstColW, y, margin + gstColW, y + gstRowH);
       doc.text("CGST (9%)", margin + gstColW + 4, y + 6);
       doc.line(margin + gstColW * 2, y, margin + gstColW * 2, y + gstRowH);
@@ -404,7 +449,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...darkGray);
     doc.text(`${subTotal.toFixed(2)}`, margin + 4, y + 6);
-    if (isGujarat) {
+    if (isSameState) {
       doc.line(margin + gstColW, y, margin + gstColW, y + gstRowH);
       doc.text(`${cgst.toFixed(2)}`, margin + gstColW + 4, y + 6);
       doc.line(margin + gstColW * 2, y, margin + gstColW * 2, y + gstRowH);
@@ -473,8 +518,14 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setTextColor(200, 200, 200);
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
+
+  const footerAddress = (organization?.officeAddress || "-").replace(/\s+/g, " ").trim();
+  const footerEmail = organization?.contactEmail || "-";
+  const footerPhone = formatBillByPhone(organization?.phone);
+  const footerText = `${footerAddress} | ${footerEmail} | ${footerPhone}`;
+
   doc.text(
-    "Reg. Office: KAREER Studio, Suite #303, Rajshree Center, Opp. Hotel Effotel, Near Kalaghoda, Sayajigunj, Vadodara - 390020  |  hello@admitra.io  |  +91 7777 07 1711",
+    footerText,
     W / 2, footerY + 7,
     { align: "center" }
   );

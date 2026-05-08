@@ -260,7 +260,7 @@ export default function LedgerPage() {
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
                       <td className="px-4 py-3 text-center">
-                        {inv.status === "PAID" && inv.user && (
+                        {inv.status === "PAID" && (
                           <button
                             onClick={() => generatePantheonInvoice({
                               invoice: {
@@ -275,14 +275,14 @@ export default function LedgerPage() {
                                 paymentReference: inv.paymentReference,
                               },
                               user: {
-                                name: `${inv.user.firstName} ${inv.user.lastName}`,
-                                email: inv.user.email,
-                                mobile: inv.user.phone,
-                                phone: inv.user.phone,
-                                institutionName: inv.user.institutionName,
-                                city: inv.user.city,
-                                state: inv.user.state,
-                                country: inv.user.country,
+                                name: inv.user ? `${inv.user.firstName} ${inv.user.lastName}` : userName,
+                                email: inv.user?.email || userEmail,
+                                mobile: inv.user?.phone,
+                                phone: inv.user?.phone,
+                                institutionName: inv.user?.institutionName,
+                                city: inv.user?.city,
+                                state: inv.user?.state,
+                                country: inv.user?.country,
                               },
                               organization: inv.organization
                                 ? {
