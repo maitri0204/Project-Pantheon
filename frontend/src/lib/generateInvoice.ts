@@ -271,7 +271,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setFont("helvetica", "normal");
   const addressLines = doc.splitTextToSize(organization?.officeAddress || "-", colW - 12).slice(0, 2);
   const detailStartY = y + 23;
-  addressLines.forEach((line, index) => {
+  addressLines.forEach((line: string, index: number) => {
     doc.text(String(line), billByX + 6, detailStartY + index * 6);
   });
 
