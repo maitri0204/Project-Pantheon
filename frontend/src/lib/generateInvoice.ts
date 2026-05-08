@@ -47,6 +47,9 @@ export interface PantheonInvoiceOrg {
   panNumber?: string;
   gstNumber?: string;
   logoUrl?: string;
+  signatoryFirstName?: string;
+  signatoryLastName?: string;
+  signatureUrl?: string;
 }
 
 export interface PantheonInvoiceRecord {
@@ -92,7 +95,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   const date = new Date(invoice.invoiceDate);
   const dateStr = Number.isNaN(date.getTime())
     ? invoice.invoiceDate
-    : date.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    : `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
 
   const invoiceNo = invoice.invoiceNo;
   const assessmentName = invoice.description;
@@ -150,6 +153,19 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
       const dataUrl = await toDataUrl(normalizedLogo);
       if (dataUrl) {
         logoSource = dataUrl;
+      }
+    }
+  }
+
+  let signatureSource = SIGNATURE_IMG;
+  if (organization?.signatureUrl) {
+    const normalizedSignature = organization.signatureUrl.trim();
+    if (normalizedSignature.startsWith("data:image")) {
+      signatureSource = normalizedSignature;
+    } else {
+      const dataUrl = await toDataUrl(normalizedSignature);
+      if (dataUrl) {
+        signatureSource = dataUrl;
       }
     }
   }
@@ -431,16 +447,21 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setTextColor(...navy);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.text("For ADMITra", sigX, sigStartY, { align: "right" });
+  doc.text(`For ${organization?.companyName || organization?.name || "Organization"}`, sigX, sigStartY, { align: "right" });
 
   try {
-    doc.addImage(SIGNATURE_IMG, "PNG", sigX - 26, sigStartY + 2, 32, 16);
+    doc.addImage(signatureSource, "PNG", sigX - 26, sigStartY + 2, 32, 16);
   } catch (_e) {}
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...navy);
-  doc.text("Makrand Bhatt", sigX, sigStartY + 22, { align: "right" });
+  doc.text(
+    `${organization?.signatoryFirstName || ""} ${organization?.signatoryLastName || ""}`.trim() || user.name,
+    sigX,
+    sigStartY + 22,
+    { align: "right" }
+  );
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...lightGray);

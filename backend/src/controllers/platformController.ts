@@ -6,6 +6,7 @@ import Razorpay from "razorpay";
 import Assessment from "../models/Assessment";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
+import InvoiceCounter from "../models/InvoiceCounter";
 import AssessmentPaymentSession from "../models/AssessmentPaymentSession";
 import Organization from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
@@ -768,7 +769,39 @@ type AssessmentPricing = {
   finalAmount: number;
 };
 
-const generateInvoiceNumber = () => `INV-${Date.now()}-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`;
+const getFinancialYear = (date = new Date()): string => {
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-indexed
+  const startYear = month >= 3 ? year : year - 1;
+  const endYearShort = String((startYear + 1) % 100).padStart(2, "0");
+  return `${startYear}-${endYearShort}`;
+};
+
+const getCompanyPrefix = (companyName: string): string => {
+  const normalized = (companyName || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+
+  if (normalized.length >= 4) return normalized.slice(0, 4);
+  if (normalized.length >= 1) return normalized.padEnd(4, "X");
+  return "COMP";
+};
+
+const generateInvoiceNumber = async (organizationId: mongoose.Types.ObjectId | string): Promise<string> => {
+  const org = await Organization.findById(organizationId).select("name branding.companyName");
+  const companyName = org?.branding?.companyName || org?.name || "COMPANY";
+  const prefix = getCompanyPrefix(companyName);
+  const financialYear = getFinancialYear();
+
+  const counter = await InvoiceCounter.findOneAndUpdate(
+    { organization: organizationId, financialYear },
+    { $inc: { counter: 1 } },
+    { new: true, upsert: true }
+  );
+
+  const padded = String(counter.counter).padStart(6, "0");
+  return `${prefix}/AS${padded}/${financialYear}`;
+};
 
 type InvoiceUserSummary = {
   _id: string;
@@ -795,6 +828,9 @@ type InvoiceOrganizationSummary = {
   country?: string;
   panNumber?: string;
   gstNumber?: string;
+  signatoryFirstName?: string;
+  signatoryLastName?: string;
+  signatureUrl?: string;
   branding?: {
     companyName?: string;
     logoUrl?: string;
@@ -842,7 +878,7 @@ const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<In
 
   const organizationRegistrations = organizationIds.length
     ? await OrganizationRegistration.find({ organization: { $in: organizationIds } })
-      .select("organization primaryMobile officeAddress state country gstNumber panCompany")
+      .select("organization firstName lastName primaryMobile officeAddress state country gstNumber panCompany signatureUrl")
       .lean()
     : [];
 
@@ -949,6 +985,9 @@ const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<In
         country: registrationByOrganizationId.get(String(invoice.organization._id))?.country,
         panNumber: registrationByOrganizationId.get(String(invoice.organization._id))?.panCompany,
         gstNumber: registrationByOrganizationId.get(String(invoice.organization._id))?.gstNumber,
+        signatoryFirstName: registrationByOrganizationId.get(String(invoice.organization._id))?.firstName,
+        signatoryLastName: registrationByOrganizationId.get(String(invoice.organization._id))?.lastName,
+        signatureUrl: registrationByOrganizationId.get(String(invoice.organization._id))?.signatureUrl,
         branding: {
           companyName: invoice.organization.branding?.companyName,
           logoUrl: invoice.organization.branding?.logoUrl,
@@ -1507,7 +1546,7 @@ export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res:
 
     if (pricing.finalAmount <= 0) {
       const invoice = await Invoice.create({
-        invoiceNumber: generateInvoiceNumber(),
+        invoiceNumber: await generateInvoiceNumber(organizationId),
         user: userId,
         organization: organizationId,
         assessmentCode: pricing.assessment.code,
@@ -1632,7 +1671,7 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
   }
 
   const invoice = await Invoice.create({
-    invoiceNumber: generateInvoiceNumber(),
+    invoiceNumber: await generateInvoiceNumber(req.user!.organization as mongoose.Types.ObjectId | string),
     user: req.user!._id,
     organization: req.user!.organization,
     assessmentCode: session.assessmentCode,

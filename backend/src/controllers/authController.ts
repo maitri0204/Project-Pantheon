@@ -83,6 +83,10 @@ const getPortalLoginLink = ({
 
     try {
       const parsed = new URL(candidate);
+      const path = parsed.pathname.replace(/\/+$/, "");
+      if (path && path !== "/") {
+        return `${parsed.origin}${path}/login`;
+      }
       return `${parsed.origin}/login`;
     } catch {
       // Fallback to platform-hosted portal login URL
@@ -278,6 +282,7 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       bankAccountNumber?: string;
       ifscCode?: string;
       logoUrl?: string;
+      signatureUrl?: string;
     };
 
     const normalizedEmail = body.email?.toLowerCase().trim();
@@ -324,6 +329,11 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
 
     if (!body.bankAccountNumber?.trim() || !body.ifscCode?.trim() || !body.accountType) {
       res.status(400).json({ message: "Bank account number, IFSC code, and account type are required" });
+      return;
+    }
+
+    if (!body.signatureUrl?.trim()) {
+      res.status(400).json({ message: "Signature is required" });
       return;
     }
 
@@ -394,6 +404,7 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
     registration.bankAccountNumber = body.bankAccountNumber?.trim();
     registration.ifscCode = body.ifscCode?.trim();
     registration.logoUrl = body.logoUrl?.trim();
+    registration.signatureUrl = body.signatureUrl?.trim();
     registration.generatedSlug = orgSlug;
     registration.status = "COMPLETED";
     registration.organization = organization._id;

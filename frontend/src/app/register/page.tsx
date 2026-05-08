@@ -41,6 +41,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [logoPreview, setLogoPreview] = useState<string>("");
+  const [signaturePreview, setSignaturePreview] = useState<string>("");
   const [primaryCountryCode, setPrimaryCountryCode] = useState("+91");
   const [alternateCountryCode, setAlternateCountryCode] = useState("+91");
   const [selectedCountryIso, setSelectedCountryIso] = useState("IN");
@@ -77,6 +78,7 @@ export default function RegisterPage() {
     bankAccountNumber: "",
     ifscCode: "",
     logoUrl: "",
+    signatureUrl: "",
   });
 
   const otpValue = useMemo(() => otp.join(""), [otp]);
@@ -114,6 +116,28 @@ export default function RegisterPage() {
       const dataUrl = String(reader.result || "");
       setLogoPreview(dataUrl);
       setFormData((prev) => ({ ...prev, logoUrl: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSignatureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const maxSignatureSizeBytes = 2 * 1024 * 1024;
+    if (file.size > maxSignatureSizeBytes) {
+      setError("Signature file is too large. Please upload an image up to 2MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setError(null);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      setSignaturePreview(dataUrl);
+      setFormData((prev) => ({ ...prev, signatureUrl: dataUrl }));
     };
     reader.readAsDataURL(file);
   };
@@ -538,6 +562,15 @@ export default function RegisterPage() {
                 <div className="space-y-3">
                   <input type="file" accept="image/*" onChange={handleLogoUpload} required className="block w-full text-sm" />
                   {logoPreview ? <img src={logoPreview} alt="Logo preview" className="h-16 w-16 rounded object-cover border border-gray-200" /> : null}
+                </div>
+              </section>
+
+              <section className="space-y-4 rounded-2xl border border-blue-100/70 bg-gradient-to-b from-white to-sky-50/25 p-5 md:p-6">
+                <h2 className="text-2xl font-bold text-black">Signature <span className="text-red-600">*</span></h2>
+                <p className="text-sm text-black/70">Note: Please upload signature with background removed (transparent background preferred).</p>
+                <div className="space-y-3">
+                  <input type="file" accept="image/*" onChange={handleSignatureUpload} required className="block w-full text-sm" />
+                  {signaturePreview ? <img src={signaturePreview} alt="Signature preview" className="h-16 w-32 rounded object-contain border border-gray-200 bg-white" /> : null}
                 </div>
               </section>
 

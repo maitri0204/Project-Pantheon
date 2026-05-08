@@ -75,7 +75,7 @@ export const getLedger = async (_req: AuthRequest, res: Response): Promise<void>
 
   const organizationRegistrations = organizationIds.length
     ? await OrganizationRegistration.find({ organization: { $in: organizationIds } })
-      .select("organization primaryMobile officeAddress state country gstNumber panCompany")
+      .select("organization firstName lastName primaryMobile officeAddress state country gstNumber panCompany signatureUrl")
       .lean()
     : [];
 
@@ -108,6 +108,9 @@ export const getLedger = async (_req: AuthRequest, res: Response): Promise<void>
           country: registration?.country,
           panNumber: registration?.panCompany,
           gstNumber: registration?.gstNumber,
+          signatoryFirstName: registration?.firstName,
+          signatoryLastName: registration?.lastName,
+          signatureUrl: registration?.signatureUrl,
         }
         : row.organization,
       runningBalance,

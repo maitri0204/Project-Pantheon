@@ -31,6 +31,7 @@ export interface IOrganizationRegistration extends Document {
   bankAccountNumber?: string;
   ifscCode?: string;
   logoUrl?: string;
+  signatureUrl?: string;
   generatedSlug?: string;
   otpHash?: string;
   otpExpiresAt?: Date;
@@ -74,6 +75,7 @@ const organizationRegistrationSchema = new Schema<IOrganizationRegistration>(
     bankAccountNumber: { type: String, default: undefined, trim: true },
     ifscCode: { type: String, default: undefined, trim: true },
     logoUrl: { type: String, default: undefined, trim: true },
+    signatureUrl: { type: String, default: undefined, trim: true },
     generatedSlug: { type: String, default: undefined, trim: true },
     otpHash: { type: String, default: undefined },
     otpExpiresAt: { type: Date, default: undefined },

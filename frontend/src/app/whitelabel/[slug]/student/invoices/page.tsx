@@ -43,6 +43,9 @@ type InvoiceItem = {
     country?: string;
     panNumber?: string;
     gstNumber?: string;
+    signatoryFirstName?: string;
+    signatoryLastName?: string;
+    signatureUrl?: string;
     branding?: {
       companyName?: string;
       logoUrl?: string;
@@ -131,7 +134,7 @@ export default function StudentInvoicesPage() {
                           onClick={() => generatePantheonInvoice({
                               invoice: {
                                 invoiceNo: inv.invoiceNumber,
-                                invoiceDate: new Date(inv.createdAt).toLocaleDateString("en-IN"),
+                                invoiceDate: inv.createdAt,
                                 description: ASSESSMENT_META[inv.assessmentCode]?.name ?? inv.assessmentCode,
                                 amount: inv.amount,
                                 discountAmount: inv.discountAmount,
@@ -162,6 +165,9 @@ export default function StudentInvoicesPage() {
                                   phone: inv.organization.phone,
                                   panNumber: inv.organization.panNumber,
                                   gstNumber: inv.organization.gstNumber,
+                                  signatoryFirstName: inv.organization.signatoryFirstName,
+                                  signatoryLastName: inv.organization.signatoryLastName,
+                                  signatureUrl: inv.organization.signatureUrl,
                                 }
                                 : undefined,
                           })}
