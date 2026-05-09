@@ -32,6 +32,7 @@ export default function StudentResultsPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
   const auth = useMemo(() => getStoredAuth(), []);
+  const learnerLabel = auth?.user?.role === "PARENT" ? "Parent" : "Student";
 
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<StudentResultItem[]>([]);
@@ -64,7 +65,7 @@ export default function StudentResultsPage() {
 
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-100">Student Dashboard</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-100">{learnerLabel} Dashboard</p>
             <h1 className="mt-1 text-3xl md:text-4xl font-black tracking-tight">Your Results</h1>
             <p className="mt-2 text-sm md:text-base text-blue-100/95">View all completed assessment reports in one place.</p>
           </div>

@@ -29,6 +29,7 @@ export default function StudentDashboardPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
   const auth = useMemo(() => getStoredAuth(), []);
+  const learnerLabel = auth?.user?.role === "PARENT" ? "Parent" : "Student";
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StudentDashboardResponse | null>(null);
 
@@ -57,7 +58,7 @@ export default function StudentDashboardPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold">Student Dashboard</h1>
+        <h1 className="text-2xl font-bold">{learnerLabel} Dashboard</h1>
         <p className="mt-1 text-blue-100">Track your test progress and start pending assessments.</p>
       </div>
 

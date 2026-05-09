@@ -80,13 +80,15 @@ export default function WhitelabelPortalPage() {
 
   const { organization, assessments, canAccessAssessments, message } = data;
   const isOrgAdminForPortal = auth?.user.role === "ORG_ADMIN" && auth.orgSlug === organization.slug;
-  const isStudentForPortal = auth?.user.role === "STUDENT" && auth.orgSlug === organization.slug;
+  const isLearnerForPortal =
+    (auth?.user.role === "STUDENT" || auth?.user.role === "PARENT") &&
+    auth.orgSlug === organization.slug;
   const primaryCtaHref = isOrgAdminForPortal
     ? `/whitelabel/${organization.slug}/dashboard`
-    : isStudentForPortal
+    : isLearnerForPortal
       ? `/whitelabel/${organization.slug}/student/dashboard`
       : `/whitelabel/${organization.slug}/login`;
-  const primaryCtaLabel = isOrgAdminForPortal || isStudentForPortal ? "Dashboard" : "Login";
+  const primaryCtaLabel = isOrgAdminForPortal || isLearnerForPortal ? "Dashboard" : "Login";
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-10">
@@ -142,7 +144,7 @@ export default function WhitelabelPortalPage() {
                 href={`/whitelabel/${organization.slug}/student/register`}
                 className="inline-flex justify-center rounded-xl border border-blue-300 bg-white px-6 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
               >
-                Register as Student
+                Register as Parent/Student
               </Link>
             </div>
           </div>
@@ -194,11 +196,11 @@ export default function WhitelabelPortalPage() {
                         {assessment.currency === "INR" ? "₹" : assessment.currency}{assessment.basePrice}
                       </span>
                       <Link
-                        href={isStudentForPortal ? `/whitelabel/${organization.slug}/student/assessments` : primaryCtaHref}
+                        href={isLearnerForPortal ? `/whitelabel/${organization.slug}/student/assessments` : primaryCtaHref}
                         className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-opacity hover:opacity-90"
                         style={{ backgroundColor: organization.branding.primaryColor }}
                       >
-                        {isStudentForPortal ? "Take Test →" : "Start Test →"}
+                        {isLearnerForPortal ? "Take Test →" : "Start Test →"}
                       </Link>
                     </div>
                   </div>

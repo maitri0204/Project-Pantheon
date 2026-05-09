@@ -33,8 +33,14 @@ const GRADE_OPTIONS = [
 
 const OTHER_GRADE_VALUE = "Other";
 
+const LEARNER_ROLE_OPTIONS = [
+  { value: "STUDENT", label: "Student" },
+  { value: "PARENT", label: "Parent" },
+] as const;
+
 type FormState = {
   firstName: string; middleName: string; lastName: string;
+  role: "STUDENT" | "PARENT";
   gender: string; email: string; phoneCode: string; phone: string;
   institutionName: string; grade: string; division: string; country: string; state: string; city: string;
 };
@@ -62,7 +68,7 @@ function SectionDivider({ icon, label }: { icon: string; label: string }) {
 }
 
 const inputCls = "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 transition focus:outline-none focus:ring-2 focus:ring-offset-1";
-const selectCls = `${inputCls} cursor-pointer appearance-none`;
+const selectCls = `${inputCls} cursor-pointer appearance-none bg-no-repeat bg-right bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2716%27%20height=%2716%27%20fill=%22none%22%20stroke=%22%23666%22%20viewBox=%220%200%2024%2024%22%3E%3Cpath%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%20stroke-width=%222%22%20d=%22M19%209l-7%207-7-7%22/%3E%3C/svg%3E')] pr-10`;
 
 /* ─── MAIN PAGE ─── */
 export default function StudentRegisterPage() {
@@ -80,7 +86,7 @@ export default function StudentRegisterPage() {
   const [progress, setProgress] = useState(0);
 
   const [form, setForm] = useState<FormState>({
-    firstName:"", middleName:"", lastName:"", gender:"", email:"",
+    firstName:"", middleName:"", lastName:"", role:"STUDENT", gender:"", email:"",
     phoneCode:"+91", phone:"", institutionName:"", grade:"",
     division:"",
     country:"", state:"", city:"",
@@ -107,11 +113,26 @@ export default function StudentRegisterPage() {
   }, [step]);
 
   const setField = (f: keyof FormState, v: string) =>
-    setForm((p) => { const n={...p,[f]:v}; if(f==="country"){n.state="";n.city="";} if(f==="state"){n.city="";} return n; });
+    setForm((p) => {
+      const n = { ...p, [f]: v };
+      if (f === "country") {
+        n.state = "";
+        n.city = "";
+      }
+      if (f === "state") {
+        n.city = "";
+      }
+      if (f === "role" && v === "PARENT") {
+        n.grade = "";
+        n.division = "";
+      }
+      return n;
+    });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setSubmitting(true);
     try {
+      const isParentRegistration = form.role === "PARENT";
       const resolvedGrade = form.grade === OTHER_GRADE_VALUE ? otherGrade.trim() : form.grade;
       if (form.grade === OTHER_GRADE_VALUE && !resolvedGrade) {
         setError("Please enter your grade.");
@@ -119,9 +140,16 @@ export default function StudentRegisterPage() {
         return;
       }
 
+      const payload = {
+        organizationSlug: slug,
+        ...form,
+        grade: isParentRegistration ? undefined : resolvedGrade || undefined,
+        division: isParentRegistration ? undefined : form.division || undefined,
+      };
+
       await apiRequest("/auth/student-register", {
         method:"POST",
-        body: JSON.stringify({ organizationSlug: slug, ...form, grade: resolvedGrade || undefined }),
+        body: JSON.stringify(payload),
       });
       setRegisteredEmail(form.email); setStep("otp");
     } catch (err) { setError(err instanceof Error ? err.message : "Registration failed"); }
@@ -138,7 +166,7 @@ export default function StudentRegisterPage() {
           firstName: string;
           lastName: string;
           email: string;
-          role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT";
+          role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT";
           organizationId: string | null;
           isVerified: boolean;
         };
@@ -174,6 +202,7 @@ export default function StudentRegisterPage() {
   const primary = organization.branding.primaryColor || "#2563eb";
   const accent = organization.branding.accentColor || "#7c3aed";
   const ringStyle = { "--tw-ring-color": primary } as React.CSSProperties;
+  const isParent = form.role === "PARENT";
 
   return (
     <div className="min-h-screen">
@@ -267,7 +296,7 @@ export default function StudentRegisterPage() {
               <form onSubmit={handleSubmit} className="space-y-5 p-8 sm:p-10">
                 <SectionDivider icon="👤" label="Personal Info" />
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                   <FieldWrap label="First Name" required>
                     <input type="text" value={form.firstName} onChange={(e)=>setField("firstName",e.target.value)} className={inputCls} style={ringStyle} placeholder="First" required />
                   </FieldWrap>
@@ -277,69 +306,85 @@ export default function StudentRegisterPage() {
                   <FieldWrap label="Last Name" required>
                     <input type="text" value={form.lastName} onChange={(e)=>setField("lastName",e.target.value)} className={inputCls} style={ringStyle} placeholder="Last" required />
                   </FieldWrap>
-                </div>
-
-                <SectionDivider icon="📬" label="Contact" />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <FieldWrap label="Gender">
                     <select value={form.gender} onChange={(e)=>setField("gender",e.target.value)} className={selectCls} style={ringStyle}>
                       <option value="">Select gender</option>
                       {GENDER_OPTIONS.map((g)=><option key={g.value} value={g.value}>{g.label}</option>)}
                     </select>
                   </FieldWrap>
+                </div>
 
-                  <FieldWrap label="Email Address" required>
-                    <input type="email" value={form.email} onChange={(e)=>setField("email",e.target.value)} className={inputCls} style={ringStyle} placeholder="you@example.com" required />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FieldWrap label="Registering As" required>
+                    <select
+                      value={form.role}
+                      onChange={(e)=>setField("role", e.target.value as "STUDENT" | "PARENT")}
+                      className={selectCls}
+                      style={ringStyle}
+                      required
+                    >
+                      {LEARNER_ROLE_OPTIONS.map((roleOption)=><option key={roleOption.value} value={roleOption.value}>{roleOption.label}</option>)}
+                    </select>
                   </FieldWrap>
                 </div>
 
-                <FieldWrap label="Phone Number" required>
-                  <div className="grid grid-cols-[100px_minmax(0,1fr)] gap-2">
-                    <select value={form.phoneCode} onChange={(e)=>setField("phoneCode",e.target.value)} className={`${selectCls} min-w-0`} style={ringStyle}>
-                      {PHONE_CODES.map((pc)=><option key={pc.code} value={pc.code}>{pc.flag} {pc.code}</option>)}
-                    </select>
-                    <input type="tel" value={form.phone} onChange={(e)=>setField("phone",e.target.value.replace(/\D/g,"").slice(0,10))} className={`${inputCls} min-w-0`} style={ringStyle} placeholder="10-digit number" maxLength={10} required />
-                  </div>
-                </FieldWrap>
+                <SectionDivider icon="📬" label="Contact" />
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FieldWrap label="Email Address" required>
+                    <input type="email" value={form.email} onChange={(e)=>setField("email",e.target.value)} className={inputCls} style={ringStyle} placeholder="you@example.com" required />
+                  </FieldWrap>
+                  <FieldWrap label="Phone Number" required>
+                    <div className="grid grid-cols-[100px_minmax(0,1fr)] gap-2">
+                      <select value={form.phoneCode} onChange={(e)=>setField("phoneCode",e.target.value)} className={`${selectCls} min-w-0`} style={ringStyle}>
+                        {PHONE_CODES.map((pc)=><option key={pc.code} value={pc.code}>{pc.flag} {pc.code}</option>)}
+                      </select>
+                      <input type="tel" value={form.phone} onChange={(e)=>setField("phone",e.target.value.replace(/\D/g,"").slice(0,10))} className={`${inputCls} min-w-0`} style={ringStyle} placeholder="10-digit number" maxLength={10} required />
+                    </div>
+                  </FieldWrap>
+                </div>
 
                 <SectionDivider icon="🎓" label="Academic" />
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className={isParent ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 md:grid-cols-3"}>
                   <FieldWrap label="Institution Name">
                     <input type="text" value={form.institutionName} readOnly className={`${inputCls} cursor-not-allowed bg-slate-50 text-slate-500`} />
                   </FieldWrap>
 
-                  <FieldWrap label="Grade / Level">
-                    <select
-                      value={form.grade}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setField("grade", value);
-                        if (value !== OTHER_GRADE_VALUE) {
-                          setOtherGrade("");
-                        }
-                      }}
-                      className={selectCls}
-                      style={ringStyle}
-                    >
-                      <option value="">Select grade</option>
-                      {GRADE_OPTIONS.map((g)=><option key={g} value={g}>{g}</option>)}
-                    </select>
-                  </FieldWrap>
+                  {!isParent && (
+                    <FieldWrap label="Grade / Level">
+                      <select
+                        value={form.grade}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setField("grade", value);
+                          if (value !== OTHER_GRADE_VALUE) {
+                            setOtherGrade("");
+                          }
+                        }}
+                        className={selectCls}
+                        style={ringStyle}
+                      >
+                        <option value="">Select grade</option>
+                        {GRADE_OPTIONS.map((g)=><option key={g} value={g}>{g}</option>)}
+                      </select>
+                    </FieldWrap>
+                  )}
 
-                  <FieldWrap label="Division">
-                    <input
-                      type="text"
-                      value={form.division}
-                      onChange={(e)=>setField("division",e.target.value.toUpperCase().slice(0,3))}
-                      className={inputCls}
-                      style={ringStyle}
-                      placeholder="A"
-                    />
-                  </FieldWrap>
+                  {!isParent && (
+                    <FieldWrap label="Division">
+                      <input
+                        type="text"
+                        value={form.division}
+                        onChange={(e)=>setField("division",e.target.value.toUpperCase().slice(0,3))}
+                        className={inputCls}
+                        style={ringStyle}
+                        placeholder="A"
+                      />
+                    </FieldWrap>
+                  )}
 
-                  {form.grade === OTHER_GRADE_VALUE && (
+                  {!isParent && form.grade === OTHER_GRADE_VALUE && (
                     <FieldWrap label="Enter Grade" required>
                       <input
                         type="text"

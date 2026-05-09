@@ -25,6 +25,7 @@ const normalizeAssessmentCode = (code: string): string => {
   const normalized = code.toUpperCase().trim();
   if (normalized === "METACOGNITION") return "METACOGNITION_TEST";
   if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
+  if (normalized === "LITMUS") return "LITMUS_TEST";
   return normalized;
 };
 
@@ -32,6 +33,7 @@ const getAssessmentCodeAliases = (code: string): string[] => {
   const normalized = normalizeAssessmentCode(code);
   if (normalized === "METACOGNITION_TEST") return ["METACOGNITION_TEST", "METACOGNITION"];
   if (normalized === "JOHARI_WINDOW") return ["JOHARI_WINDOW", "JOHARI", "CLEAR"];
+  if (normalized === "LITMUS_TEST") return ["LITMUS_TEST", "LITMUS"];
   return [normalized];
 };
 
@@ -207,6 +209,41 @@ const dedupeAssessments = <T extends { code: string; name: string }>(assessments
     .sort((a, b) => a.name.localeCompare(b.name));
 };
 
+type LearnerRole = "STUDENT" | "PARENT";
+
+const isLearnerRole = (role?: string): role is LearnerRole => role === "STUDENT" || role === "PARENT";
+
+const isLitmusAssessmentCode = (assessmentCode: string): boolean => (
+  normalizeAssessmentCode(assessmentCode) === "LITMUS_TEST"
+);
+
+const isAssessmentAccessibleForLearner = (learnerRole: LearnerRole, assessmentCode: string): boolean => {
+  const isLitmus = isLitmusAssessmentCode(assessmentCode);
+  if (learnerRole === "PARENT") {
+    return isLitmus;
+  }
+
+  return !isLitmus;
+};
+
+const requireLearnerAssessmentAccess = (
+  res: Response,
+  learnerRole: LearnerRole,
+  assessmentCode: string
+): boolean => {
+  if (!isAssessmentAccessibleForLearner(learnerRole, assessmentCode)) {
+    if (learnerRole === "PARENT") {
+      res.status(403).json({ message: "Parents can access only Litmus assessment." });
+      return false;
+    }
+
+    res.status(403).json({ message: "Students cannot access Litmus assessment." });
+    return false;
+  }
+
+  return true;
+};
+
 type AssessmentCatalogItem = {
   _id: unknown;
   code: string;
@@ -280,7 +317,7 @@ const buildWhitelabelPortalPayload = async (req: AuthRequest, organization: Inst
 
   const canAccessAssessments =
     Boolean(req.user) &&
-    (req.user?.role === "ORG_ADMIN" || req.user?.role === "STUDENT") &&
+    (req.user?.role === "ORG_ADMIN" || req.user?.role === "STUDENT" || req.user?.role === "PARENT") &&
     userOrgId === String(organization._id);
 
   const assessments = canAccessAssessments
@@ -291,6 +328,11 @@ const buildWhitelabelPortalPayload = async (req: AuthRequest, organization: Inst
     assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
+  const learnerRole = isLearnerRole(req.user?.role) ? req.user.role : null;
+  const visibleAssessments = learnerRole
+    ? normalizedAssessments.filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code))
+    : normalizedAssessments;
+
   return {
     organization: {
       id: organization._id,
@@ -300,7 +342,7 @@ const buildWhitelabelPortalPayload = async (req: AuthRequest, organization: Inst
       branding: organization.branding,
     },
     canAccessAssessments,
-    assessments: normalizedAssessments,
+    assessments: visibleAssessments,
     message: canAccessAssessments
       ? undefined
       : "Login required. Only users from this organization can view assessments.",
@@ -702,13 +744,13 @@ const requireStudentUser = (req: AuthRequest, res: Response): boolean => {
     return false;
   }
 
-  if (req.user.role !== "STUDENT") {
+  if (!isLearnerRole(req.user.role)) {
     res.status(403).json({ message: "Access denied" });
     return false;
   }
 
   if (!req.user.organization) {
-    res.status(400).json({ message: "Student organization is missing" });
+    res.status(400).json({ message: "Learner organization is missing" });
     return false;
   }
 
@@ -1290,6 +1332,8 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
   const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
@@ -1300,14 +1344,16 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
 
   const dedupedAssessments = dedupeAssessments(
     assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
-  );
+  ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
+
+  const visibleAttempts = attempts.filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode));
 
   const completedCodes = new Set(
-    attempts
+    visibleAttempts
       .filter((attempt) => attempt.status === "COMPLETED")
       .map((attempt) => normalizeAssessmentCode(attempt.assessmentCode))
   );
-  const appearedCodes = new Set(attempts.map((attempt) => normalizeAssessmentCode(attempt.assessmentCode)));
+  const appearedCodes = new Set(visibleAttempts.map((attempt) => normalizeAssessmentCode(attempt.assessmentCode)));
 
   const totalAssessments = dedupedAssessments.length;
   const appeared = appearedCodes.size;
@@ -1322,6 +1368,7 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
       totalAssessments,
     },
     latestAttempts: attempts
+      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
       .map((attempt) => ({
@@ -1341,6 +1388,8 @@ export const listStudentResults = async (req: AuthRequest, res: Response): Promi
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const attempts = await StudentAssessmentAttempt.find({
     user: req.user!._id,
     organization: req.user!.organization,
@@ -1348,7 +1397,9 @@ export const listStudentResults = async (req: AuthRequest, res: Response): Promi
   }).sort({ completedAt: -1, updatedAt: -1 });
 
   res.json({
-    results: attempts.map((attempt) => {
+    results: attempts
+      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
+      .map((attempt) => {
       const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
       return {
         id: attempt._id,
@@ -1368,6 +1419,8 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
   const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
@@ -1378,11 +1431,14 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
 
   const dedupedAssessments = dedupeAssessments(
     assessments.map((assessment) => assessment.toObject() as unknown as AssessmentCatalogItem)
-  );
+  ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
 
   const attemptsByCode = new Map<string, (typeof attempts)[number]>();
   for (const attempt of attempts) {
     const normalizedCode = normalizeAssessmentCode(attempt.assessmentCode);
+    if (!isAssessmentAccessibleForLearner(learnerRole, normalizedCode)) {
+      continue;
+    }
     const existing = attemptsByCode.get(normalizedCode);
     if (!existing || new Date(attempt.updatedAt).getTime() > new Date(existing.updatedAt).getTime()) {
       attemptsByCode.set(normalizedCode, attempt);
@@ -1434,10 +1490,16 @@ export const getStudentAssessmentPricing = async (req: AuthRequest, res: Respons
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
   if (!code) {
     res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, code)) {
     return;
   }
 
@@ -1468,13 +1530,17 @@ export const listStudentInvoices = async (req: AuthRequest, res: Response): Prom
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const invoices = await buildInvoiceListItems({
     user: req.user!._id,
     organization: req.user!.organization,
     status: "PAID",
   });
 
-  res.json({ invoices });
+  res.json({
+    invoices: invoices.filter((invoice) => isAssessmentAccessibleForLearner(learnerRole, invoice.assessmentCode)),
+  });
 };
 
 export const listOrganizationInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -1506,10 +1572,16 @@ export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res:
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
   if (!code) {
     res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, code)) {
     return;
   }
 
@@ -1612,8 +1684,15 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? normalizeAssessmentCode(codeParam) : "";
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, code)) {
+    return;
+  }
+
   const {
     paymentSessionId,
     razorpay_payment_id,
@@ -1640,6 +1719,10 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
 
   if (!session) {
     res.status(404).json({ message: "Payment session not found" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, session.assessmentCode)) {
     return;
   }
 
@@ -1700,12 +1783,18 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
   const canonicalCode = normalizeAssessmentCode(code);
   const codeAliases = getAssessmentCodeAliases(code);
   if (!code) {
     res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, canonicalCode)) {
     return;
   }
 
@@ -1912,6 +2001,8 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const attemptIdParam = req.params.attemptId;
   const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
   if (!attemptId) {
@@ -1927,6 +2018,10 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
 
   if (!attempt) {
     res.status(404).json({ message: "Attempt not found" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
     return;
   }
 
@@ -1974,6 +2069,8 @@ export const saveStudentAttemptAnswers = async (req: AuthRequest, res: Response)
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const attemptIdParam = req.params.attemptId;
   const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
   const { answers } = req.body as {
@@ -1999,6 +2096,10 @@ export const saveStudentAttemptAnswers = async (req: AuthRequest, res: Response)
 
   if (!attempt) {
     res.status(404).json({ message: "Active attempt not found" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
     return;
   }
 
@@ -2032,6 +2133,8 @@ export const submitStudentAttempt = async (req: AuthRequest, res: Response): Pro
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const attemptIdParam = req.params.attemptId;
   const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
   if (!attemptId) {
@@ -2047,6 +2150,10 @@ export const submitStudentAttempt = async (req: AuthRequest, res: Response): Pro
 
   if (!attempt) {
     res.status(404).json({ message: "Attempt not found" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
     return;
   }
 
@@ -2079,6 +2186,8 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
     return;
   }
 
+  const learnerRole = req.user!.role as LearnerRole;
+
   const attemptIdParam = req.params.attemptId;
   const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
   if (!attemptId) {
@@ -2097,6 +2206,10 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
     return;
   }
 
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
+    return;
+  }
+
   if (attempt.status !== "COMPLETED") {
     res.status(400).json({ message: "Report is available only after test submission" });
     return;
@@ -2108,6 +2221,12 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
 };
 
 export const emailStudentAttemptReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+
   const attemptIdParam = req.params.attemptId;
   const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
   if (!attemptId) {
@@ -2128,6 +2247,10 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
 
   if (!attempt || attempt.status !== "COMPLETED") {
     res.status(404).json({ message: "Completed attempt not found" });
+    return;
+  }
+
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
     return;
   }
 

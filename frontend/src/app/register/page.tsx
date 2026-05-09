@@ -239,6 +239,8 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  const selectCls = `w-full rounded-xl border border-gray-200 bg-white px-4 py-3 cursor-pointer appearance-none transition focus:outline-none focus:ring-2 focus:ring-blue-500 bg-no-repeat bg-right bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2216%27%20height=%2716%27%20fill=%22none%22%20stroke=%22%23666%22%20viewBox=%220%200%2024%2024%22%3E%3Cpath%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%20stroke-width=%222%22%20d=%22M19%209l-7%207-7-7%22/%3E%3C/svg%3E')] pr-10`;
+
   const steps: Array<{ key: Step; title: string; subtitle: string }> = [
     { key: "email", title: "Verify Email", subtitle: "Start with your official email" },
     { key: "otp", title: "Confirm OTP", subtitle: "Secure verification" },
@@ -430,7 +432,7 @@ export default function RegisterPage() {
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Primary Mobile Number <span className="text-red-600">*</span></label>
                     <div className="grid grid-cols-[90px_1fr] gap-2">
-                      <select value={primaryCountryCode} onChange={(e) => setPrimaryCountryCode(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-3">
+                      <select value={primaryCountryCode} onChange={(e) => setPrimaryCountryCode(e.target.value)} className={selectCls}>
                         {COUNTRY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
                       </select>
                       <input value={formData.primaryMobile} onChange={(e) => updateField("primaryMobile", e.target.value.replace(/\D/g, "").slice(0, 10))} required pattern="^\d{10}$" placeholder="10-digit number" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3" />
@@ -440,7 +442,7 @@ export default function RegisterPage() {
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Alternate Mobile Number</label>
                     <div className="grid grid-cols-[90px_1fr] gap-2">
-                      <select value={alternateCountryCode} onChange={(e) => setAlternateCountryCode(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-3 py-3">
+                      <select value={alternateCountryCode} onChange={(e) => setAlternateCountryCode(e.target.value)} className={selectCls}>
                         {COUNTRY_CODES.map((code) => <option key={code} value={code}>{code}</option>)}
                       </select>
                       <input value={formData.alternateMobile} onChange={(e) => updateField("alternateMobile", e.target.value.replace(/\D/g, "").slice(0, 10))} pattern="^\d{10}$" placeholder="10-digit number (optional)" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3" />
@@ -471,21 +473,21 @@ export default function RegisterPage() {
 
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Country <span className="text-red-600">*</span></label>
-                    <select value={selectedCountryIso} onChange={(e) => setSelectedCountryIso(e.target.value)} required className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3">
+                    <select value={selectedCountryIso} onChange={(e) => setSelectedCountryIso(e.target.value)} required className={selectCls}>
                       <option value="">Select Country</option>
                       {countries.map((country) => <option key={country.isoCode} value={country.isoCode}>{country.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-semibold">State <span className="text-red-600">*</span></label>
-                    <select value={selectedStateIso} onChange={(e) => setSelectedStateIso(e.target.value)} required className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3" disabled={!selectedCountryIso}>
+                    <select value={selectedStateIso} onChange={(e) => setSelectedStateIso(e.target.value)} required className={`${selectCls} disabled:opacity-50`} disabled={!selectedCountryIso}>
                       <option value="">Select State</option>
                       {states.map((state) => <option key={state.isoCode} value={state.isoCode}>{state.name}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-semibold">City <span className="text-red-600">*</span></label>
-                    <select value={formData.city} onChange={(e) => updateField("city", e.target.value)} required className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3" disabled={!selectedStateIso}>
+                    <select value={formData.city} onChange={(e) => updateField("city", e.target.value)} required className={`${selectCls} disabled:opacity-50`} disabled={!selectedStateIso}>
                       <option value="">Select City</option>
                       {cities.map((city) => <option key={`${city.stateCode}-${city.name}`} value={city.name}>{city.name}</option>)}
                     </select>
@@ -502,7 +504,7 @@ export default function RegisterPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="md:col-span-2">
                     <label className="mb-1 block text-sm font-semibold">Legal Entity Type <span className="text-red-600">*</span></label>
-                    <select value={formData.legalEntityType} disabled className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                    <select value={formData.legalEntityType} disabled className={`${selectCls} disabled:opacity-50 bg-gray-50`}>
                       {LEGAL_ENTITY_TYPES.map((entity) => (
                         <option key={entity} value={entity}>{entity}</option>
                       ))}
@@ -540,7 +542,7 @@ export default function RegisterPage() {
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-semibold">Account Type <span className="text-red-600">*</span></label>
-                    <select value={formData.accountType} onChange={(e) => updateField("accountType", e.target.value)} required className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3">
+                    <select value={formData.accountType} onChange={(e) => updateField("accountType", e.target.value)} required className={selectCls}>
                       <option value="">Select Account Type</option>
                       <option value="Saving">Saving</option>
                       <option value="Current">Current</option>
@@ -560,7 +562,12 @@ export default function RegisterPage() {
               <section className="space-y-4 rounded-2xl border border-blue-100/70 bg-gradient-to-b from-white to-sky-50/25 p-5 md:p-6">
                 <h2 className="text-2xl font-bold text-black">Logo <span className="text-red-600">*</span></h2>
                 <div className="space-y-3">
-                  <input type="file" accept="image/*" onChange={handleLogoUpload} required className="block w-full text-sm" />
+                  <label className="relative inline-block cursor-pointer w-full">
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} required className="hidden" />
+                    <div className="w-full rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-center font-medium text-gray-600 hover:border-blue-400 hover:bg-blue-50 transition">
+                      Click to select logo
+                    </div>
+                  </label>
                   {logoPreview ? <img src={logoPreview} alt="Logo preview" className="h-16 w-16 rounded object-cover border border-gray-200" /> : null}
                 </div>
               </section>
@@ -569,7 +576,12 @@ export default function RegisterPage() {
                 <h2 className="text-2xl font-bold text-black">Signature <span className="text-red-600">*</span></h2>
                 <p className="text-sm text-black/70">Note: Please upload signature with background removed (transparent background preferred).</p>
                 <div className="space-y-3">
-                  <input type="file" accept="image/*" onChange={handleSignatureUpload} required className="block w-full text-sm" />
+                  <label className="relative inline-block cursor-pointer w-full">
+                    <input type="file" accept="image/*" onChange={handleSignatureUpload} required className="hidden" />
+                    <div className="w-full rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-center font-medium text-gray-600 hover:border-blue-400 hover:bg-blue-50 transition">
+                      Click to select signature
+                    </div>
+                  </label>
                   {signaturePreview ? <img src={signaturePreview} alt="Signature preview" className="h-16 w-32 rounded object-contain border border-gray-200 bg-white" /> : null}
                 </div>
               </section>

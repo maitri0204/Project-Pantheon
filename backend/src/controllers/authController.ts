@@ -121,7 +121,7 @@ const validateWhitelabelLoginContext = ({
   const isWhitelabelMember =
     Boolean(organization) &&
     organization?.type === "WHITELABEL" &&
-    (user?.role === "ORG_ADMIN" || user?.role === "STUDENT");
+    (user?.role === "ORG_ADMIN" || user?.role === "STUDENT" || user?.role === "PARENT");
 
   if (normalizedOrganizationSlug) {
     if (user?.role === "SUPERADMIN") {
@@ -731,7 +731,16 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
       country?: string;
       state?: string;
       city?: string;
+      role?: "STUDENT" | "PARENT";
     };
+
+    const requestedRole = typeof body.role === "string" ? body.role.toUpperCase().trim() : "STUDENT";
+    if (requestedRole !== "STUDENT" && requestedRole !== "PARENT") {
+      res.status(400).json({ message: "Role must be either STUDENT or PARENT" });
+      return;
+    }
+
+    const selectedRole = requestedRole as "STUDENT" | "PARENT";
 
     const orgSlug = body.organizationSlug?.toLowerCase().trim();
     if (!orgSlug) {
@@ -788,6 +797,7 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
           country: body.country?.trim() || undefined,
           state: body.state?.trim() || undefined,
           city: body.city?.trim() || undefined,
+          role: selectedRole,
           institutionName: body.institutionName?.trim() || organization.branding.companyName,
           otpHash: hashOtp(otp),
           otpExpiresAt: getOtpExpiry(5),
@@ -872,7 +882,7 @@ export const verifyStudentRegisterOtp = async (req: Request, res: Response): Pro
       state: pending.state,
       city: pending.city,
       institutionName: pending.institutionName,
-      role: "STUDENT",
+      role: pending.role || "STUDENT",
       organization: pending.organization,
       isVerified: true,
       isActive: true,

@@ -16,11 +16,13 @@ type AuthResponse = {
     firstName: string;
     lastName: string;
     email: string;
-    role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT";
+    role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT";
     organizationId: string | null;
     isVerified: boolean;
   };
 };
+
+const isLearnerRole = (role: AuthResponse["user"]["role"]): boolean => role === "STUDENT" || role === "PARENT";
 
 type OrganizationBranding = {
   slug?: string;
@@ -70,7 +72,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         return;
       }
 
-      const validationPath = auth.user.role === "STUDENT"
+      const validationPath = isLearnerRole(auth.user.role)
         ? "/platform/student/dashboard"
         : "/platform/dashboard";
 
@@ -92,7 +94,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         return;
       }
 
-      if (auth.user.role === "STUDENT" && (portalOrganizationSlug || auth.orgSlug)) {
+      if (isLearnerRole(auth.user.role) && (portalOrganizationSlug || auth.orgSlug)) {
         router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/student/dashboard`);
         return;
       }
@@ -287,7 +289,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         router.push(
           response.user.role === "ORG_ADMIN"
             ? `/whitelabel/${portalOrganizationSlug}/dashboard`
-            : response.user.role === "STUDENT"
+            : isLearnerRole(response.user.role)
               ? `/whitelabel/${portalOrganizationSlug}/student/dashboard`
               : `/whitelabel/${portalOrganizationSlug}`
         );

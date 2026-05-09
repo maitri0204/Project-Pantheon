@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { UserRole } from "./User";
 
 export interface IStudentRegistrationTemp extends Document {
   organization: mongoose.Types.ObjectId;
@@ -16,6 +17,7 @@ export interface IStudentRegistrationTemp extends Document {
   country?: string;
   state?: string;
   city?: string;
+  role: Extract<UserRole, "STUDENT" | "PARENT">;
   otpHash: string;
   otpExpiresAt: Date;
   otpAttempts: number;
@@ -40,6 +42,7 @@ const studentRegistrationTempSchema = new Schema<IStudentRegistrationTemp>(
     country: { type: String, default: undefined, trim: true },
     state: { type: String, default: undefined, trim: true },
     city: { type: String, default: undefined, trim: true },
+    role: { type: String, enum: ["STUDENT", "PARENT"], default: "STUDENT" },
     otpHash: { type: String, required: true },
     otpExpiresAt: { type: Date, required: true },
     otpAttempts: { type: Number, default: 0 },

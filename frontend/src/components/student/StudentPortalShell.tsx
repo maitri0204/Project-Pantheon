@@ -72,7 +72,9 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
       return;
     }
 
-    if (auth.user.role !== "STUDENT") {
+    const isLearner = auth.user.role === "STUDENT" || auth.user.role === "PARENT";
+
+    if (!isLearner) {
       if (auth.user.role === "ORG_ADMIN") {
         router.replace(`/whitelabel/${slug}/dashboard`);
         return;
