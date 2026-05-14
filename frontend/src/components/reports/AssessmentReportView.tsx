@@ -9,6 +9,7 @@ import { generateCareerCompassReport } from "@/lib/reports/generateCareerCompass
 import { generateClearReport } from "@/lib/reports/generateClearReport";
 import { generateLitmusReport } from "@/lib/reports/generateLitmusReport";
 import { generateMetacognitionReport } from "@/lib/reports/generateMetacognitionReport";
+import { generateCareerDnaCapabilityReport } from "../../lib/reports/generateCareerDnaCapabilityReport";
 import QuadrantGraph, { QuadrantLegend } from "@/components/reports/QuadrantGraph";
 import {
   DOMAIN_INFO,
@@ -261,6 +262,58 @@ export default function AssessmentReportView({
         return;
       }
 
+      if (normalizedCode === "CAREER_DNA") {
+        const sections = (evaluation.sections || {}) as Record<string, { parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>; totalScore?: number; maxScore?: number; dominantCode?: string }>;
+        const cogParts = sections.COGNITIVE?.parts || [];
+        const aptParts = sections.APTITUDE?.parts || [];
+        await generateCareerDnaCapabilityReport({
+          studentName: reportStudentName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          classGrade,
+          schoolName,
+          organizationBranding: reportBranding,
+          traitScores: {
+            VR: cogParts[0]?.percentage ?? 0,
+            NR: cogParts[1]?.percentage ?? 0,
+            SR: cogParts[2]?.percentage ?? 0,
+            MP: cogParts[3]?.percentage ?? 0,
+            LR: aptParts[0]?.percentage ?? 0,
+            NA: aptParts[1]?.percentage ?? 0,
+            VA: aptParts[2]?.percentage ?? 0,
+            MA: aptParts[3]?.percentage ?? 0,
+            CI: aptParts[4]?.percentage ?? 0,
+          },
+          otherSectionScores: {
+            COGNITIVE: { score: sections.COGNITIVE?.totalScore || 0, maxScore: sections.COGNITIVE?.maxScore || 40, parts: sections.COGNITIVE?.parts || [] },
+            APTITUDE: { score: sections.APTITUDE?.totalScore || 0, maxScore: sections.APTITUDE?.maxScore || 50, parts: sections.APTITUDE?.parts || [] },
+            PERSONALITY: {
+              score: sections.PERSONALITY?.totalScore || 0,
+              maxScore: sections.PERSONALITY?.maxScore || 100,
+              parts: sections.PERSONALITY?.parts || [],
+              traits: (sections.PERSONALITY?.parts || []).map((p) => p.partName).filter(Boolean),
+              personalityType: String((sections.PERSONALITY as any)?.personalityType || evaluation.personalityType || ""),
+              personalityDimensions: (sections.PERSONALITY as any)?.personalityDimensions || [],
+            },
+            CAREER_INTEREST: {
+              score: sections.CAREER_INTEREST?.totalScore || 0,
+              maxScore: sections.CAREER_INTEREST?.maxScore || 100,
+              parts: sections.CAREER_INTEREST?.parts || [],
+              dominantCode: String(sections.CAREER_INTEREST?.dominantCode || ""),
+            },
+            EMOTIONAL_INTELLIGENCE: { score: sections.EMOTIONAL_INTELLIGENCE?.totalScore || 0, maxScore: sections.EMOTIONAL_INTELLIGENCE?.maxScore || 100, parts: sections.EMOTIONAL_INTELLIGENCE?.parts || [] },
+            LEARNING_STYLE: {
+              score: sections.LEARNING_STYLE?.totalScore || 0,
+              maxScore: sections.LEARNING_STYLE?.maxScore || 100,
+              parts: sections.LEARNING_STYLE?.parts || [],
+              dominantCode: String(sections.LEARNING_STYLE?.dominantCode || ""),
+            },
+            BEHAVIORAL_SOCIAL: { score: sections.BEHAVIORAL_SOCIAL?.totalScore || 0, maxScore: sections.BEHAVIORAL_SOCIAL?.maxScore || 100, parts: sections.BEHAVIORAL_SOCIAL?.parts || [] },
+            STRESS_RESILIENCE: { score: sections.STRESS_RESILIENCE?.totalScore || 0, maxScore: sections.STRESS_RESILIENCE?.maxScore || 160, parts: sections.STRESS_RESILIENCE?.parts || [] },
+          },
+        });
+        return;
+      }
+
       const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
       pdf.setFont("helvetica", "bold");
@@ -326,6 +379,55 @@ export default function AssessmentReportView({
             P: toNumber(styleScores.P), J: toNumber(styleScores.J),
           },
           organizationBranding: reportBranding,
+        }, { returnBlob: true }) as Blob | undefined;
+      } else if (normalizedCode === "CAREER_DNA") {
+        const sections = (evaluation.sections || {}) as Record<string, { parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>; totalScore?: number; maxScore?: number; dominantCode?: string }>;
+        const cogParts = sections.COGNITIVE?.parts || [];
+        const aptParts = sections.APTITUDE?.parts || [];
+        pdfBlob = await generateCareerDnaCapabilityReport({
+          studentName: reportStudentName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          classGrade,
+          schoolName,
+          organizationBranding: reportBranding,
+          traitScores: {
+            VR: cogParts[0]?.percentage ?? 0,
+            NR: cogParts[1]?.percentage ?? 0,
+            SR: cogParts[2]?.percentage ?? 0,
+            MP: cogParts[3]?.percentage ?? 0,
+            LR: aptParts[0]?.percentage ?? 0,
+            NA: aptParts[1]?.percentage ?? 0,
+            VA: aptParts[2]?.percentage ?? 0,
+            MA: aptParts[3]?.percentage ?? 0,
+            CI: aptParts[4]?.percentage ?? 0,
+          },
+          otherSectionScores: {
+            COGNITIVE: { score: sections.COGNITIVE?.totalScore || 0, maxScore: sections.COGNITIVE?.maxScore || 40, parts: sections.COGNITIVE?.parts || [] },
+            APTITUDE: { score: sections.APTITUDE?.totalScore || 0, maxScore: sections.APTITUDE?.maxScore || 50, parts: sections.APTITUDE?.parts || [] },
+            PERSONALITY: {
+              score: sections.PERSONALITY?.totalScore || 0,
+              maxScore: sections.PERSONALITY?.maxScore || 100,
+              parts: sections.PERSONALITY?.parts || [],
+              traits: (sections.PERSONALITY?.parts || []).map((p) => p.partName).filter(Boolean),
+              personalityType: String((sections.PERSONALITY as any)?.personalityType || evaluation.personalityType || ""),
+              personalityDimensions: (sections.PERSONALITY as any)?.personalityDimensions || [],
+            },
+            CAREER_INTEREST: {
+              score: sections.CAREER_INTEREST?.totalScore || 0,
+              maxScore: sections.CAREER_INTEREST?.maxScore || 100,
+              parts: sections.CAREER_INTEREST?.parts || [],
+              dominantCode: String(sections.CAREER_INTEREST?.dominantCode || ""),
+            },
+            EMOTIONAL_INTELLIGENCE: { score: sections.EMOTIONAL_INTELLIGENCE?.totalScore || 0, maxScore: sections.EMOTIONAL_INTELLIGENCE?.maxScore || 100, parts: sections.EMOTIONAL_INTELLIGENCE?.parts || [] },
+            LEARNING_STYLE: {
+              score: sections.LEARNING_STYLE?.totalScore || 0,
+              maxScore: sections.LEARNING_STYLE?.maxScore || 100,
+              parts: sections.LEARNING_STYLE?.parts || [],
+              dominantCode: String(sections.LEARNING_STYLE?.dominantCode || ""),
+            },
+            BEHAVIORAL_SOCIAL: { score: sections.BEHAVIORAL_SOCIAL?.totalScore || 0, maxScore: sections.BEHAVIORAL_SOCIAL?.maxScore || 100, parts: sections.BEHAVIORAL_SOCIAL?.parts || [] },
+            STRESS_RESILIENCE: { score: sections.STRESS_RESILIENCE?.totalScore || 0, maxScore: sections.STRESS_RESILIENCE?.maxScore || 160, parts: sections.STRESS_RESILIENCE?.parts || [] },
+          },
         }, { returnBlob: true }) as Blob | undefined;
       } else {
         const { default: jsPDF } = await import("jspdf");
@@ -559,16 +661,14 @@ export default function AssessmentReportView({
         </div>
       </div>
 
-      {normalizedCode !== "CAREER_DNA" && (
-        <div className="flex flex-wrap justify-end gap-3">
-          <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
-            {downloading ? "Generating Report..." : "Download Detailed Report"}
-          </button>
-          <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-            {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
-          </button>
-        </div>
-      )}
+      <div className="flex flex-wrap justify-end gap-3">
+        <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+          {downloading ? "Generating Report..." : "Download Detailed Report"}
+        </button>
+        <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+          {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+        </button>
+      </div>
 
       {renderBody()}
 

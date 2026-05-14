@@ -21,13 +21,13 @@ const GENDER_OPTIONS = [
 ];
 
 const GRADE_OPTIONS = [
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
   "Other",
 ];
 

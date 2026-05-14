@@ -90,7 +90,7 @@ export default function StudentResultsPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {results.map((result) => {
-            const canViewReport = result.assessmentCode !== "CAREER_DNA";
+            const canViewReport = true;
             return (
               <div key={result.id} className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_14px_30px_-22px_rgba(30,64,175,0.65)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_45px_-24px_rgba(37,99,235,0.75)]">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-blue-100/60 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
