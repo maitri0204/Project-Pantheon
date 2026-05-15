@@ -980,9 +980,9 @@ function tplCreateBarChartDataUrl(args: {
 
   const bars = args.bars.slice(0, 8);
   const chartLeft = 88;
-  const chartTop = 72;
+  const chartTop = 54;
   const chartWidth = canvas.width - 170;
-  const chartHeight = 420;
+  const chartHeight = 470;
   const chartBottom = chartTop + chartHeight;
 
   ctx.strokeStyle = "#CBD5E1";
@@ -1156,8 +1156,8 @@ async function tryGenerateCareerDnaFromTemplate(
     const interpretedBy = tplFirstLastName(args.organizationBranding?.representativeName);
     const website = tplNormalizeWebsite(args.organizationBranding?.website) || "—";
     const logoArea = includeFooterContact
-      ? { x: 48, top: 150, w: 98, h: 44 }
-      : { x: 98, top: 8, w: 80, h: 28 };
+      ? { x: 55, top: 150, w: 98, h: 44 }
+      : { x: 110, top: 8, w: 80, h: 28 };
 
     if (embeddedLogo) {
       const dims = embeddedLogo.scale(1);
@@ -1192,8 +1192,8 @@ async function tryGenerateCareerDnaFromTemplate(
 
     if (!includeFooterContact) {
       page.drawText(interpretedBy, {
-        x: X(13),
-        y: Y(259),
+        x: X(18),
+        y: Y(255),
         size: 10,
         font: regularFont,
         color: rgb(1, 1, 1),
@@ -1202,14 +1202,14 @@ async function tryGenerateCareerDnaFromTemplate(
     }
 
     page.drawText(`Phone: ${args.organizationBranding?.contactPhone || "—"}`, {
-      x: X(32),
+      x: X(30),
       y: Y(271),
       size: 9,
       font: regularFont,
       color: rgb(0.12, 0.16, 0.2),
     });
     page.drawText(`Email: ${args.organizationBranding?.contactEmail || "—"}`, {
-      x: X(106),
+      x: X(104),
       y: Y(271),
       size: 9,
       font: regularFont,
@@ -1237,7 +1237,7 @@ async function tryGenerateCareerDnaFromTemplate(
   );
   if (cognitiveOverallImg && pages[5]) {
     const size = pages[5].getSize();
-    tplDrawImageInA4Coords(pages[5], cognitiveOverallImg, size.width, size.height, 8, 74, 72, 72);
+    tplDrawImageInA4Coords(pages[5], cognitiveOverallImg, size.width, size.height, 7, 74, 72, 72);
   }
 
   for (const item of COGNITIVE_PAGE_MAP) {
@@ -1253,7 +1253,7 @@ async function tryGenerateCareerDnaFromTemplate(
     const page = pages[item.page - 1];
     if (!img || !page) continue;
     const size = page.getSize();
-    tplDrawImageInA4Coords(page, img, size.width, size.height, 8, 74, 72, 72);
+    tplDrawImageInA4Coords(page, img, size.width, size.height, 7, 74, 72, 72);
   }
 
   const aptitudeOverallImg = await tplEmbedDataUrlImage(
@@ -1267,7 +1267,7 @@ async function tryGenerateCareerDnaFromTemplate(
   );
   if (aptitudeOverallImg && pages[11]) {
     const size = pages[11].getSize();
-    tplDrawImageInA4Coords(pages[11], aptitudeOverallImg, size.width, size.height, 8, 74, 72, 72);
+    tplDrawImageInA4Coords(pages[11], aptitudeOverallImg, size.width, size.height, 7, 74, 72, 72);
   }
 
   for (const item of APTITUDE_PAGE_MAP) {
@@ -1283,7 +1283,7 @@ async function tryGenerateCareerDnaFromTemplate(
     const page = pages[item.page - 1];
     if (!img || !page) continue;
     const size = page.getSize();
-    tplDrawImageInA4Coords(page, img, size.width, size.height, 8, 74, 72, 72);
+    tplDrawImageInA4Coords(page, img, size.width, size.height, 7, 74, 72, 72);
   }
 
   const barTargets: Array<{ page: number; title: string; section: any; colorHex: string }> = [
@@ -1304,7 +1304,7 @@ async function tryGenerateCareerDnaFromTemplate(
     const page = pages[target.page - 1];
     if (!page || !chartImg) continue;
     const size = page.getSize();
-    tplDrawImageInA4Coords(page, chartImg, size.width, size.height, 18, 44, 174, 112);
+    tplDrawImageInA4Coords(page, chartImg, size.width, size.height, 22, 41, 168, 112);
   }
 
   const bytes = await pdfDoc.save();
