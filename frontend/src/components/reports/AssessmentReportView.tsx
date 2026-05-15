@@ -83,6 +83,24 @@ const STYLE_COLORS: Record<string, string> = {
 };
 
 const STYLE_ORDER = ["K", "S", "E", "P", "J"] as const;
+const CAREER_DNA_PERSONALITY_DIMENSION_NAMES: Record<string, string> = {
+  E: "Social Orientation",
+  I: "Reflective Orientation",
+  S: "Practical Observation",
+  N: "Conceptual Thinking",
+  T: "Logical Decision Style",
+  F: "Value-Based Decision Style",
+  J: "Structured Working Style",
+  P: "Flexible Working Style",
+};
+
+const CAREER_DNA_PERSONALITY_PAIR_NAMES: Record<string, string> = {
+  "E/I": "Social Style",
+  "S/N": "Thinking Style",
+  "T/F": "Decision Style",
+  "J/P": "Working Style",
+};
+
 const G_LEFT = 80;
 const G_TOP = 60;
 const G_SIZE = 500;
@@ -462,7 +480,22 @@ export default function AssessmentReportView({
 
   const renderBody = () => {
     if (normalizedCode === "CAREER_DNA") {
-      const sections = (evaluation.sections || {}) as Record<string, { parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>; overallPercentage?: number; totalScore?: number; maxScore?: number; dominantCode?: string; personalityType?: string }>;
+      const sections = (evaluation.sections || {}) as Record<string, {
+        parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>;
+        overallPercentage?: number;
+        totalScore?: number;
+        maxScore?: number;
+        dominantCode?: string;
+        personalityType?: string;
+        personalityDimensions?: Array<{
+          pair: string;
+          winner: string;
+          letterA: string;
+          letterB: string;
+          percentA: number;
+          percentB: number;
+        }>;
+      }>;
       const sectionOrder = ["COGNITIVE", "APTITUDE", "PERSONALITY", "CAREER_INTEREST", "EMOTIONAL_INTELLIGENCE", "LEARNING_STYLE", "BEHAVIORAL_SOCIAL", "STRESS_RESILIENCE"];
       return (
         <div className="space-y-4">
@@ -473,18 +506,48 @@ export default function AssessmentReportView({
           {sectionOrder.map((key) => {
             const section = sections[key];
             if (!section) return null;
+            const isPersonality = key === "PERSONALITY";
+            const personalityDimensions = Array.isArray(section.personalityDimensions)
+              ? section.personalityDimensions
+              : [];
             return (
               <div key={key} className="rounded-xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-base font-semibold text-slate-900">{key.replaceAll("_", " ")}</h2>
-                  <span className="text-sm font-semibold text-slate-600">{toNumber(section.totalScore)}/{toNumber(section.maxScore)}</span>
+                  {!isPersonality ? (
+                    <span className="text-sm font-semibold text-slate-600">{toNumber(section.totalScore)}/{toNumber(section.maxScore)}</span>
+                  ) : (
+                    <span className="text-sm font-semibold text-slate-600">Personality Profile</span>
+                  )}
                 </div>
-                {section.personalityType && <p className="text-sm text-slate-700 mb-2">Personality: {section.personalityType}</p>}
+                {isPersonality && personalityDimensions.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {personalityDimensions.map((dimension, idx) => {
+                      const winnerName = CAREER_DNA_PERSONALITY_DIMENSION_NAMES[dimension.winner] || dimension.winner;
+                      const pairName = CAREER_DNA_PERSONALITY_PAIR_NAMES[dimension.pair] || dimension.pair;
+                      const percentWinner = dimension.winner === dimension.letterA ? dimension.percentA : dimension.percentB;
+                      return (
+                        <div key={`${dimension.pair}-${idx}`} className="rounded-lg border border-violet-100 bg-violet-50 px-3 py-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">{pairName}</p>
+                          <p className="text-sm font-semibold text-slate-800">{winnerName}</p>
+                          <p className="text-xs text-slate-600">Alignment: {toNumber(percentWinner)}%</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 {section.dominantCode && <p className="text-sm text-slate-700 mb-2">Dominant Code: {section.dominantCode}</p>}
                 <div className="space-y-2">
                   {(section.parts || []).map((p, idx) => (
                     <div key={idx}>
-                      <div className="flex items-center justify-between text-sm"><span className="text-slate-700">{p.partName}</span><span className="font-semibold text-slate-900">{p.score}/{p.maxScore} ({p.percentage}%)</span></div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-700">
+                          {isPersonality
+                            ? (CAREER_DNA_PERSONALITY_PAIR_NAMES[p.partName] || p.partName)
+                            : p.partName}
+                        </span>
+                        <span className="font-semibold text-slate-900">{p.score}/{p.maxScore} ({p.percentage}%)</span>
+                      </div>
                       <div className="mt-1 h-2 rounded-full bg-slate-100 overflow-hidden"><div className="h-2 rounded-full bg-blue-500" style={{ width: `${p.percentage}%` }} /></div>
                     </div>
                   ))}

@@ -516,13 +516,14 @@ export const listQuestions = async (req: Request, res: Response): Promise<void> 
 export const createQuestion = async (req: Request, res: Response): Promise<void> => {
   try {
     const code = String(req.params.code || "").toUpperCase();
-    const { category, categoryLabel, questionNumber, title, questionText, options } = req.body as {
+    const { category, categoryLabel, questionNumber, title, questionText, options, correctAnswer } = req.body as {
       category?: string;
       categoryLabel?: string;
       questionNumber?: number;
       title?: string;
       questionText?: string;
       options?: Array<{ label?: string; text?: string; score?: number }>;
+      correctAnswer?: string;
     };
 
     if (!category?.trim() || !title?.trim() || !questionText?.trim() || typeof questionNumber !== "number") {
@@ -548,6 +549,7 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
       title: title.trim(),
       questionText: questionText.trim(),
       options: normalizedOptions,
+      correctAnswer: correctAnswer?.trim() || undefined,
     });
 
     res.status(201).json({ question });
@@ -564,13 +566,14 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
 export const updateQuestion = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = String(req.params.id || "");
-    const { title, questionText, category, categoryLabel, questionNumber, options } = req.body as {
+    const { title, questionText, category, categoryLabel, questionNumber, options, correctAnswer } = req.body as {
       title?: string;
       questionText?: string;
       category?: string;
       categoryLabel?: string;
       questionNumber?: number;
       options?: Array<{ label?: string; text?: string; score?: number }>;
+      correctAnswer?: string;
     };
 
     const update: Record<string, unknown> = {};
@@ -587,6 +590,9 @@ export const updateQuestion = async (req: Request, res: Response): Promise<void>
           score: typeof option.score === "number" ? option.score : undefined,
         }))
         .filter((option) => option.label && option.text);
+    }
+    if (correctAnswer !== undefined) {
+      update.correctAnswer = correctAnswer.trim() || undefined;
     }
 
     const question = await Question.findByIdAndUpdate(id, { $set: update }, { new: true });

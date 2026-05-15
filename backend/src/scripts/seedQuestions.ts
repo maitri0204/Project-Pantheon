@@ -187,6 +187,7 @@ interface PantheonQuestion {
   title: string;
   questionText: string;
   options: PantheonQuestionOption[];
+  correctAnswer?: string;
   isActive: boolean;
 }
 
@@ -216,6 +217,7 @@ function mapCareerDNA(raw: unknown[], testType: string): PantheonQuestion[] {
     options: Array.isArray(q.options)
       ? q.options.map((o: any) => ({ label: o.label, text: o.text, score: o.score }))
       : [],
+    correctAnswer: q.correctAnswer ?? undefined,
     isActive: true,
   }));
 }
@@ -268,10 +270,23 @@ async function upsertQuestions(questions: PantheonQuestion[]): Promise<void> {
   let inserted = 0;
   let updated = 0;
   for (const q of questions) {
+    const setDoc: Record<string, unknown> = {
+      assessmentCode: q.assessmentCode,
+      category: q.category,
+      categoryLabel: q.categoryLabel,
+      questionNumber: q.questionNumber,
+      title: q.title,
+      questionText: q.questionText,
+      options: q.options,
+      isActive: q.isActive,
+    };
+    if (q.correctAnswer !== undefined) {
+      setDoc.correctAnswer = q.correctAnswer;
+    }
     const res = await Question.updateOne(
       { assessmentCode: q.assessmentCode, category: q.category, questionNumber: q.questionNumber },
-      { $set: q },
-      { upsert: true }
+      { $set: setDoc },
+      { upsert: true, strict: false }
     );
     if (res.upsertedCount) inserted++;
     else if (res.modifiedCount) updated++;

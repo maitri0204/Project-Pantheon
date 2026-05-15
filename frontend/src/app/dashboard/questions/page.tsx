@@ -27,6 +27,7 @@ type Question = {
   title: string;
   questionText: string;
   options?: QuestionOption[];
+  correctAnswer?: string;
   isActive: boolean;
 };
 
@@ -40,6 +41,7 @@ type QuestionFormState = {
   title: string;
   questionText: string;
   options: QuestionOption[];
+  correctAnswer: string;
 };
 
 const DEFAULT_FORM: QuestionFormState = {
@@ -49,7 +51,115 @@ const DEFAULT_FORM: QuestionFormState = {
   title: "",
   questionText: "",
   options: [],
+  correctAnswer: "",
 };
+
+/** Extract the Career DNA sub-type (e.g. "COGNITIVE") from a category like "COGNITIVE_1" */
+function getCareerDnaSubType(category: string): string {
+  const match = String(category).match(/^([A-Z_]+)_\d+$/);
+  return match ? match[1] : "";
+}
+
+const CAREER_DNA_LIKERT_TYPES = new Set([
+  "EMOTIONAL_INTELLIGENCE",
+  "LEARNING_STYLE",
+  "BEHAVIORAL_SOCIAL",
+  "STRESS_RESILIENCE",
+]);
+
+// Short display label shown on each question card (overrides stored question.title)
+const ASSESSMENT_SHORT_NAME: Record<string, string> = {
+  JOHARI_WINDOW: "CLEAR",
+  METACOGNITION_TEST: "TEST",
+};
+
+function CareerDnaCorrectAnswerField({
+  category,
+  value,
+  onChange,
+}: {
+  category: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const subType = getCareerDnaSubType(category);
+
+  if (CAREER_DNA_LIKERT_TYPES.has(subType)) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <span className="font-semibold">Likert scoring</span> — no correct answer.{" "}
+        {subType === "STRESS_RESILIENCE"
+          ? "Scored A=4, B=3, C=2, D=1. Questions ending with * use reversed scoring (A=1…D=4)."
+          : subType === "LEARNING_STYLE"
+          ? "Scored A=3 (Yes), B=2 (Sometimes), C=1 (No). Top 3 styles form the dominant code."
+          : "Scored A=4 (Always), B=3 (Often), C=2 (Sometimes), D=1 (Never)."}
+      </div>
+    );
+  }
+
+  if (subType === "PERSONALITY") {
+    const DIMENSION_OPTIONS = [
+      { value: "E", label: "SO — Social Orientation" },
+      { value: "I", label: "RO — Reflective Orientation" },
+      { value: "S", label: "PO — Practical Observation" },
+      { value: "N", label: "CT — Conceptual Thinking" },
+      { value: "T", label: "LD — Logical Decision" },
+      { value: "F", label: "VD — Value-Based Decision" },
+      { value: "J", label: "SW — Structured Working" },
+      { value: "P", label: "FW — Flexible Working" },
+    ];
+    return (
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+          Dimension for Option A
+        </label>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+        >
+          <option value="">— Select dimension —</option>
+          {DIMENSION_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-gray-400">
+          The personality dimension awarded when the student picks <strong>Option A</strong>.
+          Option B automatically awards the opposite dimension.
+          Part 1 = Social Orientation (SO), Part 2 = Practical Observation (PO),
+          Part 3 = Logical Decision (LD), Part 4 = Structured Working (SW).
+          Part 5 questions can have any dimension.
+        </p>
+      </div>
+    );
+  }
+
+  if (subType === "CAREER_INTEREST") {
+    return (
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        <span className="font-semibold">RIASEC interest scoring</span> — Option A = Yes (interested),
+        Option B = No. Score is the % of "Yes" answers per domain. No per-question correct answer.
+      </div>
+    );
+  }
+
+  // COGNITIVE or APTITUDE — standard correct answer label
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Correct Answer</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value.toUpperCase())}
+        placeholder="Option label, e.g. A · B · C · D"
+        maxLength={1}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <p className="mt-1 text-xs text-gray-400">
+        The option label that is correct. Student earns 1 point per match.
+      </p>
+    </div>
+  );
+}
 
 const sanitizeOptions = (options: QuestionOption[]) => {
   return options
@@ -203,6 +313,7 @@ export default function QuestionsPage() {
             ...addForm,
             categoryLabel: addForm.categoryLabel || addForm.category,
             options: sanitizeOptions(addForm.options),
+            correctAnswer: addForm.correctAnswer || undefined,
           }),
         },
         auth.token
@@ -228,6 +339,7 @@ export default function QuestionsPage() {
       title: question.title,
       questionText: question.questionText,
       options: question.options ?? [],
+      correctAnswer: question.correctAnswer ?? "",
     });
     setEditError(null);
   };
@@ -248,6 +360,7 @@ export default function QuestionsPage() {
             ...editForm,
             categoryLabel: editForm.categoryLabel || editForm.category,
             options: sanitizeOptions(editForm.options),
+            correctAnswer: editForm.correctAnswer || undefined,
           }),
         },
         auth.token
@@ -351,7 +464,7 @@ export default function QuestionsPage() {
             >
               {assessments.map((assessment) => (
                 <option key={assessment.code} value={assessment.code}>
-                  {assessment.name} ({assessment.code})
+                  {assessment.name}
                 </option>
               ))}
             </select>
@@ -404,67 +517,255 @@ export default function QuestionsPage() {
           ) : (
             <div className="p-4 space-y-2.5">
               {filteredQuestions.map((question, index) => (
-                <div
-                  key={question._id}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition group"
-                >
-                  <span className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold mt-0.5">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="text-base font-semibold text-gray-900">{question.title}</p>
-                      <span className="text-sm bg-white border border-gray-200 text-gray-500 rounded px-1.5 py-0.5">
-                        {question.categoryLabel} · Q{question.questionNumber}
-                      </span>
-                    </div>
-                    <p className="text-base text-gray-600 leading-relaxed">{question.questionText}</p>
-                    {question.options && question.options.length > 0 && (
-                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                        {question.options.map((option, optionIndex) => (
-                          <div
-                            key={`${question._id}-${optionIndex}`}
-                            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600"
-                          >
-                            <span className="font-semibold text-gray-800">{option.label}.</span> {option.text}
-                            {option.score !== undefined && (
-                              <span className="text-gray-400"> · Score {option.score}</span>
-                            )}
-                          </div>
-                        ))}
+                <div key={question._id}>
+                  <div
+                    className={`flex items-start gap-3 p-4 rounded-xl border transition group ${
+                      editQuestion?._id === question._id
+                        ? "bg-blue-50 border-blue-200"
+                        : "bg-gray-50 border-gray-100 hover:border-gray-200"
+                    }`}
+                  >
+                    <span className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold mt-0.5">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {(() => {
+                          const shortName = ASSESSMENT_SHORT_NAME[question.assessmentCode];
+                          const displayTitle = shortName ?? (question.title !== activeAssessment?.name ? question.title : "");
+                          return displayTitle ? (
+                            <p className="text-base font-semibold text-gray-900">{displayTitle}</p>
+                          ) : null;
+                        })()}
+                        <span className="text-sm bg-white border border-gray-200 text-gray-500 rounded px-1.5 py-0.5">
+                          {question.categoryLabel} · Q{question.questionNumber}
+                        </span>
                       </div>
-                    )}
+                      <p className="text-base text-gray-600 leading-relaxed">{question.questionText}</p>
+                      {question.options && question.options.length > 0 && (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {question.options.map((option, optionIndex) => (
+                            <div
+                              key={`${question._id}-${optionIndex}`}
+                              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600"
+                            >
+                              <span className="font-semibold text-gray-800">{option.label}.</span> {option.text}
+                              {option.score !== undefined && (
+                                <span className="text-gray-400"> · Score {option.score}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                      <button
+                        onClick={() => openEdit(question)}
+                        className={`p-1.5 rounded-lg transition ${
+                          editQuestion?._id === question._id
+                            ? "bg-blue-100 text-blue-600"
+                            : "hover:bg-blue-50 text-gray-400 hover:text-blue-600"
+                        }`}
+                        title="Edit"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => void handleDelete(question._id)}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
+                        title="Delete"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                    <button
-                      onClick={() => openEdit(question)}
-                      className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition"
-                      title="Edit"
+
+                  {/* ── Inline edit panel ── */}
+                  {editQuestion?._id === question._id && (
+                    <div
+                      ref={(el) => { if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }}
+                      className="mt-1 border border-blue-200 rounded-xl bg-white shadow-sm p-5"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => void handleDelete(question._id)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
-                      title="Delete"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                          {editQuestion.questionNumber}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">Editing Question</p>
+                          <p className="text-xs text-gray-400">{editQuestion.categoryLabel} · Q{editQuestion.questionNumber}</p>
+                        </div>
+                        <button
+                          onClick={() => setEditQuestion(null)}
+                          className="ml-auto p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleEdit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Key</label>
+                            <input
+                              value={editForm.category}
+                              onChange={(e) => setEditForm((form) => ({ ...form, category: e.target.value }))}
+                              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Label</label>
+                            <input
+                              value={editForm.categoryLabel}
+                              onChange={(e) => setEditForm((form) => ({ ...form, categoryLabel: e.target.value }))}
+                              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Number</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={editForm.questionNumber}
+                            onChange={(e) => setEditForm((form) => ({ ...form, questionNumber: Number(e.target.value) }))}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
+                          <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) => setEditForm((form) => ({ ...form, title: e.target.value }))}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Text</label>
+                          <textarea
+                            rows={3}
+                            value={editForm.questionText}
+                            onChange={(e) => setEditForm((form) => ({ ...form, questionText: e.target.value }))}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="block text-sm font-semibold text-gray-700">Options</label>
+                            <button
+                              type="button"
+                              onClick={() => setEditForm((form) => ({
+                                ...form,
+                                options: [...form.options, { label: "", text: "", score: undefined }],
+                              }))}
+                              className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                            >
+                              + Add Option
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            {editForm.options.length === 0 && (
+                              <div className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500">
+                                No options added yet.
+                              </div>
+                            )}
+                            {editForm.options.map((option, optIdx) => (
+                              <div key={optIdx} className="grid gap-2 md:grid-cols-[120px_1fr_120px_auto] items-end">
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                                  <input
+                                    value={option.label}
+                                    onChange={(e) => updateEditOption(optIdx, "label", e.target.value)}
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Text</label>
+                                  <input
+                                    value={option.text}
+                                    onChange={(e) => updateEditOption(optIdx, "text", e.target.value)}
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                </div>
+                                {activeCode !== "CAREER_DNA" && (
+                                  <div>
+                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Score</label>
+                                    <input
+                                      type="number"
+                                      value={option.score ?? ""}
+                                      onChange={(e) => updateEditOption(optIdx, "score", e.target.value ? Number(e.target.value) : undefined)}
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setEditForm((form) => ({
+                                    ...form,
+                                    options: form.options.filter((_, i) => i !== optIdx),
+                                  }))}
+                                  className="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {activeCode === "CAREER_DNA" && (
+                          <CareerDnaCorrectAnswerField
+                            category={editForm.category}
+                            value={editForm.correctAnswer}
+                            onChange={(v) => setEditForm((form) => ({ ...form, correctAnswer: v }))}
+                          />
+                        )}
+
+                        {editError && (
+                          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2.5 rounded-xl">
+                            {editError}
+                          </div>
+                        )}
+
+                        <div className="flex gap-3 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditQuestion(null)}
+                            className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={saving || !editForm.title.trim() || !editForm.questionText.trim()}
+                            className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                          >
+                            {saving ? "Saving..." : "Save Changes"}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -591,16 +892,18 @@ export default function QuestionsPage() {
                           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Score</label>
-                        <input
-                          type="number"
-                          value={option.score ?? ""}
-                          onChange={(e) => updateAddOption(index, "score", e.target.value ? Number(e.target.value) : undefined)}
-                          placeholder="Optional"
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                      {activeCode !== "CAREER_DNA" && (
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Score</label>
+                          <input
+                            type="number"
+                            value={option.score ?? ""}
+                            onChange={(e) => updateAddOption(index, "score", e.target.value ? Number(e.target.value) : undefined)}
+                            placeholder="Optional"
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={() => setAddForm((form) => ({
@@ -615,6 +918,14 @@ export default function QuestionsPage() {
                   ))}
                 </div>
               </div>
+
+              {activeCode === "CAREER_DNA" && (
+                <CareerDnaCorrectAnswerField
+                  category={addForm.category}
+                  value={addForm.correctAnswer}
+                  onChange={(v) => setAddForm((form) => ({ ...form, correctAnswer: v }))}
+                />
+              )}
 
               {addError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2.5 rounded-xl">
@@ -646,166 +957,6 @@ export default function QuestionsPage() {
         </div>
       )}
 
-      {editQuestion && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
-                {editQuestion.questionNumber}
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Edit Question</h3>
-                <p className="text-sm text-gray-500">{editQuestion.categoryLabel} · Q{editQuestion.questionNumber}</p>
-              </div>
-              <button
-                onClick={() => setEditQuestion(null)}
-                className="ml-auto p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleEdit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Key</label>
-                  <input
-                    value={editForm.category}
-                    onChange={(e) => setEditForm((form) => ({ ...form, category: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Label</label>
-                  <input
-                    value={editForm.categoryLabel}
-                    onChange={(e) => setEditForm((form) => ({ ...form, categoryLabel: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Number</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={editForm.questionNumber}
-                  onChange={(e) => setEditForm((form) => ({ ...form, questionNumber: Number(e.target.value) }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={(e) => setEditForm((form) => ({ ...form, title: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Text</label>
-                <textarea
-                  rows={4}
-                  value={editForm.questionText}
-                  onChange={(e) => setEditForm((form) => ({ ...form, questionText: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-semibold text-gray-700">Options</label>
-                  <button
-                    type="button"
-                    onClick={() => setEditForm((form) => ({
-                      ...form,
-                      options: [...form.options, { label: "", text: "", score: undefined }],
-                    }))}
-                    className="text-blue-600 text-sm font-medium hover:text-blue-700"
-                  >
-                    + Add Option
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {editForm.options.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500">
-                      No options added yet.
-                    </div>
-                  )}
-                  {editForm.options.map((option, index) => (
-                    <div key={index} className="grid gap-2 md:grid-cols-[120px_1fr_120px_auto] items-end">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Label</label>
-                        <input
-                          value={option.label}
-                          onChange={(e) => updateEditOption(index, "label", e.target.value)}
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Text</label>
-                        <input
-                          value={option.text}
-                          onChange={(e) => updateEditOption(index, "text", e.target.value)}
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Score</label>
-                        <input
-                          type="number"
-                          value={option.score ?? ""}
-                          onChange={(e) => updateEditOption(index, "score", e.target.value ? Number(e.target.value) : undefined)}
-                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setEditForm((form) => ({
-                          ...form,
-                          options: form.options.filter((_, optionIndex) => optionIndex !== index),
-                        }))}
-                        className="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {editError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2.5 rounded-xl">
-                  {editError}
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setEditQuestion(null)}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving || !editForm.title.trim() || !editForm.questionText.trim()}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

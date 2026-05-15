@@ -14,6 +14,7 @@ export interface IQuestion extends Document {
   title: string;
   questionText: string;
   options: IQuestionOption[];
+  correctAnswer?: string;  // correct option label (e.g. "A","B") or dimension key (e.g. "E","S") for Career DNA
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +38,7 @@ const questionSchema = new Schema<IQuestion>(
       ],
       default: [],
     },
+    correctAnswer: { type: String, default: undefined },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

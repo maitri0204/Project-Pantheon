@@ -114,10 +114,16 @@ const buildCareerDnaQuestionSetForAttempt = <T extends {
 
   return orderedGroups.flatMap((group) => {
     const shuffled = shuffleArray(group.items);
-    const isNonHalved = CAREER_DNA_NON_HALVED_TEST_TYPES.has(group.testType);
-    const takeCount = isNonHalved
-      ? shuffled.length
-      : Math.max(1, Math.floor(shuffled.length / 2));
+    let takeCount: number;
+    if (group.testType === "PERSONALITY") {
+      // Match Career DNA source app: 7 random from each of parts 1-4, ALL from part 5+
+      takeCount = group.partNumber <= 4 ? Math.min(7, shuffled.length) : shuffled.length;
+    } else {
+      const isNonHalved = CAREER_DNA_NON_HALVED_TEST_TYPES.has(group.testType);
+      takeCount = isNonHalved
+        ? shuffled.length
+        : Math.max(1, Math.floor(shuffled.length / 2));
+    }
 
     return shuffled.slice(0, takeCount);
   });

@@ -402,15 +402,10 @@ function computeCareerDnaBreakdown(
 
   let dominantCode: string | undefined;
   if (testType === "LEARNING_STYLE") {
-    // Only consider Visual (0), Auditory (1), Kinesthetic (3) - filter to indices 0, 1, 3
-    const filteredParts = [...parts].filter((part) => {
-      const idx = part.partNumber - 1;
-      return idx === 0 || idx === 1 || idx === 3; // V, A, K
-    });
-    // Take only top 2 (primary and secondary)
-    dominantCode = filteredParts
+    // Top 3 from all 8 learning styles (matches Career DNA source app)
+    dominantCode = [...parts]
       .sort((a, b) => b.percentage - a.percentage || b.score - a.score)
-      .slice(0, 2)
+      .slice(0, 3)
       .map((part) => CAREER_DNA_LS_CODES[part.partNumber - 1] ?? String(part.partNumber))
       .join("");
   }
