@@ -79,6 +79,7 @@ export default function StudentAssessmentsPage() {
   const [loading, setLoading] = useState(true);
   const [startingCode, setStartingCode] = useState<string | null>(null);
   const [data, setData] = useState<StudentAssessmentsResponse>({ assessments: [] });
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [checkoutAssessmentCode, setCheckoutAssessmentCode] = useState<string | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [pricing, setPricing] = useState<AssessmentPricingResponse | null>(null);
@@ -92,9 +93,16 @@ export default function StudentAssessmentsPage() {
     }
 
     setLoading(true);
+    setLoadError(null);
     apiRequest<StudentAssessmentsResponse>("/platform/student/assessments", {}, auth.token)
-      .then(setData)
-      .catch(() => router.replace(`/whitelabel/${slug}/login`))
+      .then((res) => { setData(res); setLoadError(null); })
+      .catch((err) => {
+        if (!getStoredAuth()) {
+          router.replace(`/whitelabel/${slug}/login`);
+        } else {
+          setLoadError(err instanceof Error ? err.message : "Failed to load assessments");
+        }
+      })
       .finally(() => setLoading(false));
   };
 
@@ -249,6 +257,20 @@ export default function StudentAssessmentsPage() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <p className="text-sm text-red-600">{loadError}</p>
+        <button
+          onClick={load}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }

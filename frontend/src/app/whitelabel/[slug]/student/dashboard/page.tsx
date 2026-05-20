@@ -32,6 +32,7 @@ export default function StudentDashboardPage() {
   const learnerLabel = auth?.user?.role === "PARENT" ? "Parent" : "Student";
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StudentDashboardResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth?.token) {
@@ -40,8 +41,15 @@ export default function StudentDashboardPage() {
     }
 
     apiRequest<StudentDashboardResponse>("/platform/student/dashboard", {}, auth.token)
-      .then(setData)
-      .catch(() => router.replace(`/whitelabel/${slug}/login`))
+      .then((res) => { setData(res); setError(null); })
+      .catch((err) => {
+        // getStoredAuth returns null only when apiRequest cleared it (on 401)
+        if (!getStoredAuth()) {
+          router.replace(`/whitelabel/${slug}/login`);
+        } else {
+          setError(err instanceof Error ? err.message : "Failed to load dashboard");
+        }
+      })
       .finally(() => setLoading(false));
   }, [auth?.token, router, slug]);
 
@@ -49,6 +57,20 @@ export default function StudentDashboardPage() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <p className="text-sm text-red-600">{error}</p>
+        <button
+          onClick={() => { setLoading(true); setError(null); apiRequest<StudentDashboardResponse>("/platform/student/dashboard", {}, auth?.token).then((res) => { setData(res); }).catch((err) => { setError(err instanceof Error ? err.message : "Failed to load dashboard"); }).finally(() => setLoading(false)); }}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }

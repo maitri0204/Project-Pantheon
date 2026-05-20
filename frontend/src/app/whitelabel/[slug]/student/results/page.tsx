@@ -36,6 +36,7 @@ export default function StudentResultsPage() {
 
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<StudentResultItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth?.token) {
@@ -44,8 +45,14 @@ export default function StudentResultsPage() {
     }
 
     apiRequest<StudentResultsResponse>("/platform/student/results", {}, auth.token)
-      .then((res) => setResults(res.results || []))
-      .catch(() => router.replace(`/whitelabel/${slug}/login`))
+      .then((res) => { setResults(res.results || []); setError(null); })
+      .catch((err) => {
+        if (!getStoredAuth()) {
+          router.replace(`/whitelabel/${slug}/login`);
+        } else {
+          setError(err instanceof Error ? err.message : "Failed to load results");
+        }
+      })
       .finally(() => setLoading(false));
   }, [auth?.token, router, slug]);
 
@@ -53,6 +60,20 @@ export default function StudentResultsPage() {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
+        <p className="text-sm text-red-600">{error}</p>
+        <button
+          onClick={() => { setLoading(true); setError(null); apiRequest<StudentResultsResponse>("/platform/student/results", {}, auth?.token).then((res) => setResults(res.results || [])).catch((err) => { if (!getStoredAuth()) router.replace(`/whitelabel/${slug}/login`); else setError(err instanceof Error ? err.message : "Failed to load results"); }).finally(() => setLoading(false)); }}
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Retry
+        </button>
       </div>
     );
   }

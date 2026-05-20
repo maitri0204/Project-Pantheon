@@ -1338,55 +1338,61 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
     return;
   }
 
-  const learnerRole = req.user!.role as LearnerRole;
+  try {
+    const learnerRole = req.user!.role as LearnerRole;
 
-  const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
-  const userId = req.user!._id as mongoose.Types.ObjectId | string;
+    const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
+    const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
-  const [assessments, attempts] = await Promise.all([
-    Assessment.find({ active: true }).sort({ name: 1 }),
-    StudentAssessmentAttempt.find({ user: userId, organization: organizationId }),
-  ]);
+    const [assessments, attempts] = await Promise.all([
+      Assessment.find({ active: true }).sort({ name: 1 }),
+      StudentAssessmentAttempt.find({ user: userId, organization: organizationId }),
+    ]);
 
-  const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
-  ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
+    const dedupedAssessments = dedupeAssessments(
+      assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
+    ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
 
-  const visibleAttempts = attempts.filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode));
+    const visibleAttempts = attempts.filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode));
 
-  const completedCodes = new Set(
-    visibleAttempts
-      .filter((attempt) => attempt.status === "COMPLETED")
-      .map((attempt) => normalizeAssessmentCode(attempt.assessmentCode))
-  );
-  const appearedCodes = new Set(visibleAttempts.map((attempt) => normalizeAssessmentCode(attempt.assessmentCode)));
+    const completedCodes = new Set(
+      visibleAttempts
+        .filter((attempt) => attempt.status === "COMPLETED")
+        .map((attempt) => normalizeAssessmentCode(attempt.assessmentCode))
+    );
+    const appearedCodes = new Set(visibleAttempts.map((attempt) => normalizeAssessmentCode(attempt.assessmentCode)));
 
-  const totalAssessments = dedupedAssessments.length;
-  const appeared = appearedCodes.size;
-  const completed = completedCodes.size;
-  const pending = Math.max(totalAssessments - completed, 0);
+    const totalAssessments = dedupedAssessments.length;
+    const appeared = appearedCodes.size;
+    const completed = completedCodes.size;
+    const pending = Math.max(totalAssessments - completed, 0);
 
-  res.json({
-    stats: {
-      appeared,
-      completed,
-      pending,
-      totalAssessments,
-    },
-    latestAttempts: attempts
-      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 5)
-      .map((attempt) => ({
-        id: attempt._id,
-        assessmentCode: normalizeAssessmentCode(attempt.assessmentCode),
-        assessmentName: getAssessmentDisplayName(attempt.assessmentCode, attempt.assessmentName),
-        status: attempt.status,
-        answeredCount: attempt.answeredCount,
-        totalQuestions: attempt.totalQuestions,
-        updatedAt: attempt.updatedAt,
-      })),
-  });
+    res.json({
+      stats: {
+        appeared,
+        completed,
+        pending,
+        totalAssessments,
+      },
+      latestAttempts: attempts
+        .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .slice(0, 5)
+        .map((attempt) => ({
+          id: attempt._id,
+          assessmentCode: normalizeAssessmentCode(attempt.assessmentCode),
+          assessmentName: getAssessmentDisplayName(attempt.assessmentCode, attempt.assessmentName),
+          status: attempt.status,
+          answeredCount: attempt.answeredCount,
+          totalQuestions: attempt.totalQuestions,
+          updatedAt: attempt.updatedAt,
+        })),
+    });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("getStudentDashboard error:", error);
+    res.status(500).json({ message: "Failed to load dashboard data" });
+  }
 };
 
 export const listStudentResults = async (req: AuthRequest, res: Response): Promise<void> => {
