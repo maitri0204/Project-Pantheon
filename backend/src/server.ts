@@ -6,7 +6,7 @@ import { bootstrapPlatform } from "./services/bootstrap";
 
 dotenv.config();
 
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = Number(process.env.PORT);
 
 const startServer = async (): Promise<void> => {
   try {

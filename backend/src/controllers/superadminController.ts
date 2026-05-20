@@ -88,7 +88,7 @@ export const getLedger = async (_req: AuthRequest, res: Response): Promise<void>
   let runningBalance = 0;
   const rows = invoices.map((inv) => {
     runningBalance += inv.finalAmount ?? 0;
-    const row = inv.toObject() as {
+    const row = inv.toObject() as unknown as {
       organization?: {
         _id?: { toString(): string };
       };
