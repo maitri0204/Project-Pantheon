@@ -149,7 +149,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
           }
         } catch {
           const parts = hostname.split(".");
-          if (parts.length > 1 && parts[0] !== "www") {
+          if (parts.length > 2 && parts[0] !== "www") {
             const slug = parts[0];
             setOrganizationSlug(slug);
             try {
