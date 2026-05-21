@@ -1400,30 +1400,35 @@ export const listStudentResults = async (req: AuthRequest, res: Response): Promi
     return;
   }
 
-  const learnerRole = req.user!.role as LearnerRole;
+  try {
+    const learnerRole = req.user!.role as LearnerRole;
 
-  const attempts = await StudentAssessmentAttempt.find({
-    user: req.user!._id,
-    organization: req.user!.organization,
-    status: "COMPLETED",
-  }).sort({ completedAt: -1, updatedAt: -1 });
+    const attempts = await StudentAssessmentAttempt.find({
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    }).sort({ completedAt: -1, updatedAt: -1 });
 
-  res.json({
-    results: attempts
-      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
-      .map((attempt) => {
-      const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
-      return {
-        id: attempt._id,
-        assessmentCode: canonicalCode,
-        assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
-        answeredCount: attempt.answeredCount,
-        totalQuestions: attempt.totalQuestions,
-        completedAt: attempt.completedAt,
-        createdAt: attempt.createdAt,
-      };
-    }),
-  });
+    res.json({
+      results: attempts
+        .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
+        .map((attempt) => {
+        const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+        return {
+          id: attempt._id,
+          assessmentCode: canonicalCode,
+          assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
+          answeredCount: attempt.answeredCount,
+          totalQuestions: attempt.totalQuestions,
+          completedAt: attempt.completedAt,
+          createdAt: attempt.createdAt,
+        };
+      }),
+    });
+  } catch (error) {
+    console.error("listStudentResults error:", error);
+    res.status(500).json({ message: "Failed to load results" });
+  }
 };
 
 export const listStudentAssessments = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -1431,70 +1436,75 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const learnerRole = req.user!.role as LearnerRole;
+  try {
+    const learnerRole = req.user!.role as LearnerRole;
 
-  const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
-  const userId = req.user!._id as mongoose.Types.ObjectId | string;
+    const organizationId = req.user!.organization as mongoose.Types.ObjectId | string;
+    const userId = req.user!._id as mongoose.Types.ObjectId | string;
 
-  const [assessments, attempts] = await Promise.all([
-    Assessment.find({ active: true }).sort({ name: 1 }),
-    StudentAssessmentAttempt.find({ user: userId, organization: organizationId }),
-  ]);
+    const [assessments, attempts] = await Promise.all([
+      Assessment.find({ active: true }).sort({ name: 1 }),
+      StudentAssessmentAttempt.find({ user: userId, organization: organizationId }),
+    ]);
 
-  const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as unknown as AssessmentCatalogItem)
-  ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
+    const dedupedAssessments = dedupeAssessments(
+      assessments.map((assessment) => assessment.toObject() as unknown as AssessmentCatalogItem)
+    ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
 
-  const attemptsByCode = new Map<string, (typeof attempts)[number]>();
-  for (const attempt of attempts) {
-    const normalizedCode = normalizeAssessmentCode(attempt.assessmentCode);
-    if (!isAssessmentAccessibleForLearner(learnerRole, normalizedCode)) {
-      continue;
+    const attemptsByCode = new Map<string, (typeof attempts)[number]>();
+    for (const attempt of attempts) {
+      const normalizedCode = normalizeAssessmentCode(attempt.assessmentCode);
+      if (!isAssessmentAccessibleForLearner(learnerRole, normalizedCode)) {
+        continue;
+      }
+      const existing = attemptsByCode.get(normalizedCode);
+      if (!existing || new Date(attempt.updatedAt).getTime() > new Date(existing.updatedAt).getTime()) {
+        attemptsByCode.set(normalizedCode, attempt);
+      }
     }
-    const existing = attemptsByCode.get(normalizedCode);
-    if (!existing || new Date(attempt.updatedAt).getTime() > new Date(existing.updatedAt).getTime()) {
-      attemptsByCode.set(normalizedCode, attempt);
-    }
+
+    const assessmentsWithCounts = await Promise.all(
+      dedupedAssessments.map(async (assessment) => {
+        const questionCount = await Question.countDocuments({
+          assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
+          isActive: true,
+        });
+        return {
+          ...assessment,
+          questionCount,
+        };
+      })
+    );
+
+    res.json({
+      assessments: assessmentsWithCounts.map((assessment) => {
+        const attempt = attemptsByCode.get(assessment.code);
+        return {
+          _id: assessment._id,
+          code: assessment.code,
+          name: assessment.name,
+          slug: assessment.slug,
+          summary: assessment.summary,
+          category: assessment.category,
+          questionCount: assessment.questionCount,
+          sourceProject: assessment.sourceProject,
+          active: assessment.active,
+          attempt: attempt
+            ? {
+              id: attempt._id,
+              status: attempt.status,
+              answeredCount: attempt.answeredCount,
+              totalQuestions: attempt.totalQuestions,
+              completedAt: attempt.completedAt,
+            }
+            : null,
+        };
+      }),
+    });
+  } catch (error) {
+    console.error("listStudentAssessments error:", error);
+    res.status(500).json({ message: "Failed to load assessments" });
   }
-
-  const assessmentsWithCounts = await Promise.all(
-    dedupedAssessments.map(async (assessment) => {
-      const questionCount = await Question.countDocuments({
-        assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
-        isActive: true,
-      });
-      return {
-        ...assessment,
-        questionCount,
-      };
-    })
-  );
-
-  res.json({
-    assessments: assessmentsWithCounts.map((assessment) => {
-      const attempt = attemptsByCode.get(assessment.code);
-      return {
-        _id: assessment._id,
-        code: assessment.code,
-        name: assessment.name,
-        slug: assessment.slug,
-        summary: assessment.summary,
-        category: assessment.category,
-        questionCount: assessment.questionCount,
-        sourceProject: assessment.sourceProject,
-        active: assessment.active,
-        attempt: attempt
-          ? {
-            id: attempt._id,
-            status: attempt.status,
-            answeredCount: attempt.answeredCount,
-            totalQuestions: attempt.totalQuestions,
-            completedAt: attempt.completedAt,
-          }
-          : null,
-      };
-    }),
-  });
 };
 
 export const getStudentAssessmentPricing = async (req: AuthRequest, res: Response): Promise<void> => {
