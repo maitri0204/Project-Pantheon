@@ -7,6 +7,11 @@ import apiRoutes from "./routes";
 
 const app = express();
 
+// Express is behind Nginx reverse proxy — required for express-rate-limit
+// to correctly identify client IPs from X-Forwarded-For, and to prevent
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR validation errors.
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(
   cors({
