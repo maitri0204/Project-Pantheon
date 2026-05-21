@@ -6,6 +6,27 @@ import rateLimit from "express-rate-limit";
 import apiRoutes from "./routes";
 
 const app = express();
+const allowedOrigins = process.env.FRONTEND_URL?.split(",")
+  .map((value) => value.trim())
+  .filter(Boolean) ?? [];
+const mainDomain = (process.env.MAIN_DOMAIN || "careerstudio.net")
+  .trim()
+  .toLowerCase()
+  .replace(/^https?:\/\//, "")
+  .replace(/^www\./, "");
+
+const isAllowedOrigin = (origin: string): boolean => {
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  try {
+    const hostname = new URL(origin).hostname.toLowerCase();
+    return hostname === mainDomain || hostname === `www.${mainDomain}` || hostname.endsWith(`.${mainDomain}`);
+  } catch {
+    return false;
+  }
+};
 
 // Express is behind Nginx reverse proxy — required for express-rate-limit
 // to correctly identify client IPs from X-Forwarded-For, and to prevent
@@ -15,7 +36,14 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL?.split(",").map((value) => value.trim()) || true,
+    origin: (origin, callback) => {
+      if (!origin || isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
