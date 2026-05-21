@@ -35,6 +35,12 @@ export type StoredAuth = {
   orgLogoUrl?: string;
 };
 
+const MAX_AUTH_TOKEN_LENGTH = 8192;
+
+const isTokenTooLarge = (token?: string): boolean => {
+  return Boolean(token && token.length > MAX_AUTH_TOKEN_LENGTH);
+};
+
 export const getStoredAuth = (): StoredAuth | null => {
   if (typeof window === "undefined") {
     return null;
@@ -46,8 +52,14 @@ export const getStoredAuth = (): StoredAuth | null => {
   }
 
   try {
-    return JSON.parse(raw) as StoredAuth;
+    const auth = JSON.parse(raw) as StoredAuth;
+    if (isTokenTooLarge(auth?.token)) {
+      clearStoredAuth();
+      return null;
+    }
+    return auth;
   } catch {
+    clearStoredAuth();
     return null;
   }
 };
@@ -65,6 +77,11 @@ export const apiRequest = async <T>(
   options: RequestInit = {},
   token?: string
 ): Promise<T> => {
+  if (isTokenTooLarge(token)) {
+    clearStoredAuth();
+    throw new Error("Authentication token is invalid or too large. Please log in again.");
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
