@@ -51,6 +51,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
   const [orgBranding, setOrgBranding] = useState<OrganizationBranding | null>(null);
   const [organizationSlug, setOrganizationSlug] = useState<string>("");
   const refs = useRef<Array<HTMLInputElement | null>>([]);
+  const appHost = process.env.NEXT_PUBLIC_APP_HOST?.toLowerCase().trim() || "assessments.admitra.io";
 
   useEffect(() => {
     if (!error) return;
@@ -135,7 +136,9 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
       }
 
       const hostname = window.location.hostname;
-      if (!["localhost", "127.0.0.1"].includes(hostname)) {
+      const isMainAppHost = ["localhost", "127.0.0.1", appHost].includes(hostname);
+
+      if (!isMainAppHost) {
         try {
           const response = await apiRequest<{
             organization: { slug: string; branding: OrganizationBranding };
