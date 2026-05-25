@@ -22,6 +22,12 @@ const isAllowedOrigin = (origin: string): boolean => {
 
   try {
     const hostname = new URL(origin).hostname.toLowerCase();
+    
+    // Allow localhost and 127.0.0.1 in development
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return true;
+    }
+    
     return hostname === mainDomain || hostname === `www.${mainDomain}` || hostname.endsWith(`.${mainDomain}`);
   } catch {
     return false;

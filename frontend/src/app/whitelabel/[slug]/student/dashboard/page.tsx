@@ -24,6 +24,20 @@ type StudentDashboardResponse = {
   }>;
 };
 
+const normalizeActivityName = (code: string, name: string) => {
+  const normalized = String(code || "").toUpperCase().trim();
+  if (normalized === "JOHARI_WINDOW") return "CLEAR";
+  if (normalized === "METACOGNITION_TEST" || normalized === "METACOGNITION") return "TEST";
+  return name;
+};
+
+const normalizeActivityCode = (code: string) => {
+  const normalized = String(code || "").toUpperCase().trim();
+  if (normalized === "JOHARI_WINDOW") return "CLEAR";
+  if (normalized === "METACOGNITION_TEST" || normalized === "METACOGNITION") return "TEST";
+  return normalized;
+};
+
 export default function StudentDashboardPage() {
   const router = useRouter();
   const params = useParams<{ slug: string }>();
@@ -118,8 +132,8 @@ export default function StudentDashboardPage() {
               <div key={attempt.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="font-semibold text-slate-900">{attempt.assessmentName}</p>
-                    <p className="text-xs text-slate-500">{attempt.assessmentCode}</p>
+                    <p className="font-semibold text-slate-900">{normalizeActivityName(attempt.assessmentCode, attempt.assessmentName)}</p>
+                    <p className="text-xs text-slate-500">{normalizeActivityCode(attempt.assessmentCode)}</p>
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${attempt.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                     {attempt.status === "COMPLETED" ? "Completed" : "In Progress"}

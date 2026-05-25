@@ -70,7 +70,7 @@ export default function OrganizationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-black">Organizations</h1>
-          <p className="text-black/80 mt-1 text-base">Manage whitelabel organizations that can host the Pantheon platform.</p>
+          <p className="text-black/80 mt-1 text-base">Manage whitelabel organizations that can host the assessment platform.</p>
         </div>
       </div>
 

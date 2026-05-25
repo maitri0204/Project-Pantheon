@@ -46,11 +46,37 @@ const formatDate = (dateString?: string) => {
   });
 };
 
-const getWebsiteHref = (website?: string) => {
+const getWebsiteHref = (website?: string, slug?: string) => {
   if (!website?.trim()) return "";
+
   const trimmed = website.trim();
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
+  const portalUrl = typeof window !== "undefined" && slug
+    ? `${window.location.origin}/whitelabel/${slug}`
+    : slug
+      ? `/whitelabel/${slug}`
+      : "";
+
+  try {
+    const normalized = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const parsed = new URL(normalized);
+
+    // Localhost-style values are usually dev placeholders; show the real portal URL instead.
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      return portalUrl || `${parsed.origin}${parsed.pathname.replace(/\/+$/, "")}`;
+    }
+
+    return `${parsed.origin}${parsed.pathname.replace(/\/+$/, "")}`.replace(/\/$/, "") || parsed.origin;
+  } catch {
+    if (trimmed.startsWith("/")) {
+      return portalUrl || trimmed;
+    }
+
+    if (trimmed.includes("localhost")) {
+      return portalUrl || trimmed;
+    }
+
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  }
 };
 
 const formatPhoneNumber = (value?: string) => {
@@ -225,12 +251,12 @@ export default function OrganizationDetailsPage() {
             <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Website Link</p>
             {organization.website ? (
               <a
-                href={getWebsiteHref(organization.website)}
+                href={getWebsiteHref(organization.website, organization.slug)}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-1.5 block text-base font-semibold text-blue-700 hover:text-blue-800 underline break-all"
               >
-                {getWebsiteHref(organization.website)}
+                {getWebsiteHref(organization.website, organization.slug)}
               </a>
             ) : (
               <p className="mt-1.5 text-base font-semibold text-gray-900">—</p>
