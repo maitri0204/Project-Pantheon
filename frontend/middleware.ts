@@ -7,11 +7,22 @@ export function middleware(request: NextRequest) {
   // Get the pathname
   const pathname = request.nextUrl.pathname;
 
-  // If it's localhost or the main domain, allow it through
-  const mainDomains = ["localhost", "127.0.0.1", process.env.NEXT_PUBLIC_MAIN_DOMAIN || "pantheon.local"];
+  // Exact app hosts should never be rewritten.
+  const exactMainHosts = [
+    "localhost",
+    "127.0.0.1",
+    process.env.NEXT_PUBLIC_APP_HOST,
+  ]
+    .map((value) => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
+
+  // Platform domain can still support subdomain-based whitelabel routing.
+  const mainDomain = String(process.env.NEXT_PUBLIC_MAIN_DOMAIN || "pantheon.local").trim().toLowerCase();
+
+  const mainDomains = [...new Set(exactMainHosts)];
 
   // Check if hostname matches a whitelabel domain
-  const isMainDomain = mainDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+  const isMainDomain = mainDomains.includes(hostname) || hostname === mainDomain || hostname.endsWith(`.${mainDomain}`);
 
   if (!isMainDomain) {
     // This is a whitelabel domain - extract the subdomain
