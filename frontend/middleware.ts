@@ -12,6 +12,7 @@ export function middleware(request: NextRequest) {
     "localhost",
     "127.0.0.1",
     process.env.NEXT_PUBLIC_APP_HOST,
+    "assessments.admitra.io",
   ]
     .map((value) => String(value || "").trim().toLowerCase())
     .filter(Boolean);
