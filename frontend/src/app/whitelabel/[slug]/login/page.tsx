@@ -1,22 +1,13 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import { Suspense } from "react";
-
 import LoginPageContent from "@/components/auth/LoginPageContent";
 
-function WhitelabelLoginPageInner() {
-  const params = useParams<{ slug: string }>();
+export const dynamic = "force-dynamic";
+
+type Props = {
+  params: { slug?: string };
+};
+
+export default function WhitelabelLoginPage({ params }: Props) {
   const slug = (params?.slug || "").toLowerCase().trim();
-
   return <LoginPageContent forcedOrganizationSlug={slug} />;
-}
-
-export default function WhitelabelLoginPage() {
-  return (
-    <Suspense>
-      <WhitelabelLoginPageInner />
-    </Suspense>
-  );
 }
 

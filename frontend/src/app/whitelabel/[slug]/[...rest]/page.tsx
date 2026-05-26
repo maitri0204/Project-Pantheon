@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import StudentPortalShell from "@/components/student/StudentPortalShell";
+import LoginPageContent from "@/components/auth/LoginPageContent";
 import DashboardPage from "@/app/dashboard/page";
 import AssessmentsPage from "@/app/dashboard/assessments/page";
 import UsersPage from "@/app/dashboard/users/page";
@@ -86,6 +87,13 @@ export default function WhitelabelCatchAllPage() {
     }
 
     if (rest[0] !== "dashboard") {
+      if (rest.length === 1 && rest[0] === "login") {
+        return {
+          type: "login" as const,
+          element: <LoginPageContent forcedOrganizationSlug={slug} />,
+        };
+      }
+
       return null;
     }
 
@@ -130,6 +138,10 @@ export default function WhitelabelCatchAllPage() {
   }
 
   if (content.type === "student-fullscreen") {
+    return content.element;
+  }
+
+  if (content.type === "login") {
     return content.element;
   }
 
