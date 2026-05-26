@@ -51,6 +51,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
   const [orgBranding, setOrgBranding] = useState<OrganizationBranding | null>(null);
   const [organizationSlug, setOrganizationSlug] = useState<string>("");
   const refs = useRef<Array<HTMLInputElement | null>>([]);
+  const appHost = (process.env.NEXT_PUBLIC_APP_HOST || "assessments.admitra.io").toLowerCase().trim();
 
   useEffect(() => {
     if (!error) return;
@@ -134,7 +135,16 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         return;
       }
 
-      const hostname = window.location.hostname;
+      const hostname = window.location.hostname.toLowerCase().trim();
+      const isMainAppHost = ["localhost", "127.0.0.1", appHost, "assessments.admitra.io", "www.assessments.admitra.io"].includes(hostname);
+
+      if (isMainAppHost) {
+        // Main platform login should never inherit whitelabel branding
+        setOrganizationSlug("");
+        setOrgBranding(null);
+        return;
+      }
+
       if (!["localhost", "127.0.0.1"].includes(hostname)) {
         try {
           const response = await apiRequest<{
