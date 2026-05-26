@@ -7,6 +7,14 @@ export function middleware(request: NextRequest) {
   // Get the pathname
   const pathname = request.nextUrl.pathname;
 
+  // Never rewrite core platform routes — keep them on the main app
+  const corePaths = ["/login", "/register", "/dashboard", "/api"];
+  for (const p of corePaths) {
+    if (pathname === p || pathname.startsWith(p + "/")) {
+      return NextResponse.next();
+    }
+  }
+
   // If it's localhost or the main domain, allow it through
   const mainDomains = ["localhost", "127.0.0.1", process.env.NEXT_PUBLIC_MAIN_DOMAIN || "pantheon.local"];
 
