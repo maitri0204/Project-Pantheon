@@ -69,20 +69,22 @@ export const sendRegistrationConfirmationEmail = async ({
   email,
   firstName,
   companyName,
-  websiteLink,
+  portalUrl,
+  loginUrl,
   loginEmail,
 }: {
   email: string;
   firstName: string;
   companyName: string;
-  websiteLink: string;
+  portalUrl: string;
+  loginUrl: string;
   loginEmail: string;
 }): Promise<void> => {
   const transporter = getTransporter();
 
   if (!transporter) {
     // eslint-disable-next-line no-console
-    console.log(`[REGISTRATION_CONFIRMATION] ${email} => Portal Login: ${websiteLink}`);
+    console.log(`[REGISTRATION_CONFIRMATION] ${email} => Portal: ${portalUrl}, Login: ${loginUrl}`);
     return;
   }
 
@@ -105,7 +107,12 @@ export const sendRegistrationConfirmationEmail = async ({
             
             <div style="margin: 0 0 12px;">
               <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Portal Website</p>
-              <a href="${websiteLink}" style="display: inline-block; color: #2563eb; font-size: 15px; font-weight: 600; text-decoration: none; word-break: break-all;">${websiteLink}</a>
+              <a href="${portalUrl}" style="display: inline-block; color: #2563eb; font-size: 15px; font-weight: 600; text-decoration: none; word-break: break-all;">${portalUrl}</a>
+            </div>
+
+            <div style="margin: 0 0 12px;">
+              <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Login Link</p>
+              <a href="${loginUrl}" style="display: inline-block; color: #2563eb; font-size: 15px; font-weight: 600; text-decoration: none; word-break: break-all;">${loginUrl}</a>
             </div>
             
             <div style="margin: 0 0 12px;">
