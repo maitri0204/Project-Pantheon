@@ -9,7 +9,7 @@ const app = express();
 const allowedOrigins = process.env.FRONTEND_URL?.split(",")
   .map((value) => value.trim())
   .filter(Boolean) ?? [];
-const mainDomain = (process.env.MAIN_DOMAIN || "careerstudio.net")
+const mainDomain = (process.env.MAIN_DOMAIN || "assessments.admitra.io")
   .trim()
   .toLowerCase()
   .replace(/^https?:\/\//, "")
@@ -17,6 +17,11 @@ const mainDomain = (process.env.MAIN_DOMAIN || "careerstudio.net")
 
 const isAllowedOrigin = (origin: string): boolean => {
   if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  // Always allow localhost for development
+  if (origin?.includes("localhost") || origin?.includes("127.0.0.1")) {
     return true;
   }
 
