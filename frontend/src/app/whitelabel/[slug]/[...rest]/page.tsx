@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import StudentPortalShell from "@/components/student/StudentPortalShell";
-import LoginPageContent from "@/components/auth/LoginPageContent";
 import DashboardPage from "@/app/dashboard/page";
 import AssessmentsPage from "@/app/dashboard/assessments/page";
 import UsersPage from "@/app/dashboard/users/page";
@@ -19,34 +18,8 @@ export default function WhitelabelCatchAllPage() {
   const params = useParams() as { slug?: string; rest?: string[] };
   const slug = params?.slug ?? "";
   const rest = params?.rest ?? [];
-  const isMainDashboardSlug = slug === "dashboard";
 
   const content = useMemo(() => {
-    if (isMainDashboardSlug) {
-      if (rest.length === 0) {
-        return {
-          type: "dashboard-shell" as const,
-          element: <DashboardPage />,
-        };
-      }
-
-      if (rest.length === 1 && rest[0] === "assessments") {
-        return {
-          type: "dashboard-shell" as const,
-          element: <AssessmentsPage />,
-        };
-      }
-
-      if (rest.length === 1 && rest[0] === "users") {
-        return {
-          type: "dashboard-shell" as const,
-          element: <UsersPage />,
-        };
-      }
-
-      return null;
-    }
-
     if (rest[0] === "student") {
       if (rest.length === 2 && rest[1] === "dashboard") {
         return {
@@ -87,13 +60,6 @@ export default function WhitelabelCatchAllPage() {
     }
 
     if (rest[0] !== "dashboard") {
-      if (rest.length === 1 && rest[0] === "login") {
-        return {
-          type: "login" as const,
-          element: <LoginPageContent forcedOrganizationSlug={slug} />,
-        };
-      }
-
       return null;
     }
 
@@ -129,6 +95,14 @@ export default function WhitelabelCatchAllPage() {
     );
   }
 
+  if (rest[0] === "login") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+      </div>
+    );
+  }
+
   if (!content) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
@@ -138,10 +112,6 @@ export default function WhitelabelCatchAllPage() {
   }
 
   if (content.type === "student-fullscreen") {
-    return content.element;
-  }
-
-  if (content.type === "login") {
     return content.element;
   }
 

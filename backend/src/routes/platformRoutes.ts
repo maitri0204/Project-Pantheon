@@ -25,7 +25,6 @@ import {
   verifyStudentAssessmentPayment,
   emailStudentAttemptReport,
 } from "../controllers/platformController";
-import { completeOrganizationRegistration } from "../controllers/authController";
 import { optionalAuth, requireAuth, requireRoles } from "../middleware/auth";
 
 const router = Router();
@@ -33,7 +32,6 @@ const router = Router();
 router.get("/overview", getPlatformOverview);
 router.get("/assessments", listAssessments);
 router.get("/whitelabel/:slug", optionalAuth, getWhitelabelPortal);
-router.post("/whitelabel/register", completeOrganizationRegistration);
 router.get("/whitelabel-by-host", optionalAuth, getWhitelabelPortalByHost);
 router.get("/dashboard", requireAuth, getDashboard);
 router.get("/students", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listStudents);

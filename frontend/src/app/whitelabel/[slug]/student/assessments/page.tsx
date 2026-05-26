@@ -286,7 +286,7 @@ export default function StudentAssessmentsPage() {
         {data.assessments.map((assessment) => {
           const completed = assessment.attempt?.status === "COMPLETED";
           const inProgress = assessment.attempt?.status === "IN_PROGRESS";
-          const canViewReport = completed;
+          const canViewReport = completed && assessment.code !== "CAREER_DNA";
 
           return (
             <div key={assessment._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

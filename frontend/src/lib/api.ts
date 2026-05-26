@@ -1,8 +1,9 @@
-const normalizeApiUrl = (value?: string): string | null => {
-  const raw = (value || "").trim();
+const normalizeApiUrl = (value?: string): string => {
+  const fallback = "http://localhost:5000/api";
+  const raw = (value || fallback).trim();
 
   if (!raw) {
-    return null;
+    return fallback;
   }
 
   let normalized = raw.replace(/\/+$/, "");
@@ -13,20 +14,7 @@ const normalizeApiUrl = (value?: string): string | null => {
   return normalized;
 };
 
-const resolveApiUrl = (): string => {
-  const configured = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
-  if (configured) {
-    return configured;
-  }
-
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return `${window.location.origin}/api`;
-  }
-
-  return "/api";
-};
-
-export const API_URL = resolveApiUrl();
+export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export type StoredAuth = {
   token: string;

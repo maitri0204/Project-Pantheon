@@ -74,7 +74,7 @@ const getPortalLoginLink = ({
   website?: string;
   orgSlug: string;
   frontendBaseUrl: string;
-}): { portalUrl: string; loginUrl: string } => {
+}): string => {
   const encodedSlug = encodeURIComponent(orgSlug);
 
   if (website?.trim()) {
@@ -84,16 +84,17 @@ const getPortalLoginLink = ({
     try {
       const parsed = new URL(candidate);
       const path = parsed.pathname.replace(/\/+$/, "");
-      const portalUrl = path && path !== "/" ? `${parsed.origin}${path}` : parsed.origin;
-      return { portalUrl, loginUrl: `${portalUrl}/login` };
+      if (path && path !== "/") {
+        return `${parsed.origin}${path}/login`;
+      }
+      return `${parsed.origin}/login`;
     } catch {
       // Fallback to platform-hosted portal login URL
     }
   }
 
-  const base = normalizeUrlBase(frontendBaseUrl) || "http://localhost:3000";
-  const portalUrl = `${base}/whitelabel/${encodedSlug}`;
-  return { portalUrl, loginUrl: `${portalUrl}/login` };
+  const base = normalizeUrlBase(frontendBaseUrl);
+  return `${base}/whitelabel/${orgSlug}/login`;
 };
 
 const getUserOrganization = (user: Awaited<ReturnType<typeof User.findOne>>) => {
@@ -114,7 +115,7 @@ const validateWhitelabelLoginContext = ({
 }: {
   user: Awaited<ReturnType<typeof User.findOne>>;
   organizationSlug?: string;
-}) => {
+}): { allowed: true } | { allowed: false; status: number; message: string } => {
   const normalizedOrganizationSlug = organizationSlug?.toLowerCase().trim();
   const organization = getUserOrganization(user);
   const isWhitelabelMember =
@@ -411,7 +412,7 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
 
     // Construct the website link and login URL
     const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const portalUrls = getPortalLoginLink({
+    const websiteLink = getPortalLoginLink({
       website: body.website?.trim(),
       orgSlug,
       frontendBaseUrl: baseUrl,
@@ -423,8 +424,7 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
         email: normalizedEmail,
         firstName: body.firstName.trim(),
         companyName: body.companyName.trim(),
-        portalUrl: portalUrls.portalUrl,
-        loginUrl: portalUrls.loginUrl,
+        websiteLink,
         loginEmail: normalizedEmail,
       });
     } catch (emailError) {
@@ -619,7 +619,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
     if (!contextValidation.allowed) {
-      res.status(contextValidation.status ?? 403).json({ message: contextValidation.message });
+      res.status(contextValidation.status).json({ message: contextValidation.message });
       return;
     }
 
@@ -665,7 +665,7 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
 
     const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
     if (!contextValidation.allowed) {
-      res.status(contextValidation.status ?? 403).json({ message: contextValidation.message });
+      res.status(contextValidation.status).json({ message: contextValidation.message });
       return;
     }
 
