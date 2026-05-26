@@ -18,8 +18,34 @@ export default function WhitelabelCatchAllPage() {
   const params = useParams() as { slug?: string; rest?: string[] };
   const slug = params?.slug ?? "";
   const rest = params?.rest ?? [];
+  const isMainDashboardSlug = slug === "dashboard";
 
   const content = useMemo(() => {
+    if (isMainDashboardSlug) {
+      if (rest.length === 0) {
+        return {
+          type: "dashboard-shell" as const,
+          element: <DashboardPage />,
+        };
+      }
+
+      if (rest.length === 1 && rest[0] === "assessments") {
+        return {
+          type: "dashboard-shell" as const,
+          element: <AssessmentsPage />,
+        };
+      }
+
+      if (rest.length === 1 && rest[0] === "users") {
+        return {
+          type: "dashboard-shell" as const,
+          element: <UsersPage />,
+        };
+      }
+
+      return null;
+    }
+
     if (rest[0] === "student") {
       if (rest.length === 2 && rest[1] === "dashboard") {
         return {

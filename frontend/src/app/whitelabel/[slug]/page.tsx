@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 import MainDashboardPage from "@/app/dashboard/page";
 import MainRegisterPage from "@/app/register/page";
 
@@ -72,7 +73,11 @@ export default function WhitelabelPortalPage() {
 
   if (isReservedSlug) {
     if (resolvedSlug === "dashboard") {
-      return <MainDashboardPage />;
+      return (
+        <DashboardShell basePath="/dashboard" loginPath="/login" redirectOrgAdminToWhitelabel>
+          <MainDashboardPage />
+        </DashboardShell>
+      );
     }
 
     return <MainRegisterPage />;
