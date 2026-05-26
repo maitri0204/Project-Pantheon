@@ -7,6 +7,18 @@ type Props = { params: { slug?: string } };
 export default async function WhitelabelPortalPage({ params }: Props) {
   const slug = (params?.slug || "").toLowerCase().trim();
   const reserved = slug === "register" || slug === "dashboard";
+  const fallbackOrganization =
+    slug === "kareer-studio"
+      ? {
+          name: "Kareer Studio",
+          slug: "kareer-studio",
+          branding: {
+            companyName: "Kareer Studio",
+            logoUrl: undefined,
+            primaryColor: "#2563eb",
+          },
+        }
+      : null;
 
   if (reserved) {
     return (
@@ -32,6 +44,33 @@ export default async function WhitelabelPortalPage({ params }: Props) {
   try {
     const res = await fetch(`${apiUrl}/platform/whitelabel/${encodeURIComponent(slug)}`, { cache: "no-store" });
     if (!res.ok) {
+      if (fallbackOrganization) {
+        const organization = fallbackOrganization;
+        return (
+          <div className="min-h-screen bg-slate-50 px-4 py-10">
+            <div className="mx-auto max-w-6xl space-y-6">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-18 w-18 rounded-xl bg-blue-50 border border-blue-100" />
+                    <div>
+                      <h1 className="text-3xl font-bold text-black">{organization.branding.companyName}</h1>
+                      <p className="text-black/80 text-base">Whitelabel Assessment Portal</p>
+                    </div>
+                  </div>
+                  <Link href={`/whitelabel/${organization.slug}/login`} className="px-6 py-2 rounded-lg font-medium text-white" style={{ backgroundColor: organization.branding.primaryColor }}>
+                    Login
+                  </Link>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-900">
+                Backend organization lookup returned no record, so a local fallback portal is being shown for this slug.
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">Portal not found.</p>
