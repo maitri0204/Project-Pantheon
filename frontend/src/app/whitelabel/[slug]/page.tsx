@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import MainDashboardPage from "@/app/dashboard/page";
+import MainRegisterPage from "@/app/register/page";
 
 type PortalResponse = {
   organization: {
@@ -32,15 +34,21 @@ type PortalResponse = {
 
 export default function WhitelabelPortalPage() {
   const params = useParams<{ slug: string }>();
-  const [loading, setLoading] = useState(true);
+  const resolvedSlug = (params?.slug || "").toLowerCase().trim();
+  const isReservedSlug = resolvedSlug === "register" || resolvedSlug === "dashboard";
+  const [loading, setLoading] = useState(!isReservedSlug);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PortalResponse | null>(null);
   const auth = getStoredAuth();
 
   useEffect(() => {
-    const resolvedSlug = params?.slug;
+    if (isReservedSlug) {
+      return;
+    }
 
-    if (!resolvedSlug) {
+    const currentSlug = params?.slug;
+
+    if (!currentSlug) {
       setError("No organization slug provided");
       setLoading(false);
       return;
@@ -48,19 +56,27 @@ export default function WhitelabelPortalPage() {
 
     const auth = getStoredAuth();
 
-    apiRequest<PortalResponse>(`/platform/whitelabel/${resolvedSlug}`)
+    apiRequest<PortalResponse>(`/platform/whitelabel/${currentSlug}`)
       .then((res) => setData(res))
       .catch((requestError) => setError(requestError instanceof Error ? requestError.message : "Failed to load portal"))
       .finally(() => setLoading(false));
 
     if (auth?.token) {
-      apiRequest<PortalResponse>(`/platform/whitelabel/${resolvedSlug}`, {}, auth.token)
+      apiRequest<PortalResponse>(`/platform/whitelabel/${currentSlug}`, {}, auth.token)
         .then((res) => setData(res))
         .catch(() => {
           // keep public branding response if authenticated request fails
         });
     }
-  }, [params?.slug]);
+  }, [auth?.token, isReservedSlug, params?.slug]);
+
+  if (isReservedSlug) {
+    if (resolvedSlug === "dashboard") {
+      return <MainDashboardPage />;
+    }
+
+    return <MainRegisterPage />;
+  }
 
   if (loading) {
     return (
