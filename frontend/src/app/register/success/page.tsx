@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 function RegistrationSuccessPageInner() {
   const searchParams = useSearchParams();
   const email = searchParams?.get("email") || "your registered email";
