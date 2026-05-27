@@ -404,57 +404,6 @@ export default function AssessmentInfoPage() {
               <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>
                 {page.theme.badge}
               </span>
-              <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">
-                {page.hero.title}
-              </h1>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-                {page.hero.subtitle}
-              </p>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                {page.hero.supportingLine}
-              </p>
-
-              <div className={`mt-8 rounded-3xl ${page.theme.card} p-6 text-slate-900 shadow-lg`}>
-                <p className={`text-sm font-semibold uppercase tracking-[0.2em] text-${page.theme.accent}-700`}>Supporting line</p>
-                <p className="mt-3 text-sm leading-7 text-slate-700">
-                  {page.hero.supportingLine}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-[linear-gradient(160deg,#111827,#0b1220)] p-8 text-white sm:p-10 lg:p-12">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-${page.theme.accent}-200`}>At a glance</p>
-                <div className="mt-5 space-y-4 text-sm leading-7 text-slate-200">
-                  {page.hero.sidePoints.map((point) => (
-                    <p key={point}>{point}</p>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {page.hero.sidePoints.slice(0, 3).map((title, index) => (
-                  <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4">
-                    <p className="text-sm font-semibold">{title}</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-300">
-                      {index === 0 ? "Clear understanding" : index === 1 ? "Guided action" : "Better outcomes"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-  return (
-    <div className={`min-h-[calc(100vh-4rem)] bg-gradient-to-b ${page.theme.gradient} py-8`}>
-      <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
-          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="p-8 sm:p-10 lg:p-12">
-              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-${page.theme.accent}-800 ${page.theme.card}`}>
-                {page.theme.badge}
-              </span>
               <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
               <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
@@ -473,6 +422,17 @@ export default function AssessmentInfoPage() {
                     <p key={point}>{point}</p>
                   ))}
                 </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                {page.hero.sidePoints.slice(0, 3).map((title, index) => (
+                  <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                    <p className="text-sm font-semibold">{title}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-300">
+                      {index === 0 ? "Clear understanding" : index === 1 ? "Guided action" : "Better outcomes"}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
