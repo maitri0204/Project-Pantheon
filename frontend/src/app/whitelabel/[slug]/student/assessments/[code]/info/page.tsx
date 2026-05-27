@@ -137,7 +137,7 @@ const content: Record<string, AssessmentPageContent> = {
           },
           {
             title: "Why do students need this?",
-            subtitle: "Students are struggling — not with intelligence, but with expression.",
+            subtitle: "Students are struggling - not with intelligence, but with expression.",
             bullets: [
               "Don’t express what they actually think",
               "Avoid difficult conversations",
@@ -201,8 +201,8 @@ const content: Record<string, AssessmentPageContent> = {
             title: "FAQs",
             cards: [
               { title: "Is this a personality test?", body: "No. It helps you understand how you behave, communicate, and handle feedback." },
-              { title: "How long does it take?", body: "About 15–20 minutes, followed by your report and a 30-day improvement program." },
-              { title: "Will this improve confidence?", body: "Yes — by improving self-expression, feedback handling, and self-understanding." },
+              { title: "How long does it take?", body: "About 15-20 minutes, followed by your report and a 30-day improvement program." },
+              { title: "Will this improve confidence?", body: "Yes - by improving self-expression, feedback handling, and self-understanding." },
             ],
           },
         ],
@@ -313,7 +313,7 @@ const content: Record<string, AssessmentPageContent> = {
         hero: {
           title: "Every Child Thinks Differently. Discover the Beautiful Way Your Child’s Mind Works.",
           subtitle: "A powerful Metacognitive Assessment designed to develop confident thinkers and independent learners.",
-          supportingLine: "The Thinking & Expression Test evaluates how students think, learn, reflect, and express ideas — beyond memory alone.",
+          supportingLine: "The Thinking & Expression Test evaluates how students think, learn, reflect, and express ideas - beyond memory alone.",
           sidePoints: ["Thinking awareness", "Learning strategy", "Self-monitoring"],
         },
         sections: [
@@ -329,7 +329,7 @@ const content: Record<string, AssessmentPageContent> = {
             callout: "Most traditional exams only check what students remember, not how well they understand or think.",
           },
           {
-            title: "Problem — Students & Parents",
+            title: "Problem - Students & Parents",
             subtitle: "Common learning pain points",
             blocks: [
               { title: "Students", body: "Memorize without understanding; struggle to explain answers; fear during exams; lack confidence in thinking and problem-solving; unsure how to study effectively." },
@@ -393,7 +393,7 @@ const content: Record<string, AssessmentPageContent> = {
           },
           {
             title: "Help Your Child Become a Confident Thinker",
-            callout: "The Thinking & Expression Test creates strong thinkers — not just good test-takers.",
+            callout: "The Thinking & Expression Test creates strong thinkers - not just good test-takers.",
           },
         ],
       },
