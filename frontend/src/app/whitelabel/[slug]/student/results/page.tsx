@@ -98,7 +98,7 @@ export default function StudentResultsPage() {
             </div>
             <div className="rounded-2xl border border-white/25 bg-white/15 backdrop-blur-md p-3 md:p-4">
               <div className="flex items-center gap-2 text-blue-100"><Sparkles className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Reports</span></div>
-              <p className="mt-2 text-2xl font-black">{results.filter((result) => result.assessmentCode !== "CAREER_DNA").length}</p>
+              <p className="mt-2 text-2xl font-black">{results.length}</p>
             </div>
           </div>
         </div>
