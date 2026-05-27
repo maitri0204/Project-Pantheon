@@ -149,7 +149,6 @@ export default function StudentInvoicesPage() {
                     <th className="px-4 py-3 text-left">Assessment</th>
                     <th className="px-4 py-3 text-right">Amount Paid</th>
                     <th className="px-4 py-3 text-left">Coupon</th>
-                    <th className="px-4 py-3 text-center">Download</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -179,9 +178,6 @@ export default function StudentInvoicesPage() {
                           {fmt(inv.finalAmount)}
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-xs text-gray-400">—</span>
-                        </td>
                       </tr>
                     );
                   })}
