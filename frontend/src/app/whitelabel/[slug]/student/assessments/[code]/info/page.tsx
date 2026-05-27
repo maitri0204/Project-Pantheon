@@ -303,7 +303,7 @@ const content: Record<string, AssessmentPageContent> = {
 
       TEST: {
         theme: {
-          badge: "Thinking & Expression Test",
+          badge: "Thinking & Expression Skills Test",
           badgeClass: "bg-sky-50 text-sky-800",
           gradient: "from-sky-50 via-white to-slate-50",
           supportCardClass: "bg-sky-50 text-slate-900",
@@ -313,7 +313,7 @@ const content: Record<string, AssessmentPageContent> = {
         hero: {
           title: "Every Child Thinks Differently. Discover the Beautiful Way Your Child’s Mind Works.",
           subtitle: "A powerful Metacognitive Assessment designed to develop confident thinkers and independent learners.",
-          supportingLine: "The Thinking & Expression Test evaluates how students think, learn, reflect, and express ideas - beyond memory alone.",
+          supportingLine: "The Thinking & Expression Skills Test evaluates how students think, learn, reflect, and express ideas - beyond memory alone.",
           sidePoints: ["Thinking awareness", "Learning strategy", "Self-monitoring"],
         },
         sections: [
@@ -337,7 +337,7 @@ const content: Record<string, AssessmentPageContent> = {
             ],
           },
           {
-            title: "What the Thinking & Expression Test Measures",
+            title: "What the Thinking & Expression Skills Test Measures",
             bullets: [
               "Thinking Awareness: How students understand questions and plan solutions",
               "Learning Strategy: How students plan and organize study",
@@ -354,7 +354,7 @@ const content: Record<string, AssessmentPageContent> = {
               "Foster self-awareness in learning",
               "Increase confidence in expression",
             ],
-            callout: "The Thinking & Expression Test bridges the gap between rote learning and deeper understanding.",
+            callout: "The Thinking & Expression Skills Test bridges the gap between rote learning and deeper understanding.",
           },
           {
             title: "What Makes This Test Different",
@@ -393,7 +393,7 @@ const content: Record<string, AssessmentPageContent> = {
           },
           {
             title: "Help Your Child Become a Confident Thinker",
-            callout: "The Thinking & Expression Test creates strong thinkers - not just good test-takers.",
+            callout: "The Thinking & Expression Skills Test creates strong thinkers - not just good test-takers.",
           },
         ],
       },
