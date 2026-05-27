@@ -411,7 +411,24 @@ const content: Record<string, AssessmentPageContent> = {
     };
 
     function normalizeAssessmentCode(code: string): keyof typeof content | null {
-      return FALLBACK_CODE_MAP[String(code || "").toUpperCase()] ?? null;
+      const raw = String(code || "").toUpperCase();
+
+      // 1) Direct exact key match
+      if (Object.prototype.hasOwnProperty.call(content, raw)) return raw as keyof typeof content;
+
+      // 2) Known fallbacks
+      if (FALLBACK_CODE_MAP[raw]) return FALLBACK_CODE_MAP[raw];
+
+      // 3) Try a relaxed match: strip non-alphanumerics and compare normalized forms
+      const normalize = (s: string) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const target = normalize(raw);
+      if (!target) return null;
+
+      for (const k of Object.keys(content)) {
+        if (normalize(k) === target) return k as keyof typeof content;
+      }
+
+      return null;
     }
 
     function renderCards(cards?: Array<{ title: string; body: string; hint?: string }>) {
