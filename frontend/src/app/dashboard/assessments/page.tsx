@@ -12,6 +12,8 @@ type Assessment = {
   summary: string;
   category: string;
   basePrice: number;
+  gstEnabled?: boolean;
+  gstPercentage?: number;
   currency: string;
   questionBankStatus: "linked" | "pending-import" | "imported";
   questionCount: number;
@@ -44,6 +46,8 @@ export default function AssessmentsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [gstEnabledDrafts, setGstEnabledDrafts] = useState<Record<string, boolean>>({});
+  const [gstRateDrafts, setGstRateDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -81,6 +85,8 @@ export default function AssessmentsPage() {
       }
       setAssessments(list);
       setPriceDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.basePrice)])));
+      setGstEnabledDrafts(Object.fromEntries(list.map((a) => [a.code, Boolean(a.gstEnabled)])));
+      setGstRateDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.gstPercentage ?? 18)])));
     } catch {
       router.replace("/login");
     } finally {
@@ -98,9 +104,13 @@ export default function AssessmentsPage() {
     try {
       await apiRequest(`/superadmin/assessments/${code}/pricing`, {
         method: "PATCH",
-        body: JSON.stringify({ basePrice: Number(priceDrafts[code] || 0) }),
+        body: JSON.stringify({
+          basePrice: Number(priceDrafts[code] || 0),
+          gstEnabled: Boolean(gstEnabledDrafts[code]),
+          gstPercentage: Number(gstRateDrafts[code] || 0),
+        }),
       }, auth.token);
-      setMessage(`Price updated for ${code}.`);
+      setMessage(`Pricing updated for ${code}.`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update price");
@@ -217,6 +227,30 @@ export default function AssessmentsPage() {
                     {saving === a.code ? "..." : "Save"}
                   </button>
                 </div>
+
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5">
+                  <span className="text-sm font-semibold text-black/80">GST Enabled</span>
+                  <button
+                    type="button"
+                    onClick={() => setGstEnabledDrafts((prev) => ({ ...prev, [a.code]: !prev[a.code] }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gstEnabledDrafts[a.code] ? "bg-orange-500" : "bg-gray-300"}`}
+                  >
+                    <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${gstEnabledDrafts[a.code] ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </div>
+
+                <div className="mt-3">
+                  <label className="text-sm text-black/80 font-semibold mb-2 block">GST Percentage (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.01"
+                    value={gstRateDrafts[a.code] ?? ""}
+                    onChange={(e) => setGstRateDrafts((prev) => ({ ...prev, [a.code]: e.target.value }))}
+                    className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
               )}
               {isOrgAdmin === true && (
@@ -224,6 +258,10 @@ export default function AssessmentsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-black/80 font-semibold">Base Price</span>
                   <span className="text-lg font-bold text-black">₹{priceDrafts[a.code] ?? a.basePrice}</span>
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-sm text-black/70">GST</span>
+                  <span className="text-sm font-semibold text-black">{a.gstEnabled ? `On (${a.gstPercentage ?? 18}%)` : "Off"}</span>
                 </div>
               </div>
               )}

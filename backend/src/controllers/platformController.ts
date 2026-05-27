@@ -801,14 +801,13 @@ const getReferenceId = (value: unknown): string | undefined => {
   return undefined;
 };
 
-const GST_RATE = 0.18;
-
 type AssessmentPricing = {
   assessment: {
     code: string;
     name: string;
     basePrice: number;
     gstEnabled: boolean;
+    gstPercentage: number;
     currency: string;
   };
   couponCode?: string;
@@ -1150,7 +1149,8 @@ const computeAssessmentPricing = async (args: {
     }
   }
 
-  const gstAmount = assessment.gstEnabled ? basePrice * GST_RATE : 0;
+  const gstPercentage = Math.max(0, Math.min(100, Number(assessment.gstPercentage ?? 18)));
+  const gstAmount = assessment.gstEnabled ? basePrice * (gstPercentage / 100) : 0;
   const priceWithGst = basePrice + gstAmount;
   const rawFinalAmount = Math.max(priceWithGst - discountAmount, 0);
   const finalAmount = Math.round(rawFinalAmount);
@@ -1161,6 +1161,7 @@ const computeAssessmentPricing = async (args: {
       name: getAssessmentDisplayName(canonicalCode, assessment.name),
       basePrice,
       gstEnabled: Boolean(assessment.gstEnabled),
+      gstPercentage,
       currency: assessment.currency || "INR",
     },
     couponCode,

@@ -31,13 +31,14 @@ const COLOR_CLASSES: Record<string, string> = {
   rose: "bg-rose-50 text-rose-700 border-rose-200",
 };
 
-type Assessment = { _id: string; code: string; name: string; basePrice: number; gstEnabled?: boolean };
+type Assessment = { _id: string; code: string; name: string; basePrice: number; gstEnabled?: boolean; gstPercentage?: number };
 type Coupon = {
   _id: string; code: string; discountType: "FLAT" | "PERCENT"; value: number;
   applicableAssessmentCodes: string[]; expiresAt?: string; isActive: boolean;
 };
 type PricingMap = Record<string, number>;
 type GstMap = Record<string, boolean>;
+type GstRateMap = Record<string, number>;
 type RoleMode = "SUPERADMIN" | "ORG_ADMIN";
 type OrganizationCouponSummaryItem = {
   assessmentCode: string;
@@ -55,16 +56,15 @@ type OrganizationCouponSummaryItem = {
     usedAt?: string;
   }>;
 };
-const GST_RATE = 0.18;
-
-function calcPrice(base: number, coupon: Coupon | null, gst: boolean) {
+function calcPrice(base: number, coupon: Coupon | null, gst: boolean, gstRatePercent: number) {
   let disc = 0;
   if (coupon) {
     if (coupon.discountType === "PERCENT") disc = (base * coupon.value) / 100;
     else disc = Math.min(coupon.value, base);
   }
   const discounted = base - disc;
-  const gstAmt = gst ? discounted * GST_RATE : 0;
+  const normalizedRate = Math.max(0, Number(gstRatePercent || 0));
+  const gstAmt = gst ? discounted * (normalizedRate / 100) : 0;
   return { base, disc, discounted, gstAmt, final: discounted + gstAmt };
 }
 
@@ -77,6 +77,7 @@ export default function CouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [pricing, setPricing] = useState<PricingMap>({});
   const [gst, setGst] = useState<GstMap>({});
+  const [gstRates, setGstRates] = useState<GstRateMap>({});
   const [priceDrafts, setPriceDrafts] = useState<PricingMap>({});
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,10 +93,11 @@ export default function CouponsPage() {
   const previewCode = form.assessmentCode;
   const previewBase = pricing[previewCode] ?? 0;
   const previewGst = gst[previewCode] ?? false;
+  const previewGstRate = gstRates[previewCode] ?? 18;
   const previewCoupon: Coupon | null = form.code
     ? { _id: "p", code: form.code, discountType: form.discountType, value: Number(form.value) || 0, applicableAssessmentCodes: [], isActive: true }
     : null;
-  const preview = calcPrice(previewBase, previewCoupon, previewGst);
+  const preview = calcPrice(previewBase, previewCoupon, previewGst, previewGstRate);
 
   async function load() {
     if (!auth) {
@@ -128,8 +130,13 @@ export default function CouponsPage() {
     ]);
     setAssessments(asmRes.assessments ?? []);
     setCoupons(cpRes.coupons ?? []);
-    const pm: PricingMap = {}; const gm: GstMap = {}; const pd: PricingMap = {};
-    (asmRes.assessments ?? []).forEach((a) => { pm[a.code] = a.basePrice; pd[a.code] = a.basePrice; gm[a.code] = a.gstEnabled ?? false; });
+    const pm: PricingMap = {}; const gm: GstMap = {}; const pd: PricingMap = {}; const gr: GstRateMap = {};
+    (asmRes.assessments ?? []).forEach((a) => {
+      pm[a.code] = a.basePrice;
+      pd[a.code] = a.basePrice;
+      gm[a.code] = a.gstEnabled ?? false;
+      gr[a.code] = Number(a.gstPercentage ?? 18);
+    });
     if ((asmRes.assessments ?? []).length > 0) {
       const available = new Set((asmRes.assessments ?? []).map((a) => a.code));
       setForm((f) => ({
@@ -137,7 +144,7 @@ export default function CouponsPage() {
         assessmentCode: available.has(f.assessmentCode) ? f.assessmentCode : (asmRes.assessments?.[0]?.code ?? "CAREER_COMPASS"),
       }));
     }
-    setPricing(pm); setPriceDrafts(pd); setGst(gm); setLoading(false);
+    setPricing(pm); setPriceDrafts(pd); setGst(gm); setGstRates(gr); setLoading(false);
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -375,7 +382,7 @@ export default function CouponsPage() {
                     <p className="mt-1.5 text-base font-semibold text-black">{a?.name ?? name}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-sm text-black/70 font-medium">GST 18%</span>
+                    <span className="text-sm text-black/70 font-medium">GST {gstRates[code] ?? 18}%</span>
                     <button
                       onClick={() => void toggleGst(code)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isGst ? "bg-orange-500" : "bg-gray-300"}`}
@@ -402,7 +409,11 @@ export default function CouponsPage() {
                   <div className="flex items-center justify-between mt-3">
                     <div>
                       <span className="text-3xl font-bold text-black">&#8377;{price}</span>
-                      {isGst && <span className="ml-2 text-sm text-black/70">+ &#8377;{Math.round(price * GST_RATE)} GST = &#8377;{Math.round(price * (1 + GST_RATE))}</span>}
+                      {isGst && (
+                        <span className="ml-2 text-sm text-black/70">
+                          + &#8377;{Math.round(price * ((gstRates[code] ?? 18) / 100))} GST = &#8377;{Math.round(price * (1 + ((gstRates[code] ?? 18) / 100)))}
+                        </span>
+                      )}
                     </div>
                     <button onClick={() => setEditingPrice(code)} className="text-sm text-blue-600 hover:underline font-medium">Edit</button>
                   </div>
@@ -491,7 +502,7 @@ export default function CouponsPage() {
             </div>
             {previewGst && (
               <div className="flex justify-between text-sm text-orange-600">
-                <span>GST (18%)</span>
+                <span>GST ({previewGstRate}%)</span>
                 <span>+ &#8377;{preview.gstAmt.toFixed(2)}</span>
               </div>
             )}

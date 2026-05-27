@@ -139,6 +139,7 @@ const navDefinitions: NavDefinition[] = [
 ];
 
 const orgAdminAllowedSuffixes = new Set(["", "/assessments", "/users", "/coupons", "/ledger"]);
+const superadminHiddenSuffixes = new Set(["/coupons"]);
 
 export default function DashboardShell({
   children,
@@ -214,7 +215,7 @@ export default function DashboardShell({
   const navItems = useMemo(() => {
     const filtered = userRole === "ORG_ADMIN"
       ? navDefinitions.filter((item) => orgAdminAllowedSuffixes.has(item.suffix))
-      : navDefinitions;
+      : navDefinitions.filter((item) => !superadminHiddenSuffixes.has(item.suffix));
 
     return filtered.map((item) => ({
       ...item,

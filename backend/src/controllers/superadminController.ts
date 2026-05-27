@@ -429,11 +429,14 @@ export const updateOrganizationCouponConfig = async (req: AuthRequest, res: Resp
 export const updateAssessmentPricing = async (req: Request, res: Response): Promise<void> => {
   try {
     const code = String(req.params.code || "");
-    const { basePrice, gstEnabled } = req.body as { basePrice?: number; gstEnabled?: boolean };
+    const { basePrice, gstEnabled, gstPercentage } = req.body as { basePrice?: number; gstEnabled?: boolean; gstPercentage?: number };
 
     const updates: Record<string, unknown> = {};
     if (typeof basePrice === "number" && basePrice >= 0) updates.basePrice = basePrice;
     if (typeof gstEnabled === "boolean") updates.gstEnabled = gstEnabled;
+    if (typeof gstPercentage === "number" && gstPercentage >= 0 && gstPercentage <= 100) {
+      updates.gstPercentage = gstPercentage;
+    }
 
     if (Object.keys(updates).length === 0) {
       res.status(400).json({ message: "Nothing to update" });

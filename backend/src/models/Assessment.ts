@@ -9,6 +9,7 @@ export interface IAssessment extends Document {
   active: boolean;
   basePrice: number;
   gstEnabled: boolean;
+  gstPercentage: number;
   currency: string;
   sourceProject: string;
   sourceDbName: string;
@@ -34,6 +35,7 @@ const assessmentSchema = new Schema<IAssessment>(
     active: { type: Boolean, default: true },
     basePrice: { type: Number, default: 0 },
     gstEnabled: { type: Boolean, default: false },
+    gstPercentage: { type: Number, default: 18, min: 0, max: 100 },
     currency: { type: String, default: "INR" },
     sourceProject: { type: String, required: true },
     sourceDbName: { type: String, required: true },
