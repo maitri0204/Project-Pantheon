@@ -312,7 +312,7 @@ const content: Record<string, AssessmentPageContent> = {
         },
         hero: {
           title: "Every Child Thinks Differently. Discover the Beautiful Way Your Child’s Mind Works.",
-          subtitle: "A powerful Metacognitive Assessment designed to develop confident thinkers and independent learners.",
+          subtitle: "A powerful assessment designed to develop confident thinkers and independent learners.",
           supportingLine: "The Thinking & Expression Skills Test evaluates how students think, learn, reflect, and express ideas - beyond memory alone.",
           sidePoints: ["Thinking awareness", "Learning strategy", "Self-monitoring"],
         },
