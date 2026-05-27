@@ -330,7 +330,8 @@ export default function StudentAssessmentsPage() {
                 <button
                   onClick={() => {
                     if (typeof window !== "undefined") {
-                      window.open(`/whitelabel/${slug}/student/assessments/${assessment.code}/info`, "_blank", "noopener,noreferrer");
+                      const infoCode = normalizeAssessmentCodeForDisplay(assessment.code);
+                      window.open(`/whitelabel/${slug}/student/assessments/${infoCode}/info`, "_blank", "noopener,noreferrer");
                     }
                   }}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"

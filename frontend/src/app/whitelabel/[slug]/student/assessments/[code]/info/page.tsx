@@ -407,6 +407,11 @@ const content: Record<string, AssessmentPageContent> = {
       JOHARI_WINDOW: "CLEAR",
       LITMUS: "LITMUS",
       LITMUS_TEST: "LITMUS",
+      METACOGNITION: "TEST",
+      METACOGNITION_TEST: "TEST",
+      "METACOGNITION-TEST": "TEST",
+      THINKING_EXPRESSION_TEST: "TEST",
+      "THINKING-EXPRESSION-TEST": "TEST",
       TEST: "TEST",
     };
 
