@@ -377,7 +377,7 @@ function renderSections(theme: AssessmentPageContent["theme"], sections: Assessm
   ));
 }
 
-function renderHero(normalizedCode: keyof typeof CONTENT, page: AssessmentContent) {
+function renderHero(normalizedCode: keyof typeof content, page: AssessmentContent) {
   if (normalizedCode === "CAREER_COMPASS") {
     return (
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
