@@ -114,12 +114,19 @@ export default function StudentDashboardPage() {
           <p className="text-sm text-slate-600">No test attempts yet. Start your first assessment.</p>
         ) : (
           <div className="space-y-2">
-            {data.latestAttempts.map((attempt) => (
+            {data.latestAttempts.map((attempt) => {
+              const normalizeCode = (code: string) => {
+                const normalized = String(code || "").toUpperCase().trim();
+                if (normalized === "JOHARI_WINDOW") return "CLEAR";
+                if (normalized === "METACOGNITION_TEST" || normalized === "METACOGNITION") return "TEST";
+                return normalized;
+              };
+              return (
               <div key={attempt.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="font-semibold text-slate-900">{attempt.assessmentName}</p>
-                    <p className="text-xs text-slate-500">{attempt.assessmentCode}</p>
+                    <p className="text-xs text-slate-500">{normalizeCode(attempt.assessmentCode)}</p>
                   </div>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${attempt.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
                     {attempt.status === "COMPLETED" ? "Completed" : "In Progress"}
@@ -129,7 +136,8 @@ export default function StudentDashboardPage() {
                   {attempt.answeredCount}/{attempt.totalQuestions} answered
                 </p>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
