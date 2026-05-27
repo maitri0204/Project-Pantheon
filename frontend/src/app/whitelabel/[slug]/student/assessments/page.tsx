@@ -308,23 +308,36 @@ export default function StudentAssessmentsPage() {
                 <span className="font-bold text-slate-900">{assessment.questionCount || assessment.attempt?.totalQuestions || "—"}</span>
               </div>
 
-              <button
-                onClick={() => {
-                  if (canViewReport) {
-                    openReport(assessment.code, assessment.attempt?.id);
-                    return;
-                  }
-                  if (inProgress) {
-                    void startTestWithPayment(assessment.code);
-                    return;
-                  }
-                  void openCheckout(assessment.code);
-                }}
-                disabled={(!canViewReport && completed) || startingCode === assessment.code}
-                className="mt-4 w-full rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
-              >
-                {canViewReport ? "View Report" : completed ? "Already Completed" : inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
-              </button>
+              <div className="mt-4 flex gap-3">
+                <button
+                  onClick={() => {
+                    if (canViewReport) {
+                      openReport(assessment.code, assessment.attempt?.id);
+                      return;
+                    }
+                    if (inProgress) {
+                      void startTestWithPayment(assessment.code);
+                      return;
+                    }
+                    void openCheckout(assessment.code);
+                  }}
+                  disabled={(!canViewReport && completed) || startingCode === assessment.code}
+                  className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
+                >
+                  {canViewReport ? "View Report" : completed ? "Already Completed" : inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.open(`/whitelabel/${slug}/student/assessments/${assessment.code}/info`, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Know More
+                </button>
+              </div>
             </div>
           );
         })}
