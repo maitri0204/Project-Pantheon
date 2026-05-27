@@ -378,21 +378,62 @@ function renderSections(theme: AssessmentPageContent["theme"], sections: Assessm
 }
 
 function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageContent) {
+  const heroBadgeItems =
+    normalizedCode === "CAREER_COMPASS"
+      ? [
+          { title: "Explore", desc: "Streams and subjects", icon: "🔭" },
+          { title: "Align", desc: "Strengths with careers", icon: "🎯" },
+          { title: "Plan", desc: "A clearer roadmap", icon: "📘" },
+        ]
+      : normalizedCode === "CLEAR"
+        ? [
+            { title: "See yourself", desc: "Understand how you show up", icon: "🪞" },
+            { title: "Express better", desc: "Communicate with clarity", icon: "🗣️" },
+            { title: "Handle feedback", desc: "Respond without shutdown", icon: "⚡" },
+            { title: "Connect better", desc: "Build stronger relationships", icon: "🤝" },
+          ]
+        : [
+            { title: "King", desc: "Control and structure", icon: "👑" },
+            { title: "Servant", desc: "Support and independence", icon: "🤝" },
+            { title: "Elder", desc: "Wisdom and logic", icon: "🧠" },
+            { title: "Prince", desc: "Growth and opportunities", icon: "✨" },
+            { title: "Joker", desc: "Fun and bonding", icon: "🎭" },
+          ];
+
+  const heroSidePoints =
+    normalizedCode === "CAREER_COMPASS"
+      ? [
+          { title: "Grade 8–12 guidance", desc: "Career awareness and self-discovery", icon: "🧭" },
+          { title: "Personality patterns", desc: "Understand natural tendencies", icon: "🧠" },
+          { title: "Actionable direction", desc: "Suggested academic and career paths", icon: "📈" },
+        ]
+      : normalizedCode === "CLEAR"
+        ? [
+            { title: "Self-awareness", desc: "Know how you show up in real conversations", icon: "🪞" },
+            { title: "Communication clarity", desc: "Build clarity in feedback and behavior", icon: "🗣️" },
+            { title: "Feedback handling", desc: "Improve confidence through action", icon: "⚡" },
+          ]
+        : [
+            { title: "Confidence", desc: "Your child’s confidence", icon: "🌱" },
+            { title: "Decisions", desc: "Decision-making ability", icon: "🧭" },
+            { title: "Career", desc: "Career choices", icon: "🎓" },
+          ];
+
   if (normalizedCode === "CAREER_COMPASS") {
     return (
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
         <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
           <div className="p-8 sm:p-10 lg:p-12">
-            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.badgeClass}`}>{page.badge}</span>
-            <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.heroTitle}</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.heroSubtitle}</p>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.heroSupport}</p>
+            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+            <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
 
             <div className="mt-8 rounded-3xl bg-indigo-50 p-6 shadow-lg">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">{page.heroAccentLabel}</p>
-              <p className="mt-2 text-sm leading-7 text-slate-700">{page.heroAccentText}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-700">Career snapshot</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">Stream fit, subject fit, and career fit in one clean view.</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                {page.heroBadgeItems.map((item) => (
+                {heroBadgeItems.map((item) => (
                   <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
                     <div className="text-2xl">{item.icon}</div>
                     <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
@@ -407,9 +448,9 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
             <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-cyan-400/10 blur-3xl" />
             <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-indigo-400/10 blur-3xl" />
             <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">{page.heroSideTitle}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">At a glance</p>
               <div className="mt-5 space-y-3">
-                {page.heroSidePoints.map((point) => (
+                {heroSidePoints.map((point) => (
                   <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
                     <div>
@@ -441,16 +482,16 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
         <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
           <div className="p-8 sm:p-10 lg:p-12">
-            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.badgeClass}`}>{page.badge}</span>
-            <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.heroTitle}</h1>
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.heroSubtitle}</p>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.heroSupport}</p>
+            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+            <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
 
             <div className="mt-8 rounded-3xl bg-emerald-50 p-6 shadow-lg">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">{page.heroAccentLabel}</p>
-              <p className="mt-2 text-sm leading-7 text-slate-700">{page.heroAccentText}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Behavior map</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">Know how you show up, communicate, and respond in real situations.</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {page.heroBadgeItems.map((item) => (
+                {heroBadgeItems.map((item) => (
                   <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
                     <div className="text-2xl">{item.icon}</div>
                     <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
@@ -465,9 +506,9 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
             <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-emerald-400/10 blur-3xl" />
             <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-cyan-400/10 blur-3xl" />
             <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">{page.heroSideTitle}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">At a glance</p>
               <div className="mt-5 space-y-3">
-                {page.heroSidePoints.map((point) => (
+                {heroSidePoints.map((point) => (
                   <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                     <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
                     <div>
@@ -492,16 +533,16 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
     <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
       <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
         <div className="p-8 sm:p-10 lg:p-12">
-          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.badgeClass}`}>{page.badge}</span>
-          <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.heroTitle}</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.heroSubtitle}</p>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.heroSupport}</p>
+            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+            <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
 
           <div className="mt-8 rounded-3xl bg-amber-50 p-6 shadow-lg">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">{page.heroAccentLabel}</p>
-            <p className="mt-2 text-sm leading-7 text-slate-700">{page.heroAccentText}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Parenting style map</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">Understand how your choices affect confidence, decision-making, and growth.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {page.heroBadgeItems.map((item) => (
+              {heroBadgeItems.map((item) => (
                 <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
                   <div className="text-2xl">{item.icon}</div>
                   <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
@@ -516,9 +557,9 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
           <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-amber-400/10 blur-3xl" />
           <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-rose-400/10 blur-3xl" />
           <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">{page.heroSideTitle}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">At a glance</p>
             <div className="mt-5 space-y-3">
-              {page.heroSidePoints.map((point) => (
+              {heroSidePoints.map((point) => (
                 <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
                   <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
                   <div>
@@ -529,7 +570,7 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
               ))}
             </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {page.heroBadgeItems.map((item) => (
+              {heroBadgeItems.map((item) => (
                 <div key={item.title} className="rounded-2xl border border-white/10 bg-white/5 p-4 transition-transform duration-200 hover:-translate-y-1 hover:bg-white/10">
                   <div className="text-2xl">{item.icon}</div>
                   <p className="mt-2 text-sm font-semibold text-white">{item.title}</p>
@@ -547,7 +588,7 @@ function renderHero(normalizedCode: keyof typeof content, page: AssessmentPageCo
 export default function AssessmentInfoPage() {
   const params = useParams<{ code: string }>();
   const code = String(params?.code || "").toUpperCase();
-  const normalized = normalizeCode(code);
+  const normalized = normalizeAssessmentCode(code);
 
   if (!normalized) {
     return (
@@ -560,31 +601,14 @@ export default function AssessmentInfoPage() {
     );
   }
 
-  const page = CONTENT[normalized];
+  const page = content[normalized];
 
   return (
-    <div className={`min-h-[calc(100vh-4rem)] bg-gradient-to-b ${page.bgClass} py-8`}>
+    <div className={`min-h-[calc(100vh-4rem)] bg-gradient-to-b ${page.theme.gradient} py-8`}>
       <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
         {renderHero(normalized, page)}
 
-        {page.sections.map((section) => (
-          <section key={section.title} className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="max-w-4xl">
-              <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">{section.title}</h2>
-              {section.subtitle && <p className="mt-3 text-base leading-7 text-slate-600">{section.subtitle}</p>}
-            </div>
-
-            <SectionCards cards={section.cards} />
-            <SectionBullets bullets={section.bullets} />
-            <SectionGrid grid={section.grid} />
-
-            {section.callout && (
-              <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm font-semibold leading-7 text-slate-800">
-                {section.callout}
-              </div>
-            )}
-          </section>
-        ))}
+        {renderSections(page.theme, page.sections)}
       </div>
     </div>
   );
