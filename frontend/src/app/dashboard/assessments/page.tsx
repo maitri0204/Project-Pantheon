@@ -96,6 +96,12 @@ export default function AssessmentsPage() {
 
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [message]);
+
   const updatePrice = async (code: string) => {
     if (!auth) return;
     setSaving(code);
@@ -110,7 +116,7 @@ export default function AssessmentsPage() {
           gstPercentage: Number(gstRateDrafts[code] || 0),
         }),
       }, auth.token);
-      setMessage(`Pricing updated for ${code}.`);
+      setMessage(`Pricing updated for ${normalizeAssessmentCodeForDisplay(code)}.`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update price");

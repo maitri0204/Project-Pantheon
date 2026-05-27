@@ -1304,7 +1304,8 @@ async function tryGenerateCareerDnaFromTemplate(
     const page = pages[target.page - 1];
     if (!page || !chartImg) continue;
     const size = page.getSize();
-    tplDrawImageInA4Coords(page, chartImg, size.width, size.height, 22, 41, 168, 112);
+    const chartY = target.page === 23 ? 33 : 41;
+    tplDrawImageInA4Coords(page, chartImg, size.width, size.height, 22, chartY, 168, 112);
   }
 
   const bytes = await pdfDoc.save();

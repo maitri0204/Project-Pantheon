@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { generatePantheonInvoice } from "@/lib/generateInvoice";
 
 const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string }> = {
   CAREER_COMPASS: { name: "Career Compass", color: "text-emerald-700", bg: "bg-emerald-50" },
@@ -106,49 +105,6 @@ export default function OrgLedgerPage() {
     [filtered]
   );
 
-  function handlePdf(inv: InvoiceItem) {
-    generatePantheonInvoice({
-      invoice: {
-        invoiceNo: inv.invoiceNumber,
-        invoiceDate: inv.createdAt,
-        description: ASSESSMENT_META[inv.assessmentCode]?.name ?? inv.assessmentCode,
-        amount: inv.amount,
-        discountAmount: inv.discountAmount,
-        gstAmount: inv.gstAmount ?? 0,
-        finalAmount: inv.finalAmount,
-        paymentMethod: inv.paymentMethod,
-        paymentReference: inv.paymentReference,
-      },
-      user: {
-        name: `${inv.user.firstName} ${inv.user.lastName}`,
-        email: inv.user.email,
-        mobile: inv.user.phone,
-        phone: inv.user.phone,
-        institutionName: inv.user.institutionName,
-        city: inv.user.city,
-        state: inv.user.state,
-        country: inv.user.country,
-      },
-      organization: inv.organization
-        ? {
-            name: inv.organization.name ?? "",
-            companyName: inv.organization.companyName || inv.organization.branding?.companyName,
-            contactEmail: inv.organization.contactEmail,
-            logoUrl: inv.organization.branding?.logoUrl,
-            officeAddress: inv.organization.officeAddress,
-            state: inv.organization.state,
-            country: inv.organization.country,
-            phone: inv.organization.phone,
-            panNumber: inv.organization.panNumber,
-            gstNumber: inv.organization.gstNumber,
-            signatoryFirstName: inv.organization.signatoryFirstName,
-            signatoryLastName: inv.organization.signatoryLastName,
-            signatureUrl: inv.organization.signatureUrl,
-          }
-        : undefined,
-    });
-  }
-
   if (loading) {
     return (
       <div className="flex h-48 items-center justify-center">
@@ -208,12 +164,6 @@ export default function OrgLedgerPage() {
                       <p className="font-mono text-xs font-semibold text-gray-900">{inv.invoiceNumber}</p>
                       <p className="mt-0.5 text-[11px] text-gray-400">{dateStr}</p>
                     </div>
-                    <button
-                      onClick={() => handlePdf(inv)}
-                      className="flex-shrink-0 rounded-lg bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
-                    >
-                      ↓ PDF
-                    </button>
                   </div>
 
                   <span
@@ -283,7 +233,6 @@ export default function OrgLedgerPage() {
                     <th className="px-4 py-3 text-right">Discount</th>
                     <th className="px-4 py-3 text-right">Net</th>
                     <th className="px-4 py-3 text-left">Coupon</th>
-                    <th className="px-4 py-3 text-center">PDF</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -323,14 +272,6 @@ export default function OrgLedgerPage() {
                           {fmt(inv.finalAmount)}
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
-                        <td className="px-4 py-3 text-center">
-                          <button
-                            onClick={() => handlePdf(inv)}
-                            className="rounded-lg bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
-                          >
-                            ↓ PDF
-                          </button>
-                        </td>
                       </tr>
                     );
                   })}
@@ -345,7 +286,7 @@ export default function OrgLedgerPage() {
                       {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-900">{fmt(summary.net)}</td>
-                    <td colSpan={2} />
+                    <td colSpan={1} />
                   </tr>
                 </tfoot>
               </table>
