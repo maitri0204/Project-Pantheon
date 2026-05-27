@@ -394,6 +394,12 @@ export default function AssessmentInfoPage() {
   }
 
   const page = content[normalizedCode];
+  const heroIcons =
+    normalizedCode === "CAREER_COMPASS"
+      ? ["🧭", "🎯", "📈"]
+      : normalizedCode === "CLEAR"
+        ? ["🪞", "🗣️", "⚡"]
+        : ["👨‍👩‍👧", "🤝", "🌱"];
 
   return (
     <div className={`min-h-[calc(100vh-4rem)] bg-gradient-to-b ${page.theme.gradient} py-8`}>
@@ -414,25 +420,63 @@ export default function AssessmentInfoPage() {
               </div>
             </div>
 
-            <div className="bg-[linear-gradient(160deg,#111827,#0b1220)] p-8 text-white sm:p-10 lg:p-12">
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${page.theme.glanceTextClass}`}>At a glance</p>
-                <div className="mt-5 space-y-4 text-sm leading-7 text-slate-200">
-                  {page.hero.sidePoints.map((point) => (
-                    <p key={point}>{point}</p>
+            <div className="relative overflow-hidden bg-[linear-gradient(160deg,#111827,#0b1220)] p-8 text-white sm:p-10 lg:p-12">
+              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-cyan-400/10 blur-3xl" />
+              <div className="absolute -left-8 bottom-0 h-32 w-32 rounded-full bg-indigo-400/10 blur-3xl" />
+
+              <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-xl ring-1 ring-white/10">
+                    {heroIcons[0]}
+                  </div>
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${page.theme.glanceTextClass}`}>At a glance</p>
+                    <p className="text-sm text-slate-300">A quick view of what this assessment helps with</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-4 text-sm leading-7 text-slate-200">
+                  {page.hero.sidePoints.map((point, index) => (
+                    <div key={point} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white/10">
+                      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-base">
+                        {heroIcons[index] ?? "✨"}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-white">{point}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-300">
+                          {normalizedCode === "CAREER_COMPASS"
+                            ? index === 0
+                              ? "Ideal for middle and high school guidance"
+                              : index === 1
+                                ? "Explore your stream and career fit"
+                                : "Understand natural patterns and strengths"
+                            : normalizedCode === "CLEAR"
+                              ? index === 0
+                                ? "Know how you show up in real conversations"
+                                : index === 1
+                                  ? "Build clarity in feedback and behavior"
+                                  : "Improve confidence through action"
+                              : index === 0
+                                ? "Understand how parenting style shapes children"
+                                : index === 1
+                                  ? "See strengths and risks clearly"
+                                  : "Balance support, structure, and freedom"}
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
 
-              <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {page.hero.sidePoints.slice(0, 3).map((title, index) => (
-                  <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4">
-                    <p className="text-sm font-semibold">{title}</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-300">
-                      {index === 0 ? "Clear understanding" : index === 1 ? "Guided action" : "Better outcomes"}
-                    </p>
-                  </div>
-                ))}
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  {page.hero.sidePoints.slice(0, 3).map((title, index) => (
+                    <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4 transition-transform duration-200 hover:-translate-y-1 hover:bg-white/12">
+                      <p className="text-sm font-semibold text-white">{title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">
+                        {index === 0 ? "Clear understanding" : index === 1 ? "Guided action" : "Better outcomes"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
