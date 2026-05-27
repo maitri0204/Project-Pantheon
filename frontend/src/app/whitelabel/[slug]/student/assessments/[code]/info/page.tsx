@@ -2,101 +2,387 @@
 
 import { useParams } from "next/navigation";
 
-const bullet = (items: string[]) => items.map((item) => item);
+type ContentBlock = { title: string; body?: string; bullets?: string[] };
 
-const styleCards = [
-  {
-    emoji: "👑",
-    title: "KING STYLE",
-    tag: "Control-Oriented",
-    meaning: "You take control and make decisions for your child.",
-    good: ["Discipline", "Clear direction", "Strong structure"],
-    risk: ["Child becomes dependent", "Stops thinking independently", "May lose confidence"],
-    rightWay: "Guide, but involve the child in decisions.",
-    oneLine: "You lead everything. Child follows.",
-  },
-  {
-    emoji: "🤝",
-    title: "SERVANT STYLE",
-    tag: "Support-Oriented",
-    meaning: "You support your child and let them decide.",
-    good: ["Builds confidence", "Encourages independence"],
-    risk: ["Lack of direction", "Child may avoid challenges"],
-    rightWay: "Support, but don’t over-protect.",
-    oneLine: "You support. Child decides.",
-  },
-  {
-    emoji: "🧠",
-    title: "ELDER STYLE",
-    tag: "Wisdom-Oriented",
-    meaning: "You guide using experience and logic.",
-    good: ["Strong thinking ability", "Better decisions over time"],
-    risk: ["Too much advice", "Slow decisions"],
-    rightWay: "Guide, don’t lecture.",
-    oneLine: "You guide. Child learns and decides.",
-  },
-  {
-    emoji: "✨",
-    title: "PRINCE STYLE",
-    tag: "Growth-Oriented",
-    meaning: "You actively build your child’s future.",
-    good: ["High exposure", "Faster skill development", "Better opportunities"],
-    risk: ["Pressure to perform", "Fear of failure"],
-    rightWay: "Invest, but don’t pressure.",
-    oneLine: "You invest. Child grows.",
-  },
-  {
-    emoji: "🎭",
-    title: "JOKER STYLE",
-    tag: "Fun-Oriented",
-    meaning: "You make learning fun and engaging.",
-    good: ["Creativity", "Strong bonding", "Less stress"],
-    risk: ["Lack of discipline", "No seriousness"],
-    rightWay: "Balance fun with structure.",
-    oneLine: "You make learning fun.",
-  },
-];
+type AssessmentPageContent = {
+  theme: {
+    badge: string;
+    badgeClass: string;
+    gradient: string;
+    supportCardClass: string;
+    calloutClass: string;
+    glanceTextClass: string;
+  };
+  hero: {
+    title: string;
+    subtitle: string;
+    supportingLine: string;
+    sidePoints: string[];
+  };
+  sections: Array<{
+    title: string;
+    subtitle?: string;
+    blocks?: ContentBlock[];
+    cards?: Array<{ title: string; body: string; hint?: string }>;
+    bullets?: string[];
+    callout?: string;
+    grid?: Array<{ title: string; body: string }>;
+  }>;
+  faq?: Array<{ q: string; a: string }>;
+};
 
-const faqItems = [
-  {
-    q: "Is this a personality test?",
-    a: "No. This doesn’t label you or put you into a type. It helps you understand how you actually behave — how you communicate, how you handle feedback, and where you can improve.",
+const content: Record<string, AssessmentPageContent> = {
+  CAREER_COMPASS: {
+    theme: {
+      badge: "Career Compass & Personality Profiler",
+      badgeClass: "bg-indigo-50 text-indigo-800",
+      gradient: "from-indigo-50 via-white to-slate-50",
+      supportCardClass: "bg-indigo-50 text-slate-900",
+      calloutClass: "border-indigo-200 bg-indigo-50 text-slate-800",
+      glanceTextClass: "text-indigo-200",
+    },
+    hero: {
+      title: "Discover Your True Potential. Choose the Right Career Path.",
+      subtitle:
+        "A scientifically designed student assessment that helps students understand their personality, strengths, interests, and natural working style.",
+      supportingLine:
+        "Used by students, parents, and schools to guide academic stream selection, subject choices, and future career direction.",
+      sidePoints: [
+        "For Grade 8–12 students",
+        "Career awareness and self-discovery",
+        "Personality-pattern based insights",
+      ],
+    },
+    sections: [
+      {
+        title: "Who should take this?",
+        subtitle: "Built for students, useful for parents and schools.",
+        cards: [
+          { title: "For Students", body: "Want to explore streams, subjects, and future careers with more confidence." },
+          { title: "For Parents", body: "Want to support informed career decisions and understand their child better." },
+          { title: "For Schools", body: "Want a structured career guidance program that improves student awareness." },
+        ],
+      },
+      {
+        title: "Why students need Career Compass",
+        subtitle: "Many students choose careers without understanding their own strengths.",
+        bullets: [
+          "Wrong stream selection in Class 11",
+          "Lack of motivation in studies",
+          "Poor academic performance",
+          "Career confusion later in life",
+        ],
+        callout: "Career Compass helps students understand themselves before they choose a path.",
+      },
+      {
+        title: "What the assessment evaluates",
+        cards: [
+          { title: "Energy source", body: "How students interact with people and the world around them." },
+          { title: "Information processing", body: "How they learn new concepts and approach new ideas." },
+          { title: "Decision-making style", body: "How they evaluate choices and solve problems." },
+          { title: "Lifestyle and work style", body: "How they plan, structure, and manage tasks." },
+        ],
+        callout: "These dimensions combine into a unique personality profile that forms the foundation for career recommendations.",
+      },
+      {
+        title: "How the assessment helps students",
+        grid: [
+          { title: "Self-awareness", body: "Students discover their natural strengths, learning style, emotional tendencies, and communication style." },
+          { title: "Stream guidance", body: "Supports choices for Science, Commerce, Arts, and interdisciplinary paths aligned to personality and interest." },
+          { title: "Subject selection", body: "Helps students choose subjects that match the way they think and work best." },
+          { title: "Career direction", body: "Suggests career domains that fit the student’s personality profile and strengths." },
+        ],
+      },
+      {
+        title: "What students receive",
+        cards: [
+          { title: "Personality profile", body: "A clear summary of the student’s core pattern." },
+          { title: "Strength analysis", body: "Highlights talents, strengths, and learning preferences." },
+          { title: "Academic roadmap", body: "Suggests streams, subjects, and career domains." },
+        ],
+      },
+      {
+        title: "Why this is different",
+        subtitle: "Unlike traditional aptitude tests, Career Compass focuses on personality, mindset, and natural tendencies.",
+        callout: "The result is a more personalized and sustainable career path.",
+      },
+    ],
   },
-  {
-    q: "How long does it take?",
-    a: "The assessment takes about 15–20 minutes. After that, you get your report and access to a 30-day improvement program.",
+  CLEAR: {
+    theme: {
+      badge: "CLEAR",
+      badgeClass: "bg-emerald-50 text-emerald-800",
+      gradient: "from-emerald-50 via-white to-slate-50",
+      supportCardClass: "bg-emerald-50 text-slate-900",
+      calloutClass: "border-emerald-200 bg-emerald-50 text-slate-800",
+      glanceTextClass: "text-emerald-200",
+    },
+    hero: {
+      title: "Know Yourself. Express Better. Connect Better.",
+      subtitle:
+        "A structured self-awareness and communication assessment tool designed for students to build confidence, express clearly, and handle feedback effectively.",
+      supportingLine: "Used by students, parents, and schools to develop real-life communication and emotional awareness skills.",
+      sidePoints: ["Self-awareness", "Communication clarity", "Feedback handling"],
+    },
+    sections: [
+      {
+        title: "Who needs this?",
+        subtitle: "Built for students, useful for parents and schools.",
+        cards: [
+          { title: "For Students", body: "Want to speak confidently, express clearly, and improve relationships." },
+          { title: "For Parents", body: "Want their child to open up, communicate at home, and gain confidence beyond marks." },
+          { title: "For Schools", body: "Want better classroom participation, stronger peer relationships, and structured growth." },
+        ],
+      },
+      {
+        title: "Why do students need this?",
+        subtitle: "Students are struggling — not with intelligence, but with expression.",
+        bullets: [
+          "Don’t express what they actually think",
+          "Avoid difficult conversations",
+          "Get uncomfortable with feedback",
+          "Feel misunderstood in friendships and group work",
+        ],
+        callout: "The problem is not capability. The problem is lack of self-awareness and communication clarity.",
+      },
+      {
+        title: "What CLEAR helps students do",
+        bullets: [
+          "Understand how they see themselves vs how others see them",
+          "Identify gaps in communication and behavior",
+          "Improve openness, confidence, and feedback handling",
+          "Build stronger relationships in school and college",
+        ],
+        callout: "This is not a personality test. This is a behavior-based self-awareness system.",
+      },
+      {
+        title: "How it works",
+        cards: [
+          { title: "Take the assessment", body: "Answer questions based on real-life situations." },
+          { title: "Understand your pattern", body: "Discover how you communicate, handle feedback, and hold back." },
+          { title: "Get your personalized report", body: "See your strengths, blind spots, and what needs improvement." },
+          { title: "Follow a 30-day plan", body: "Daily small actions to speak better, accept feedback, and build confidence." },
+        ],
+      },
+      {
+        title: "The CLEAR model",
+        subtitle: "Understand your behavior through 4 simple zones.",
+        cards: [
+          { title: "Open zone", body: "I express myself and people understand me.", hint: "You communicate clearly. You are open and confident." },
+          { title: "Blind zone", body: "Others notice things in me which I don’t.", hint: "You may not realize how others experience you." },
+          { title: "Hidden zone", body: "I think a lot but don’t express fully.", hint: "You think a lot but hold back yourself." },
+          { title: "Unknown zone", body: "I haven’t explored myself enough.", hint: "You haven’t tried enough to discover yourself." },
+        ],
+        callout: "The goal is simple: Identify and expand your Open Zone.",
+      },
+      {
+        title: "What students will gain",
+        grid: [
+          { title: "Communication", body: "Speak clearly and share thoughts." },
+          { title: "Emotional awareness", body: "Understand feelings and respond better." },
+          { title: "Feedback handling", body: "Accept feedback without reacting and improve faster." },
+          { title: "Relationships", body: "Build better friendships and stronger teamwork." },
+          { title: "Confidence", body: "Speak up and take initiative." },
+        ],
+      },
+      {
+        title: "For parents",
+        subtitle: "Help your child become more confident and self-aware.",
+        bullets: [
+          "Express thoughts without hesitation",
+          "Handle feedback maturely",
+          "Build healthy relationships",
+          "Improve confidence in school and social situations",
+        ],
+        callout: "You receive a detailed assessment report, communication profile, and improvement roadmap.",
+      },
+      {
+        title: "FAQs",
+        cards: [
+          { title: "Is this a personality test?", body: "No. It helps you understand how you behave, communicate, and handle feedback." },
+          { title: "How long does it take?", body: "About 15–20 minutes, followed by your report and a 30-day improvement program." },
+          { title: "Will this improve confidence?", body: "Yes — by improving self-expression, feedback handling, and self-understanding." },
+        ],
+      },
+    ],
   },
-  {
-    q: "Is this useful for all students?",
-    a: "Yes. Whether a student is quiet and reserved, confident but misunderstood, or somewhere in between, this helps them become more aware and communicate better.",
+  LITMUS: {
+    theme: {
+      badge: "Litmus Test",
+      badgeClass: "bg-amber-100 text-amber-800",
+      gradient: "from-amber-50 via-white to-slate-50",
+      supportCardClass: "bg-amber-50 text-slate-900",
+      calloutClass: "border-amber-200 bg-amber-50 text-slate-800",
+      glanceTextClass: "text-amber-200",
+    },
+    hero: {
+      title: "The First Step to Confident Parenting",
+      subtitle: "Understand your parenting style and how it shapes your child’s future.",
+      supportingLine: "This Litmus Test helps you identify how you guide, support, and influence your child’s decisions.",
+      sidePoints: ["Primary style", "Secondary style", "Parenting score"],
+    },
+    sections: [
+      {
+        title: "Most parents don’t know this",
+        subtitle: "Every parent wants the best for their child, but few understand how their behavior shapes confidence and decisions.",
+        bullets: ["Some parents control too much.", "Some give too much freedom.", "Some push too hard.", "Some avoid direction completely."],
+        callout: "The result? Confused children. Low confidence. Wrong career choices. This is where clarity begins.",
+      },
+      {
+        title: "What is the Litmus Test?",
+        bullets: [
+          "Your Primary Parenting Style",
+          "Your Secondary Parenting Style",
+          "How your behavior impacts your child",
+        ],
+        callout: "The report identifies where you stand across five parenting styles: King, Servant, Elder, Prince, and Joker.",
+      },
+      {
+        title: "How the test works",
+        cards: [
+          { title: "1. Observe real-life situations", body: "Notice how your child behaves in everyday moments." },
+          { title: "2. Select behaviors", body: "Choose what fits different scenarios." },
+          { title: "3. Identify patterns", body: "Focus on repeated behavior, not one-time actions." },
+          { title: "4. Get your style score", body: "The focus is pattern recognition, not perfection." },
+        ],
+      },
+      {
+        title: "What you will observe",
+        bullets: [
+          "How your child reacts to failure",
+          "How they behave in a group",
+          "How they respond to authority",
+          "What motivates them",
+          "How they communicate",
+        ],
+        callout: "These observations help identify deeper behavioral patterns.",
+      },
+      {
+        title: "The 5 parenting styles",
+        cards: [
+          { title: "King style", body: "Control-oriented. You lead everything; the child follows.", hint: "Good for discipline and direction, but can reduce independence." },
+          { title: "Servant style", body: "Support-oriented. You support; the child decides.", hint: "Good for confidence, but may lack direction." },
+          { title: "Elder style", body: "Wisdom-oriented. You guide; the child learns and decides.", hint: "Good thinking and better decisions, but avoid over-lecturing." },
+          { title: "Prince style", body: "Growth-oriented. You invest; the child grows.", hint: "Great for exposure and opportunities, but avoid pressure." },
+          { title: "Joker style", body: "Fun-oriented. You make learning fun.", hint: "Great bonding and creativity, but keep structure too." },
+        ],
+        callout: "There is no perfect parenting style — the goal is to balance them based on your child.",
+      },
+      {
+        title: "Why this test is important",
+        bullets: [
+          "Your child’s confidence",
+          "Decision-making ability",
+          "Career choices",
+          "Emotional strength",
+        ],
+        callout: "If you don’t understand your approach, you may unknowingly create long-term problems.",
+      },
+      {
+        title: "What you will get",
+        cards: [
+          { title: "Primary style", body: "Your dominant parenting style." },
+          { title: "Secondary style", body: "Your secondary influence." },
+          { title: "Strengths and risks", body: "A clear picture of your approach." },
+          { title: "Improvement suggestions", body: "Practical ways to improve." },
+          { title: "Personalized report", body: "A report tailored to your responses." },
+        ],
+      },
+      {
+        title: "FAQs",
+        cards: [
+          { title: "Is this a personality test?", body: "No. It identifies parenting behavior patterns and their effect on children." },
+          { title: "How long does it take?", body: "About 15–20 minutes, followed by your score and report." },
+          { title: "Will it help confidence?", body: "Yes, when the insights are used to guide real behavior change." },
+        ],
+      },
+    ],
   },
-  {
-    q: "What will I get after the assessment?",
-    a: "A clear report showing your strengths, blind spots, how others may see you, what you need to improve, and a step-by-step action plan.",
-  },
-  {
-    q: "How is this different from other assessments?",
-    a: "Most assessments only tell you about yourself. CLEAR goes one step further — it helps you change your behavior. You don’t just get insights; you get a plan to improve.",
-  },
-  {
-    q: "Will this really help improve confidence?",
-    a: "Yes — but not by motivation. Confidence improves when you express yourself clearly, handle feedback better, and understand yourself.",
-  },
-  {
-    q: "Do parents or schools get involved?",
-    a: "They can, if needed. Parents can see progress and understand their child better. Schools can use it as a structured development program.",
-  },
-  {
-    q: "What if I don’t take action after the assessment?",
-    a: "Then nothing changes. This only works if you follow the small daily actions, reflect honestly, and try new behavior. It’s not just about knowing yourself — it’s about improving yourself.",
-  },
-];
+};
+
+const FALLBACK_CODE_MAP: Record<string, keyof typeof content> = {
+  CAREER_COMPASS_TEST: "CAREER_COMPASS",
+  CAREER_COMPASS: "CAREER_COMPASS",
+  CLEAR: "CLEAR",
+  JOHARI: "CLEAR",
+  JOHARI_WINDOW: "CLEAR",
+  LITMUS: "LITMUS",
+  LITMUS_TEST: "LITMUS",
+};
+
+function normalizeAssessmentCode(code: string): keyof typeof content | null {
+  return FALLBACK_CODE_MAP[String(code || "").toUpperCase()] ?? null;
+}
+
+function renderCards(cards?: Array<{ title: string; body: string; hint?: string }>) {
+  if (!cards?.length) return null;
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {cards.map((card) => (
+        <div key={card.title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">{card.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{card.body}</p>
+          {card.hint && <p className="mt-3 text-sm font-medium text-slate-500">{card.hint}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function renderBullets(bullets?: string[]) {
+  if (!bullets?.length) return null;
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {bullets.map((item) => (
+        <div key={item} className="rounded-2xl bg-slate-50 p-5 text-sm font-medium leading-6 text-slate-700">
+          {item}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function renderGrid(grid?: Array<{ title: string; body: string }>) {
+  if (!grid?.length) return null;
+  return (
+    <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {grid.map((item) => (
+        <div key={item.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function renderSections(theme: AssessmentPageContent["theme"], sections: AssessmentPageContent["sections"]) {
+  return sections.map((section) => (
+    <section key={section.title} className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="max-w-4xl">
+        <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">{section.title}</h2>
+        {section.subtitle && <p className="mt-3 text-base leading-7 text-slate-600">{section.subtitle}</p>}
+      </div>
+
+      {renderCards(section.cards)}
+      {renderBullets(section.bullets)}
+      {renderGrid(section.grid)}
+
+      {section.callout && (
+        <div className={`mt-6 rounded-3xl border border-dashed p-5 text-sm font-semibold leading-7 ${theme.calloutClass}`}>
+          {section.callout}
+        </div>
+      )}
+    </section>
+  ));
+}
 
 export default function AssessmentInfoPage() {
   const params = useParams<{ code: string }>();
   const code = String(params?.code || "").toUpperCase();
+  const normalizedCode = normalizeAssessmentCode(code);
 
-  if (code !== "LITMUS_TEST" && code !== "LITMUS") {
+  if (!normalizedCode) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -107,52 +393,52 @@ export default function AssessmentInfoPage() {
     );
   }
 
+  const page = content[normalizedCode];
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-amber-50 via-white to-slate-50 py-8">
+    <div className={`min-h-[calc(100vh-4rem)] bg-gradient-to-b ${page.theme.gradient} py-8`}>
       <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
-        <section className="overflow-hidden rounded-[2rem] border border-amber-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
           <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
             <div className="p-8 sm:p-10 lg:p-12">
-              <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-amber-800">
-                Litmus Test
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>
+                {page.theme.badge}
               </span>
               <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">
-                The First Step to Confident Parenting
+                {page.hero.title}
               </h1>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-                Understand your parenting style and how it shapes your child’s future.
+                {page.hero.subtitle}
               </p>
               <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                This Litmus Test helps you identify how you guide, support, and influence your child’s decisions.
+                {page.hero.supportingLine}
               </p>
 
-              <div className="mt-8 rounded-3xl bg-slate-900 p-6 text-white shadow-lg">
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Supporting line</p>
-                <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Used by students, parents, and schools to develop real-life communication and emotional awareness skills.
+              <div className={`mt-8 rounded-3xl ${page.theme.card} p-6 text-slate-900 shadow-lg`}>
+                <p className={`text-sm font-semibold uppercase tracking-[0.2em] text-${page.theme.accent}-700`}>Supporting line</p>
+                <p className="mt-3 text-sm leading-7 text-slate-700">
+                  {page.hero.supportingLine}
                 </p>
               </div>
             </div>
 
             <div className="bg-[linear-gradient(160deg,#111827,#0b1220)] p-8 text-white sm:p-10 lg:p-12">
               <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">At a glance</p>
+                <p className={`text-xs font-semibold uppercase tracking-[0.2em] text-${page.theme.accent}-200`}>At a glance</p>
                 <div className="mt-5 space-y-4 text-sm leading-7 text-slate-200">
-                  <p>Understand your parenting style.</p>
-                  <p>See how it shapes confidence, decision-making, and future choices.</p>
-                  <p>Recognize how you guide, support, and influence your child.</p>
+                  {page.hero.sidePoints.map((point) => (
+                    <p key={point}>{point}</p>
+                  ))}
                 </div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {[
-                  ["Clarity", "See your style clearly"],
-                  ["Impact", "Understand your influence"],
-                  ["Growth", "Improve your approach"],
-                ].map(([title, desc]) => (
+                {page.hero.sidePoints.slice(0, 3).map((title, index) => (
                   <div key={title} className="rounded-2xl border border-white/10 bg-white/8 p-4">
                     <p className="text-sm font-semibold">{title}</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-300">{desc}</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-300">
+                      {index === 0 ? "Clear understanding" : index === 1 ? "Guided action" : "Better outcomes"}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -160,212 +446,39 @@ export default function AssessmentInfoPage() {
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">Most Parents Don’t Know This</h2>
-          <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
-            Every parent wants the best for their child. But very few understand how their own behavior is shaping the child’s thinking, confidence, and decisions.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              "Some parents control too much.",
-              "Some give too much freedom.",
-              "Some push too hard.",
-              "Some avoid direction completely.",
-            ].map((item) => (
-              <div key={item} className="rounded-2xl bg-amber-50 p-5 text-sm font-medium text-slate-700">{item}</div>
-            ))}
-          </div>
-          <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm font-semibold leading-7 text-slate-800">
-            The result? Confused children. Low confidence. Wrong career choices. This is where clarity begins.
-          </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">What is the Litmus Test?</h2>
-          <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
-            The Litmus Test is a simple but powerful tool that helps you understand your primary parenting style, your secondary parenting style, and how your behavior impacts your child.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {[
-              ["Primary Parenting Style", "See your dominant pattern."],
-              ["Secondary Parenting Style", "Understand your second influence."],
-              ["Parenting Score", "Identify where you stand across five styles."],
-            ].map(([title, desc]) => (
-              <div key={title} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm font-bold text-slate-900">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            {["King", "Servant", "Elder", "Prince", "Joker"].map((style) => (
-              <span key={style} className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-                {style}
+  return (
+    <div className={`min-h-[calc(100vh-4rem)] bg-gradient-to-b ${page.theme.gradient} py-8`}>
+      <div className="mx-auto max-w-6xl space-y-8 px-4 sm:px-6 lg:px-8">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-8 sm:p-10 lg:p-12">
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-${page.theme.accent}-800 ${page.theme.card}`}>
+                {page.theme.badge}
               </span>
-            ))}
-          </div>
-        </section>
+              <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+              <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">How the Test Works</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              ["1", "You observe your child in real-life situations", "Focus on real behavior, not assumptions."],
-              ["2", "You select behaviors from different scenarios", "Choose patterns across situations."],
-              ["3", "You identify patterns, not one-time actions", "The goal is consistent behavior, not single events."],
-              ["4", "You get your parenting style score", "The focus is not perfection. It is pattern recognition."],
-            ].map(([step, title, desc]) => (
-              <div key={title} className="rounded-3xl bg-slate-50 p-5">
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-black text-amber-800">
-                  {step}
-                </div>
-                <p className="mt-4 text-lg font-bold text-slate-900">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{desc}</p>
+              <div className={`mt-8 rounded-3xl p-6 shadow-lg ${page.theme.supportCardClass}`}>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Supporting line</p>
+                <p className="mt-3 text-sm leading-7 text-slate-700">{page.hero.supportingLine}</p>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">What You Will Observe</h2>
-          <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
-            You will answer simple situations like how your child reacts to failure, behaves in a group, responds to authority, what motivates them, and how they communicate.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {bullet([
-              "How your child reacts to failure",
-              "How they behave in a group",
-              "How they respond to authority",
-              "What motivates them",
-              "How they communicate",
-            ]).map((item) => (
-              <div key={item} className="rounded-2xl bg-amber-50 p-5 text-sm font-medium text-slate-700">
-                {item}
-              </div>
-            ))}
-          </div>
-          <p className="mt-5 text-sm font-semibold text-slate-700">These observations help identify deeper behavioral patterns.</p>
-        </section>
-
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">The 5 Parenting Styles</h2>
-          <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
-            Keep it clean and structured. Every style has strengths. Every style has risks.
-          </p>
-
-          <div className="mt-6 grid gap-5 xl:grid-cols-2">
-            {styleCards.map((style) => (
-              <article key={style.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-2xl">{style.emoji}</p>
-                    <h3 className="mt-2 text-2xl font-black text-slate-900">{style.title}</h3>
-                    <p className="mt-1 text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">{style.tag}</p>
-                  </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow-sm">
-                    {style.oneLine}
-                  </span>
+            <div className="bg-[linear-gradient(160deg,#111827,#0b1220)] p-8 text-white sm:p-10 lg:p-12">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${page.theme.glanceTextClass}`}>At a glance</p>
+                <div className="mt-5 space-y-4 text-sm leading-7 text-slate-200">
+                  {page.hero.sidePoints.map((point) => (
+                    <p key={point}>{point}</p>
+                  ))}
                 </div>
-
-                <p className="mt-4 text-sm leading-7 text-slate-700">What it means: {style.meaning}</p>
-
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <p className="text-sm font-bold text-emerald-700">What’s good</p>
-                    <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-                      {style.good.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
-                    <p className="text-sm font-bold text-rose-700">What can go wrong</p>
-                    <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-                      {style.risk.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-2xl bg-slate-900 p-4 text-white">
-                  <p className="text-sm font-semibold text-amber-200">Right way</p>
-                  <p className="mt-1 text-sm leading-6">{style.rightWay}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white p-5 text-sm font-semibold leading-7 text-slate-800">
-            There is no perfect parenting style. The goal is not to choose one. The goal is to balance them based on your child.
-          </div>
-        </section>
-
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">Why This Test is Important</h2>
-          <p className="mt-3 max-w-4xl text-base leading-7 text-slate-600">
-            Your parenting style directly affects your child’s confidence, decision-making ability, career choices, and emotional strength.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              "Your child’s confidence",
-              "Decision-making ability",
-              "Career choices",
-              "Emotional strength",
-            ].map((item) => (
-              <div key={item} className="rounded-2xl bg-amber-50 p-5 text-sm font-semibold text-slate-700">
-                {item}
               </div>
-            ))}
-          </div>
-          <p className="mt-5 text-sm font-semibold text-slate-800">
-            If you don’t understand your approach, you may unknowingly create long-term problems.
-          </p>
-        </section>
-
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">What You Will Get</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {[
-              "Your Primary Parenting Style",
-              "Your Secondary Style",
-              "Strengths and risks of your approach",
-              "Clear improvement suggestions",
-              "Personalized report",
-            ].map((item) => (
-              <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm font-medium text-slate-700">
-                {item}
-              </div>
-            ))}
+            </div>
           </div>
         </section>
 
-        <section className="rounded-[2rem] border border-slate-200 bg-slate-900 p-6 text-white shadow-sm sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">CTA section</p>
-          <h2 className="mt-3 text-3xl font-black sm:text-4xl">Start Your Parenting Clarity Journey</h2>
-          <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-200">
-            Don’t guess. Don’t assume. Understand your impact.
-          </p>
-          <p className="mt-2 text-sm font-semibold text-amber-200">Take the Litmus Test now and get your personalized report.</p>
-        </section>
-
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">FAQs for Litmus</h2>
-          <div className="mt-6 grid gap-4">
-            {faqItems.map((faq) => (
-              <details key={faq.q} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <summary className="cursor-pointer list-none text-base font-semibold text-slate-900">{faq.q}</summary>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{faq.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
+        {renderSections(page.theme, page.sections)}
       </div>
     </div>
   );
