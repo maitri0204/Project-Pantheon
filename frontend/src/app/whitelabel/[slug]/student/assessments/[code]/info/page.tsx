@@ -348,7 +348,7 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Prince style", body: "Growth-oriented. You invest; the child grows.", hint: "Great for exposure and opportunities, but avoid pressure." },
               { title: "Joker style", body: "Fun-oriented. You make learning fun.", hint: "Great bonding and creativity, but keep structure too." },
             ],
-            callout: "There is no perfect parenting style — the goal is to balance them based on your child.",
+            callout: "There is no perfect parenting style - the goal is to balance them based on your child.",
           },
           {
             title: "Why this test is important",
