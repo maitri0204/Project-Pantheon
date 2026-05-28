@@ -109,6 +109,86 @@ const content: Record<string, AssessmentPageContent> = {
         ],
       },
 
+      CAREER_DNA: {
+        theme: {
+          badge: "Career DNA Profiler",
+          badgeClass: "bg-violet-50 text-violet-800",
+          gradient: "from-violet-50 via-white to-slate-50",
+          supportCardClass: "bg-violet-50 text-slate-900",
+          calloutClass: "border-violet-200 bg-violet-50 text-slate-800",
+          glanceTextClass: "text-violet-200",
+        },
+        hero: {
+          title: "Go Beyond One Test. Build Your Complete Career DNA.",
+          subtitle:
+            "A multi-section profiler that measures how students think, decide, learn, adapt, and perform across academic and real-world contexts.",
+          supportingLine:
+            "Career DNA combines cognitive, aptitude, personality, interest, emotional, behavioral, learning, and resilience insights into one integrated profile.",
+          sidePoints: ["8 capability domains", "Integrated profile", "Career-aligned direction"],
+        },
+        sections: [
+          {
+            title: "Who should take Career DNA",
+            subtitle: "Built for students planning their academic and career journey.",
+            cards: [
+              { title: "For Students", body: "Who want clear direction based on strengths, interests, learning style, and real capability." },
+              { title: "For Parents", body: "Who need a complete understanding of how their child learns, handles pressure, and makes decisions." },
+              { title: "For Schools", body: "Who want deeper profiling beyond marks to support stream guidance and mentoring." },
+            ],
+          },
+          {
+            title: "What Career DNA evaluates",
+            subtitle: "Eight connected assessments in one journey.",
+            cards: [
+              { title: "Cognitive Ability", body: "Verbal, numerical, spatial reasoning, and memory speed." },
+              { title: "Aptitude", body: "Logical, verbal, numerical, mechanical, and creativity potential." },
+              { title: "Personality", body: "Social style, thinking style, decision style, and working style." },
+              { title: "Career Interest (RIASEC)", body: "Realistic, Investigative, Artistic, Social, Enterprising, Conventional preferences." },
+              { title: "Emotional Intelligence", body: "Self-awareness, regulation, empathy, and social skills." },
+              { title: "Learning Style", body: "Visual, auditory, reading-writing, kinesthetic, logical, social, solitary, musical." },
+              { title: "Behavioral & Social", body: "Adaptability, teamwork, leadership, and communication skills." },
+              { title: "Stress & Resilience", body: "Stress awareness, coping, self-talk, and bounce-back ability." },
+            ],
+          },
+          {
+            title: "Why students need this now",
+            bullets: [
+              "Marks alone do not reveal complete potential",
+              "Career decisions need both aptitude and behavior insight",
+              "Students require stronger self-awareness for long-term success",
+              "Families need practical guidance, not generic suggestions",
+            ],
+            callout: "Career DNA creates a deeper profile by combining performance, preference, and personality signals.",
+          },
+          {
+            title: "How this helps in real decisions",
+            grid: [
+              { title: "Stream and subject selection", body: "Align choices with capability, interest, and working style." },
+              { title: "Learning strategy", body: "Use dominant learning preferences to improve outcomes." },
+              { title: "Career direction", body: "Explore domains that match strengths and RIASEC trends." },
+              { title: "Personal growth", body: "Build emotional and behavioral skills required for higher education and careers." },
+            ],
+          },
+          {
+            title: "What students and parents receive",
+            cards: [
+              { title: "Section-wise capability scores", body: "Clear breakdown for all eight domains." },
+              { title: "Dominant patterns", body: "Top traits, styles, and interest codes with interpretation." },
+              { title: "Actionable guidance", body: "Practical next steps for study, skill-building, and career planning." },
+            ],
+          },
+          {
+            title: "What makes Career DNA different",
+            bullets: [
+              "It is a multi-assessment profiler, not a single-score test",
+              "It connects capability, personality, and interest in one model",
+              "It supports both academic planning and long-term career readiness",
+            ],
+            callout: "Career DNA helps students choose with clarity, confidence, and evidence.",
+          },
+        ],
+      },
+
       CLEAR: {
         theme: {
           badge: "CLEAR",
@@ -402,6 +482,9 @@ const content: Record<string, AssessmentPageContent> = {
     const FALLBACK_CODE_MAP: Record<string, keyof typeof content> = {
       CAREER_COMPASS_TEST: "CAREER_COMPASS",
       CAREER_COMPASS: "CAREER_COMPASS",
+      CAREER_DNA: "CAREER_DNA",
+      CAREERDNA: "CAREER_DNA",
+      DNA: "CAREER_DNA",
       CLEAR: "CLEAR",
       JOHARI: "CLEAR",
       JOHARI_WINDOW: "CLEAR",
@@ -507,6 +590,12 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Align", desc: "Strengths with careers", icon: "🎯" },
               { title: "Plan", desc: "A clearer roadmap", icon: "📘" },
             ]
+          : normalizedCode === "CAREER_DNA"
+          ? [
+              { title: "Measure", desc: "8 capability domains", icon: "🧩" },
+              { title: "Map", desc: "Patterns and strengths", icon: "🗺️" },
+              { title: "Match", desc: "Career-aligned direction", icon: "🎯" },
+            ]
           : normalizedCode === "CLEAR"
           ? [
               { title: "See yourself", desc: "Understand how you show up", icon: "🪞" },
@@ -534,6 +623,12 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Grade 8–12 guidance", desc: "Career awareness and self-discovery", icon: "🧭" },
               { title: "Personality patterns", desc: "Understand natural tendencies", icon: "🧠" },
               { title: "Actionable direction", desc: "Suggested academic and career paths", icon: "📈" },
+            ]
+          : normalizedCode === "CAREER_DNA"
+          ? [
+              { title: "Multi-assessment", desc: "Eight sections, one integrated profile", icon: "🧩" },
+              { title: "Capability insight", desc: "Performance + preference + behavior", icon: "📊" },
+              { title: "Practical roadmap", desc: "Actionable next steps for growth", icon: "🛣️" },
             ]
           : normalizedCode === "CLEAR"
           ? [
@@ -651,6 +746,64 @@ const content: Record<string, AssessmentPageContent> = {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      if (normalizedCode === "CAREER_DNA") {
+        return (
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="p-8 sm:p-10 lg:p-12">
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+                <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
+
+                <div className="mt-8 rounded-3xl bg-violet-50 p-6 shadow-lg">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-violet-700">Capability map</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">One profile across cognitive, aptitude, personality, interests, learning, and resilience.</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {heroBadgeItems.map((item) => (
+                      <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
+                        <div className="text-2xl">{item.icon}</div>
+                        <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden bg-[linear-gradient(160deg,#1f1239,#111827)] p-8 text-white sm:p-10 lg:p-12">
+                <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-violet-400/15 blur-3xl" />
+                <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-fuchsia-400/10 blur-3xl" />
+                <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-200">At a glance</p>
+                  <div className="mt-5 space-y-3">
+                    {heroSidePoints.map((point) => (
+                      <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{point.title}</p>
+                          <p className="text-xs text-slate-300">{point.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <p className="text-sm font-semibold text-white">8 domains</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">Capability sections in one profile</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <p className="text-sm font-semibold text-white">Holistic fit</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">Learning + behavior + career alignment</p>
+                    </div>
                   </div>
                 </div>
               </div>
