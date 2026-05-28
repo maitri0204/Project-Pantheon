@@ -42,6 +42,9 @@ type CareerResult = {
   rank: number; career: string; cluster: string; description: string; proposedStream: string;
   capabilityScore: number; band: BandEntry;
   gaps: Record<TraitKey, number>; flag: string;
+  fitCount: number;
+  majorGapCount: number;
+  totalGapDeficit: number;
 };
 type BandEntry = {
   label: string;
@@ -283,6 +286,62 @@ function computeGaps(student: TraitScores, required: TraitScores): Record<TraitK
   const gaps = {} as Record<TraitKey, number>;
   for (const key of TRAIT_KEYS) gaps[key] = Math.round(student[key] - required[key]);
   return gaps;
+}
+
+function summarizeCareerFit(gaps: Record<TraitKey, number>): { fitCount: number; majorGapCount: number; totalGapDeficit: number } {
+  const values = Object.values(gaps);
+  return {
+    fitCount: values.filter((value) => value >= 0).length,
+    majorGapCount: values.filter((value) => value < -20).length,
+    totalGapDeficit: values.filter((value) => value < 0).reduce((sum, value) => sum + Math.abs(value), 0),
+  };
+}
+
+function buildCareerRecommendations(traitScores: TraitScores, careerDb: CareerDbRow[], limit = 10): CareerResult[] {
+  const ranked = careerDb
+    .map((row) => {
+      const capabilityScore = computeCapabilityScore(traitScores, row.required);
+      const gaps = computeGaps(traitScores, row.required);
+      const fit = summarizeCareerFit(gaps);
+      return {
+        rank: 0,
+        career: row.career,
+        cluster: row.cluster,
+        description: row.description || "",
+        proposedStream: row.proposedStream || "",
+        capabilityScore,
+        band: getBand(capabilityScore),
+        gaps,
+        flag: getFlag(capabilityScore, gaps),
+        fitCount: fit.fitCount,
+        majorGapCount: fit.majorGapCount,
+        totalGapDeficit: fit.totalGapDeficit,
+      } as CareerResult;
+    })
+    .sort((a, b) => {
+      const bandWeight = (band: string) => (band === "Strong Capability Alignment" ? 3 : band === "High Capability Potential" ? 2 : band === "Moderate Capability Match" ? 1 : 0);
+      return (
+        bandWeight(b.band.label) - bandWeight(a.band.label) ||
+        b.capabilityScore - a.capabilityScore ||
+        b.fitCount - a.fitCount ||
+        a.majorGapCount - b.majorGapCount ||
+        a.totalGapDeficit - b.totalGapDeficit ||
+        a.career.localeCompare(b.career)
+      );
+    });
+
+  const strongMatches = ranked.filter((career) => career.band.label === "Strong Capability Alignment" || career.band.label === "High Capability Potential");
+  const suitableMatches = strongMatches.filter((career) => career.capabilityScore >= 75 && career.majorGapCount === 0 && career.fitCount >= 7);
+  const secondaryMatches = strongMatches.filter((career) => career.capabilityScore >= 70 && career.majorGapCount <= 1 && career.fitCount >= 6);
+
+  const preferredSet = suitableMatches.length >= 4
+    ? suitableMatches
+    : secondaryMatches.length >= 4
+      ? secondaryMatches
+      : strongMatches;
+
+  const chosen = (preferredSet.length ? preferredSet : ranked).slice(0, limit);
+  return chosen.map((career, index) => ({ ...career, rank: index + 1 }));
 }
 
 function getFlag(score: number, gaps: Record<TraitKey, number>): string {
@@ -1123,6 +1182,9 @@ async function tryGenerateCareerDnaFromTemplate(
   const pages = pdfDoc.getPages();
   if (!pages.length) return undefined;
 
+  const careerDb = await loadCareerDb();
+  const recommendations = buildCareerRecommendations(args.traitScores, careerDb, 10);
+
   // Branding on page 1 + last page
   let embeddedLogo: any;
   const logoUrl = tplAbsoluteUrl(args.organizationBranding?.logoUrl);
@@ -1308,6 +1370,141 @@ async function tryGenerateCareerDnaFromTemplate(
     tplDrawImageInA4Coords(page, chartImg, size.width, size.height, 22, chartY, 168, 112);
   }
 
+  if (recommendations.length) {
+    const insertIndex = Math.max(0, pdfDoc.getPageCount() - 1);
+    const careersPage = pdfDoc.insertPage(insertIndex, [pages[0].getWidth(), pages[0].getHeight()]);
+    const { width, height } = careersPage.getSize();
+    const mm = (value: number) => value * PT_PER_MM;
+    const pageLeft = mm(10);
+    const pageWidth = width - mm(20);
+    const pageHeight = height - mm(24);
+
+    // Elegant blue gradient background
+    careersPage.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0.97, 0.98, 1) });
+    
+    // Blue header with gradient effect (taller to fit lines)
+    careersPage.drawRectangle({ x: pageLeft, y: height - mm(26), width: pageWidth, height: mm(18), color: rgb(15 / 255, 76 / 255, 168 / 255) });
+    careersPage.drawRectangle({ x: pageLeft, y: height - mm(26), width: pageWidth, height: mm(1.5), color: rgb(59 / 255, 130 / 255, 246 / 255) });
+    
+    careersPage.drawText("Suggested Career Matches", {
+      x: pageLeft + mm(3),
+      y: height - mm(13.5),
+      size: 17,
+      font: regularFont,
+      color: rgb(1, 1, 1),
+    });
+    careersPage.drawText("Only high-confidence matches from the Career DNA Excel sheet are shown here.", {
+      x: pageLeft + mm(3),
+      y: height - mm(20.0),
+      size: 8.5,
+      font: regularFont,
+      color: rgb(0.93, 0.94, 1),
+    });
+    careersPage.drawText("Logic: strong/high capability alignment, at least 7 matching traits, and no major capability gaps.", {
+      x: pageLeft + mm(3),
+      y: height - mm(24.0),
+      size: 8,
+      font: regularFont,
+      color: rgb(0.93, 0.94, 1),
+    });
+
+    const cols = 2;
+    const gapX = mm(4);
+    const gapY = mm(3.6);
+    const cardW = (pageWidth - gapX) / cols;
+    const cardH = mm(31);
+    const startY = height - mm(36.0);
+    const startX = pageLeft;
+
+    recommendations.slice(0, 10).forEach((career, index) => {
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      const x = startX + col * (cardW + gapX);
+      const yTop = startY - row * (cardH + gapY);
+      const y = yTop - cardH;
+      if (y < mm(14)) return;
+
+      // Elegant white card
+      careersPage.drawRectangle({ x, y, width: cardW, height: cardH, color: rgb(1, 1, 1), borderColor: rgb(219 / 255, 234 / 255, 254 / 255), borderWidth: 1.2 });
+      
+      // Blue top bar
+      careersPage.drawRectangle({ x, y: y + cardH - mm(2.2), width: cardW, height: mm(2.2), color: rgb(15 / 255, 76 / 255, 168 / 255) });
+      
+      // Highlight
+      careersPage.drawRectangle({ x, y: y + cardH - mm(0.5), width: cardW, height: mm(0.5), color: rgb(59 / 255, 130 / 255, 246 / 255) });
+
+      // Rank badge - smaller
+      const rankBadgeX = x + mm(2.4);
+      const rankBadgeY = y + cardH - mm(5.0);
+      careersPage.drawRectangle({ x: rankBadgeX - mm(1.4), y: rankBadgeY - mm(1.4), width: mm(5.6), height: mm(5.6), color: rgb(59 / 255, 130 / 255, 246 / 255) });
+      careersPage.drawText(String(career.rank), {
+        x: rankBadgeX - mm(1.1),
+        y: rankBadgeY - mm(0.5),
+        size: 11,
+        font: regularFont,
+        color: rgb(1, 1, 1),
+      });
+
+      // Career title - better aligned with badge
+      careersPage.drawText(career.career, {
+        x: x + mm(9.2),
+        y: y + cardH - mm(5.2),
+        size: 9.5,
+        font: regularFont,
+        color: rgb(15 / 255, 23 / 255, 42 / 255),
+      });
+
+      const stream = career.proposedStream || career.cluster || "—";
+      
+      // Stream and Cluster chips: increase box height so content fits comfortably
+      const chipLineY = y + cardH - mm(15.0);
+      const chipW = (cardW - mm(4.0)) / 2;
+
+      // Stream chip (taller)
+      careersPage.drawRectangle({ x: x + mm(2.8), y: chipLineY, width: chipW, height: mm(7.0), color: rgb(229 / 255, 242 / 255, 255 / 255), borderColor: rgb(147 / 255, 197 / 255, 253 / 255), borderWidth: 0.7 });
+      careersPage.drawText("Stream", { x: x + mm(3.2), y: chipLineY + mm(4.4), size: 5.2, font: regularFont, color: rgb(30 / 255, 58 / 255, 138 / 255) });
+      careersPage.drawText(stream, { x: x + mm(3.2), y: chipLineY + mm(1.2), size: 7.2, font: regularFont, color: rgb(15 / 255, 76 / 255, 168 / 255) });
+
+      // Cluster chip (taller)
+      const clusterX = x + mm(2.8) + chipW + mm(1.2);
+      careersPage.drawRectangle({ x: clusterX, y: chipLineY, width: chipW, height: mm(7.0), color: rgb(219 / 255, 234 / 255, 254 / 255), borderColor: rgb(96 / 255, 165 / 255, 250 / 255), borderWidth: 0.7 });
+      careersPage.drawText("Cluster", { x: clusterX + mm(0.4), y: chipLineY + mm(4.4), size: 5.2, font: regularFont, color: rgb(30 / 255, 58 / 255, 138 / 255) });
+      careersPage.drawText(career.cluster || "—", { x: clusterX + mm(0.4), y: chipLineY + mm(1.2), size: 7.2, font: regularFont, color: rgb(15 / 255, 76 / 255, 168 / 255) });
+
+      // Traits progress bar at bottom - closer to chips
+      const barY = y + mm(5.0);
+      const barWidth = cardW - mm(5.6);
+      
+      // Label
+      careersPage.drawText(`Traits:`, {
+        x: x + mm(2.8),
+        y: barY + mm(1.6),
+        size: 6.5,
+        font: regularFont,
+        color: rgb(71 / 255, 85 / 255, 105 / 255),
+      });
+      
+      // Count badge
+      careersPage.drawText(`${career.fitCount}/9`, {
+        x: x + mm(cardW - 7.2),
+        y: barY + mm(1.6),
+        size: 6.5,
+        font: regularFont,
+        color: rgb(59 / 255, 130 / 255, 246 / 255),
+      });
+      
+      // Progress bar
+      const barHeight = mm(1.4);
+      careersPage.drawRectangle({ x: x + mm(2.8), y: barY - mm(1.2), width: barWidth, height: barHeight, color: rgb(241 / 255, 245 / 255, 250 / 255), borderColor: rgb(219 / 255, 234 / 255, 254 / 255), borderWidth: 0.5 });
+      
+      // Progress fill
+      const fillWidth = (career.fitCount / 9) * barWidth;
+      careersPage.drawRectangle({ x: x + mm(2.8), y: barY - mm(1.2), width: fillWidth, height: barHeight, color: rgb(59 / 255, 130 / 255, 246 / 255) });
+    });
+
+    // Page number intentionally omitted for this generated careers page
+  }
+
   const bytes = await pdfDoc.save();
   const blob = new Blob([bytes], { type: "application/pdf" });
   if (options?.returnBlob) return blob;
@@ -1340,24 +1537,7 @@ export async function generateCareerDnaCapabilityReport(
   if (!allPresent) throw new Error("Incomplete – all 9 trait scores required.");
 
   const careerDb = await loadCareerDb();
-  const ranked: CareerResult[] = careerDb
-    .map((row) => {
-      const capabilityScore = computeCapabilityScore(traitScores, row.required);
-      return {
-        rank: 0,
-        career: row.career,
-        cluster: row.cluster,
-        description: row.description || "",
-        proposedStream: row.proposedStream || "",
-        capabilityScore,
-        band: getBand(capabilityScore),
-        gaps: computeGaps(traitScores, row.required),
-        flag: "",
-      } as unknown as CareerResult;
-    })
-    .sort((a, b) => b.capabilityScore - a.capabilityScore || a.career.localeCompare(b.career));
-
-  const top10 = ranked.slice(0, 10);
+  const top10 = buildCareerRecommendations(traitScores, careerDb, 10);
 
   const { default: jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
