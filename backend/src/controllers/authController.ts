@@ -22,6 +22,8 @@ const formatUser = (user: IUser) => ({
   grade: user.grade,
   institutionName: user.institutionName,
   division: user.division,
+  phone: user.phone,
+  phoneCode: user.phoneCode,
 });
 
 const validateCaptchaPayload = (captchaToken?: string, captchaAnswer?: string): boolean => {

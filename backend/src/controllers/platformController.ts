@@ -2320,7 +2320,26 @@ export const getOrganizationProfile = async (req: AuthRequest, res: Response): P
       return;
     }
 
-    res.json({ organization });
+    const [orgAdmin, orgRegistration] = await Promise.all([
+      User.findOne({ organization: organization._id, role: "ORG_ADMIN" }).lean(),
+      OrganizationRegistration.findOne({ organization: organization._id }).lean(),
+    ]);
+
+    const derivedRepresentativeName = orgAdmin
+      ? `${orgAdmin.firstName || ""} ${orgAdmin.lastName || ""}`.trim()
+      : "";
+    const registrationRepresentativeName = orgRegistration
+      ? `${orgRegistration.firstName || ""} ${orgRegistration.lastName || ""}`.trim()
+      : "";
+    const registrationContactPhone = orgRegistration?.primaryMobile || orgRegistration?.alternateMobile || "";
+
+    const responseOrganization = {
+      ...organization.toObject(),
+      contactPhone: organization.settings?.contactPhone || registrationContactPhone || orgAdmin?.phone || "",
+      representativeName: organization.settings?.representativeName || registrationRepresentativeName || derivedRepresentativeName || "",
+    };
+
+    res.json({ organization: responseOrganization });
   } catch (error) {
     console.error("Get organization profile error:", error);
     res.status(500).json({ message: "Failed to fetch organization profile" });

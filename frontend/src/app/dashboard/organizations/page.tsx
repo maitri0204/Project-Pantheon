@@ -38,7 +38,6 @@ export default function OrganizationsPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState<{ from?: string; to?: string }>({});
 
   const auth = useMemo(() => getStoredAuth(), []);
 
@@ -59,9 +58,7 @@ export default function OrganizationsPage() {
 
   const filtered = orgs.filter((o) =>
     (o.name.toLowerCase().includes(search.toLowerCase()) ||
-      o.slug.toLowerCase().includes(search.toLowerCase())) &&
-    (!dateFilter.from || !o.createdAt || new Date(dateFilter.from) <= new Date(o.createdAt)) &&
-    (!dateFilter.to || !o.createdAt || new Date(dateFilter.to) >= new Date(o.createdAt))
+      o.slug.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -87,22 +84,6 @@ export default function OrganizationsPage() {
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search organizations..."
           className="w-full pl-9 pr-4 py-3 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        />
-      </div>
-
-      {/* Date filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input
-          type="date"
-          value={dateFilter.from || ""}
-          onChange={(e) => setDateFilter((f) => ({ ...f, from: e.target.value }))}
-          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-        />
-        <input
-          type="date"
-          value={dateFilter.to || ""}
-          onChange={(e) => setDateFilter((f) => ({ ...f, to: e.target.value }))}
-          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         />
       </div>
 
