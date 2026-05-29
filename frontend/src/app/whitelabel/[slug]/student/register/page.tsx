@@ -348,7 +348,7 @@ export default function StudentRegisterPage() {
 
                 <div className={isParent ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 md:grid-cols-3"}>
                   <FieldWrap label="Institution Name">
-                    <input type="text" value={form.institutionName} readOnly className={`${inputCls} cursor-not-allowed bg-slate-50 text-slate-500`} />
+                    <input type="text" value={form.institutionName} onChange={(e) => setField("institutionName", e.target.value)} className={inputCls} placeholder="Enter your institution name" required />
                   </FieldWrap>
 
                   {!isParent && (
