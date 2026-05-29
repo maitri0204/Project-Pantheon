@@ -2558,62 +2558,75 @@ export const logAntiCheatEvent = async (req: AuthRequest, res: Response): Promis
 };
 
 export const listParents = async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user) {
-    res.status(401).json({ message: "Authentication required" });
-    return;
-  }
-
-  const scope = req.user.role === "SUPERADMIN" ? {} : { organization: req.user.organization };
-
-  const parents = await User.find({ role: "PARENT", ...scope })
-    .populate("organization", "name slug")
-    .sort({ createdAt: -1 });
-
-  const parentIds = parents.map((parent) => parent._id);
-  const attemptCounts = await StudentAssessmentAttempt.aggregate<{
-    _id: { user: string; status: "COMPLETED" | "IN_PROGRESS" };
-    count: number;
-  }>([
-    { $match: { user: { $in: parentIds }, status: { $in: ["COMPLETED", "IN_PROGRESS"] } } },
-    { $group: { _id: { user: "$user", status: "$status" }, count: { $sum: 1 } } },
-  ]);
-
-  const completedByParent = new Map<string, number>();
-  const pendingByParent = new Map<string, number>();
-
-  attemptCounts.forEach((row) => {
-    const userId = String(row._id.user);
-    if (row._id.status === "COMPLETED") {
-      completedByParent.set(userId, row.count);
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: "Authentication required" });
       return;
     }
-    pendingByParent.set(userId, row.count);
-  });
 
-  const parentsWithStats = parents
-    .map((parent) => {
-      const testsCompleted = completedByParent.get(String(parent._id)) || 0;
-      const testsPending = pendingByParent.get(String(parent._id)) || 0;
+    const scope = req.user.role === "SUPERADMIN" ? {} : { organization: req.user.organization };
 
-      return {
-        ...parent.toObject(),
-        testsTaken: testsCompleted,
-        testsCompleted,
-        testsPending,
-      };
+    const parents = await User.find({ role: "PARENT", ...scope })
+      .populate("organization", "name slug")
+      .sort({ createdAt: -1 });
+
+    const parentIds = parents.map((parent) => parent._id);
+    
+    // Only query attempts if there are parents
+    let attemptCounts: Array<{
+      _id: { user: string; status: "COMPLETED" | "IN_PROGRESS" };
+      count: number;
+    }> = [];
+    
+    if (parentIds.length > 0) {
+      attemptCounts = await StudentAssessmentAttempt.aggregate<{
+        _id: { user: string; status: "COMPLETED" | "IN_PROGRESS" };
+        count: number;
+      }>([
+        { $match: { user: { $in: parentIds }, status: { $in: ["COMPLETED", "IN_PROGRESS"] } } },
+        { $group: { _id: { user: "$user", status: "$status" }, count: { $sum: 1 } } },
+      ]);
+    }
+
+    const completedByParent = new Map<string, number>();
+    const pendingByParent = new Map<string, number>();
+
+    attemptCounts.forEach((row) => {
+      const userId = String(row._id.user);
+      if (row._id.status === "COMPLETED") {
+        completedByParent.set(userId, row.count);
+        return;
+      }
+      pendingByParent.set(userId, row.count);
     });
 
-  const summary = parentsWithStats.reduce((acc, parent) => {
-    acc.parentCount += 1;
-    acc.testsCompleted += Number(parent.testsCompleted || 0);
-    acc.testsPending += Number(parent.testsPending || 0);
-    return acc;
-  }, { parentCount: 0, testsCompleted: 0, testsPending: 0 });
+    const parentsWithStats = parents
+      .map((parent) => {
+        const testsCompleted = completedByParent.get(String(parent._id)) || 0;
+        const testsPending = pendingByParent.get(String(parent._id)) || 0;
 
-  res.json({
-    parents: parentsWithStats,
-    summary,
-  });
+        return {
+          ...parent.toObject(),
+          testsTaken: testsCompleted,
+          testsCompleted,
+          testsPending,
+        };
+      });
+
+    const summary = parentsWithStats.reduce((acc, parent) => {
+      acc.parentCount += 1;
+      acc.testsCompleted += Number(parent.testsCompleted || 0);
+      acc.testsPending += Number(parent.testsPending || 0);
+      return acc;
+    }, { parentCount: 0, testsCompleted: 0, testsPending: 0 });
+
+    res.json({
+      parents: parentsWithStats,
+      summary,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to retrieve parents" });
+  }
 };
 
 export const getParentDetailsForAdmin = async (req: AuthRequest, res: Response): Promise<void> => {

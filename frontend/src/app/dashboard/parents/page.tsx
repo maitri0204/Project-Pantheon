@@ -39,6 +39,7 @@ export default function ParentsPage() {
   const router = useRouter();
   const [parents, setParents] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [organizationFilter, setOrganizationFilter] = useState("ALL");
   const [currentRole, setCurrentRole] = useState<string>("");
@@ -50,8 +51,18 @@ export default function ParentsPage() {
     if (!auth) { router.replace("/login"); return; }
     setCurrentRole(auth.user.role);
     apiRequest<ParentsResponse>("/platform/parents", {}, auth.token)
-      .then((res) => setParents(res.parents))
-      .catch(() => router.replace("/login"))
+      .then((res) => {
+        setParents(res.parents);
+        setError(null);
+      })
+      .catch((err) => {
+        const errorMsg = err instanceof Error ? err.message : "Failed to load parents";
+        if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
+          router.replace("/login");
+        } else {
+          setError(errorMsg);
+        }
+      })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -137,6 +148,10 @@ export default function ParentsPage() {
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        </div>
+      ) : error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
