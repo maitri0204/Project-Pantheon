@@ -24,6 +24,9 @@ import {
   submitStudentAttempt,
   verifyStudentAssessmentPayment,
   emailStudentAttemptReport,
+  getOrganizationProfile,
+  updateOrganizationProfile,
+  updateOrganizationLogo,
 } from "../controllers/platformController";
 import { optionalAuth, requireAuth, requireRoles } from "../middleware/auth";
 
@@ -46,6 +49,9 @@ router.post("/student/assessments/:code/payment/order", requireAuth, requireRole
 router.post("/student/assessments/:code/payment/verify", requireAuth, requireRoles("STUDENT", "PARENT"), verifyStudentAssessmentPayment);
 router.get("/organization/invoices", requireAuth, requireRoles("ORG_ADMIN"), listOrganizationInvoices);
 router.get("/organization/coupons/summary", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationCouponSummary);
+router.get("/organization/profile", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationProfile);
+router.patch("/organization/profile", requireAuth, requireRoles("ORG_ADMIN"), updateOrganizationProfile);
+router.patch("/organization/logo", requireAuth, requireRoles("ORG_ADMIN"), updateOrganizationLogo);
 router.post("/student/assessments/:code/start", requireAuth, requireRoles("STUDENT", "PARENT"), startStudentAssessment);
 router.get("/student/attempts/:attemptId", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAttempt);
 router.get("/student/attempts/:attemptId/report", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAttemptReport);

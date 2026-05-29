@@ -16,6 +16,8 @@ export interface IOrganization extends Document {
   settings: {
     allowSelfSignup: boolean;
     assessmentCatalogVisible: boolean;
+    contactPhone?: string;
+    representativeName?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -38,6 +40,8 @@ const organizationSchema = new Schema<IOrganization>(
     settings: {
       allowSelfSignup: { type: Boolean, default: true },
       assessmentCatalogVisible: { type: Boolean, default: true },
+      contactPhone: { type: String, default: undefined, trim: true },
+      representativeName: { type: String, default: undefined, trim: true },
     },
   },
   { timestamps: true }

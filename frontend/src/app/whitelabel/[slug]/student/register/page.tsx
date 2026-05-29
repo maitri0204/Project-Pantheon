@@ -100,7 +100,7 @@ export default function StudentRegisterPage() {
   useEffect(() => {
     if (!slug) return;
     apiRequest<PortalPublic>(`/platform/whitelabel/${slug}`)
-      .then((res) => { setPortal(res); setForm((p) => ({ ...p, institutionName: res.organization.branding.companyName })); })
+      .then((res) => { setPortal(res); })
       .catch(() => {})
       .finally(() => setPortalLoading(false));
   }, [slug]);

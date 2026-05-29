@@ -136,9 +136,24 @@ const navDefinitions: NavDefinition[] = [
       </svg>
     ),
   },
+  {
+    label: "Profile",
+    suffix: "/profile",
+    exact: false,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5.121 17.804A7.968 7.968 0 0112 14a7.968 7.968 0 016.879 3.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm7 2a10 10 0 11-20 0 10 10 0 0120 0z"
+        />
+      </svg>
+    ),
+  },
 ];
 
-const orgAdminAllowedSuffixes = new Set(["", "/assessments", "/users", "/coupons", "/ledger"]);
+const orgAdminAllowedSuffixes = new Set(["", "/assessments", "/users", "/coupons", "/ledger", "/profile"]);
 const superadminHiddenSuffixes = new Set(["/coupons"]);
 
 export default function DashboardShell({
@@ -228,7 +243,7 @@ export default function DashboardShell({
       return;
     }
 
-    const allowedPaths = [toHref(""), toHref("/assessments"), toHref("/users"), toHref("/coupons")];
+    const allowedPaths = [toHref(""), toHref("/assessments"), toHref("/users"), toHref("/coupons"), toHref("/ledger"), toHref("/profile")];
     const isAllowed = allowedPaths.some((allowedPath) => (
       pathname === allowedPath || pathname.startsWith(`${allowedPath}/`)
     ));

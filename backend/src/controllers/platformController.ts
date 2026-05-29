@@ -2296,3 +2296,158 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
 
   res.json({ message: "Report sent to your email successfully" });
 };
+
+export const getOrganizationProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || req.user.role !== "ORG_ADMIN") {
+    res.status(403).json({ message: "Only organization admins can access this endpoint" });
+    return;
+  }
+
+  try {
+    const organizationId = req.user.organization && typeof req.user.organization === "object"
+      ? String((req.user.organization as { _id?: { toString(): string } })._id || "")
+      : String(req.user.organization || "");
+
+    if (!organizationId) {
+      res.status(400).json({ message: "Organization is not linked to this user" });
+      return;
+    }
+
+    const organization = await Organization.findById(organizationId);
+
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    res.json({ organization });
+  } catch (error) {
+    console.error("Get organization profile error:", error);
+    res.status(500).json({ message: "Failed to fetch organization profile" });
+  }
+};
+
+export const updateOrganizationProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || req.user.role !== "ORG_ADMIN") {
+    res.status(403).json({ message: "Only organization admins can update profile" });
+    return;
+  }
+
+  try {
+    const payload = req.body as {
+      companyName?: string;
+      website?: string;
+      contactEmail?: string;
+      contactPhone?: string;
+      representativeName?: string;
+      branding?: {
+        companyName?: string;
+        website?: string;
+        contactEmail?: string;
+        contactPhone?: string;
+        representativeName?: string;
+      };
+    };
+
+    const profile = payload.branding || payload;
+
+    if (!profile) {
+      res.status(400).json({ message: "Branding data is required" });
+      return;
+    }
+
+    const updateData: any = {};
+
+    if (profile.companyName?.trim()) {
+      updateData["branding.companyName"] = profile.companyName.trim();
+    }
+
+    if (profile.website !== undefined) {
+      updateData.website = profile.website?.trim() || undefined;
+    }
+
+    if (profile.contactEmail !== undefined) {
+      updateData.contactEmail = profile.contactEmail?.trim() || undefined;
+    }
+
+    if (profile.contactPhone !== undefined) {
+      updateData["settings.contactPhone"] = profile.contactPhone?.trim() || "";
+    }
+
+    if (profile.representativeName !== undefined) {
+      updateData["settings.representativeName"] = profile.representativeName?.trim() || "";
+    }
+
+    const organizationId = req.user.organization && typeof req.user.organization === "object"
+      ? String((req.user.organization as { _id?: { toString(): string } })._id || "")
+      : String(req.user.organization || "");
+
+    if (!organizationId) {
+      res.status(400).json({ message: "Organization is not linked to this user" });
+      return;
+    }
+
+    const organization = await Organization.findOneAndUpdate(
+      { _id: organizationId },
+      updateData,
+      { new: true }
+    );
+
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    res.json({ organization });
+  } catch (error) {
+    console.error("Update organization profile error:", error);
+    res.status(500).json({ message: "Failed to update organization profile" });
+  }
+};
+
+export const updateOrganizationLogo = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user || req.user.role !== "ORG_ADMIN") {
+    res.status(403).json({ message: "Only organization admins can update logo" });
+    return;
+  }
+
+  try {
+    const { logoUrl } = req.body as { logoUrl?: string };
+
+    if (!logoUrl || typeof logoUrl !== "string") {
+      res.status(400).json({ message: "Logo URL is required" });
+      return;
+    }
+
+    // Validate base64 or URL format
+    if (!logoUrl.startsWith("data:image/") && !logoUrl.startsWith("http")) {
+      res.status(400).json({ message: "Invalid logo format" });
+      return;
+    }
+
+    const organizationId = req.user.organization && typeof req.user.organization === "object"
+      ? String((req.user.organization as { _id?: { toString(): string } })._id || "")
+      : String(req.user.organization || "");
+
+    if (!organizationId) {
+      res.status(400).json({ message: "Organization is not linked to this user" });
+      return;
+    }
+
+    const organization = await Organization.findOneAndUpdate(
+      { _id: organizationId },
+      { "branding.logoUrl": logoUrl },
+      { new: true }
+    );
+
+    if (!organization) {
+      res.status(404).json({ message: "Organization not found" });
+      return;
+    }
+
+    res.json({ organization });
+  } catch (error) {
+    console.error("Update organization logo error:", error);
+    res.status(500).json({ message: "Failed to update logo" });
+  }
+};
