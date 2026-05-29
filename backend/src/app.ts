@@ -21,15 +21,19 @@ const isAllowedOrigin = (origin: string): boolean => {
     return true;
   }
 
-  // Always allow localhost for development
-  if (origin?.includes("localhost") || origin?.includes("127.0.0.1")) {
-    return true;
-  }
-
   try {
-    const hostname = new URL(origin).hostname.toLowerCase();
+    const parsed = new URL(origin);
+    const hostname = parsed.hostname.toLowerCase();
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return true;
+    }
+
     return hostname === mainDomain || hostname === `www.${mainDomain}` || hostname.endsWith(`.${mainDomain}`);
-  } catch {
+  } catch (err) {
+    // Log invalid origin parsing for debugging CORS issues
+    // eslint-disable-next-line no-console
+    console.warn("isAllowedOrigin: failed to parse origin", err, origin);
     return false;
   }
 };

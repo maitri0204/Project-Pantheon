@@ -157,7 +157,11 @@ export default function CouponsPage() {
     try {
       await apiRequest(`/superadmin/assessments/${code}/pricing`, { method: "PATCH", body: JSON.stringify({ basePrice: Number(priceDrafts[code]) }) }, auth.token);
       setPricing((p) => ({ ...p, [code]: Number(priceDrafts[code]) })); setEditingPrice(null); flash("ok", "Price updated.");
-    } catch { flash("err", "Failed to update price."); } finally { setSaving(null); }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("savePrice: failed to update price", err, code);
+      flash("err", "Failed to update price.");
+    } finally { setSaving(null); }
   }
 
   async function toggleGst(code: string) {
@@ -166,7 +170,12 @@ export default function CouponsPage() {
     try {
       await apiRequest(`/superadmin/assessments/${code}/pricing`, { method: "PATCH", body: JSON.stringify({ gstEnabled: next }) }, auth.token);
       flash("ok", `GST ${next ? "enabled" : "disabled"}`);
-    } catch { setGst((g) => ({ ...g, [code]: !next })); flash("err", "Failed to toggle GST."); }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("toggleGst: failed to toggle GST", err, code);
+      setGst((g) => ({ ...g, [code]: !next }));
+      flash("err", "Failed to toggle GST.");
+    }
   }
 
   async function createCoupon(e: React.FormEvent) {
@@ -180,13 +189,21 @@ export default function CouponsPage() {
       flash("ok", "Coupon created!");
       setForm((f) => ({ ...f, code: "", discountType: "PERCENT", value: "10", expiryDate: "", expiryTime: "23:59" }));
       await load();
-    } catch (err) { flash("err", err instanceof Error ? err.message : "Failed."); } finally { setSaving(null); }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("createCoupon: failed to create coupon", err);
+      flash("err", err instanceof Error ? err.message : "Failed.");
+    } finally { setSaving(null); }
   }
 
   async function deleteCoupon(id: string) {
     if (!auth || !confirm("Delete this coupon?")) return;
     try { await apiRequest(`/superadmin/coupons/${id}`, { method: "DELETE" }, auth.token); flash("ok", "Deleted."); await load(); }
-    catch { flash("err", "Failed to delete."); }
+    catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("deleteCoupon: failed to delete coupon", err, id);
+      flash("err", "Failed to delete.");
+    }
   }
 
   function openEdit(c: Coupon) {
@@ -201,7 +218,11 @@ export default function CouponsPage() {
       const expiresAt = editForm.expiryDate ? new Date(`${editForm.expiryDate}T${editForm.expiryTime}:00`).toISOString() : undefined;
       await apiRequest(`/superadmin/coupons/${editCoupon._id}`, { method: "PATCH", body: JSON.stringify({ discountType: editForm.discountType, value: Number(editForm.value), expiresAt }) }, auth.token);
       flash("ok", "Coupon updated."); setEditCoupon(null); await load();
-    } catch { flash("err", "Failed to update."); } finally { setSaving(null); }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("saveEdit: failed to save edited coupon", err, editCoupon?._id);
+      flash("err", "Failed to update.");
+    } finally { setSaving(null); }
   }
 
   function isExpired(c: Coupon) { return c.expiresAt ? new Date(c.expiresAt) < new Date() : false; }

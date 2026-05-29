@@ -94,7 +94,9 @@ function loadQuestionsFromFile(filePath: string, arrayVarName: string): unknown[
     const fn = new Function(`${stripped}\nreturn typeof ${arrayVarName} !== \"undefined\" ? ${arrayVarName} : [];`);
     const result = fn() as unknown[];
     return Array.isArray(result) ? result : [];
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("loadQuestionsFromFile: failed to evaluate source file", filePath, err);
     return [];
   }
 }

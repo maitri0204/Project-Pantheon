@@ -212,7 +212,11 @@ export default function QuestionsPage() {
           setActiveCode(res.assessments[0].code);
         }
       })
-      .catch(() => router.replace("/login"))
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn("QuestionsPage: failed to load assessments", err);
+        router.replace("/login");
+      })
       .finally(() => setLoadingAssessments(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -253,7 +257,9 @@ export default function QuestionsPage() {
           }))
         );
       }
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("loadQuestions: failed to fetch questions", err, code);
       setQuestions([]);
     } finally {
       setLoadingQuestions(false);
@@ -384,7 +390,9 @@ export default function QuestionsPage() {
       await apiRequest(`/superadmin/questions/${id}`, { method: "DELETE" }, auth.token);
       setMessage("Question deleted.");
       await loadQuestions(activeCode);
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("handleDelete: failed to delete question", err, id);
       setMessage("Failed to delete question.");
     }
   };

@@ -79,7 +79,9 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
 
       try {
         await apiRequest(validationPath, {}, auth.token);
-      } catch {
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("validateAndRedirect: token validation failed", err);
         if (!cancelled) {
           clearStoredAuth();
         }
@@ -129,8 +131,10 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
               slug: response.organization.slug,
             });
           }
-        } catch {
-          // Fallback to default branding
+        } catch (err) {
+          // Fallback to default branding; log for diagnostics
+          // eslint-disable-next-line no-console
+          console.warn("loadOrgBranding: failed to load branding for slug", requestedSlug, err);
         }
         return;
       }
@@ -157,7 +161,9 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
               slug: response.organization.slug,
             });
           }
-        } catch {
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn("loadOrgBranding: failed to load branding by host", hostname, err);
           const parts = hostname.split(".");
           if (parts.length > 2 && parts[0] !== "www") {
             const slug = parts[0];
@@ -172,8 +178,9 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
                   slug: response.organization.slug,
                 });
               }
-            } catch {
-              console.debug("Failed to load organization branding");
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.debug("Failed to load organization branding", err);
             }
           }
         }

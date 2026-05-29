@@ -311,7 +311,9 @@ const normalizeHostName = (value?: string): string => {
 
   try {
     return new URL(candidate).hostname.toLowerCase().replace(/^www\./, "");
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("normalizeHostName: failed to parse candidate URL", err, candidate);
     return raw.replace(/^https?:\/\//, "").split("/")[0].split(":")[0].replace(/^www\./, "");
   }
 };
@@ -406,11 +408,11 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
   const [assessments, organizations, coupons, invoices, students] = await Promise.all([
     Assessment.find({ active: true }).sort({ name: 1 }),
     req.user.role === "SUPERADMIN"
-      ? Organization.find().sort({ createdAt: -1 })
+        ? Organization.find().limit(100).sort({ createdAt: -1 })
       : Organization.find({ _id: req.user.organization }).sort({ createdAt: -1 }),
     req.user.role === "SUPERADMIN"
-      ? Coupon.find().sort({ createdAt: -1 }).limit(10)
-      : Coupon.find({}).sort({ createdAt: -1 }).limit(10),
+        ? Coupon.find().limit(50).sort({ createdAt: -1 })
+        : Coupon.find().sort({ createdAt: -1 }).limit(10),
     req.user.role === "SUPERADMIN"
       ? Invoice.find().sort({ createdAt: -1 }).limit(10)
       : Invoice.find({ organization: req.user.organization }).sort({ createdAt: -1 }).limit(10),
@@ -846,6 +848,10 @@ const generateInvoiceNumber = async (organizationId: mongoose.Types.ObjectId | s
     { new: true, upsert: true }
   );
 
+  if (!counter) {
+    throw new Error("Unable to generate invoice number.");
+  }
+
   const padded = String(counter.counter).padStart(6, "0");
   return `${prefix}/AS${padded}/${financialYear}`;
 };
@@ -1239,7 +1245,9 @@ const allocateOrganizationCouponForStudent = async (args: {
       sequence,
       usedAt: new Date(),
     });
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("allocate coupon: failed to create OrganizationCouponUsage", err);
     const fallback = await OrganizationCouponUsage.findOne({
       organization: organizationScope,
       user: userScope,
@@ -2191,16 +2199,34 @@ export const submitStudentAttempt = async (req: AuthRequest, res: Response): Pro
     return;
   }
 
-  attempt.status = "COMPLETED";
-  attempt.completedAt = new Date();
-  attempt.answeredCount = attempt.totalQuestions;
-  attempt.evaluation = await evaluateAssessmentAttempt(attempt);
-  await attempt.save();
+  // Use atomic findOneAndUpdate to prevent race condition: only submit if status is still IN_PROGRESS
+  const evaluationData = await evaluateAssessmentAttempt(attempt);
+  const updatedAttempt = await StudentAssessmentAttempt.findOneAndUpdate(
+    {
+      _id: attemptId,
+      status: "IN_PROGRESS", // Only update if still in progress
+      user: req.user!._id,
+      organization: req.user!.organization,
+    },
+    {
+      status: "COMPLETED",
+      completedAt: new Date(),
+      answeredCount: attempt.totalQuestions,
+      evaluation: evaluationData,
+    },
+    { new: true } // Return updated document
+  );
+
+  if (!updatedAttempt) {
+    // Another request already submitted this attempt
+    res.status(409).json({ message: "Assessment already submitted by another request" });
+    return;
+  }
 
   res.json({
     message: "Assessment submitted successfully",
-    attemptId: attempt._id,
-    evaluation: attempt.evaluation,
+    attemptId: updatedAttempt._id,
+    evaluation: updatedAttempt.evaluation,
   });
 };
 
@@ -2375,7 +2401,7 @@ export const updateOrganizationProfile = async (req: AuthRequest, res: Response)
       return;
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, string | undefined> = {};
 
     if (profile.companyName?.trim()) {
       updateData["branding.companyName"] = profile.companyName.trim();
@@ -2418,7 +2444,7 @@ export const updateOrganizationProfile = async (req: AuthRequest, res: Response)
     }
 
     res.json({ organization });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Update organization profile error:", error);
     res.status(500).json({ message: "Failed to update organization profile" });
   }
@@ -2469,4 +2495,177 @@ export const updateOrganizationLogo = async (req: AuthRequest, res: Response): P
     console.error("Update organization logo error:", error);
     res.status(500).json({ message: "Failed to update logo" });
   }
+};
+
+export const logAntiCheatEvent = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  const eventType = typeof req.body?.eventType === "string" ? req.body.eventType.trim() : "";
+  if (!eventType) {
+    res.status(400).json({ message: "Event type is required" });
+    return;
+  }
+
+  // Validate event type is one of known anti-cheat events
+  const validEvents = ["fullscreen_exit", "tab_switch", "window_blur", "other"];
+  if (!validEvents.includes(eventType)) {
+    res.status(400).json({ message: `Invalid event type. Allowed: ${validEvents.join(", ")}` });
+    return;
+  }
+
+  const attempt = await StudentAssessmentAttempt.findOne({
+    _id: attemptId,
+    user: req.user!._id,
+    organization: req.user!.organization,
+  });
+
+  if (!attempt) {
+    res.status(404).json({ message: "Attempt not found" });
+    return;
+  }
+
+  // Log the anti-cheat event with timestamp
+  const eventEntry = `${eventType}:${new Date().toISOString()}`;
+  if (!Array.isArray(attempt.antiCheatEvents)) {
+    attempt.antiCheatEvents = [];
+  }
+  attempt.antiCheatEvents.push(eventEntry);
+  
+  // Keep only last 100 events to prevent unbounded growth
+  if (attempt.antiCheatEvents.length > 100) {
+    attempt.antiCheatEvents = attempt.antiCheatEvents.slice(-100);
+  }
+
+  await attempt.save();
+
+  console.warn("logAntiCheatEvent: recorded", {
+    attemptId: String(attempt._id),
+    eventType,
+    userId: String(req.user!._id),
+    totalEvents: attempt.antiCheatEvents.length,
+  });
+
+  res.json({ message: "Event logged", totalEvents: attempt.antiCheatEvents.length });
+};
+
+export const listParents = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const scope = req.user.role === "SUPERADMIN" ? {} : { organization: req.user.organization };
+
+  const parents = await User.find({ role: "PARENT", ...scope })
+    .populate("organization", "name slug")
+    .sort({ createdAt: -1 });
+
+  const parentIds = parents.map((parent) => parent._id);
+  const attemptCounts = await StudentAssessmentAttempt.aggregate<{
+    _id: { user: string; status: "COMPLETED" | "IN_PROGRESS" };
+    count: number;
+  }>([
+    { $match: { user: { $in: parentIds }, status: { $in: ["COMPLETED", "IN_PROGRESS"] } } },
+    { $group: { _id: { user: "$user", status: "$status" }, count: { $sum: 1 } } },
+  ]);
+
+  const completedByParent = new Map<string, number>();
+  const pendingByParent = new Map<string, number>();
+
+  attemptCounts.forEach((row) => {
+    const userId = String(row._id.user);
+    if (row._id.status === "COMPLETED") {
+      completedByParent.set(userId, row.count);
+      return;
+    }
+    pendingByParent.set(userId, row.count);
+  });
+
+  const parentsWithStats = parents
+    .map((parent) => {
+      const testsCompleted = completedByParent.get(String(parent._id)) || 0;
+      const testsPending = pendingByParent.get(String(parent._id)) || 0;
+
+      return {
+        ...parent.toObject(),
+        testsTaken: testsCompleted,
+        testsCompleted,
+        testsPending,
+      };
+    });
+
+  const summary = parentsWithStats.reduce((acc, parent) => {
+    acc.parentCount += 1;
+    acc.testsCompleted += Number(parent.testsCompleted || 0);
+    acc.testsPending += Number(parent.testsPending || 0);
+    return acc;
+  }, { parentCount: 0, testsCompleted: 0, testsPending: 0 });
+
+  res.json({
+    parents: parentsWithStats,
+    summary,
+  });
+};
+
+export const getParentDetailsForAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const parentIdParam = req.params.parentId;
+  const parentId = typeof parentIdParam === "string" ? parentIdParam.trim() : "";
+
+  if (!parentId) {
+    res.status(400).json({ message: "Parent ID is required" });
+    return;
+  }
+
+  const parent = await User.findById(parentId).populate("organization", "name slug");
+  if (!parent || parent.role !== "PARENT") {
+    res.status(404).json({ message: "Parent not found" });
+    return;
+  }
+
+  const parentOrgId = parent.organization && typeof parent.organization === "object"
+    ? String((parent.organization as { _id?: { toString(): string } })._id || "")
+    : String(parent.organization || "");
+
+  const requesterOrgId = req.user.organization && typeof req.user.organization === "object"
+    ? String((req.user.organization as { _id?: { toString(): string } })._id || "")
+    : String(req.user.organization || "");
+
+  if (req.user.role !== "SUPERADMIN" && parentOrgId !== requesterOrgId) {
+    res.status(403).json({ message: "Access denied" });
+    return;
+  }
+
+  const attempts = await StudentAssessmentAttempt.find({
+    user: parentId,
+  })
+    .populate("organization", "name slug contactEmail website branding")
+    .sort({ createdAt: -1 });
+
+  const attemptsWithReports = await Promise.all(
+    attempts.map((attempt) => buildAttemptReportPayload(attempt, String(parent._id)))
+  );
+
+  res.json({
+    parent: parent.toObject(),
+    attempts: attemptsWithReports,
+    summary: {
+      totalTests: attempts.length,
+      completedTests: attempts.filter((a) => a.status === "COMPLETED").length,
+      inProgressTests: attempts.filter((a) => a.status === "IN_PROGRESS").length,
+    },
+  });
 };

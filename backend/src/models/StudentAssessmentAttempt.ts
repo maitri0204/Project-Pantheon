@@ -33,6 +33,7 @@ export interface IStudentAssessmentAttempt extends Document {
   evaluation?: Record<string, unknown>;
   startedAt: Date;
   completedAt?: Date;
+  antiCheatEvents?: string[]; // Track anti-cheat violations (e.g., "fullscreen_exit", "tab_switch")
   createdAt: Date;
   updatedAt: Date;
 }
@@ -75,6 +76,7 @@ const studentAssessmentAttemptSchema = new Schema<IStudentAssessmentAttempt>(
     evaluation: { type: Schema.Types.Mixed, default: undefined },
     startedAt: { type: Date, default: Date.now },
     completedAt: { type: Date, default: undefined },
+    antiCheatEvents: { type: [String], default: [] }, // Track violations: "fullscreen_exit", "tab_switch", etc.
   },
   { timestamps: true }
 );

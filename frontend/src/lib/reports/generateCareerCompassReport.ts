@@ -121,7 +121,9 @@ export async function generateCareerCompassReport(args: {
     try {
       const dataUrl = await loadImageAsJpeg(src);
       pdf.addImage(dataUrl, "JPEG", 0, 0, pageWidth, pageHeight);
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("generateCareerCompassReport: failed to load image page", src, err);
       pdf.setFontSize(14);
       pdf.text("Page content unavailable", pageWidth / 2, pageHeight / 2, { align: "center" });
     }
@@ -132,7 +134,9 @@ export async function generateCareerCompassReport(args: {
   if (args.organizationBranding?.logoUrl) {
     try {
       organizationLogo = await loadImageAsJpeg(toAbsoluteUrl(args.organizationBranding.logoUrl));
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("generateCareerCompassReport: failed to load organization logo", args.organizationBranding?.logoUrl, err);
       organizationLogo = undefined;
     }
   }

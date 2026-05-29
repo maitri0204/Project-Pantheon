@@ -73,7 +73,16 @@ export interface PantheonInvoiceData {
 
 const toDataUrl = async (url: string): Promise<string | null> => {
   try {
-    const response = await fetch(url, { cache: "force-cache" });
+    const normalized = String(url || "").trim();
+    if (!normalized) return null;
+
+    if (!normalized.startsWith("data:image/") && !/^https?:\/\//i.test(normalized)) {
+      // eslint-disable-next-line no-console
+      console.warn("generateInvoice.toDataUrl: rejected unsupported image URL scheme");
+      return null;
+    }
+
+    const response = await fetch(normalized, { cache: "force-cache" });
     if (!response.ok) return null;
     const blob = await response.blob();
     return await new Promise((resolve) => {
@@ -82,7 +91,11 @@ const toDataUrl = async (url: string): Promise<string | null> => {
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
-  } catch {
+  } catch (error) {
+    // Log the error so failures to fetch/convert images are visible in logs
+    // and return null to allow graceful fallback.
+    // eslint-disable-next-line no-console
+    console.warn("generateInvoice.toDataUrl: failed to fetch/convert image", error);
     return null;
   }
 };
@@ -218,7 +231,10 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
 
   try {
     doc.addImage(logoSource, "PNG", W - margin - 50, 14, 50, 17);
-  } catch (_e) {}
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("generatePantheonInvoice: failed to add logo image", err);
+  }
 
   y = 52;
 
@@ -502,7 +518,10 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
 
   try {
     doc.addImage(signatureSource, "PNG", sigX - 26, sigStartY + 2, 32, 16);
-  } catch (_e) {}
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("generatePantheonInvoice: failed to add signature image", err);
+  }
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");

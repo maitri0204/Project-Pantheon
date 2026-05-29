@@ -30,7 +30,7 @@ export type CapabilityReportInput = {
     representativeName?: string;
   };
   traitScores: TraitScores;
-  otherSectionScores?: Record<string, any>;
+  otherSectionScores?: Record<string, SectionData>;
 };
 
 const TRAIT_KEYS = ["VR", "NR", "SR", "MP", "LR", "NA", "VA", "MA", "CI"] as const;
@@ -50,6 +50,18 @@ type BandEntry = {
   label: string;
   color: [number, number, number];
   lightColor: [number, number, number];
+};
+
+type SectionPart = {
+  partName?: string;
+  percentage?: number;
+};
+
+type SectionData = {
+  score?: number;
+  maxScore?: number;
+  parts?: SectionPart[];
+  [key: string]: unknown;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1106,26 +1118,36 @@ async function tplEmbedDataUrlImage(pdfDoc: any, dataUrl: string): Promise<any |
     const bytes = await fetch(dataUrl).then((r) => r.arrayBuffer());
     try {
       return await pdfDoc.embedPng(bytes);
-    } catch {
-      return await pdfDoc.embedJpg(bytes);
+    } catch (errEmbedPng) {
+      try {
+        // eslint-disable-next-line no-console
+        console.warn("tplEmbedDataUrlImage: embedPng failed, trying embedJpg", errEmbedPng, dataUrl);
+        return await pdfDoc.embedJpg(bytes);
+      } catch (errEmbedJpg) {
+        // eslint-disable-next-line no-console
+        console.error("tplEmbedDataUrlImage: failed to embed image as PNG or JPG", errEmbedPng, errEmbedJpg, dataUrl);
+        return null;
+      }
     }
-  } catch {
+  } catch (errFetch) {
+    // eslint-disable-next-line no-console
+    console.warn("tplEmbedDataUrlImage: failed to fetch dataUrl", errFetch, dataUrl);
     return null;
   }
 }
 
-function tplSection(otherSectionScores: CapabilityReportInput["otherSectionScores"], key: string): any {
-  return (otherSectionScores?.[key] || {}) as any;
+function tplSection(otherSectionScores: CapabilityReportInput["otherSectionScores"], key: string): SectionData {
+  return otherSectionScores?.[key] || {};
 }
 
-function tplSectionBars(section: any): Array<{ label: string; percentage: number }> {
+function tplSectionBars(section: SectionData): Array<{ label: string; percentage: number }> {
   const parts = Array.isArray(section?.parts) ? section.parts : [];
   if (parts.length === 0) {
     const score = tplToNumber(section?.score);
     const maxScore = Math.max(1, tplToNumber(section?.maxScore, 100));
     return [{ label: "Overall", percentage: tplPct(score, maxScore) }];
   }
-  return parts.map((part: any, i: number) => ({
+  return parts.map((part: SectionPart, i: number) => ({
     label: String(part?.partName || `Part ${i + 1}`),
     percentage: tplClamp(tplToNumber(part?.percentage), 0, 100),
   }));
@@ -1188,15 +1210,25 @@ async function tryGenerateCareerDnaFromTemplate(
   // Branding on page 1 + last page
   let embeddedLogo: any;
   const logoUrl = tplAbsoluteUrl(args.organizationBranding?.logoUrl);
-  if (logoUrl) {
+    if (logoUrl) {
     try {
       const logoBytes = await fetch(logoUrl).then((res) => res.arrayBuffer());
       try {
         embeddedLogo = await pdfDoc.embedPng(logoBytes);
-      } catch {
-        embeddedLogo = await pdfDoc.embedJpg(logoBytes);
+      } catch (errEmbedPng) {
+        try {
+          // eslint-disable-next-line no-console
+          console.warn("tryGenerateCareerDnaFromTemplate: embedPng failed, trying embedJpg", errEmbedPng, logoUrl);
+          embeddedLogo = await pdfDoc.embedJpg(logoBytes);
+        } catch (errEmbedJpg) {
+          // eslint-disable-next-line no-console
+          console.error("tryGenerateCareerDnaFromTemplate: failed to embed logo as PNG or JPG", errEmbedPng, errEmbedJpg, logoUrl);
+          embeddedLogo = undefined;
+        }
       }
-    } catch {
+    } catch (errFetch) {
+      // eslint-disable-next-line no-console
+      console.warn("tryGenerateCareerDnaFromTemplate: failed to fetch logo", errFetch, logoUrl);
       embeddedLogo = undefined;
     }
   }

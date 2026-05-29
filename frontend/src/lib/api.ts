@@ -58,7 +58,11 @@ export const getStoredAuth = (): StoredAuth | null => {
       return null;
     }
     return auth;
-  } catch {
+  } catch (error) {
+    // Log parse errors to aid debugging and clear invalid stored state
+    // Keep behavior of clearing stored auth to avoid infinite parse loops
+    // eslint-disable-next-line no-console
+    console.error("getStoredAuth: failed to parse stored auth", error, raw);
     clearStoredAuth();
     return null;
   }
@@ -100,7 +104,10 @@ export const apiRequest = async <T>(
   if (isJsonLike && rawText) {
     try {
       data = JSON.parse(rawText);
-    } catch {
+    } catch (error) {
+      // Log malformed JSON responses for easier debugging
+      // eslint-disable-next-line no-console
+      console.error("apiRequest: failed to parse JSON response", error, rawText);
       data = { message: "Invalid JSON response from server" };
     }
   } else if (rawText) {

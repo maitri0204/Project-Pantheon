@@ -68,6 +68,34 @@ const getUniqueOrganizationSlug = async (seed: string): Promise<string> => {
 
 const normalizeUrlBase = (value: string): string => value.trim().replace(/\/+$/, "");
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9+()\-\s]{7,20}$/;
+const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+
+const isValidEmail = (value?: string): boolean => {
+  const email = String(value || "").trim();
+  return EMAIL_PATTERN.test(email);
+};
+
+const isValidPhoneNumber = (value?: string): boolean => {
+  const phone = String(value || "").trim();
+  return PHONE_PATTERN.test(phone);
+};
+
+const isValidIfscCode = (value?: string): boolean => {
+  const ifsc = String(value || "").trim().toUpperCase();
+  return IFSC_PATTERN.test(ifsc);
+};
+
+const isValidOrganizationSlug = (value?: string): boolean => {
+  const slug = String(value || "").toLowerCase().trim();
+  if (!slug) {
+    return false;
+  }
+
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+};
+
 const getPortalLoginLink = ({
   website,
   orgSlug,
@@ -90,13 +118,15 @@ const getPortalLoginLink = ({
         return `${parsed.origin}${path}/login`;
       }
       return `${parsed.origin}/login`;
-    } catch {
-      // Fallback to platform-hosted portal login URL
+    } catch (err) {
+      // Log and fall back to platform-hosted portal login URL
+      // eslint-disable-next-line no-console
+      console.warn("getPortalLoginLink: failed to parse website URL", err, candidate);
     }
   }
 
   const base = normalizeUrlBase(frontendBaseUrl);
-  return `${base}/whitelabel/${orgSlug}/login`;
+  return `${base}/whitelabel/${encodedSlug}/login`;
 };
 
 const getUserOrganization = (user: Awaited<ReturnType<typeof User.findOne>>) => {
@@ -119,6 +149,15 @@ const validateWhitelabelLoginContext = ({
   organizationSlug?: string;
 }): { allowed: true } | { allowed: false; status: number; message: string } => {
   const normalizedOrganizationSlug = organizationSlug?.toLowerCase().trim();
+
+  if (normalizedOrganizationSlug && !isValidOrganizationSlug(normalizedOrganizationSlug)) {
+    return {
+      allowed: false,
+      status: 400,
+      message: "Invalid organization portal identifier",
+    };
+  }
+
   const organization = getUserOrganization(user);
   const isWhitelabelMember =
     Boolean(organization) &&
@@ -173,6 +212,11 @@ export const requestRegistrationOtp = async (req: Request, res: Response): Promi
       return;
     }
 
+    if (!isValidEmail(email)) {
+      res.status(400).json({ message: "Invalid email format" });
+      return;
+    }
+
     const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
@@ -216,6 +260,11 @@ export const verifyRegistrationOtp = async (req: Request, res: Response): Promis
 
     if (!email?.trim() || !otp?.trim()) {
       res.status(400).json({ message: "Email and OTP are required" });
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      res.status(400).json({ message: "Invalid email format" });
       return;
     }
 
@@ -293,6 +342,11 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       return;
     }
 
+    if (!isValidEmail(normalizedEmail)) {
+      res.status(400).json({ message: "Invalid email format" });
+      return;
+    }
+
     const registration = await OrganizationRegistration.findOne({ email: normalizedEmail });
     if (!registration || !registration.emailVerified) {
       res.status(400).json({ message: "Verify email before submitting organization details" });
@@ -314,6 +368,11 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       return;
     }
 
+    if (!isValidPhoneNumber(body.primaryMobile)) {
+      res.status(400).json({ message: "Invalid primary mobile number" });
+      return;
+    }
+
     if (!body.officeAddress?.trim() || !body.registeredAddress?.trim()) {
       res.status(400).json({ message: "Office and registered address are required" });
       return;
@@ -331,6 +390,16 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
 
     if (!body.bankAccountNumber?.trim() || !body.ifscCode?.trim() || !body.accountType) {
       res.status(400).json({ message: "Bank account number, IFSC code, and account type are required" });
+      return;
+    }
+
+    if (!isValidIfscCode(body.ifscCode)) {
+      res.status(400).json({ message: "Invalid IFSC code" });
+      return;
+    }
+
+    if (body.alternateMobile?.trim() && !isValidPhoneNumber(body.alternateMobile)) {
+      res.status(400).json({ message: "Invalid alternate mobile number" });
       return;
     }
 
@@ -475,6 +544,11 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (!isValidEmail(email)) {
+      res.status(400).json({ message: "Invalid email format" });
+      return;
+    }
+
     if (!validateCaptchaPayload(captchaToken, captchaAnswer)) {
       res.status(400).json({ message: "Invalid captcha" });
       return;
@@ -603,6 +677,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (organizationSlug && !isValidOrganizationSlug(organizationSlug)) {
+      res.status(400).json({ message: "Invalid organization identifier" });
+      return;
+    }
+
     const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("organization");
     if (!user) {
       res.status(404).json({ message: "User not found" });
@@ -656,6 +735,11 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
 
     if (!email?.trim() || !otp?.trim()) {
       res.status(400).json({ message: "Email and OTP are required" });
+      return;
+    }
+
+    if (organizationSlug && !isValidOrganizationSlug(organizationSlug)) {
+      res.status(400).json({ message: "Invalid organization identifier" });
       return;
     }
 
@@ -760,8 +844,18 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    if (!isValidEmail(body.email)) {
+      res.status(400).json({ message: "Invalid email format" });
+      return;
+    }
+
     if (!body.phone?.trim()) {
       res.status(400).json({ message: "Phone number is required" });
+      return;
+    }
+
+    if (!isValidPhoneNumber(body.phone)) {
+      res.status(400).json({ message: "Invalid phone number" });
       return;
     }
 

@@ -63,11 +63,22 @@ export async function generateLitmusReport(args: {
         const logoBytes = await logoResponse.arrayBuffer();
         try {
           embeddedLogo = await pdfDoc.embedPng(logoBytes);
-        } catch {
-          embeddedLogo = await pdfDoc.embedJpg(logoBytes);
+        } catch (errEmbedPng) {
+          // If PNG embedding fails, try JPG and log the reason
+          try {
+            // eslint-disable-next-line no-console
+            console.warn("generateLitmusReport: embedPng failed, attempting embedJpg", errEmbedPng);
+            embeddedLogo = await pdfDoc.embedJpg(logoBytes);
+          } catch (errEmbedJpg) {
+            // eslint-disable-next-line no-console
+            console.error("generateLitmusReport: failed to embed logo as PNG or JPG", errEmbedPng, errEmbedJpg);
+            embeddedLogo = undefined;
+          }
         }
       }
-    } catch {
+    } catch (errFetch) {
+      // eslint-disable-next-line no-console
+      console.error("generateLitmusReport: failed to fetch or process logo", errFetch, logoUrl);
       embeddedLogo = undefined;
     }
   }

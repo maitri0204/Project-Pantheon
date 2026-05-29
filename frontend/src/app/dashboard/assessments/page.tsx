@@ -87,7 +87,9 @@ export default function AssessmentsPage() {
       setPriceDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.basePrice)])));
       setGstEnabledDrafts(Object.fromEntries(list.map((a) => [a.code, Boolean(a.gstEnabled)])));
       setGstRateDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.gstPercentage ?? 18)])));
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("AssessmentsPage: failed to load assessments", err);
       router.replace("/login");
     } finally {
       setLoading(false);

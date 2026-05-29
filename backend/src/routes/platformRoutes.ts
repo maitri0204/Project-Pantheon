@@ -16,17 +16,20 @@ import {
   getWhitelabelPortal,
   getWhitelabelPortalByHost,
   listStudents,
+  listParents,
   listAssessments,
   listStudentAssessments,
   createStudentAssessmentPaymentOrder,
   saveStudentAttemptAnswers,
   startStudentAssessment,
   submitStudentAttempt,
+  logAntiCheatEvent,
   verifyStudentAssessmentPayment,
   emailStudentAttemptReport,
   getOrganizationProfile,
   updateOrganizationProfile,
   updateOrganizationLogo,
+  getParentDetailsForAdmin,
 } from "../controllers/platformController";
 import { optionalAuth, requireAuth, requireRoles } from "../middleware/auth";
 
@@ -40,6 +43,8 @@ router.get("/dashboard", requireAuth, getDashboard);
 router.get("/students", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listStudents);
 router.get("/students/:studentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentDetailsForAdmin);
 router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
+router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
+router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentDashboard);
 router.get("/student/results", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentResults);
 router.get("/student/invoices", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentInvoices);
@@ -57,6 +62,7 @@ router.get("/student/attempts/:attemptId", requireAuth, requireRoles("STUDENT", 
 router.get("/student/attempts/:attemptId/report", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAttemptReport);
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);
+router.post("/student/attempts/:attemptId/anti-cheat-event", requireAuth, requireRoles("STUDENT", "PARENT"), logAntiCheatEvent);
 router.post("/student/attempts/:attemptId/email-report", requireAuth, requireRoles("STUDENT", "PARENT"), emailStudentAttemptReport);
 
 export default router;

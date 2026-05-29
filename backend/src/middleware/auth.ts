@@ -29,6 +29,8 @@ export const requireAuth = async (
     req.user = user;
     next();
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn("requireAuth: token verification failed", error);
     res.status(401).json({ message: "Invalid or expired token" });
   }
 };
@@ -71,8 +73,10 @@ export const optionalAuth = async (
     if (user && user.isActive) {
       req.user = user;
     }
-  } catch {
-    // Continue without authenticated user when token is invalid.
+  } catch (err) {
+    // Continue without authenticated user when token is invalid; log for diagnostics
+    // eslint-disable-next-line no-console
+    console.warn("optionalAuth: invalid token", err);
   }
 
   next();

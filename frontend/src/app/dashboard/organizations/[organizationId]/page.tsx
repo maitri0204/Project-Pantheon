@@ -109,7 +109,9 @@ export default function OrganizationDetailsPage() {
         };
       });
       setCouponDrafts(drafts);
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("OrganizationDetailsPage: failed to load organization details", err, organizationId);
       router.replace("/dashboard/organizations");
     } finally {
       setLoading(false);

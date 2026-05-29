@@ -47,7 +47,9 @@ export default function OrganizationsPage() {
     try {
       const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
       setOrgs(res.organizations);
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("OrganizationsPage: failed to load organizations", err);
       router.replace("/login");
     } finally {
       setLoading(false);

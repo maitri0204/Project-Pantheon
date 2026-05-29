@@ -570,7 +570,9 @@ export async function generateMetacognitionReport(
     try {
       const logoData = await fetchImageAsDataURL(toAbsoluteUrl(data.organizationBranding.logoUrl));
       organizationLogo = await compressImageToJPEG(logoData, options?.returnBlob ? 0.72 : 0.82);
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("generateMetacognitionReport: failed to fetch/prepare organization logo", err, data.organizationBranding?.logoUrl);
       organizationLogo = undefined;
     }
   }

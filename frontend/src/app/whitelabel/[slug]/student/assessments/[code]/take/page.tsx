@@ -177,6 +177,7 @@ export default function StudentTakeAssessmentPage() {
   const [activeSectionCat, setActiveSectionCat] = useState<string | null>(null);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const isSubmittingRef = useRef(false);
+  const fullscreenExitedRef = useRef(false); // Track if fullscreen was exited (anti-cheat)
 
   useEffect(() => {
     if (!auth?.token || !slug || !code) {
@@ -219,8 +220,10 @@ export default function StudentTakeAssessmentPage() {
   const enterFullscreen = useCallback(async () => {
     try {
       await document.documentElement.requestFullscreen();
-    } catch {
-      // not supported
+    } catch (err) {
+      // Not supported or failed; log for diagnostics
+      // eslint-disable-next-line no-console
+      console.warn("enterFullscreen: requestFullscreen failed", err);
     }
   }, []);
 
@@ -234,12 +237,27 @@ export default function StudentTakeAssessmentPage() {
     const handleFullscreenChange = () => {
       const isFull = !!document.fullscreenElement;
       if (!isFull && !loading && questions.length > 0 && !isSubmittingRef.current && !showInstructions) {
+        // Anti-cheat: Mark that fullscreen was exited
+        fullscreenExitedRef.current = true;
+        console.warn("handleFullscreenChange: Fullscreen exited - test paused for security");
+        
+        // Log event to backend asynchronously (non-blocking)
+        if (attemptId && auth?.token) {
+          apiRequest(
+            `/platform/student/attempts/${attemptId}/anti-cheat-event`,
+            { method: "POST", body: JSON.stringify({ eventType: "fullscreen_exit" }) },
+            auth.token
+          ).catch((err) => {
+            console.warn("handleFullscreenChange: Failed to log anti-cheat event", err);
+          });
+        }
+        
         setShowResumeModal(true);
       }
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, [loading, questions.length, showInstructions]);
+  }, [loading, questions.length, showInstructions, attemptId, auth?.token]);
 
   // ── Anti-cheat ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -285,8 +303,10 @@ export default function StudentTakeAssessmentPage() {
         { method: "PATCH", body: JSON.stringify({ answers: [{ questionId, answer: label }] }) },
         auth.token
       );
-    } catch {
-      // non-blocking
+    } catch (err) {
+      // non-blocking but log for telemetry
+      // eslint-disable-next-line no-console
+      console.warn("handleAnswer: failed to persist answer", err, { attemptId, questionId, label });
     }
   };
 
@@ -317,12 +337,25 @@ export default function StudentTakeAssessmentPage() {
         { method: "PATCH", body: JSON.stringify({ answers: [{ questionId: currentQuestion.questionId, answer: defaultAnswer }] }) },
         auth.token
       );
-    } catch {
-      // non-blocking
+    } catch (err) {
+      // non-blocking - log error for analysis
+      // eslint-disable-next-line no-console
+      console.warn("ensureJohariDefaultAnswerForCurrent: failed to persist default answer", err, { attemptId, questionId: currentQuestion.questionId });
     }
   };
 
   const handleSubmit = async () => {
+    // Prevent race condition: check ref before starting submission
+    if (isSubmittingRef.current || submitting) {
+      return;
+    }
+
+    // Anti-cheat: Block submission if fullscreen was exited
+    if (fullscreenExitedRef.current) {
+      alert("Assessment cannot be submitted. Fullscreen mode was exited during the test. Please contact support.");
+      return;
+    }
+
     const unanswered = questions.filter((q) => !answers[q.questionId]);
     if (unanswered.length > 0) {
       alert(`Please answer all questions. ${unanswered.length} remaining.`);
@@ -369,10 +402,12 @@ export default function StudentTakeAssessmentPage() {
       const submittedAttemptId = response?.attemptId || attemptId;
       router.replace(`/whitelabel/${slug}/student/assessments/${code}/result?attemptId=${submittedAttemptId}`);
     } catch (error) {
-      isSubmittingRef.current = false;
+      // On error, keep isSubmittingRef true to prevent retry attempts
+      console.warn("handleSubmit: submission failed", error);
       alert(error instanceof Error ? error.message : "Submission failed");
     } finally {
       setSubmitting(false);
+      // Note: isSubmittingRef stays true to prevent double submissions even after error
     }
   };
 

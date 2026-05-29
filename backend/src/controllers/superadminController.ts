@@ -57,7 +57,9 @@ const dedupeAssessments = <T extends { code: string; name: string }>(assessments
 };
 
 export const getLedger = async (_req: AuthRequest, res: Response): Promise<void> => {
-  const invoices = await Invoice.find()
+    // Enforce limit to prevent performance issues with large datasets
+    const invoices = await Invoice.find()
+      .limit(1000) // Safe default limit for admin ledger view
     .populate("user", "firstName lastName email phone grade institutionName city state country")
     .populate("organization", "name slug contactEmail website branding.companyName branding.logoUrl")
     .sort({ createdAt: 1 });
@@ -139,6 +141,8 @@ export const updateCoupon = async (req: AuthRequest, res: Response): Promise<voi
     if (!coupon) { res.status(404).json({ message: "Coupon not found" }); return; }
     res.json({ coupon });
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error("updateCoupon: failed to update coupon", error);
     res.status(500).json({ message: "Failed to update coupon" });
   }
 };
@@ -147,15 +151,19 @@ export const deleteCoupon = async (req: AuthRequest, res: Response): Promise<voi
   try {
     await Coupon.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted" });
-  } catch { res.status(500).json({ message: "Failed to delete" }); }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("deleteCoupon: failed to delete coupon", err, req.params.id);
+    res.status(500).json({ message: "Failed to delete" });
+  }
 };
 
 export const getSuperadminDashboard = async (_req: AuthRequest, res: Response): Promise<void> => {
   const [assessments, organizations, users, coupons] = await Promise.all([
-    Assessment.find().sort({ name: 1 }),
-    Organization.find().sort({ createdAt: -1 }),
+    Assessment.find().limit(200).sort({ name: 1 }),
+    Organization.find().limit(100).sort({ createdAt: -1 }),
     User.find().sort({ createdAt: -1 }).limit(25).populate("organization"),
-    Coupon.find().sort({ createdAt: -1 }),
+    Coupon.find().limit(50).sort({ createdAt: -1 }),
   ]);
 
   const dedupedAssessments = dedupeAssessments(
@@ -207,8 +215,8 @@ export const createOrganization = async (req: AuthRequest, res: Response): Promi
     });
 
     res.status(201).json({ organization });
-  } catch (error: any) {
-    if (error?.code === 11000) {
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: number }).code === 11000) {
       res.status(409).json({ message: "Organization slug already exists" });
       return;
     }
@@ -462,7 +470,7 @@ export const updateAssessmentPricing = async (req: Request, res: Response): Prom
 };
 
 export const listCoupons = async (_req: AuthRequest, res: Response): Promise<void> => {
-  const coupons = await Coupon.find().sort({ createdAt: -1 });
+  const coupons = await Coupon.find().limit(200).sort({ createdAt: -1 });
   res.json({ coupons });
 };
 
@@ -497,8 +505,8 @@ export const createCoupon = async (req: AuthRequest, res: Response): Promise<voi
     });
 
     res.status(201).json({ coupon });
-  } catch (error: any) {
-    if (error?.code === 11000) {
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: number }).code === 11000) {
       res.status(409).json({ message: "Coupon code already exists" });
       return;
     }
@@ -556,8 +564,8 @@ export const createQuestion = async (req: Request, res: Response): Promise<void>
     });
 
     res.status(201).json({ question });
-  } catch (error: any) {
-    if (error?.code === 11000) {
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: number }).code === 11000) {
       res.status(409).json({ message: "A question with this number and category already exists" });
       return;
     }

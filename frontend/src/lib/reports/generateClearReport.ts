@@ -452,7 +452,9 @@ export async function generateClearReport(data: ReportData, options?: { returnBl
       try {
         const dataURL = await loadImageAsDataURL(`/clear/${n}.png`);
         return [n, dataURL] as const;
-      } catch {
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(`generateClearReport: failed to load page image ${n}`, err);
         return [n, null] as const;
       }
     }),
@@ -463,7 +465,9 @@ export async function generateClearReport(data: ReportData, options?: { returnBl
   if (data.organizationBranding?.logoUrl) {
     try {
       organizationLogo = await loadImageAsDataURL(toAbsoluteUrl(data.organizationBranding.logoUrl));
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("generateClearReport: failed to load organization logo", err, data.organizationBranding?.logoUrl);
       organizationLogo = undefined;
     }
   }
