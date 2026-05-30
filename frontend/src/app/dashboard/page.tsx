@@ -174,11 +174,17 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome banner */}
       <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-2xl p-7 text-white shadow-md">
-        {role === "SUPERADMIN" && (
-          <p className="text-blue-100 text-base font-medium mb-1">Assessment Centre</p>
-        )}
-        <h1 className="text-3xl font-bold mb-1">Welcome back, {auth?.user.firstName}! 👋</h1>
-        <p className="text-blue-100 text-base">{role === "ORG_ADMIN" ? "Manage your assessments and students from one place." : "Manage all assessments, organizations, and whitelabel configurations from one place."}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div>
+              {role === "SUPERADMIN" && (
+                <p className="text-blue-100 text-base font-medium mb-1">Assessment Centre</p>
+              )}
+              <h1 className="text-3xl font-bold mb-1">Welcome back, {auth?.user.firstName}! 👋</h1>
+            </div>
+          </div>
+          <p className="text-blue-100 text-base">{role === "ORG_ADMIN" ? "Manage your assessments and students from one place." : "Manage all assessments, organizations, and whitelabel configurations from one place."}</p>
+        </div>
       </div>
 
       {/* Stats */}

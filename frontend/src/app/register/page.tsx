@@ -296,7 +296,10 @@ export default function RegisterPage() {
         <div className="relative rounded-3xl border border-white/70 bg-white/85 p-6 shadow-[0_25px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl md:p-8 lg:[transform:rotateX(0.6deg)_rotateY(-0.6deg)] transition-transform duration-500 hover:lg:[transform:rotateX(0deg)_rotateY(0deg)]">
           <div className="pointer-events-none absolute right-7 top-7 hidden h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-400/20 shadow-inner sm:block" />
 
-          <div className="mb-6">
+          <div className="mb-6 text-center">
+            <div className="flex justify-center mb-4">
+              <img src="/logo.png" alt="Logo" className="h-20 w-auto mx-auto" />
+            </div>
             <h1 className="text-3xl font-bold text-black">Whitelabel Registration</h1>
             <p className="mt-1 text-base text-black/80">Register your organization, verify email with OTP, and launch a premium assessment portal.</p>
           </div>

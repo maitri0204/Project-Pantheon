@@ -1,5 +1,6 @@
 import Footer from "@/components/site/Footer";
-import ReviewerPaymentButton from "@/components/reviewer/ReviewerPaymentButton";
+import SiteHeader from "@/components/site/SiteHeader";
+import HeroArea from "@/components/site/HeroArea";
 import {
   ArrowRight,
   BadgeCheck,
@@ -112,28 +113,7 @@ export default function Home() {
         <div className="hero-orb hero-orb-right" />
 
         <div className="content-wrap relative mx-auto px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-          <header className="app-panel flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-700">Assessment Center</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                Comprehensive assessment platform for organizations
-              </h1>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a
-                href="/login"
-                className="rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-              >
-                Login
-              </a>
-              <a
-                href="/register"
-                className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
-              >
-                Register Organization
-              </a>
-            </div>
-          </header>
+          <SiteHeader />
 
           <div className="grid items-center gap-10 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:py-20">
             <div className="space-y-7">
@@ -147,23 +127,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="/login"
-                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:translate-y-[-1px] hover:from-blue-700 hover:via-indigo-700 hover:to-cyan-600"
-                >
-                  Enter dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-                <a
-                  href="/signup"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
-                >
-                  Create account
-                </a>
-              </div>
-
-                <ReviewerPaymentButton />
+              <HeroArea />
 
               <div className="grid gap-4 pt-4 sm:grid-cols-3">
                 {metrics.map((metric) => (
@@ -307,23 +271,6 @@ export default function Home() {
          </div>
        </section>
 
-       <section className="content-wrap mx-auto px-4 pb-12 sm:px-6 lg:px-8">
-         <div className="max-w-5xl mx-auto flex flex-col gap-3 sm:flex-row sm:justify-center">
-           <a
-             href="/dashboard"
-             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-           >
-             Go to dashboard <ArrowRight className="h-4 w-4" />
-           </a>
-           <a
-             href="/register"
-             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
-           >
-             Start an organization <ArrowRight className="h-4 w-4" />
-           </a>
-         </div>
-       </section>
- 
        <section className="content-wrap mx-auto px-4 pb-12 sm:px-6 lg:px-8">
          <h2 className="mb-8 text-center text-3xl font-black text-slate-950 sm:text-4xl">Core Features</h2>
          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 max-w-7xl mx-auto">

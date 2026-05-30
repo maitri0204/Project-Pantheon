@@ -29,14 +29,21 @@ export default function Footer() {
       <div className="content-wrap relative mx-auto px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-3">
           <div className="space-y-5">
-            <div>
-              <h2 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
-                A comprehensive assessment platform for organizations.
-              </h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-slate-400">
-                Streamline assessments, manage organizations, track performance, and deliver secure role-based experiences
-                with detailed analytics and customizable portals.
-              </p>
+            <div className="space-y-4">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="h-16 w-auto brightness-0 invert drop-shadow-[0_0_8px_rgba(255,255,255,0.22)]"
+              />
+              <div>
+                <h2 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
+                  A comprehensive assessment platform for organizations.
+                </h2>
+                <p className="mt-4 max-w-xl text-base leading-7 text-slate-400">
+                  Streamline assessments, manage organizations, track performance, and deliver secure role-based experiences
+                  with detailed analytics and customizable portals.
+                </p>
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">

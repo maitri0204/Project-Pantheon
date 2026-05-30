@@ -338,6 +338,8 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
           : "linear-gradient(to bottom right, rgb(240, 249, 255) 0%, rgb(255, 255, 255) 50%, rgb(240, 248, 255) 100%)"
       }}
     >
+      {/* Top panel removed to keep login focused; logo will be centered above the form */}
+
       <div className="pointer-events-none absolute inset-0">
         <div
           className="absolute left-10 top-16 h-72 w-72 rounded-full blur-3xl"
@@ -354,27 +356,10 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
       </div>
 
       <div className="relative mx-auto max-w-md">
+        <div className="flex justify-center mb-6">
+          <img src="/logo.png" alt="Assessment Center logo" className="h-20 w-auto" />
+        </div>
         <div className="mb-8 text-center">
-          {orgBranding?.logoUrl ? (
-            <div className="mx-auto mb-5 flex h-[140px] w-[140px] items-center justify-center">
-              <img
-                src={orgBranding.logoUrl}
-                alt="Organization logo"
-                className="h-full w-full object-contain"
-              />
-            </div>
-          ) : (
-            <div
-              className="mx-auto mb-5 flex h-20 w-20 items-center justify-center text-lg font-bold"
-              style={{
-                background: orgBranding
-                  ? `linear-gradient(135deg, ${orgBranding.primaryColor}, ${orgBranding.accentColor})`
-                  : "linear-gradient(135deg, rgb(37, 99, 235), rgb(6, 182, 212))"
-              }}
-            >
-              {orgBranding ? orgBranding.companyName.substring(0, 2).toUpperCase() : "AC"}
-            </div>
-          )}
           <h1 className="text-4xl font-bold text-slate-900">Welcome</h1>
           <p className="mt-2 text-slate-600">
             {orgBranding ? orgBranding.companyName : "Assessment Centre Platform"}
