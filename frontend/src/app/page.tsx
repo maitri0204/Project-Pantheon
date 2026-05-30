@@ -208,7 +208,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute -bottom-6 -left-4 hidden w-56 rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/10 lg:block float-slow">
+              {/* <div className="absolute -bottom-6 -left-4 hidden w-56 rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/10 lg:block float-slow">
                 <div className="flex items-center gap-3">
                   <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
                     <FileText className="h-5 w-5" />
@@ -218,7 +218,7 @@ export default function Home() {
                     <p className="text-xs text-slate-500">Clear performance visibility</p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
            </div>
          </div>
@@ -239,7 +239,7 @@ export default function Home() {
          </div>
        </section>
  
-       <section className="content-wrap mx-auto px-4 pb-12 sm:px-6 lg:px-8">
+       {/* <section className="content-wrap mx-auto px-4 pb-12 sm:px-6 lg:px-8">
          <div className="app-panel p-6 sm:p-8">
            <h2 className="mb-8 text-center text-3xl font-black text-slate-950 sm:text-4xl">Built for Every User</h2>
            <div className="mt-6 grid gap-4 md:grid-cols-3 max-w-5xl mx-auto">
@@ -254,7 +254,7 @@ export default function Home() {
              ))}
            </div>
          </div>
-       </section>
+       </section> */}
 
        <section className="content-wrap mx-auto px-4 pb-12 sm:px-6 lg:px-8">
          <h2 className="mb-8 text-center text-3xl font-black text-slate-950 sm:text-4xl">Our Capabilities</h2>
