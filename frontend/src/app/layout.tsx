@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Assessment",
-  description: "Assessment platform",
+  title: "Assessment Center",
+  description: "Unified assessment platform for students, parents, and organizations",
 };
 
 export default function RootLayout({
