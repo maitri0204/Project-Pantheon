@@ -4,7 +4,7 @@ import Organization from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
 import StudentRegistrationTemp from "../models/StudentRegistrationTemp";
 import User, { IUser } from "../models/User";
-import { PLATFORM_ORG_SLUG } from "../constants/platform";
+import { PLATFORM_ORG_SLUG, REVIEWER_EMAIL, REVIEWER_NAME } from "../constants/platform";
 import { generateCaptcha, verifyCaptcha } from "../services/captcha";
 import { sendOtpEmail, sendRegistrationConfirmationEmail } from "../services/email";
 import { compareOtp, generateOtp, getOtpExpiry, hashOtp, isOtpExpired } from "../services/otp";
@@ -688,6 +688,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const isReviewerLogin = user.email === REVIEWER_EMAIL;
+
     if (!user.isVerified) {
       res.status(400).json({ message: "Account is not verified yet" });
       return;
@@ -701,6 +703,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
     if (!contextValidation.allowed) {
       res.status(contextValidation.status).json({ message: contextValidation.message });
+      return;
+    }
+
+    if (isReviewerLogin) {
+      user.firstName = user.firstName || REVIEWER_NAME;
+      user.otpHash = hashOtp("123456");
+      user.otpExpiresAt = getOtpExpiry(60 * 24);
+      user.otpPurpose = "LOGIN";
+      user.otpAttempts = 0;
+      await user.save();
+
+      res.json({ message: "Reviewer OTP fixed to 123456. Use it to continue.", email: user.email });
       return;
     }
 
@@ -749,9 +763,31 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    const isReviewerLogin = user.email === REVIEWER_EMAIL;
+
     const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
     if (!contextValidation.allowed) {
       res.status(contextValidation.status).json({ message: contextValidation.message });
+      return;
+    }
+
+    if (isReviewerLogin) {
+      if (otp.trim() !== "123456") {
+        res.status(400).json({ message: "Invalid OTP" });
+        return;
+      }
+
+      user.otpHash = undefined;
+      user.otpExpiresAt = undefined;
+      user.otpPurpose = null;
+      user.otpAttempts = 0;
+      user.lastLoginAt = new Date();
+      await user.save();
+
+      res.json({
+        token: signToken(user),
+        user: formatUser(user),
+      });
       return;
     }
 

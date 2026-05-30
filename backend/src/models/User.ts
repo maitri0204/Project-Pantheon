@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 
-export type UserRole = "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT";
+export type UserRole = "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT" | "REVIEWER";
 export type OtpPurpose = "SIGNUP" | "LOGIN" | null;
 
 export interface IUser extends Document {
@@ -36,7 +36,7 @@ const userSchema = new Schema<IUser>(
     middleName: { type: String, default: undefined, trim: true },
     lastName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    role: { type: String, enum: ["SUPERADMIN", "ORG_ADMIN", "STUDENT", "PARENT"], default: "STUDENT" },
+    role: { type: String, enum: ["SUPERADMIN", "ORG_ADMIN", "STUDENT", "PARENT", "REVIEWER"], default: "STUDENT" },
     organization: { type: Schema.Types.ObjectId, ref: "Organization", default: undefined },
     gender: { type: String, default: undefined },
     phone: { type: String, default: undefined },

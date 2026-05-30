@@ -16,7 +16,7 @@ type AuthResponse = {
     firstName: string;
     lastName: string;
     email: string;
-    role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT";
+    role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT" | "REVIEWER";
     organizationId: string | null;
     isVerified: boolean;
   };
@@ -99,6 +99,11 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
 
       if (isLearnerRole(auth.user.role) && (portalOrganizationSlug || auth.orgSlug)) {
         router.replace(`/whitelabel/${portalOrganizationSlug || auth.orgSlug}/student/dashboard`);
+        return;
+      }
+
+      if (auth.user.role === "REVIEWER") {
+        router.replace("/");
         return;
       }
 
@@ -302,6 +307,10 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
           }
           : {}),
       });
+      if (response.user.role === "REVIEWER") {
+        router.push("/");
+        return;
+      }
       if (portalOrganizationSlug) {
         router.push(
           response.user.role === "ORG_ADMIN"

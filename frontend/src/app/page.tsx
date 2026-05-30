@@ -1,4 +1,5 @@
 import Footer from "@/components/site/Footer";
+import ReviewerPaymentButton from "@/components/reviewer/ReviewerPaymentButton";
 import {
   ArrowRight,
   BadgeCheck,
@@ -136,10 +137,6 @@ export default function Home() {
 
           <div className="grid items-center gap-10 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:py-20">
             <div className="space-y-7">
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/85 px-4 py-2 text-sm font-medium text-blue-800 shadow-sm backdrop-blur">
-                <Sparkles className="h-4 w-4 text-emerald-500" />
-                Built for assessments, reporting, and whitelabel delivery
-              </div>
 
               <div className="space-y-5">
                 <h2 className="max-w-4xl text-5xl font-black tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
@@ -165,6 +162,8 @@ export default function Home() {
                   Create account
                 </a>
               </div>
+
+                <ReviewerPaymentButton />
 
               <div className="grid gap-4 pt-4 sm:grid-cols-3">
                 {metrics.map((metric) => (

@@ -20,10 +20,12 @@ import {
   listAssessments,
   listStudentAssessments,
   createStudentAssessmentPaymentOrder,
+  createReviewerPaymentOrder,
   saveStudentAttemptAnswers,
   startStudentAssessment,
   submitStudentAttempt,
   logAntiCheatEvent,
+  verifyReviewerPayment,
   verifyStudentAssessmentPayment,
   emailStudentAttemptReport,
   getOrganizationProfile,
@@ -52,6 +54,8 @@ router.get("/student/assessments", requireAuth, requireRoles("STUDENT", "PARENT"
 router.get("/student/assessments/:code/pricing", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAssessmentPricing);
 router.post("/student/assessments/:code/payment/order", requireAuth, requireRoles("STUDENT", "PARENT"), createStudentAssessmentPaymentOrder);
 router.post("/student/assessments/:code/payment/verify", requireAuth, requireRoles("STUDENT", "PARENT"), verifyStudentAssessmentPayment);
+router.post("/reviewer/payment/order", requireAuth, requireRoles("REVIEWER"), createReviewerPaymentOrder);
+router.post("/reviewer/payment/verify", requireAuth, requireRoles("REVIEWER"), verifyReviewerPayment);
 router.get("/organization/invoices", requireAuth, requireRoles("ORG_ADMIN"), listOrganizationInvoices);
 router.get("/organization/coupons/summary", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationCouponSummary);
 router.get("/organization/profile", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationProfile);

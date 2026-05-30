@@ -29,10 +29,6 @@ export default function Footer() {
       <div className="content-wrap relative mx-auto px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-3">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white shadow-lg backdrop-blur">
-              <Sparkles className="h-4 w-4 text-cyan-300" />
-              Assessment Center
-            </div>
             <div>
               <h2 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
                 A comprehensive assessment platform for organizations.

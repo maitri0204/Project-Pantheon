@@ -9,6 +9,8 @@ import {
   DEFAULT_ASSESSMENTS,
   DEFAULT_SUPERADMIN_EMAIL,
   DEFAULT_SUPERADMIN_NAME,
+  REVIEWER_EMAIL,
+  REVIEWER_NAME,
   PLATFORM_ORG_NAME,
   PLATFORM_ORG_SLUG,
 } from "../constants/platform";
@@ -156,6 +158,24 @@ export const bootstrapPlatform = async (): Promise<void> => {
       },
       $set: {
         role: "SUPERADMIN",
+        organization: organization._id,
+        isActive: true,
+      },
+    },
+    { upsert: true, returnDocument: "after" }
+  );
+
+  await User.findOneAndUpdate(
+    { email: REVIEWER_EMAIL },
+    {
+      $setOnInsert: {
+        firstName: REVIEWER_NAME,
+        lastName: "Admitra",
+        email: REVIEWER_EMAIL,
+        isVerified: true,
+      },
+      $set: {
+        role: "REVIEWER",
         organization: organization._id,
         isActive: true,
       },

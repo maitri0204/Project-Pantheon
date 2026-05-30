@@ -23,7 +23,7 @@ export type StoredAuth = {
     firstName: string;
     lastName: string;
     email: string;
-    role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT";
+    role: "SUPERADMIN" | "ORG_ADMIN" | "STUDENT" | "PARENT" | "REVIEWER";
     organizationId: string | null;
     isVerified: boolean;
     grade?: string;

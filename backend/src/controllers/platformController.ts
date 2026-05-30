@@ -1059,6 +1059,90 @@ const getRazorpayClient = () => {
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
 };
 
+const REVIEWER_PAYMENT_AMOUNT = Math.max(1, Number(process.env.REVIEWER_PAYMENT_AMOUNT_INR || 1));
+const REVIEWER_PAYMENT_CURRENCY = (process.env.REVIEWER_PAYMENT_CURRENCY || "INR").toUpperCase();
+
+export const createReviewerPaymentOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== "REVIEWER") {
+      res.status(403).json({ message: "Access denied" });
+      return;
+    }
+
+    const razorpay = getRazorpayClient();
+    if (!razorpay || !process.env.RAZORPAY_KEY_ID) {
+      res.status(500).json({ message: "Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in backend env." });
+      return;
+    }
+
+    const order = await razorpay.orders.create({
+      amount: Math.round(REVIEWER_PAYMENT_AMOUNT * 100),
+      currency: REVIEWER_PAYMENT_CURRENCY,
+      receipt: `reviewer_${Date.now()}`,
+      notes: {
+        email: req.user.email,
+        purpose: "reviewer_payment",
+      },
+    });
+
+    res.json({
+      keyId: process.env.RAZORPAY_KEY_ID,
+      order: {
+        id: order.id,
+        amount: order.amount,
+        currency: order.currency,
+      },
+      amount: REVIEWER_PAYMENT_AMOUNT,
+      currency: REVIEWER_PAYMENT_CURRENCY,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unable to create reviewer payment order" });
+  }
+};
+
+export const verifyReviewerPayment = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user || req.user.role !== "REVIEWER") {
+      res.status(403).json({ message: "Access denied" });
+      return;
+    }
+
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+    } = req.body as {
+      razorpay_payment_id?: string;
+      razorpay_order_id?: string;
+      razorpay_signature?: string;
+    };
+
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+      res.status(400).json({ message: "Payment verification payload is incomplete" });
+      return;
+    }
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      res.status(500).json({ message: "Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in backend env." });
+      return;
+    }
+
+    const expected = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (expected !== razorpay_signature) {
+      res.status(400).json({ message: "Payment verification failed" });
+      return;
+    }
+
+    res.json({ message: "Payment verified" });
+  } catch (error) {
+    res.status(500).json({ message: error instanceof Error ? error.message : "Unable to verify reviewer payment" });
+  }
+};
+
 const computeAssessmentPricing = async (args: {
   assessmentCode: string;
   couponCode?: string;
