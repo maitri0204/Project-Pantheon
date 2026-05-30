@@ -4,7 +4,7 @@ import { ArrowUpRight, BadgeInfo, Mail, PhoneCall, ShieldCheck, Sparkles } from 
 const quickLinks = [
   { href: "/", label: "Home" },
   { href: "/login", label: "Login" },
-  { href: "/register", label: "Register Organization" },
+  { href: "https://assessments.admitra.io/whitelabel/kareer-studio/student/register", label: "Register" },
 ];
 
 const legalLinks = [
