@@ -312,15 +312,17 @@ export default function DashboardShell({
         </button>
 
         <div className="flex items-center gap-2 sm:gap-3 md:ml-1 min-w-0 max-w-[45vw] sm:max-w-none">
-          <div className="w-[110px] h-[42px] sm:w-[160px] sm:h-[64px] md:w-[200px] md:h-[76px] flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl flex-shrink-0">
+          <div className={`${userRole === "SUPERADMIN" ? "w-[160px] h-[64px] sm:w-[220px] sm:h-[84px] md:w-[260px] md:h-[96px]" : "w-[110px] h-[42px] sm:w-[160px] sm:h-[64px] md:w-[200px] md:h-[76px]"} flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl flex-shrink-0`}>
             {userRole === "ORG_ADMIN" && orgLogoUrl ? (
               <img
                 src={orgLogoUrl}
                 alt={`${orgCompanyName || "Organization"} logo`}
                 className="h-full w-full object-contain"
               />
+            ) : userRole === "SUPERADMIN" ? (
+              <img src="/logo.png" alt="Assessment Center" className="h-full w-full object-contain" />
             ) : (
-              <span>{userRole === "ORG_ADMIN" && orgCompanyName ? orgCompanyName.substring(0, 2).toUpperCase() : "PP"}</span>
+              <span>{userName ? userName.charAt(0).toUpperCase() : "PP"}</span>
             )}
           </div>
         </div>
