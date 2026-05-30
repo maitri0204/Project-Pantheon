@@ -37,7 +37,7 @@ export default function Footer() {
               />
               <div>
                 <h2 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
-                  A comprehensive assessment platform for organizations.
+                  A comprehensive assessment platform.
                 </h2>
                 <p className="mt-4 max-w-xl text-base leading-7 text-slate-400">
                   Streamline assessments, manage organizations, track performance, and deliver secure role-based experiences

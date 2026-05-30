@@ -120,7 +120,7 @@ export default function Home() {
 
               <div className="space-y-5">
                 <h2 className="max-w-4xl text-5xl font-black tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
-                  Streamlined assessments made simple.
+                  Complexed assessments made simple.
                 </h2>
                 <p className="max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
                   Assessment Center provides a unified platform for students, parents, and administrators with secure assessment flows, detailed analytics, invoicing, and complete whitelabel customization.
