@@ -192,14 +192,6 @@ const validateWhitelabelLoginContext = ({
     return { allowed: true };
   }
 
-  if (isWhitelabelMember) {
-    return {
-      allowed: false,
-      status: 403,
-      message: "Use your organization portal login link to continue",
-    };
-  }
-
   return { allowed: true };
 };
 
