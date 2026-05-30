@@ -23,7 +23,7 @@ export default function TermsAndConditionsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">2. Nature and Purpose of the Assessment</h2>
-            <p>The Thinking &amp; Expression Skills Test (Metacognition Test) is a metacognition assessment designed to help students understand their thinking patterns, learning strategies, and self-regulation skills.</p>
+            <p>The Assessment Center is an assessment center designed to help students understand their thinking patterns, learning strategies, and self-regulation skills.</p>
             <p>The assessment is intended only for educational, developmental, and self-improvement purposes.</p>
           </section>
 
@@ -45,7 +45,7 @@ export default function TermsAndConditionsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">4. Non-Diagnostic Nature</h2>
-            <p>The Thinking &amp; Expression Skills Test is not:</p>
+            <p>The Assessment Center is not:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>a psychological test</li>
               <li>a clinical assessment</li>
@@ -103,7 +103,7 @@ export default function TermsAndConditionsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">8. Evolving Framework</h2>
-            <p>The Thinking &amp; Expression Skills Test is part of an evolving learning system. We reserve the right to:</p>
+            <p>The Assessment Center is part of an evolving learning system. We reserve the right to:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>update assessment questions</li>
               <li>modify interpretation models</li>
@@ -114,14 +114,14 @@ export default function TermsAndConditionsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">9. Intellectual Property</h2>
-            <p>All content related to the Thinking &amp; Expression Skills Test (Metacognition Test), including assessment design, reports, frameworks, and tools are the intellectual property of KAREER Studio / ADMITra.</p>
+            <p>All content related to the Assessment Center, including assessment design, reports, frameworks, and tools are the intellectual property of KAREER Studio / ADMITra.</p>
             <p>Users may not copy, reproduce, distribute, or modify without prior permission.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">10. Data and Privacy</h2>
-            <p>Use of the Thinking &amp; Expression Skills Test is also governed by our <Link href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</Link>, which explains how user data is collected, used, and protected.</p>
-            <p>By using the Thinking &amp; Expression Skills Test, you agree to the terms outlined in the Privacy Policy.</p>
+            <p>Use of the Assessment Center is also governed by our <Link href="/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</Link>, which explains how user data is collected, used, and protected.</p>
+            <p>By using the Assessment Center, you agree to the terms outlined in the Privacy Policy.</p>
           </section>
 
           <section>
@@ -141,7 +141,7 @@ export default function TermsAndConditionsPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">14. Acceptance of Terms</h2>
-            <p>By taking the Thinking &amp; Expression Skills Test assessment, users (students, parents, or institutions) confirm that they:</p>
+            <p>By taking the Assessment Center, users (students, parents, or institutions) confirm that they:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>understand the purpose and limitations of the assessment</li>
               <li>agree to use it responsibly</li>

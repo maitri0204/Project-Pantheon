@@ -21,7 +21,7 @@ export default function DisclaimerPage() {
           <div className="inline-block bg-white rounded-lg px-2 py-1">
             <img
               src="/logo.png"
-              alt="Thinking & Expression Skills Test"
+              alt="Assessment Center"
               className="h-15 w-auto object-contain"
             />
           </div>
@@ -62,7 +62,7 @@ export default function DisclaimerPage() {
           </p>
 
           <p>
-            The Thinking &amp; Expression Test is not a diagnostic or psychological instrument, which
+            The Assessment Center is not a diagnostic or psychological instrument, which
             identify or evaluate learning disabilities, mental health conditions, or cognitive
             disorders. For any concerns related to such areas, it is strongly recommended that
             parents or guardians seek guidance from qualified educational or mental health
@@ -86,7 +86,7 @@ export default function DisclaimerPage() {
           </p>
 
           <p>
-            Furthermore, the Thinking &amp; Expression Test is part of an evolving educational
+            Furthermore, the Assessment Center is part of an evolving educational
             framework. The assessment methodology, interpretation models, and recommendations may be
             updated over time to improve accuracy and effectiveness. The results provided are based
             on the current version of the assessment at the time of testing.

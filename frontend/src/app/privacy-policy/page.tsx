@@ -32,9 +32,9 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-semibold text-gray-900">2. Who This Policy Applies To</h2>
             <p>This policy applies to:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Students using the Thinking &amp; Expression Skills Test assessment</li>
+              <li>Students using the Assessment Center</li>
               <li>Parents or guardians providing consent</li>
-              <li>Schools and institutions using the Thinking &amp; Expression Skills Test</li>
+              <li>Schools and institutions using the Assessment Center</li>
               <li>Users accessing our platform</li>
             </ul>
           </section>
@@ -114,7 +114,7 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-gray-900">8. Children&apos;s Privacy</h2>
-            <p>Since the Thinking &amp; Expression Skills Test is designed for students:</p>
+            <p>Since the Assessment Center is designed for students:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>For minors, parental or school consent may be asked</li>
               <li>We do not knowingly collect data without appropriate authorization</li>
