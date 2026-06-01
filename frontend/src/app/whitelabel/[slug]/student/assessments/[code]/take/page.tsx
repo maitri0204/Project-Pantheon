@@ -425,6 +425,39 @@ export default function StudentTakeAssessmentPage() {
     categoryMap.get(q.category)!.questions.push({ q, idx });
   });
   const categoryGroups = Array.from(categoryMap.entries()).map(([cat, val]) => ({ cat, ...val }));
+  // Ensure the navigator groups follow the canonical AQ dimension order
+  const desiredCategoryOrder = ["Control", "Endurance", "Reach", "Ownership"];
+  const categoryOrderMap = new Map(desiredCategoryOrder.map((c, i) => [c, i]));
+
+  // Sort questions inside each group by their `questionNumber` so items appear in natural sequence
+  categoryGroups.forEach((grp) => {
+    grp.questions.sort((a, b) => {
+      const aNum = Number(a.q.questionNumber ?? a.idx);
+      const bNum = Number(b.q.questionNumber ?? b.idx);
+      return aNum - bNum;
+    });
+  });
+
+  // Order groups according to desired order; unknown categories are pushed to the end in their original order
+  categoryGroups.sort((a, b) => {
+    const ai = categoryOrderMap.has(a.cat) ? (categoryOrderMap.get(a.cat) as number) : Number.MAX_SAFE_INTEGER;
+    const bi = categoryOrderMap.has(b.cat) ? (categoryOrderMap.get(b.cat) as number) : Number.MAX_SAFE_INTEGER;
+    return ai - bi;
+  });
+
+  // Build navigator-ordered list of question indexes (used for sequential Next/Previous)
+  const navigatorOrderedIndexes: number[] = [];
+  categoryGroups.forEach((grp) => {
+    grp.questions.forEach(({ idx }) => navigatorOrderedIndexes.push(idx));
+  });
+  const navigatorQuestionNumbers = new Map<string, number>();
+  let navigatorCounter = 1;
+  categoryGroups.forEach((group) => {
+    group.questions.forEach(({ q }) => {
+      navigatorQuestionNumbers.set(q.questionId, navigatorCounter);
+      navigatorCounter += 1;
+    });
+  });
 
   const getCircleColor = (idx: number, q: AttemptQuestion) => {
     if (idx === currentIndex) return "bg-blue-600 text-white ring-2 ring-blue-300";
@@ -534,11 +567,24 @@ export default function StudentTakeAssessmentPage() {
     ? careerDnaSections.find((section) => section.cat === activeSectionCat)
     : null;
 
-  const visibleQuestionIndexes = isCareerDna && activeSectionCat
-    ? questions
-      .map((question, index) => (getCareerDnaTestType(question) === activeSectionCat ? index : -1))
-      .filter((index) => index >= 0)
-    : questions.map((_, index) => index);
+  const visibleQuestionIndexes = (() => {
+    if (isCareerDna && activeSectionCat) {
+      // Only include questions for the active section, but preserve navigator order
+      const sectionCat = activeSectionCat;
+      const sectionIndexes: number[] = [];
+      categoryGroups.forEach((grp) => {
+        // grp.cat may be like "Endurance" etc; include only those matching the career DNA section mapping
+        const firstQ = grp.questions[0]?.q;
+        if (firstQ && getCareerDnaTestType(firstQ) === sectionCat) {
+          grp.questions.forEach(({ idx }) => sectionIndexes.push(idx));
+        }
+      });
+      return sectionIndexes;
+    }
+
+    // Default: use the navigator order across all groups
+    return navigatorOrderedIndexes.length ? navigatorOrderedIndexes : questions.map((_, index) => index);
+  })();
 
   const currentVisibleIndex = visibleQuestionIndexes.indexOf(currentIndex);
   const displayQuestionNumber = currentVisibleIndex >= 0 ? currentVisibleIndex + 1 : currentIndex + 1;
@@ -1110,7 +1156,7 @@ export default function StudentTakeAssessmentPage() {
                     </p>
                     <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
                       {grp.questions.map(({ q, idx }) => {
-                        const sectionQuestionNumber = visibleQuestionIndexes.indexOf(idx) + 1;
+                        const sectionQuestionNumber = navigatorQuestionNumbers.get(q.questionId) ?? idx + 1;
                         return (
                         <button
                           key={q.questionId}
@@ -1143,7 +1189,7 @@ export default function StudentTakeAssessmentPage() {
                 </p>
                 <div className="grid grid-cols-6 gap-2">
                   {grp.questions.map(({ q, idx }) => {
-                    const sectionQuestionNumber = visibleQuestionIndexes.indexOf(idx) + 1;
+                    const sectionQuestionNumber = navigatorQuestionNumbers.get(q.questionId) ?? idx + 1;
                     return (
                     <button
                       key={q.questionId}

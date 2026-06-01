@@ -530,7 +530,7 @@ const buildAttemptReportPayload = async (
   const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
 
   if (!attempt.evaluation) {
-    attempt.evaluation = await evaluateAssessmentAttempt(attempt);
+    (attempt as unknown as { evaluation: unknown }).evaluation = await evaluateAssessmentAttempt(attempt);
     await attempt.save();
   }
 
@@ -570,7 +570,7 @@ const buildAttemptReportPayload = async (
     answeredCount: attempt.answeredCount,
     totalQuestions: attempt.totalQuestions,
     submittedAt: attempt.completedAt,
-    evaluation: attempt.evaluation,
+    evaluation: attempt.evaluation as Record<string, unknown> | undefined,
     student: student
       ? {
           firstName: student.firstName,
@@ -2024,7 +2024,7 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
   }
 
   const questions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true })
-    .sort({ createdAt: 1, _id: 1 });
+    .sort({ questionNumber: 1, createdAt: 1, _id: 1 });
   if (!questions.length) {
     res.status(400).json({ message: "No active questions found for this assessment" });
     return;

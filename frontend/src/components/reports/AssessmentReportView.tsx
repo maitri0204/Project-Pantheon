@@ -118,6 +118,167 @@ const formatDateTime = (value?: string) => {
   return date.toLocaleString("en-IN");
 };
 
+type AQSubscale = {
+  dimension: string;
+  rawScore: number;
+  maxScore: number;
+  percentage: number;
+};
+
+type AQEvaluation = {
+  totalScore: number;
+  aqLevel: string;
+  subscales: AQSubscale[];
+};
+
+type AQTrendPoint = {
+  attempt: number;
+  score: number;
+  level: string;
+  date: string;
+  assessmentTitle: string;
+  durationSeconds?: number;
+  difficulty?: string;
+};
+
+type SubscaleAverage = {
+  dimension: string;
+  avgPercentage: number;
+};
+
+type AQHistoryResponse = {
+  totalAttempts: number;
+  bestScore: number;
+  avgScore: number;
+  latestScore: number | null;
+  latestLevel: string | null;
+  trend: AQTrendPoint[];
+  subscaleAverages: SubscaleAverage[];
+};
+
+const AQ_LEVEL_DESCRIPTIONS: Record<string, string> = {
+  Exceptional:
+    "You operate in the highest tier of adversity intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
+  Strong:
+    "Your AQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
+  Moderate:
+    "Your AQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
+  Developing:
+    "Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside.",
+};
+
+const AQ_DIMENSION_INSIGHTS: Record<string, { high: string; low: string }> = {
+  Control: {
+    high: "You exhibit a strong internal locus of control. You approach adversity believing you can shape outcomes through intentional action.",
+    low: "You may feel that adversity is largely beyond your control. A daily 'sphere of influence' practice will help rebuild agency.",
+  },
+  Ownership: {
+    high: "You hold yourself accountable for outcomes and use setbacks as learning inputs instead of blame triggers.",
+    low: "You may tend to externalize blame under stress. A brief 'what can I own?' reflection can shift this pattern.",
+  },
+  Reach: {
+    high: "You contain adversity well and prevent setbacks from spreading into unrelated life areas.",
+    low: "Adversity may spill into multiple life areas. Clear boundaries and 'parking lot' techniques will help contain it.",
+  },
+  Endurance: {
+    high: "You view challenges as temporary, which supports rapid psychological bounce-back and sustained performance.",
+    low: "You may perceive challenges as longer-lasting than they are. Evidence journaling can help reframe adversity as temporary.",
+  },
+};
+
+const AQ_LEVEL_GRADIENTS: Record<string, string> = {
+  Exceptional: "from-emerald-500 to-teal-600",
+  Strong: "from-sky-500 to-cyan-600",
+  Moderate: "from-amber-500 to-orange-600",
+  Developing: "from-rose-500 to-red-600",
+};
+
+const AQ_LEVEL_ACCENTS: Record<string, string> = {
+  Exceptional: "text-emerald-700 bg-emerald-50 border-emerald-200",
+  Strong: "text-sky-700 bg-sky-50 border-sky-200",
+  Moderate: "text-amber-700 bg-amber-50 border-amber-200",
+  Developing: "text-rose-700 bg-rose-50 border-rose-200",
+};
+
+const AQ_RECOMMENDATIONS = (result: AQEvaluation): string[] => {
+  const control = result.subscales.find((s) => s.dimension === "Control")?.percentage ?? 0;
+  const ownership = result.subscales.find((s) => s.dimension === "Ownership")?.percentage ?? 0;
+  const reach = result.subscales.find((s) => s.dimension === "Reach")?.percentage ?? 0;
+  const endurance = result.subscales.find((s) => s.dimension === "Endurance")?.percentage ?? 0;
+
+  const recs: string[] = [];
+  if (control < 60) recs.push("Build your internal locus of control by identifying 3 actions within your power each day.");
+  if (ownership < 60) recs.push("Keep a short accountability journal: after setbacks, note what you contributed and what you can improve.");
+  if (reach < 60) recs.push("Practice compartmentalization so one setback does not spill into other parts of your life.");
+  if (endurance < 60) recs.push("Use evidence journaling to remind yourself that difficult phases are temporary and manageable.");
+  if (!recs.length) {
+    recs.push("Maintain your current resilience practices and continue challenging yourself with progressively harder goals.");
+  }
+  return recs.slice(0, 6);
+};
+
+async function generateAQReportBlob(
+  result: AQEvaluation,
+  report: ReportResponse["report"],
+  studentName: string,
+  email: string
+): Promise<Blob> {
+  const [{ pdf }, { AQReport }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/components/reports/AQReport"),
+  ]);
+
+  const generatedDate = report.submittedAt
+    ? new Date(report.submittedAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : new Date().toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+  const trendDate = report.submittedAt
+    ? new Date(report.submittedAt).toLocaleDateString("en-IN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : generatedDate;
+
+  const aqHistory: AQHistoryResponse = {
+    totalAttempts: 1,
+    bestScore: result.totalScore,
+    avgScore: result.totalScore,
+    latestScore: result.totalScore,
+    latestLevel: result.aqLevel,
+    trend: [
+      {
+        attempt: 1,
+        score: result.totalScore,
+        level: result.aqLevel,
+        date: trendDate,
+        assessmentTitle: report.assessmentName,
+      },
+    ],
+    subscaleAverages: result.subscales.map((sub) => ({
+      dimension: sub.dimension,
+      avgPercentage: Math.round(sub.percentage),
+    })),
+  };
+
+  const element = AQReport({
+    studentName,
+    email,
+    generatedDate,
+    aqHistory,
+  });
+
+  return pdf(element).toBlob();
+}
+
 const blobToBase64 = async (blob: Blob): Promise<string> => {
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -199,11 +360,18 @@ export default function AssessmentReportView({
 
   const evaluation = report.evaluation as Record<string, unknown>;
   const normalizedCode = String(report.assessmentCode || "").toUpperCase();
+  const aqReport = normalizedCode === "ADVERSITY_TEST"
+    ? (() => {
+        const evaluation = report.evaluation as unknown as AQEvaluation;
+        return evaluation && Array.isArray(evaluation.subscales) ? evaluation : null;
+      })()
+    : null;
   const profileFromReport = report.student || {};
   const profileFromAuth = (auth?.user || {}) as { grade?: string; institutionName?: string; firstName?: string; lastName?: string; email?: string };
   const classGrade = profileFromReport.grade || profileFromAuth.grade || "";
   const schoolName = profileFromReport.institutionName || profileFromAuth.institutionName || "";
   const reportStudentName = `${profileFromReport.firstName || profileFromAuth.firstName || ""} ${profileFromReport.lastName || profileFromAuth.lastName || ""}`.trim() || "Student";
+  const reportEmail = (profileFromReport as any).email || profileFromAuth.email || (auth?.user as { email?: string })?.email || "";
   const orgProfile = report.organization || {};
   const reportBranding = {
     organizationName: orgProfile.companyName || orgProfile.name || "",
@@ -217,6 +385,24 @@ export default function AssessmentReportView({
   const downloadDetailedReport = async () => {
     setDownloading(true);
     try {
+      if (normalizedCode === "ADVERSITY_TEST" && aqReport) {
+        const pdfBlob = await generateAQReportBlob(
+          aqReport,
+          report,
+          reportStudentName,
+          reportEmail
+        );
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `AQ-Report-${reportStudentName.replace(/\s+/g, "-")}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
       if (normalizedCode === "JOHARI_WINDOW") {
         await generateClearReport({
           studentName: reportStudentName,
@@ -357,6 +543,10 @@ export default function AssessmentReportView({
     try {
       let pdfBlob: Blob | undefined;
 
+      if (normalizedCode === "ADVERSITY_TEST" && aqReport) {
+        pdfBlob = await generateAQReportBlob(aqReport, report, reportStudentName, reportEmail);
+      }
+
       if (normalizedCode === "JOHARI_WINDOW") {
         pdfBlob = await generateClearReport({
           studentName: reportStudentName, classGrade, schoolName,
@@ -479,6 +669,69 @@ export default function AssessmentReportView({
   };
 
   const renderBody = () => {
+    if (normalizedCode === "ADVERSITY_TEST" && aqReport) {
+      const recommendations = AQ_RECOMMENDATIONS(aqReport);
+      return (
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className={`rounded-2xl bg-gradient-to-br ${AQ_LEVEL_GRADIENTS[aqReport.aqLevel] || AQ_LEVEL_GRADIENTS.Moderate} p-8 text-white shadow-xl`}>
+            <div className="text-center">
+              <p className="text-lg font-semibold opacity-90 mb-4">Your AQ Score</p>
+              <div className="text-7xl font-bold mb-4">{aqReport.totalScore}</div>
+              <div className="text-2xl font-semibold mb-2">{aqReport.aqLevel} Resilience</div>
+              <p className="text-base opacity-90 max-w-3xl mx-auto">{AQ_LEVEL_DESCRIPTIONS[aqReport.aqLevel] || AQ_LEVEL_DESCRIPTIONS.Moderate}</p>
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Dimension Breakdown</h2>
+              <div className="space-y-5">
+                {aqReport.subscales.map((subscale) => (
+                  <div key={subscale.dimension} className="border-b border-slate-200 pb-5 last:border-b-0 last:pb-0">
+                    <div className="flex justify-between items-start gap-4 mb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">{subscale.dimension}</h3>
+                        <p className="text-sm text-slate-600 mt-1">
+                          {AQ_DIMENSION_INSIGHTS[subscale.dimension]?.[subscale.percentage >= 70 ? "high" : "low"] || ""}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-2xl font-bold text-blue-600">{subscale.rawScore}/{subscale.maxScore}</div>
+                        <div className="text-sm text-slate-600">{subscale.percentage.toFixed(0)}%</div>
+                      </div>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                      <div className="bg-blue-600 h-2.5 rounded-full transition-all" style={{ width: `${subscale.percentage}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Key Insights</h3>
+                <ul className="space-y-3 text-slate-700">
+                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Your AQ score indicates your overall capacity to handle adversity and change.</span></li>
+                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>The four dimensions — Control, Ownership, Reach, and Endurance — show different aspects of resilience.</span></li>
+                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Focus on dimensions with lower scores to strengthen your overall resilience.</span></li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">Recommendations</h3>
+                <ul className="space-y-3 text-blue-800">
+                  {recommendations.map((rec) => (
+                    <li key={rec} className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>{rec}</span></li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     if (normalizedCode === "CAREER_DNA") {
       const sections = (evaluation.sections || {}) as Record<string, {
         parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>;

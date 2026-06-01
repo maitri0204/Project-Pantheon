@@ -520,7 +520,7 @@ export const createCoupon = async (req: AuthRequest, res: Response): Promise<voi
 
 export const listQuestions = async (req: Request, res: Response): Promise<void> => {
   const code = String(req.params.code || "").toUpperCase();
-  const questions = await Question.find({ assessmentCode: code, isActive: true }).sort({ createdAt: 1, _id: 1 });
+  const questions = await Question.find({ assessmentCode: code, isActive: true }).sort({ questionNumber: 1, createdAt: 1, _id: 1 });
   res.json({ questions });
 };
 

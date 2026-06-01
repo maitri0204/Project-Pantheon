@@ -1,5 +1,6 @@
 import { IStudentAssessmentAttempt } from "../models/StudentAssessmentAttempt";
 import { getCareerDnaSourceQuestion, parseCareerDnaCategory } from "./sourceAssessmentData";
+import { evaluateAQAnswers } from "./aqScoring.service";
 
 const CAREER_COMPASS_DIMENSION_MAP: Record<number, { a: string; b: string }> = {
   1: { a: "E", b: "I" },
@@ -471,6 +472,8 @@ export async function evaluateAssessmentAttempt(attempt: IStudentAssessmentAttem
       return evaluateMetacognition(attempt);
     case "CAREER_DNA":
       return evaluateCareerDna(attempt);
+    case "ADVERSITY_TEST":
+      return evaluateAQAnswers(attempt);
     default:
       return {
         assessmentCode: attempt.assessmentCode,

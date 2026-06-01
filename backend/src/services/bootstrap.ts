@@ -14,6 +14,7 @@ import {
   PLATFORM_ORG_NAME,
   PLATFORM_ORG_SLUG,
 } from "../constants/platform";
+import { ADVERSITY_TEST_QUESTIONS } from "../scripts/seedAdversityQuestions";
 
 const LEGACY_ASSESSMENT_ALIASES: Array<{ alias: string; canonical: string; canonicalName: string }> = [
   {
@@ -195,6 +196,16 @@ export const bootstrapPlatform = async (): Promise<void> => {
       },
       { upsert: true, returnDocument: "after" }
     );
+  }
+
+  // Seed Adversity Test questions if not already present
+  const adversityTestQuestionCount = await Question.countDocuments({
+    assessmentCode: "ADVERSITY_TEST",
+  });
+
+  if (adversityTestQuestionCount === 0) {
+    await Question.insertMany(ADVERSITY_TEST_QUESTIONS);
+    console.log("✅ Adversity Test questions seeded successfully");
   }
 
   await cleanupLegacyAssessmentAliases();
