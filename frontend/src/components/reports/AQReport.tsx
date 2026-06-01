@@ -711,8 +711,12 @@ function PageFooter({ name, date }: { name: string; date: string }) {
 const S = StyleSheet.create({
   // ── Pages — fontFamily + fontWeight set at page level so every Text inherits
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
-  contentPage: { backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 28, fontFamily: 'Inter', fontWeight: 400 },
+  contentPage: { backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 40, fontFamily: 'Inter', fontWeight: 400 },
   finalPage:   { backgroundColor: C.dark, paddingHorizontal: 56, paddingTop: 52, paddingBottom: 40, fontFamily: 'Inter', fontWeight: 400 },
+
+  // ── Content wrapper (flex grow for footer push-down)
+  contentWrapper: { flex: 1, display: 'flex', flexDirection: 'column' },
+  contentBody: { flex: 1 },
 
   // ── Cover
   coverInner: { flex: 1, paddingHorizontal: 56, paddingVertical: 52, flexDirection: 'column', justifyContent: 'space-between' },
@@ -746,7 +750,7 @@ const S = StyleSheet.create({
   headerRight: { alignItems: 'flex-end' },
   headerBrand: { fontSize: 9, fontWeight: 700, color: C.sky, letterSpacing: 1 },
   headerPg: { fontSize: 7.5, fontWeight: 400, color: C.slate400, marginTop: 2 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: C.slate200, paddingTop: 8, marginTop: 'auto' },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: C.slate200, paddingTop: 8, paddingBottom: 28, marginTop: 12 },
   footerL: { fontSize: 7.5, fontWeight: 400, color: C.slate400 },
   footerR: { fontSize: 7.5, fontWeight: 400, color: C.slate400 },
 
@@ -1269,7 +1273,7 @@ function DimensionPage({ d }: { d: AQReportData }) {
 function BehavioralPage({ d }: { d: AQReportData }) {
   const patterns = behaviorPatterns(d.aqHistory);
   const behaviorExtensions: Record<string, string> = {
-    'Stress Response Style': 'Practical indicator: after a setback, measure how long it takes to return to focused work. Reducing this recovery window is one of the fastest ways to improve overall AQ and academic consistency.',
+    'Stress Response Style': 'Coaching note: after each setback, write one quick review of what happened, what helped, and what the next small action will be. This turns stress into practical momentum instead of allowing rumination to take over.',
     'Resilience Mechanism': 'Coaching note: this pattern is trainable through repeated reframing. If you practice short evidence-based reframing daily, emotional recovery speed usually improves first, followed by performance stability.',
     'Accountability Orientation': 'Growth insight: accountability is not self-blame. Healthy ownership is specific, actionable, and future-oriented. It asks, "What can I improve next time?" rather than "What is wrong with me?"',
     'Adversity Compartmentalization': 'Performance impact: better compartmentalization protects deep work quality and sleep quality. Students who contain spillover tend to perform more consistently across exams and project deadlines.',
@@ -2149,7 +2153,6 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
           'Focused study minutes completed (target consistency over volume).',
           'Number of distraction-free deep work blocks completed.',
           'Sleep quality score (1-10) and its relation to productivity quality.',
-          'Weekly stress level and emotional recovery speed after setbacks.',
         ].map((line, i) => (
           <View key={i} style={{ flexDirection: 'row', marginBottom: 2 }}>
             <Text style={{ fontSize: 7.2, fontWeight: 700, color: C.dark, marginRight: 5 }}>•</Text>
@@ -2237,7 +2240,6 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
           'Use process praise at least 3 times a week (effort, strategy, persistence), not only result praise.',
           'Keep one low-pressure family routine that supports emotional safety (walk, meal, or device-free talk time).',
           'Monitor early stress signs: sleep disturbance, irritability, withdrawal, avoidance. Respond with support before escalation.',
-          'Coordinate with mentors/teachers monthly to align support expectations at home and school.',
         ].map((item, i) => (
           <View key={i} style={{ flexDirection: 'row', marginBottom: 3 }}>
             <Text style={{ fontSize: 7.3, fontWeight: 700, color: C.dark, marginRight: 5 }}>•</Text>
