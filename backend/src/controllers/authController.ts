@@ -18,6 +18,10 @@ const formatUser = (user: IUser) => ({
   email: user.email,
   role: user.role,
   organizationId: user.organization ? user.organization.toString() : null,
+  orgSlug:
+    typeof user.organization === "object" && user.organization && "slug" in user.organization
+      ? (user.organization as { slug?: string }).slug || null
+      : null,
   isVerified: user.isVerified,
   grade: user.grade,
   institutionName: user.institutionName,
@@ -805,6 +809,10 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
     res.json({
       token: signToken(user),
       user: formatUser(user),
+      orgSlug:
+        typeof user.organization === "object" && user.organization && "slug" in user.organization
+          ? (user.organization as { slug?: string }).slug || null
+          : null,
     });
   } catch (error) {
     console.error("Verify login OTP error:", error);
@@ -825,6 +833,10 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
       ...formatUser(req.user),
       organization: req.user.organization,
     },
+    orgSlug:
+      typeof req.user.organization === "object" && req.user.organization && "slug" in req.user.organization
+        ? (req.user.organization as { slug?: string }).slug || null
+        : null,
   });
 };
 

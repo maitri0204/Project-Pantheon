@@ -11,6 +11,7 @@ type Step = "email" | "otp";
 type CaptchaResponse = { data: { token: string; question: string } };
 type AuthResponse = {
   token: string;
+  orgSlug?: string | null;
   user: {
     id: string;
     firstName: string;
@@ -297,18 +298,50 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
           organizationSlug: portalOrganizationSlug || undefined,
         }),
       });
-      setStoredAuth({
-        ...response,
-        ...(portalOrganizationSlug && response.user.role !== "SUPERADMIN" && orgBranding
-          ? {
-            orgCompanyName: orgBranding.companyName,
-            orgSlug: portalOrganizationSlug,
-            orgLogoUrl: orgBranding.logoUrl,
+      const resolvedOrgSlug = (portalOrganizationSlug || response.orgSlug || "").toLowerCase().trim() || undefined;
+      const { orgSlug: _responseOrgSlug, ...authPayload } = response;
+
+      // Determine branding to persist in stored auth
+      let finalOrgCompanyName: string | undefined = undefined;
+      let finalOrgLogoUrl: string | undefined = undefined;
+      const finalOrgSlug = resolvedOrgSlug || portalOrganizationSlug || undefined;
+
+      if (portalOrganizationSlug && response.user.role !== "SUPERADMIN" && orgBranding) {
+        finalOrgCompanyName = orgBranding.companyName;
+        finalOrgLogoUrl = orgBranding.logoUrl;
+      } else if (finalOrgSlug && response.user.role !== "SUPERADMIN") {
+        // If we have an org slug but no branding loaded from host, try to fetch branding
+        try {
+          const brandingRes = await apiRequest<{ organization: { branding?: OrganizationBranding } }>(
+            `/platform/whitelabel/${finalOrgSlug}`
+          );
+          if (brandingRes.organization?.branding) {
+            finalOrgCompanyName = brandingRes.organization.branding.companyName;
+            finalOrgLogoUrl = brandingRes.organization.branding.logoUrl;
           }
+        } catch (err) {
+          // ignore; UI will fallback to initials
+        }
+      }
+
+      setStoredAuth({
+        ...authPayload,
+        ...(finalOrgSlug && response.user.role !== "SUPERADMIN"
+          ? { orgSlug: finalOrgSlug, organizationSlug: finalOrgSlug }
           : {}),
+        ...(finalOrgCompanyName ? { orgCompanyName: finalOrgCompanyName } : {}),
+        ...(finalOrgLogoUrl ? { orgLogoUrl: finalOrgLogoUrl } : {}),
       });
       if (response.user.role === "REVIEWER") {
         router.push("/");
+        return;
+      }
+      if (response.user.role === "ORG_ADMIN" && resolvedOrgSlug) {
+        router.push(`/whitelabel/${resolvedOrgSlug}/dashboard`);
+        return;
+      }
+      if (isLearnerRole(response.user.role) && resolvedOrgSlug) {
+        router.push(`/whitelabel/${resolvedOrgSlug}/student/dashboard`);
         return;
       }
       if (portalOrganizationSlug) {

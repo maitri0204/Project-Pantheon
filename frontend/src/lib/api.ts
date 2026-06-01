@@ -33,6 +33,7 @@ export type StoredAuth = {
   orgCompanyName?: string;
   orgSlug?: string;
   orgLogoUrl?: string;
+  organizationSlug?: string;
 };
 
 const MAX_AUTH_TOKEN_LENGTH = 8192;

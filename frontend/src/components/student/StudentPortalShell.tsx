@@ -100,7 +100,7 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
 
   const logout = () => {
     clearStoredAuth();
-    router.replace(`/whitelabel/${slug}/login`);
+    router.replace("/");
   };
 
   if (loading) {
