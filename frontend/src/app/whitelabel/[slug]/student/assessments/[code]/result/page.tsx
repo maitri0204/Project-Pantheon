@@ -96,7 +96,7 @@ function AssessmentAttemptHistory(props: {
               Retry
             </button>
           </div>
-        ) : attempts?.length === 0 ? (
+        ) : !attempts || attempts.length === 0 ? (
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">No completed attempts found for this assessment.</div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
