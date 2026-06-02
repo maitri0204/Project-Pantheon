@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
@@ -10,7 +10,9 @@ import { generateClearReport } from "@/lib/reports/generateClearReport";
 import { generateLitmusReport } from "@/lib/reports/generateLitmusReport";
 import { generateMetacognitionReport } from "@/lib/reports/generateMetacognitionReport";
 import { generateCareerDnaCapabilityReport } from "../../lib/reports/generateCareerDnaCapabilityReport";
+import { generateAcademicCareerReport } from "@/lib/reports/generateAcademicCareerReport";
 import QuadrantGraph, { QuadrantLegend } from "@/components/reports/QuadrantGraph";
+import AcademicCareerReport from "@/components/reports/AcademicCareerReport";
 import {
   DOMAIN_INFO,
   DIMENSION_COLORS,
@@ -141,6 +143,18 @@ type AQTrendPoint = {
   difficulty?: string;
 };
 
+type AQAttemptItem = {
+  attemptId: string;
+  assessmentCode: string;
+  assessmentName: string;
+  completedAt?: string;
+  evaluation?: {
+    totalScore?: number;
+    aqLevel?: string;
+  };
+  attemptNumber: number;
+};
+
 type SubscaleAverage = {
   dimension: string;
   avgPercentage: number;
@@ -221,7 +235,8 @@ async function generateAQReportBlob(
   result: AQEvaluation,
   report: ReportResponse["report"],
   studentName: string,
-  email: string
+  email: string,
+  attempts?: AQAttemptItem[]
 ): Promise<Blob> {
   const [{ pdf }, { AQReport }] = await Promise.all([
     import("@react-pdf/renderer"),
@@ -240,29 +255,48 @@ async function generateAQReportBlob(
         day: "numeric",
       });
 
-  const trendDate = report.submittedAt
-    ? new Date(report.submittedAt).toLocaleDateString("en-IN", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+  const attemptList = Array.isArray(attempts) && attempts.length > 0
+    ? [...attempts].sort((a, b) => {
+        const left = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+        const right = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+        return left - right;
       })
-    : generatedDate;
+    : [{
+      attemptId: report.attemptId,
+      assessmentCode: report.assessmentCode,
+      assessmentName: report.assessmentName,
+      completedAt: report.submittedAt,
+      evaluation: result,
+      attemptNumber: 1,
+    }];
+
+  const trend = attemptList.map((attempt) => ({
+    attempt: attempt.attemptNumber,
+    score: attempt.evaluation?.totalScore ?? 0,
+    level: attempt.evaluation?.aqLevel ?? result.aqLevel,
+    date: attempt.completedAt
+      ? new Date(attempt.completedAt).toLocaleDateString("en-IN", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : generatedDate,
+    assessmentTitle: attempt.assessmentName || report.assessmentName,
+  }));
+
+  const scores = trend.map((item) => item.score);
+  const bestScore = scores.length ? Math.max(...scores) : result.totalScore;
+  const avgScore = scores.length
+    ? Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1))
+    : result.totalScore;
 
   const aqHistory: AQHistoryResponse = {
-    totalAttempts: 1,
-    bestScore: result.totalScore,
-    avgScore: result.totalScore,
+    totalAttempts: attemptList.length,
+    bestScore,
+    avgScore,
     latestScore: result.totalScore,
     latestLevel: result.aqLevel,
-    trend: [
-      {
-        attempt: 1,
-        score: result.totalScore,
-        level: result.aqLevel,
-        date: trendDate,
-        assessmentTitle: report.assessmentName,
-      },
-    ],
+    trend,
     subscaleAverages: result.subscales.map((sub) => ({
       dimension: sub.dimension,
       avgPercentage: Math.round(sub.percentage),
@@ -315,10 +349,14 @@ export default function AssessmentReportView({
   bottomBackLabel,
 }: AssessmentReportViewProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const auth = useMemo(() => getStoredAuth(), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
+  const [aqAttempts, setAQAttempts] = useState<AQAttemptItem[] | null>(null);
+  const [attemptsError, setAttemptsError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -334,6 +372,27 @@ export default function AssessmentReportView({
       .catch((e) => setError(e instanceof Error ? e.message : "Unable to load report"))
       .finally(() => setLoading(false));
   }, [auth?.token, fetchPath, loginHref, router]);
+
+  useEffect(() => {
+    if (!auth?.token || !report || !fetchPath.startsWith("/platform/student/")) {
+      return;
+    }
+
+    const normalizedCode = String(report.assessmentCode || "").toUpperCase();
+    if (normalizedCode !== "ADVERSITY_TEST") {
+      return;
+    }
+
+    apiRequest<{ attempts: AQAttemptItem[] }>(`/platform/student/assessments/${normalizedCode}/attempts`, {}, auth.token)
+      .then((res) => {
+        setAQAttempts(res.attempts);
+        setAttemptsError(null);
+      })
+      .catch((e) => {
+        setAQAttempts(null);
+        setAttemptsError(e instanceof Error ? e.message : "Unable to load attempt history");
+      });
+  }, [auth?.token, report, fetchPath]);
 
   if (loading) {
     return (
@@ -360,7 +419,9 @@ export default function AssessmentReportView({
 
   const evaluation = report.evaluation as Record<string, unknown>;
   const normalizedCode = String(report.assessmentCode || "").toUpperCase();
-  const aqReport = normalizedCode === "ADVERSITY_TEST"
+  const currentAttemptId = (searchParams?.get("attemptId") || report.attemptId);
+  const showAQAttemptHistory = normalizedCode === "ADVERSITY_TEST";
+  const aqReport = showAQAttemptHistory
     ? (() => {
         const evaluation = report.evaluation as unknown as AQEvaluation;
         return evaluation && Array.isArray(evaluation.subscales) ? evaluation : null;
@@ -390,7 +451,8 @@ export default function AssessmentReportView({
           aqReport,
           report,
           reportStudentName,
-          reportEmail
+          reportEmail,
+          aqAttempts || undefined
         );
         const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement("a");
@@ -518,6 +580,19 @@ export default function AssessmentReportView({
         return;
       }
 
+      if (normalizedCode === "ACADEMIC_CAREER") {
+        const acEvaluation = evaluation as any;
+        await generateAcademicCareerReport({
+          studentName: reportStudentName,
+          classGrade,
+          schoolName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          evaluation: acEvaluation,
+          organizationBranding: reportBranding,
+        });
+        return;
+      }
+
       const { default: jsPDF } = await import("jspdf");
       const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
       pdf.setFont("helvetica", "bold");
@@ -544,7 +619,7 @@ export default function AssessmentReportView({
       let pdfBlob: Blob | undefined;
 
       if (normalizedCode === "ADVERSITY_TEST" && aqReport) {
-        pdfBlob = await generateAQReportBlob(aqReport, report, reportStudentName, reportEmail);
+        pdfBlob = await generateAQReportBlob(aqReport, report, reportStudentName, reportEmail, aqAttempts || undefined);
       }
 
       if (normalizedCode === "JOHARI_WINDOW") {
@@ -636,6 +711,16 @@ export default function AssessmentReportView({
             BEHAVIORAL_SOCIAL: { score: sections.BEHAVIORAL_SOCIAL?.totalScore || 0, maxScore: sections.BEHAVIORAL_SOCIAL?.maxScore || 100, parts: sections.BEHAVIORAL_SOCIAL?.parts || [] },
             STRESS_RESILIENCE: { score: sections.STRESS_RESILIENCE?.totalScore || 0, maxScore: sections.STRESS_RESILIENCE?.maxScore || 160, parts: sections.STRESS_RESILIENCE?.parts || [] },
           },
+        }, { returnBlob: true }) as Blob | undefined;
+      } else if (normalizedCode === "ACADEMIC_CAREER") {
+        const acEvaluation = evaluation as any;
+        pdfBlob = await generateAcademicCareerReport({
+          studentName: reportStudentName,
+          classGrade,
+          schoolName,
+          submittedAt: report.submittedAt ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "—",
+          evaluation: acEvaluation,
+          organizationBranding: reportBranding,
         }, { returnBlob: true }) as Blob | undefined;
       } else {
         const { default: jsPDF } = await import("jspdf");
@@ -958,6 +1043,11 @@ export default function AssessmentReportView({
       );
     }
 
+    if (normalizedCode === "ACADEMIC_CAREER") {
+      const acEvaluation = evaluation as any;
+      return <AcademicCareerReport evaluation={acEvaluation} submittedAt={report.submittedAt} />;
+    }
+
     return <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">Report generated successfully.</div>;
   };
 
@@ -976,6 +1066,54 @@ export default function AssessmentReportView({
           </div>
         </div>
       </div>
+
+      {showAQAttemptHistory && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Your AQ Attempts</h2>
+              <p className="text-sm text-slate-500">Select any attempt to view that report.</p>
+            </div>
+            {attemptsError && <p className="text-sm text-rose-600">{attemptsError}</p>}
+          </div>
+          <div className="space-y-3">
+            {aqAttempts === null ? (
+              <div className="text-sm text-slate-500">Loading attempt history…</div>
+            ) : aqAttempts.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">No previous AQ attempts found.</div>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {aqAttempts.map((attempt) => {
+                  const isCurrent = attempt.attemptId === currentAttemptId;
+                  const score = attempt.evaluation?.totalScore ?? 0;
+                  const level = attempt.evaluation?.aqLevel ?? "—";
+                  return (
+                    <button
+                      key={attempt.attemptId}
+                      onClick={() => {
+                        if (!pathname) return;
+                        router.push(`${pathname}?attemptId=${attempt.attemptId}`);
+                      }}
+                      className={`w-full rounded-2xl border p-4 text-left transition ${isCurrent ? "border-blue-600 bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300"}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Attempt {attempt.attemptNumber}</p>
+                          <p className="text-xs text-slate-500">{attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Not submitted"}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-slate-900">{score}</p>
+                          <p className="text-xs text-slate-500">{level}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap justify-end gap-3">
         <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">

@@ -223,6 +223,10 @@ const isLitmusAssessmentCode = (assessmentCode: string): boolean => (
   normalizeAssessmentCode(assessmentCode) === "LITMUS_TEST"
 );
 
+const isAdversityAssessmentCode = (assessmentCode: string): boolean => (
+  normalizeAssessmentCode(assessmentCode) === "ADVERSITY_TEST"
+);
+
 const isAssessmentAccessibleForLearner = (learnerRole: LearnerRole, assessmentCode: string): boolean => {
   const isLitmus = isLitmusAssessmentCode(assessmentCode);
   if (learnerRole === "PARENT") {
@@ -1502,21 +1506,44 @@ export const listStudentResults = async (req: AuthRequest, res: Response): Promi
       status: "COMPLETED",
     }).sort({ completedAt: -1, updatedAt: -1 });
 
-    res.json({
-      results: attempts
-        .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
-        .map((attempt) => {
+    const groupedResults = new Map<string, {
+      assessmentCode: string;
+      assessmentName: string;
+      latestAttempt: typeof attempts[number];
+      totalAttempts: number;
+    }>();
+
+    attempts
+      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
+      .forEach((attempt) => {
         const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
-        return {
-          id: attempt._id,
+        const existing = groupedResults.get(canonicalCode);
+        if (existing) {
+          existing.totalAttempts += 1;
+          return;
+        }
+
+        groupedResults.set(canonicalCode, {
           assessmentCode: canonicalCode,
           assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
-          answeredCount: attempt.answeredCount,
-          totalQuestions: attempt.totalQuestions,
-          completedAt: attempt.completedAt,
-          createdAt: attempt.createdAt,
-        };
-      }),
+          latestAttempt: attempt,
+          totalAttempts: 1,
+        });
+      });
+
+    res.json({
+      results: Array.from(groupedResults.values()).map(({ assessmentCode, assessmentName, latestAttempt, totalAttempts }) => ({
+        id: latestAttempt._id,
+        assessmentCode,
+        assessmentName,
+        answeredCount: latestAttempt.answeredCount,
+        totalQuestions: latestAttempt.totalQuestions,
+        completedAt: latestAttempt.completedAt,
+        createdAt: latestAttempt.createdAt,
+        totalAttempts,
+        latestScore: latestAttempt.evaluation?.totalScore ?? undefined,
+        latestLevel: latestAttempt.evaluation?.aqLevel ?? undefined,
+      })),
     });
   } catch (error) {
     console.error("listStudentResults error:", error);
@@ -1597,6 +1624,48 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
   } catch (error) {
     console.error("listStudentAssessments error:", error);
     res.status(500).json({ message: "Failed to load assessments" });
+  }
+};
+
+export const listStudentAssessmentAttempts = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const codeParam = req.params.code;
+  const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
+  if (!code) {
+    res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  const canonicalCode = normalizeAssessmentCode(code);
+  if (!requireLearnerAssessmentAccess(res, learnerRole, canonicalCode)) {
+    return;
+  }
+
+  try {
+    const attempts = await StudentAssessmentAttempt.find({
+      user: req.user!._id,
+      organization: req.user!.organization,
+      assessmentCode: canonicalCode,
+      status: "COMPLETED",
+    }).sort({ completedAt: 1, updatedAt: 1 });
+
+    res.json({
+      attempts: attempts.map((attempt, index) => ({
+        attemptId: attempt._id,
+        assessmentCode: normalizeAssessmentCode(attempt.assessmentCode),
+        assessmentName: attempt.assessmentName,
+        completedAt: attempt.completedAt,
+        evaluation: attempt.evaluation ?? undefined,
+        attemptNumber: index + 1,
+      })),
+    });
+  } catch (error) {
+    console.error("listStudentAssessmentAttempts error:", error);
+    res.status(500).json({ message: "Failed to load assessment attempts" });
   }
 };
 
@@ -1922,9 +1991,19 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const [assessment, existingAttempt] = await Promise.all([
+  const [assessment, inProgressAttempt, latestExistingAttempt] = await Promise.all([
     Assessment.findOne({ code: { $in: codeAliases }, active: true }),
-    StudentAssessmentAttempt.findOne({ user: userId, organization: organizationId, assessmentCode: { $in: codeAliases } }),
+    StudentAssessmentAttempt.findOne({
+      user: userId,
+      organization: organizationId,
+      assessmentCode: { $in: codeAliases },
+      status: "IN_PROGRESS",
+    }).sort({ updatedAt: -1 }),
+    StudentAssessmentAttempt.findOne({
+      user: userId,
+      organization: organizationId,
+      assessmentCode: { $in: codeAliases },
+    }).sort({ updatedAt: -1 }),
   ]);
 
   if (!assessment) {
@@ -1932,18 +2011,13 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  if (existingAttempt?.status === "COMPLETED") {
-    res.status(409).json({ message: "You have already completed this assessment." });
-    return;
-  }
-
-  if (existingAttempt?.status === "IN_PROGRESS") {
-    const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(existingAttempt.questions);
+  if (inProgressAttempt) {
+    const hydratedQuestions = await hydrateAttemptQuestionsWithOptions(inProgressAttempt.questions);
     let orderedQuestions = canonicalCode === "CAREER_DNA"
       ? [...hydratedQuestions]
       : await orderQuestionsByDatabaseInsertion(hydratedQuestions);
 
-    if (canonicalCode === "CAREER_DNA" && existingAttempt.answeredCount === 0) {
+    if (canonicalCode === "CAREER_DNA" && inProgressAttempt.answeredCount === 0) {
       const sourceQuestions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true })
         .sort({ createdAt: 1, _id: 1 });
 
@@ -1970,29 +2044,29 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
             (currentCategoryCounts.get(category) || 0) !== count
           ));
 
-        if (existingAttempt.totalQuestions !== expectedCareerDnaQuestionCount || hasDistributionMismatch) {
+        if (inProgressAttempt.totalQuestions !== expectedCareerDnaQuestionCount || hasDistributionMismatch) {
           orderedQuestions = sampledCareerDnaQuestions;
         }
       }
     }
 
     const questionsReordered = orderedQuestions.some((question, index) => (
-      String(question.questionId) !== String(existingAttempt.questions[index]?.questionId)
-    )) || orderedQuestions.length !== existingAttempt.questions.length;
+      String(question.questionId) !== String(inProgressAttempt.questions[index]?.questionId)
+    )) || orderedQuestions.length !== inProgressAttempt.questions.length;
 
     const shouldNormalizeAttemptMetadata =
-      existingAttempt.assessmentCode !== canonicalCode
-      || existingAttempt.assessmentName !== getAssessmentDisplayName(canonicalCode, existingAttempt.assessmentName);
+      inProgressAttempt.assessmentCode !== canonicalCode
+      || inProgressAttempt.assessmentName !== getAssessmentDisplayName(canonicalCode, inProgressAttempt.assessmentName);
 
     if (
-      hydratedQuestions.some((question, index) => question.options !== existingAttempt.questions[index].options)
+      hydratedQuestions.some((question, index) => question.options !== inProgressAttempt.questions[index].options)
       || questionsReordered
       || shouldNormalizeAttemptMetadata
     ) {
-      const nextAssessmentName = getAssessmentDisplayName(canonicalCode, assessment?.name || existingAttempt.assessmentName);
+      const nextAssessmentName = getAssessmentDisplayName(canonicalCode, assessment?.name || inProgressAttempt.assessmentName);
 
       await StudentAssessmentAttempt.updateOne(
-        { _id: existingAttempt._id },
+        { _id: inProgressAttempt._id },
         {
           $set: {
             questions: orderedQuestions,
@@ -2003,23 +2077,28 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
         }
       );
 
-      existingAttempt.questions = orderedQuestions as typeof existingAttempt.questions;
-      existingAttempt.totalQuestions = orderedQuestions.length;
-      existingAttempt.assessmentCode = canonicalCode;
-      existingAttempt.assessmentName = nextAssessmentName;
+      inProgressAttempt.questions = orderedQuestions as typeof inProgressAttempt.questions;
+      inProgressAttempt.totalQuestions = orderedQuestions.length;
+      inProgressAttempt.assessmentCode = canonicalCode;
+      inProgressAttempt.assessmentName = nextAssessmentName;
     }
 
     res.json({
       attempt: {
-        id: existingAttempt._id,
+        id: inProgressAttempt._id,
         assessmentCode: canonicalCode,
-        assessmentName: getAssessmentDisplayName(canonicalCode, assessment?.name || existingAttempt.assessmentName),
-        status: existingAttempt.status,
+        assessmentName: getAssessmentDisplayName(canonicalCode, assessment?.name || inProgressAttempt.assessmentName),
+        status: inProgressAttempt.status,
         questions: orderedQuestions,
-        answeredCount: existingAttempt.answeredCount,
-        totalQuestions: existingAttempt.totalQuestions,
+        answeredCount: inProgressAttempt.answeredCount,
+        totalQuestions: inProgressAttempt.totalQuestions,
       },
     });
+    return;
+  }
+
+  if (latestExistingAttempt?.status === "COMPLETED" && !isAdversityAssessmentCode(canonicalCode)) {
+    res.status(409).json({ message: "You have already completed this assessment." });
     return;
   }
 

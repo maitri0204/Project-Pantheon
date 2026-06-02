@@ -8,6 +8,7 @@ import {
   getStudentDashboard,
   getDashboard,
   getStudentAssessmentPricing,
+  listStudentAssessmentAttempts,
   listStudentInvoices,
   listOrganizationInvoices,
   getStudentAttemptReport,
@@ -51,6 +52,7 @@ router.get("/student/dashboard", requireAuth, requireRoles("STUDENT", "PARENT"),
 router.get("/student/results", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentResults);
 router.get("/student/invoices", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentInvoices);
 router.get("/student/assessments", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentAssessments);
+router.get("/student/assessments/:code/attempts", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentAssessmentAttempts);
 router.get("/student/assessments/:code/pricing", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAssessmentPricing);
 router.post("/student/assessments/:code/payment/order", requireAuth, requireRoles("STUDENT", "PARENT"), createStudentAssessmentPaymentOrder);
 router.post("/student/assessments/:code/payment/verify", requireAuth, requireRoles("STUDENT", "PARENT"), verifyStudentAssessmentPayment);

@@ -5,7 +5,7 @@ import app from "./app";
 import { connectDB } from "./config/db";
 import { bootstrapPlatform } from "./services/bootstrap";
 import { validateEnvironmentVariables } from "./services/envValidator";
-import { ensureInvoiceIndexes } from "./services/indexInitializer";
+import { ensureInvoiceIndexes, ensureStudentAssessmentAttemptIndexes } from "./services/indexInitializer";
 
 // Load .env relative to this file's location so it works regardless of process CWD
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
@@ -21,6 +21,7 @@ const startServer = async (): Promise<void> => {
     
     // Ensure database indexes for performance optimization
     await ensureInvoiceIndexes();
+    await ensureStudentAssessmentAttemptIndexes();
     
     await bootstrapPlatform();
 

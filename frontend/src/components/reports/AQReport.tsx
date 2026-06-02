@@ -693,7 +693,7 @@ function ProgressBar({ pct, color }: { pct: number; color: string }) {
 
 function PageFooter({ name, date }: { name: string; date: string }) {
   return (
-    <View style={S.footer}>
+    <View style={[S.footer, S.footerFixed]} fixed>
       <Text style={S.footerL}>Adversity AQ Analytics Report · {name}</Text>
       <Text style={S.footerR}>Generated {date} · Confidential</Text>
     </View>
@@ -711,8 +711,8 @@ function PageFooter({ name, date }: { name: string; date: string }) {
 const S = StyleSheet.create({
   // ── Pages — fontFamily + fontWeight set at page level so every Text inherits
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
-  contentPage: { backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 40, fontFamily: 'Inter', fontWeight: 400 },
-  finalPage:   { backgroundColor: C.dark, paddingHorizontal: 56, paddingTop: 52, paddingBottom: 40, fontFamily: 'Inter', fontWeight: 400 },
+  contentPage: { position: 'relative', backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 90, fontFamily: 'Inter', fontWeight: 400 },
+  finalPage:   { position: 'relative', backgroundColor: C.dark, paddingHorizontal: 56, paddingTop: 52, paddingBottom: 90, fontFamily: 'Inter', fontWeight: 400 },
 
   // ── Content wrapper (flex grow for footer push-down)
   contentWrapper: { flex: 1, display: 'flex', flexDirection: 'column' },
@@ -750,7 +750,8 @@ const S = StyleSheet.create({
   headerRight: { alignItems: 'flex-end' },
   headerBrand: { fontSize: 9, fontWeight: 700, color: C.sky, letterSpacing: 1 },
   headerPg: { fontSize: 7.5, fontWeight: 400, color: C.slate400, marginTop: 2 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: C.slate200, paddingTop: 8, paddingBottom: 28, marginTop: 12 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: C.slate200, paddingTop: 8, paddingBottom: 12 },
+  footerFixed: { position: 'absolute', left: 40, right: 40, bottom: 28 },
   footerL: { fontSize: 7.5, fontWeight: 400, color: C.slate400 },
   footerR: { fontSize: 7.5, fontWeight: 400, color: C.slate400 },
 

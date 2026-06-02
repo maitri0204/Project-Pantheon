@@ -309,23 +309,41 @@ export default function StudentAssessmentsPage() {
               </div>
 
               <div className="mt-4 flex gap-3">
-                <button
-                  onClick={() => {
-                    if (canViewReport) {
-                      openReport(assessment.code, assessment.attempt?.id);
-                      return;
-                    }
-                    if (inProgress) {
-                      void startTestWithPayment(assessment.code);
-                      return;
-                    }
-                    void openCheckout(assessment.code);
-                  }}
-                  disabled={(!canViewReport && completed) || startingCode === assessment.code}
-                  className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
-                >
-                  {canViewReport ? "View Report" : completed ? "Already Completed" : inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
-                </button>
+                {assessment.code === "ADVERSITY_TEST" && completed ? (
+                  <>
+                    <button
+                      onClick={() => openReport(assessment.code, assessment.attempt?.id)}
+                      className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800"
+                    >
+                      View Report
+                    </button>
+                    <button
+                      onClick={() => void openCheckout(assessment.code)}
+                      disabled={startingCode === assessment.code}
+                      className="flex-1 rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55"
+                    >
+                      {startingCode === assessment.code ? "Starting…" : "Retake Test"}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (canViewReport) {
+                        openReport(assessment.code, assessment.attempt?.id);
+                        return;
+                      }
+                      if (inProgress) {
+                        void startTestWithPayment(assessment.code);
+                        return;
+                      }
+                      void openCheckout(assessment.code);
+                    }}
+                    disabled={(!canViewReport && completed) || startingCode === assessment.code}
+                    className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    {canViewReport ? "View Report" : completed ? "Already Completed" : inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
+                  </button>
+                )}
 
                 <button
                   onClick={() => {

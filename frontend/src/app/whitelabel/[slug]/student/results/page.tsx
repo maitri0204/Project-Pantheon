@@ -14,6 +14,9 @@ type StudentResultItem = {
   totalQuestions: number;
   completedAt?: string;
   createdAt?: string;
+  totalAttempts: number;
+  latestScore?: number;
+  latestLevel?: string;
 };
 
 type StudentResultsResponse = {
@@ -113,7 +116,7 @@ export default function StudentResultsPage() {
           {results.map((result) => {
             const canViewReport = true;
             return (
-              <div key={result.id} className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_14px_30px_-22px_rgba(30,64,175,0.65)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_45px_-24px_rgba(37,99,235,0.75)]">
+              <div key={result.assessmentCode} className="group relative overflow-hidden rounded-2xl border border-blue-100 bg-white p-5 shadow-[0_14px_30px_-22px_rgba(30,64,175,0.65)] transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_45px_-24px_rgba(37,99,235,0.75)]">
                 <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-blue-100/60 blur-2xl opacity-0 transition-opacity group-hover:opacity-100" />
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -122,6 +125,15 @@ export default function StudentResultsPage() {
                     <p className="mt-1 text-sm text-slate-600">
                       {result.answeredCount}/{result.totalQuestions} answered
                     </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span className="rounded-full bg-slate-50 px-2.5 py-1 border border-slate-100">{result.totalAttempts} attempt{result.totalAttempts > 1 ? "s" : ""}</span>
+                      {result.latestScore !== undefined && (
+                        <span className="rounded-full bg-slate-50 px-2.5 py-1 border border-slate-100">Latest score: {result.latestScore}</span>
+                      )}
+                      {result.latestLevel && (
+                        <span className="rounded-full bg-slate-50 px-2.5 py-1 border border-slate-100">{result.latestLevel}</span>
+                      )}
+                    </div>
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-500 border border-slate-100">
                       <CalendarClock className="h-3.5 w-3.5" />
                       Completed {result.completedAt ? new Date(result.completedAt).toLocaleString("en-IN") : "—"}
@@ -131,7 +143,7 @@ export default function StudentResultsPage() {
                   <button
                     onClick={() => {
                       if (!canViewReport) return;
-                      router.push(`/whitelabel/${slug}/student/assessments/${result.assessmentCode}/result?attemptId=${result.id}`);
+                      router.push(`/whitelabel/${slug}/student/assessments/${result.assessmentCode}/result`);
                     }}
                     disabled={!canViewReport}
                     className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.9)] hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
