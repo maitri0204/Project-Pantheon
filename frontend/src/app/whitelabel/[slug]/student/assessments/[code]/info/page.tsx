@@ -381,6 +381,147 @@ const content: Record<string, AssessmentPageContent> = {
         ],
       },
 
+      ADVERSITY_TEST: {
+        theme: {
+          badge: "Adversity Quotient (AQ) Assessment",
+          badgeClass: "bg-rose-50 text-rose-800",
+          gradient: "from-rose-50 via-white to-slate-50",
+          supportCardClass: "bg-rose-50 text-slate-900",
+          calloutClass: "border-rose-200 bg-rose-50 text-slate-800",
+          glanceTextClass: "text-rose-200",
+        },
+        hero: {
+          title: "Build Resilience. Respond Better Under Pressure.",
+          subtitle:
+            "The AQ Assessment measures how students and professionals respond to setbacks, stress, and challenges in real-life situations.",
+          supportingLine:
+            "It maps your resilience profile across four proven dimensions: Control, Ownership, Reach, and Endurance.",
+          sidePoints: ["30 questions", "CORE model scoring", "Action-focused resilience report"],
+        },
+        sections: [
+          {
+            title: "Who should take this assessment",
+            cards: [
+              { title: "Students", body: "Who want to improve consistency, emotional control, and confidence during exams and setbacks." },
+              { title: "Parents", body: "Who want to understand how their child reacts to pressure, failure, and responsibility." },
+              { title: "Professionals", body: "Who want stronger stress management, ownership mindset, and bounce-back ability." },
+            ],
+          },
+          {
+            title: "What AQ measures",
+            subtitle: "Your response pattern during difficult situations.",
+            cards: [
+              { title: "Control", body: "How much influence you feel you have over a difficult situation." },
+              { title: "Ownership", body: "How willing you are to take responsibility and act instead of blaming circumstances." },
+              { title: "Reach", body: "How far you allow one problem to affect other areas of life." },
+              { title: "Endurance", body: "How long you believe setbacks will continue before improvement happens." },
+            ],
+            callout: "These four dimensions create your AQ profile and explain how you currently handle adversity.",
+          },
+          {
+            title: "Why this assessment matters",
+            bullets: [
+              "Resilience predicts long-term success more reliably than short-term performance",
+              "Students with stronger AQ recover faster from low scores and pressure",
+              "Ownership mindset improves decision quality and confidence",
+              "AQ can be developed through guided habits and reflection",
+            ],
+          },
+          {
+            title: "What you receive in the report",
+            grid: [
+              { title: "Overall AQ level", body: "A clear total AQ score with interpretation." },
+              { title: "Subscale breakdown", body: "Control, Ownership, Reach, and Endurance scores." },
+              { title: "Strength and risk areas", body: "Where your resilience pattern is strongest and where support is needed." },
+              { title: "Action roadmap", body: "Practical recommendations to improve stress response and bounce-back behavior." },
+            ],
+          },
+          {
+            title: "How to use this report",
+            bullets: [
+              "Review the result with a counselor, parent, or mentor",
+              "Focus on one weak AQ dimension at a time",
+              "Track progress by re-attempting after habit changes",
+              "Use insights during exam prep, career planning, and performance review",
+            ],
+            callout: "AQ is not fixed. With structure and reflection, resilience can be improved significantly.",
+          },
+        ],
+      },
+
+      ACADEMIC_CAREER: {
+        theme: {
+          badge: "Academic Career & Interest Test",
+          badgeClass: "bg-cyan-50 text-cyan-800",
+          gradient: "from-cyan-50 via-white to-slate-50",
+          supportCardClass: "bg-cyan-50 text-slate-900",
+          calloutClass: "border-cyan-200 bg-cyan-50 text-slate-800",
+          glanceTextClass: "text-cyan-200",
+        },
+        hero: {
+          title: "Find Your Academic Fit Before Choosing a Stream.",
+          subtitle:
+            "A grade-specific assessment for students in Grades 8, 9, and 10 that identifies strong interest domains and aligns them with subjects, streams, and career exposure.",
+          supportingLine:
+            "The report helps students, parents, and counselors make evidence-based academic decisions instead of guesswork.",
+          sidePoints: ["Grade 8–10 only", "10 interest domains", "Stream and career guidance"],
+        },
+        sections: [
+          {
+            title: "Who should take this test",
+            cards: [
+              { title: "Grade 8 students", body: "To explore curiosity and identify early interest patterns without stream pressure." },
+              { title: "Grade 9 students", body: "To build direction and narrow stronger domains before final stream decisions." },
+              { title: "Grade 10 students", body: "To connect interests with Grade 11 subject and stream choices." },
+            ],
+          },
+          {
+            title: "What the test measures",
+            subtitle: "Interest strength across 10 academic-career domains.",
+            bullets: [
+              "Science & Research",
+              "Commerce & Financial",
+              "Social Science, Law & Public Policy",
+              "Creative Arts, Design & Media",
+              "Technology & Digital Systems",
+              "Health, Biology & Human Performance",
+              "Communication, Language & Education",
+              "Entrepreneurship, Leadership & Management",
+              "Environment, Sustainability & Agriculture",
+              "Social Impact, Community & Helping",
+            ],
+          },
+          {
+            title: "What students receive",
+            grid: [
+              { title: "Top 3 interest areas", body: "Primary, supporting, and secondary domains with score levels." },
+              { title: "Score distribution", body: "Percentage-based strength across all 10 domains." },
+              { title: "Stream guidance", body: "Recommended stream direction with rationale and caution points." },
+              { title: "Career exposure list", body: "Suggested fields, activities, and next exploration paths." },
+            ],
+          },
+          {
+            title: "Why this helps families and schools",
+            bullets: [
+              "Reduces confusion before stream selection",
+              "Aligns subject choices with natural interest patterns",
+              "Improves counseling quality with structured evidence",
+              "Encourages realistic planning with exposure-based guidance",
+            ],
+            callout: "This report should be used with academic performance, counselor discussion, and parent observation.",
+          },
+          {
+            title: "Important note",
+            subtitle: "Interest is one major input, not the only decision factor.",
+            cards: [
+              { title: "Not an IQ or aptitude test", body: "It reflects current interest preference, not fixed capability." },
+              { title: "Not a permanent label", body: "Interests evolve with age, exposure, and learning experience." },
+              { title: "Best used as a planning tool", body: "Combine with marks, mentoring, and counseling for final decisions." },
+            ],
+          },
+        ],
+      },
+
       TEST: {
         theme: {
           badge: "Thinking & Expression Skills Test",
@@ -609,6 +750,19 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Learn", desc: "Plan and monitor learning", icon: "📚" },
               { title: "Express", desc: "Communicate ideas clearly", icon: "🗣️" },
             ]
+          : normalizedCode === "ADVERSITY_TEST"
+          ? [
+              { title: "Control", desc: "Influence under pressure", icon: "🎛️" },
+              { title: "Ownership", desc: "Responsibility in setbacks", icon: "🧭" },
+              { title: "Reach", desc: "Contain impact of setbacks", icon: "🛡️" },
+              { title: "Endurance", desc: "Bounce-back duration", icon: "⏳" },
+            ]
+          : normalizedCode === "ACADEMIC_CAREER"
+          ? [
+              { title: "Map interests", desc: "10 domain profile", icon: "🗺️" },
+              { title: "Identify top 3", desc: "Primary + supporting strengths", icon: "🥇" },
+              { title: "Stream guidance", desc: "Subject-aligned direction", icon: "🧭" },
+            ]
           : [
               { title: "King", desc: "Control and structure", icon: "👑" },
               { title: "Servant", desc: "Support and independence", icon: "🤝" },
@@ -641,6 +795,18 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Thinking Awareness", desc: "Approach and problem-solving methods", icon: "🧠" },
               { title: "Learning Strategy", desc: "Plan and organize study", icon: "🗂️" },
               { title: "Self-Monitoring", desc: "Recognize gaps and adjust", icon: "🔍" },
+            ]
+          : normalizedCode === "ADVERSITY_TEST"
+          ? [
+              { title: "Resilience profile", desc: "How you respond to adversity", icon: "🧱" },
+              { title: "Stress response", desc: "Reaction under pressure", icon: "⚡" },
+              { title: "Recovery pattern", desc: "Bounce-back capability", icon: "🔄" },
+            ]
+          : normalizedCode === "ACADEMIC_CAREER"
+          ? [
+              { title: "Grade-specific fit", desc: "Designed for Grades 8 to 10", icon: "🎓" },
+              { title: "Interest domains", desc: "Strength across 10 academic areas", icon: "📊" },
+              { title: "Actionable guidance", desc: "Streams, subjects, and exposure paths", icon: "🚀" },
             ]
           : [
               { title: "Confidence", desc: "Your child’s confidence", icon: "🌱" },
@@ -803,6 +969,112 @@ const content: Record<string, AssessmentPageContent> = {
                     <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
                       <p className="text-sm font-semibold text-white">Holistic fit</p>
                       <p className="mt-1 text-xs leading-5 text-slate-300">Learning + behavior + career alignment</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      if (normalizedCode === "ADVERSITY_TEST") {
+        return (
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="p-8 sm:p-10 lg:p-12">
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+                <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
+
+                <div className="mt-8 rounded-3xl bg-rose-50 p-6 shadow-lg">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-700">AQ dimension snapshot</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">A structured view of how you handle pressure, setbacks, and recovery.</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {heroBadgeItems.map((item) => (
+                      <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
+                        <div className="text-2xl">{item.icon}</div>
+                        <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden bg-[linear-gradient(160deg,#3a0f1d,#111827)] p-8 text-white sm:p-10 lg:p-12">
+                <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-rose-400/15 blur-3xl" />
+                <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-orange-400/10 blur-3xl" />
+                <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-200">At a glance</p>
+                  <div className="mt-5 space-y-3">
+                    {heroSidePoints.map((point) => (
+                      <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{point.title}</p>
+                          <p className="text-xs text-slate-300">{point.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      if (normalizedCode === "ACADEMIC_CAREER") {
+        return (
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="p-8 sm:p-10 lg:p-12">
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+                <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
+
+                <div className="mt-8 rounded-3xl bg-cyan-50 p-6 shadow-lg">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">Interest profile snapshot</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">Understand domain strengths before stream and subject selection.</p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {heroBadgeItems.map((item) => (
+                      <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
+                        <div className="text-2xl">{item.icon}</div>
+                        <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden bg-[linear-gradient(160deg,#0b2f3b,#111827)] p-8 text-white sm:p-10 lg:p-12">
+                <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-cyan-400/15 blur-3xl" />
+                <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-blue-400/10 blur-3xl" />
+                <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">At a glance</p>
+                  <div className="mt-5 space-y-3">
+                    {heroSidePoints.map((point) => (
+                      <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{point.title}</p>
+                          <p className="text-xs text-slate-300">{point.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <p className="text-sm font-semibold text-white">Top 3 domains</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">Primary and supporting interest strengths</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <p className="text-sm font-semibold text-white">Stream fit</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">Guidance for subject and stream choices</p>
                     </div>
                   </div>
                 </div>
