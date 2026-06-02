@@ -73,6 +73,7 @@ type PdfAnalysis = {
   streamLearningCompatibility: string;
   streamSupportingDomains: string[];
   suggestedSubjects: string[];
+  careerRecommendations: string[];
 };
 
 const INTEREST_MAP: Record<string, InterestMeta> = {
@@ -206,6 +207,11 @@ const styles = StyleSheet.create({
   warnBox: { borderWidth: 1, borderColor: "#c8a060", borderRadius: 4, padding: 11, marginBottom: 12, backgroundColor: "#fffbf0" },
   warnTitle: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#7a4800", marginBottom: 5 },
   warnText: { fontSize: 9, color: "#5a3000", lineHeight: 1.6 },
+  intCard: { borderWidth: 1, borderColor: "#c8d4e0", borderRadius: 4, padding: 12, marginBottom: 14 },
+  intCardRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 7 },
+  intCardRank: { fontSize: 8, color: "#4a7a99", backgroundColor: "#e4eef8", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, fontFamily: "Helvetica-Bold" },
+  intCardTitle: { fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0c1e3c", marginBottom: 4 },
+  intCardMeta: { fontSize: 9, color: "#333333", marginBottom: 7 },
   scoreBarTrack: { height: 8, backgroundColor: "#e2e8f0", borderRadius: 999, overflow: "hidden", flex: 1 },
   scoreBarFill: { height: 8, borderRadius: 999 },
   scoreRow: { flexDirection: "row", alignItems: "center", marginBottom: 9 },
@@ -323,6 +329,10 @@ function buildAnalysis(report: AcademicCareerPdfReport): PdfAnalysis {
     ].filter((item, index, arr) => arr.indexOf(item) === index),
     streamLearningCompatibility: `The student learns best when the work connects to ${topNames.slice(0, 2).join(" and ")}.`,
     streamSupportingDomains: topNames.slice(0, 3),
+    careerRecommendations: top
+      .flatMap((item) => [...(item.careers ?? []), ...(INTEREST_MAP[item.code]?.careers ?? [])])
+      .filter((item, index, arr) => arr.indexOf(item) === index)
+      .slice(0, 8),
     suggestedSubjects: [
       INTEREST_MAP[top[0]?.code ?? "B"]?.subjects ?? "Career-linked subjects",
       INTEREST_MAP[top[1]?.code ?? "F"]?.subjects ?? "Supportive subjects",
@@ -347,13 +357,15 @@ type NormalizedInterest = {
   code: string;
   name: string;
   careers: string[];
+  streams: string[];
 };
 
 function normalizeTop3(report: AcademicCareerPdfReport, scores: PdfScore[]): NormalizedInterest[] {
   const picked: NormalizedInterest[] = [];
   const seen = new Set<string>();
+  const defaultStream = normalizeStream(report.streamRecommendationDetailed || report.streamRecommendation || "Exploratory Stream");
 
-  const add = (code: string, name?: string, careers?: string[]) => {
+  const add = (code: string, name?: string, careers?: string[], streams?: string[]) => {
     const resolvedCode = (code || "B").toUpperCase();
     if (seen.has(resolvedCode)) return;
     const meta = INTEREST_MAP[resolvedCode] ?? INTEREST_MAP["B"];
@@ -362,11 +374,12 @@ function normalizeTop3(report: AcademicCareerPdfReport, scores: PdfScore[]): Nor
       code: resolvedCode,
       name: name?.trim() || meta.subjects.split(",")[0] || "Interest Area",
       careers: (careers && careers.length > 0 ? careers : meta.careers).slice(0, 6),
+      streams: (streams && streams.length > 0 ? streams : [defaultStream]).slice(0, 3),
     });
   };
 
   for (const item of report.topInterests ?? []) {
-    add(item.code, item.name, item.careers);
+    add(item.code, item.name, item.careers, item.streams);
     if (picked.length >= 3) break;
   }
 
@@ -402,6 +415,7 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
     code: "B",
     name: "Commerce & Financial",
     careers: INTEREST_MAP.B.careers,
+    streams: [normalizeStream(report.streamRecommendationDetailed || report.streamRecommendation || "Exploratory Stream")],
   };
   const i1 = top3[0] ?? fallbackInterest;
   const i2 = top3[1] ?? i1;
@@ -416,7 +430,7 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
       code: item.code,
       name: item.name,
       careers: item.careers,
-      streams: [],
+      streams: item.streams,
       color: "",
       icon: "",
     })),
@@ -636,33 +650,54 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
         <Text style={styles.body}>
           {report.student.fullName}'s current interest profile shows strongest attraction toward {i1.name}, {i2.name}, and {i3.name}. This suggests the student may enjoy learning experiences that involve {i1.careers.slice(0, 2).join(" and ")} at the primary level, supported by {i2.careers.slice(0, 2).join(" and ")}-related exploration.
         </Text>
-        <Text style={styles.body}>This does not mean the student must choose only these career areas. It means these areas should be explored seriously through subjects, projects, competitions, reading, workshops, and counseling discussions. Detailed analysis of each of the top three areas follows in the next sections.</Text>
-        <Text style={styles.bodyBold}>Career Areas Recommended for Exploration</Text>
-        {[i1, i2, i3].flatMap((item) => (item.careers ?? []).slice(0, 2)).map((career, index) => <Text key={`${career}-${index}`} style={styles.bullet}>{"\u2022  "}{career}</Text>)}
+        <Text style={styles.body}>
+          This does not mean the student must choose only these career areas. It means these areas should be explored seriously through subjects, projects, competitions, reading, workshops, and counseling discussions. Detailed analysis of each of the top three areas follows in Sections 8, 9, and 10.
+        </Text>
+        {analysis.careerRecommendations.length > 0 && (
+          <View>
+            {subHeading("Career Areas Recommended for Exploration")}
+            {analysis.careerRecommendations.slice(0, 8).map((career, idx) => (
+              <Text key={`career-rec-${idx}`} style={styles.bullet}>{"\u2022  "}{career}</Text>
+            ))}
+          </View>
+        )}
         {footer(report.student.fullName)}
       </Page>
 
       {top3.map((item, index) => {
         const meta = INTEREST_MAP[item.code] ?? INTEREST_MAP["B"];
         const score = findScore(scores, item.code);
+        const careerExposure = [...(item.careers ?? []), ...meta.careers]
+          .filter((value, idx, arr) => arr.indexOf(value) === idx)
+          .slice(0, 6);
+        const rankLabel = index === 0 ? "Primary Interest" : index === 1 ? "Supporting Interest" : "Secondary Interest";
         return (
           <Page key={item.code} size="A4" style={styles.page}>
             {sectionHeader(report.student.fullName, `Section ${7 + index} - Interest Area ${index + 1}`)}
             <View style={styles.sectionWrap}><Text style={styles.sectionNum}>{`Section ${7 + index}`}</Text><Text style={styles.sectionTitle}>{`Interest Area ${index + 1}: ${item.name}`}</Text></View>
-            <Text style={styles.bodyBold}>{`#${index + 1} - ${index === 0 ? "Primary" : index === 1 ? "Supporting" : "Secondary"} Interest ${score.percentage}%  |  ${score.level}`}</Text>
-            <Text style={styles.bodyBold}>{item.name}</Text>
-            <Text style={styles.body}>Score: {score.score}  |  Percentage: {score.percentage}%  |  Band: {score.level}</Text>
-            <Text style={styles.bodyBold}>What This Interest Suggests</Text>
-            <Text style={styles.body}>{report.student.fullName} shows a repeated attraction toward tasks and scenarios connected with {item.name}. A score at this level is not casual curiosity - it reflects a genuine current preference that should be explored through structured activities and direct subject engagement.</Text>
-            <Text style={styles.bodyBold}>Academic Subjects Connected to This Area</Text>
+            <View style={styles.intCard}>
+              <View style={styles.intCardRow}>
+                <Text style={styles.intCardRank}>#{index + 1} - {rankLabel}</Text>
+                <Text style={[styles.tdB, { fontSize: 10 }]}>{score.percentage}%  |  {score.level}</Text>
+              </View>
+              <Text style={styles.intCardTitle}>{item.name}</Text>
+              <Text style={styles.intCardMeta}>Score: {score.score}  |  Percentage: {score.percentage}%  |  Band: {score.level}</Text>
+            </View>
+            {subHeading("What This Interest Suggests")}
+            <Text style={styles.body}>
+              {report.student.fullName} shows a repeated attraction toward tasks and scenarios connected with {item.name}. A score at the {score.level} level is not casual curiosity - it reflects a genuine current preference that should be explored through structured activities and direct subject engagement.
+            </Text>
+            {subHeading("Academic Subjects Connected to This Area")}
             <Text style={styles.body}>{meta.subjects}</Text>
-            <Text style={styles.body}>Stream alignment: {meta.careers.slice(0, 3).join(" / ")}</Text>
-            <Text style={styles.bodyBold}>Suitable Exploration Activities</Text>
-            {meta.activities.slice(0, 5).map((activity, idx) => (
+            {(item.streams?.length ?? 0) > 0 && (
+              <Text style={styles.body}>Stream alignment: {item.streams.join("  |  ")}</Text>
+            )}
+            {subHeading("Suitable Exploration Activities")}
+            {meta.activities.map((activity, idx) => (
               <Text key={`activity-${item.code}-${idx}`} style={styles.bullet}>{"\u2022  "}{activity}</Text>
             ))}
-            <Text style={styles.bodyBold}>Possible Career Exposure Areas</Text>
-            {item.careers.slice(0, 6).map((career, idx) => (
+            {subHeading("Possible Career Exposure Areas")}
+            {careerExposure.map((career, idx) => (
               <Text key={`career-${item.code}-${idx}`} style={styles.bullet}>{"\u2022  "}{career}</Text>
             ))}
             <View style={[styles.warnBox, { marginTop: 10 }]}>
@@ -679,17 +714,25 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
         <View style={styles.sectionWrap}><Text style={styles.sectionNum}>Section 10</Text><Text style={styles.sectionTitle}>Academic Alignment</Text></View>
         <Text style={styles.body}>This section compares the student's interest profile with academic subject performance. A strong interest that is not supported by consistent academic performance in related subjects must be investigated before any stream decision is made.</Text>
         <View style={styles.warnBox}><Text style={styles.warnTitle}>Key Principle</Text><Text style={styles.warnText}>Interest without effort, consistency, and subject comfort should be treated as curiosity - not readiness. A student who loves Technology but avoids Mathematics cannot simply become a software engineer through interest alone.</Text></View>
-        <Text style={styles.bodyBold}>Subject Performance Table - To Be Completed in Counseling Session</Text>
+        {subHeading("Subject Performance Table - To Be Completed in Counseling Session")}
         <View style={styles.table}>
           <View style={styles.thr}><Text style={[styles.th, { width: "26%" }]}>Subject</Text><Text style={[styles.th, { width: "20%", textAlign: "center" }]}>Current Marks</Text><Text style={[styles.th, { width: "18%", textAlign: "center" }]}>Performance</Text><Text style={[styles.th, { width: "18%", textAlign: "center" }]}>Interest Link</Text><Text style={[styles.th, { width: "18%", textAlign: "center" }]}>Alignment</Text></View>
           {["Mathematics", "Science", "Social Science", "English / Language", "Computer Science", "Art / Creative", "Physical Education"].map((subject, i) => <View key={subject} style={i % 2 === 0 ? styles.tr : styles.trAlt}><Text style={[styles.tdB, { width: "26%" }]}>{subject}</Text><Text style={[styles.td, { width: "20%", textAlign: "center" }]}>{"-"}</Text><Text style={[styles.td, { width: "18%", textAlign: "center" }]}>{"-"}</Text><Text style={[styles.td, { width: "18%", textAlign: "center" }]}>{"-"}</Text><Text style={[styles.td, { width: "18%", textAlign: "center" }]}>{"-"}</Text></View>)}
         </View>
-        <Text style={styles.bodyBold}>Academic Alignment Interpretation</Text>
+        {subHeading("Academic Alignment Interpretation")}
         <Text style={styles.body}>{report.student.fullName}'s interest profile shows attraction toward {i1.name} and {i2.name}. Before recommending the {analysis.streamName} stream, the counselor should verify that the student's performance in related academic subjects supports this direction.</Text>
-        <Text style={styles.bodyBold}>Observed Behavioural Patterns</Text>
-        {analysis.behavioralPatterns.slice(0, 4).map((item, i) => <Text key={i} style={styles.bullet}>{"\u2022  "}{item}</Text>)}
-        <Text style={styles.bodyBold}>Learning Tendencies</Text>
-        {analysis.learningTendencies.slice(0, 4).map((item, i) => <Text key={i} style={styles.bullet}>{"\u2022  "}{item}</Text>)}
+        {analysis.behavioralPatterns.length > 0 && (
+          <View>
+            {subHeading("Observed Behavioural Patterns")}
+            {analysis.behavioralPatterns.slice(0, 4).map((item, i) => <Text key={i} style={styles.bullet}>{"\u2022  "}{item}</Text>)}
+          </View>
+        )}
+        {analysis.learningTendencies.length > 0 && (
+          <View>
+            {subHeading("Learning Tendencies")}
+            {analysis.learningTendencies.slice(0, 4).map((item, i) => <Text key={i} style={styles.bullet}>{"\u2022  "}{item}</Text>)}
+          </View>
+        )}
         {footer(report.student.fullName)}
       </Page>
 
