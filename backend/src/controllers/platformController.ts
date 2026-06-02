@@ -227,10 +227,33 @@ const isAdversityAssessmentCode = (assessmentCode: string): boolean => (
   normalizeAssessmentCode(assessmentCode) === "ADVERSITY_TEST"
 );
 
-const isAssessmentAccessibleForLearner = (learnerRole: LearnerRole, assessmentCode: string): boolean => {
+const isAcademicCareerAssessmentCode = (assessmentCode: string): boolean => (
+  normalizeAssessmentCode(assessmentCode) === "ACADEMIC_CAREER"
+);
+
+const getAcademicCareerGradeCategory = (grade?: string): string | null => {
+  const normalizedGrade = String(grade || "").toLowerCase().trim();
+  const match = normalizedGrade.match(/\d+/);
+  const numericGrade = match ? Number(match[0]) : Number.NaN;
+  if (![8, 9, 10].includes(numericGrade)) {
+    return null;
+  }
+
+  return `Grade-${numericGrade}`;
+};
+
+const isAssessmentAccessibleForLearner = (
+  learnerRole: LearnerRole,
+  assessmentCode: string,
+  learnerGrade?: string
+): boolean => {
   const isLitmus = isLitmusAssessmentCode(assessmentCode);
   if (learnerRole === "PARENT") {
     return isLitmus;
+  }
+
+  if (isAcademicCareerAssessmentCode(assessmentCode)) {
+    return Boolean(getAcademicCareerGradeCategory(learnerGrade));
   }
 
   return !isLitmus;
@@ -239,11 +262,17 @@ const isAssessmentAccessibleForLearner = (learnerRole: LearnerRole, assessmentCo
 const requireLearnerAssessmentAccess = (
   res: Response,
   learnerRole: LearnerRole,
-  assessmentCode: string
+  assessmentCode: string,
+  learnerGrade?: string
 ): boolean => {
-  if (!isAssessmentAccessibleForLearner(learnerRole, assessmentCode)) {
+  if (!isAssessmentAccessibleForLearner(learnerRole, assessmentCode, learnerGrade)) {
     if (learnerRole === "PARENT") {
       res.status(403).json({ message: "Parents can access only Litmus assessment." });
+      return false;
+    }
+
+    if (isAcademicCareerAssessmentCode(assessmentCode)) {
+      res.status(403).json({ message: "Academic Career & Interest Test is available only for grades 8, 9, and 10." });
       return false;
     }
 
@@ -342,7 +371,7 @@ const buildWhitelabelPortalPayload = async (req: AuthRequest, organization: Inst
 
   const learnerRole = isLearnerRole(req.user?.role) ? req.user.role : null;
   const visibleAssessments = learnerRole
-    ? normalizedAssessments.filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code))
+    ? normalizedAssessments.filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code, req.user?.grade))
     : normalizedAssessments;
 
   return {
@@ -1448,9 +1477,9 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
 
     const dedupedAssessments = dedupeAssessments(
       assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
-    ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
+    ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code, req.user?.grade));
 
-    const visibleAttempts = attempts.filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode));
+    const visibleAttempts = attempts.filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode, req.user?.grade));
 
     const completedCodes = new Set(
       visibleAttempts
@@ -1472,7 +1501,7 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response): Prom
         totalAssessments,
       },
       latestAttempts: attempts
-        .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
+        .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode, req.user?.grade))
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
         .slice(0, 5)
         .map((attempt) => ({
@@ -1514,7 +1543,7 @@ export const listStudentResults = async (req: AuthRequest, res: Response): Promi
     }>();
 
     attempts
-      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode))
+      .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode, req.user?.grade))
       .forEach((attempt) => {
         const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
         const existing = groupedResults.get(canonicalCode);
@@ -1569,12 +1598,12 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
 
     const dedupedAssessments = dedupeAssessments(
       assessments.map((assessment) => assessment.toObject() as unknown as AssessmentCatalogItem)
-    ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code));
+    ).filter((assessment) => isAssessmentAccessibleForLearner(learnerRole, assessment.code, req.user?.grade));
 
     const attemptsByCode = new Map<string, (typeof attempts)[number]>();
     for (const attempt of attempts) {
       const normalizedCode = normalizeAssessmentCode(attempt.assessmentCode);
-      if (!isAssessmentAccessibleForLearner(learnerRole, normalizedCode)) {
+      if (!isAssessmentAccessibleForLearner(learnerRole, normalizedCode, req.user?.grade)) {
         continue;
       }
       const existing = attemptsByCode.get(normalizedCode);
@@ -1587,6 +1616,9 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
       dedupedAssessments.map(async (assessment) => {
         const questionCount = await Question.countDocuments({
           assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
+          ...(isAcademicCareerAssessmentCode(assessment.code)
+            ? { category: getAcademicCareerGradeCategory(req.user?.grade) || "__NO_MATCH__" }
+            : {}),
           isActive: true,
         });
         return {
@@ -1641,7 +1673,7 @@ export const listStudentAssessmentAttempts = async (req: AuthRequest, res: Respo
   }
 
   const canonicalCode = normalizeAssessmentCode(code);
-  if (!requireLearnerAssessmentAccess(res, learnerRole, canonicalCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, canonicalCode, req.user?.grade)) {
     return;
   }
 
@@ -1683,7 +1715,7 @@ export const getStudentAssessmentPricing = async (req: AuthRequest, res: Respons
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, code)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, code, req.user?.grade)) {
     return;
   }
 
@@ -1723,7 +1755,7 @@ export const listStudentInvoices = async (req: AuthRequest, res: Response): Prom
   });
 
   res.json({
-    invoices: invoices.filter((invoice) => isAssessmentAccessibleForLearner(learnerRole, invoice.assessmentCode)),
+    invoices: invoices.filter((invoice) => isAssessmentAccessibleForLearner(learnerRole, invoice.assessmentCode, req.user?.grade)),
   });
 };
 
@@ -1765,7 +1797,7 @@ export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res:
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, code)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, code, req.user?.grade)) {
     return;
   }
 
@@ -1873,7 +1905,7 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? normalizeAssessmentCode(codeParam) : "";
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, code)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, code, req.user?.grade)) {
     return;
   }
 
@@ -1906,7 +1938,7 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, session.assessmentCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, session.assessmentCode, req.user?.grade)) {
     return;
   }
 
@@ -1978,7 +2010,7 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, canonicalCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, canonicalCode, req.user?.grade)) {
     return;
   }
 
@@ -2102,7 +2134,14 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const questions = await Question.find({ assessmentCode: { $in: codeAliases }, isActive: true })
+  const academicCareerCategory = getAcademicCareerGradeCategory(req.user?.grade);
+  const questions = await Question.find({
+    assessmentCode: { $in: codeAliases },
+    ...(isAcademicCareerAssessmentCode(canonicalCode)
+      ? { category: academicCareerCategory || "__NO_MATCH__" }
+      : {}),
+    isActive: true,
+  })
     .sort({ questionNumber: 1, createdAt: 1, _id: 1 });
   if (!questions.length) {
     res.status(400).json({ message: "No active questions found for this assessment" });
@@ -2215,7 +2254,7 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
     return;
   }
 
@@ -2293,7 +2332,7 @@ export const saveStudentAttemptAnswers = async (req: AuthRequest, res: Response)
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
     return;
   }
 
@@ -2347,7 +2386,7 @@ export const submitStudentAttempt = async (req: AuthRequest, res: Response): Pro
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
     return;
   }
 
@@ -2418,7 +2457,7 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
     return;
   }
 
@@ -2462,7 +2501,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     return;
   }
 
-  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode)) {
+  if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
     return;
   }
 

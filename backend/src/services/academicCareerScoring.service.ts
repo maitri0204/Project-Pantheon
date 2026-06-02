@@ -180,6 +180,8 @@ export function buildStreamAnalysis(
   let guidancePoints: string[] = [];
   let cautionAreas: string[] = [];
   let futureOpportunities: string[] = [];
+  let supportingDomains: string[] = [];
+  let learningCompatibility = "";
 
   if (maxScore === pcmScore) {
     recommendedStream = "Science (PCM) - Physics, Chemistry, Mathematics";
@@ -203,6 +205,8 @@ export function buildStreamAnalysis(
       "Robotics & Automation",
       "Fintech & Analytics",
     ];
+    supportingDomains = top.filter((c) => [...sciPCM, "I"].includes(c)).map((c) => INTEREST_META[c].name);
+    learningCompatibility = "Logical, analytical, and hands-on learner. Excels in structured problem-solving, experiments, and technology-driven projects.";
   } else if (maxScore === pcbScore) {
     recommendedStream = "Science (PCB) - Physics, Chemistry, Biology";
     streamReasoning = `Your ${top.map((c) => INTEREST_META[c].name).join(" and ")} interests reflect a strong inclination toward life sciences, health, and natural systems. PCB is the pathway to medicine, biology, and environmental sciences.`;
@@ -225,6 +229,8 @@ export function buildStreamAnalysis(
       "Psychology",
       "Forensic Science",
     ];
+    supportingDomains = top.filter((c) => sciPCB.includes(c)).map((c) => INTEREST_META[c].name);
+    learningCompatibility = "Visual and empathetic learner. Excels with diagrams, case studies, biological models, and understanding human systems.";
   } else if (maxScore === comScore) {
     recommendedStream = "Commerce - Economics, Business Studies, Mathematics";
     streamReasoning = `Your ${top.map((c) => INTEREST_META[c].name).join(" and ")} interests point toward business thinking, financial systems, and leadership. Commerce is the foundation for entrepreneurship, management, and financial careers.`;
@@ -247,6 +253,8 @@ export function buildStreamAnalysis(
       "Marketing & Brand Management",
       "Financial Planning",
     ];
+    supportingDomains = top.filter((c) => commerce.includes(c)).map((c) => INTEREST_META[c].name);
+    learningCompatibility = "Goal-driven and practical learner. Excels through real-world examples, business simulations, and competitive challenges.";
   } else {
     recommendedStream = "Humanities & Arts - History, Political Science, Psychology";
     streamReasoning = `Your ${top.map((c) => INTEREST_META[c].name).join(" and ")} interests reflect a deep alignment with human society, creativity, and communication. Humanities is a rich pathway for law, social sciences, media, and public service.`;
@@ -269,6 +277,8 @@ export function buildStreamAnalysis(
       "Social Work & NGOs",
       "Content, Writing & Publishing",
     ];
+    supportingDomains = top.filter((c) => humanities.includes(c)).map((c) => INTEREST_META[c].name);
+    learningCompatibility = "Reflective and communicative learner. Excels through reading, discussion, creative writing, and understanding human behaviour.";
   }
 
   return {
@@ -279,7 +289,8 @@ export function buildStreamAnalysis(
     cautionAreas,
     futureOpportunities,
     suggestedCareers: top.flatMap((c) => INTEREST_META[c].careers.slice(0, 2)).slice(0, 6),
-    supportingDomains: top.filter((c) => [...sciPCM, ...sciPCB, ...commerce, ...humanities].includes(c)).map((c) => INTEREST_META[c].name),
+    supportingDomains,
+    learningCompatibility,
   };
 }
 

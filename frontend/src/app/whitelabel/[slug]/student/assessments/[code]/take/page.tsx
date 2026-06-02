@@ -350,10 +350,10 @@ export default function StudentTakeAssessmentPage() {
       return;
     }
 
-    // Anti-cheat: Block submission if fullscreen was exited
-    if (fullscreenExitedRef.current) {
-      alert("Assessment cannot be submitted. Fullscreen mode was exited during the test. Please contact support.");
-      return;
+    // Allow intentional submission even if fullscreen was exited earlier.
+    // We still log fullscreen-exit anti-cheat events, but do not hard-block submission.
+    if (showResumeModal) {
+      setShowResumeModal(false);
     }
 
     const unanswered = questions.filter((q) => !answers[q.questionId]);
