@@ -4,15 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
-import { apiRequest, getStoredAuth } from "@/lib/api";
-import { generateCareerCompassReport } from "@/lib/reports/generateCareerCompassReport";
-import { generateClearReport } from "@/lib/reports/generateClearReport";
-import { generateLitmusReport } from "@/lib/reports/generateLitmusReport";
-import { generateMetacognitionReport } from "@/lib/reports/generateMetacognitionReport";
+import { apiRequest, getStoredAuth } from "../../lib/api";
+import { generateCareerCompassReport } from "../../lib/reports/generateCareerCompassReport";
+import { generateClearReport } from "../../lib/reports/generateClearReport";
+import { generateLitmusReport } from "../../lib/reports/generateLitmusReport";
+import { generateMetacognitionReport } from "../../lib/reports/generateMetacognitionReport";
 import { generateCareerDnaCapabilityReport } from "../../lib/reports/generateCareerDnaCapabilityReport";
-import { generateAcademicCareerReport } from "@/lib/reports/generateAcademicCareerReport";
-import QuadrantGraph, { QuadrantLegend } from "@/components/reports/QuadrantGraph";
-import AcademicCareerReport from "@/components/reports/AcademicCareerReport";
+import { generateAcademicCareerReport } from "../../lib/reports/generateAcademicCareerReport";
+import QuadrantGraph, { QuadrantLegend } from "./QuadrantGraph";
+import AcademicCareerReport from "./AcademicCareerReport";
 import {
   DOMAIN_INFO,
   DIMENSION_COLORS,
