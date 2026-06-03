@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { allowsMultipleAttempts, buildStudentResultPath } from "@/lib/assessmentAccess";
 
 type AttemptHistoryItem = {
   attemptId: string;
@@ -106,7 +107,7 @@ function AssessmentAttemptHistory(props: {
               return (
                 <button
                   key={attempt.attemptId}
-                  onClick={() => router.push(`/whitelabel/${slug}/student/assessments/${assessmentCode}/result?attemptId=${attempt.attemptId}`)}
+                  onClick={() => router.push(buildStudentResultPath(slug, assessmentCode, { attemptId: attempt.attemptId }))}
                   className="w-full rounded-3xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-white"
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -143,6 +144,124 @@ function AssessmentAttemptHistory(props: {
   );
 }
 
+function AttemptHistoryOrRedirect(props: {
+  slug: string;
+  assessmentCode: string;
+  loginHref: string;
+  topBackHref: string;
+  topBackLabel: string;
+  bottomBackHref: string;
+  bottomBackLabel: string;
+}) {
+  const router = useRouter();
+  const auth = useMemo(() => getStoredAuth(), []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const [assessmentName, setAssessmentName] = useState(props.assessmentCode);
+
+  useEffect(() => {
+    if (!auth?.token) {
+      router.replace(props.loginHref);
+      return;
+    }
+
+    let cancelled = false;
+
+    const resolveDestination = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiRequest<AttemptHistoryResponse>(
+          `/platform/student/assessments/${props.assessmentCode}/attempts`,
+          {},
+          auth.token
+        );
+        const attempts = response.attempts || [];
+
+        if (cancelled) return;
+
+        if (attempts.length === 0) {
+          setShowPicker(false);
+          setError("No completed attempts found for this assessment.");
+          return;
+        }
+
+        const resolvedName = attempts[attempts.length - 1]?.assessmentName || props.assessmentCode;
+        setAssessmentName(resolvedName);
+
+        if (allowsMultipleAttempts(props.assessmentCode)) {
+          setShowPicker(true);
+          return;
+        }
+
+        const latestAttempt = attempts[attempts.length - 1];
+        router.replace(buildStudentResultPath(props.slug, props.assessmentCode, { attemptId: latestAttempt.attemptId }));
+      } catch (err) {
+        if (cancelled) return;
+        if (!getStoredAuth()) {
+          router.replace(props.loginHref);
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Failed to load report");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void resolveDestination();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth?.token, props.assessmentCode, props.loginHref, props.slug, router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (showPicker) {
+    return (
+      <AssessmentAttemptHistory
+        slug={props.slug}
+        assessmentCode={props.assessmentCode}
+        assessmentName={assessmentName}
+        loginHref={props.loginHref}
+        topBackHref={props.topBackHref}
+        topBackLabel={props.topBackLabel}
+        bottomBackHref={props.bottomBackHref}
+        bottomBackLabel={props.bottomBackLabel}
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <button onClick={() => router.replace(props.topBackHref)} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+          ← {props.topBackLabel}
+        </button>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>
+        <button
+          onClick={() => router.push(props.bottomBackHref)}
+          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          {props.bottomBackLabel}
+        </button>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export default function StudentAssessmentResultPage() {
   const params = useParams<{ slug?: string; code?: string }>();
   const searchParams = useSearchParams();
@@ -150,15 +269,16 @@ export default function StudentAssessmentResultPage() {
   const code = String(params?.code || "").toUpperCase();
   const attemptId = searchParams?.get("attemptId") || "";
 
-  if (!attemptId) {
+  const attemptListHref = buildStudentResultPath(slug, code);
+  const isMultiAttemptAssessment = allowsMultipleAttempts(code);
+
+  if (attemptId) {
     return (
-      <AssessmentAttemptHistory
-        slug={slug}
-        assessmentCode={code}
-        assessmentName={code}
+      <AssessmentReportView
+        fetchPath={`/platform/student/attempts/${attemptId}/report`}
         loginHref={`/whitelabel/${slug}/login`}
-        topBackHref={`/whitelabel/${slug}/student/results`}
-        topBackLabel="Back to Results"
+        topBackHref={isMultiAttemptAssessment ? attemptListHref : `/whitelabel/${slug}/student/results`}
+        topBackLabel={isMultiAttemptAssessment ? "Back to Attempts" : "Back to Results"}
         bottomBackHref={`/whitelabel/${slug}/student/assessments`}
         bottomBackLabel="Back to Assessments"
       />
@@ -166,8 +286,9 @@ export default function StudentAssessmentResultPage() {
   }
 
   return (
-    <AssessmentReportView
-      fetchPath={`/platform/student/attempts/${attemptId}/report`}
+    <AttemptHistoryOrRedirect
+      slug={slug}
+      assessmentCode={code}
       loginHref={`/whitelabel/${slug}/login`}
       topBackHref={`/whitelabel/${slug}/student/results`}
       topBackLabel="Back to Results"

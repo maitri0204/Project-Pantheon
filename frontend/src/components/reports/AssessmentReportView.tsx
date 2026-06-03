@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "../../lib/api";
@@ -349,14 +349,11 @@ export default function AssessmentReportView({
   bottomBackLabel,
 }: AssessmentReportViewProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const auth = useMemo(() => getStoredAuth(), []);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
   const [aqAttempts, setAQAttempts] = useState<AQAttemptItem[] | null>(null);
-  const [attemptsError, setAttemptsError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -386,11 +383,9 @@ export default function AssessmentReportView({
     apiRequest<{ attempts: AQAttemptItem[] }>(`/platform/student/assessments/${normalizedCode}/attempts`, {}, auth.token)
       .then((res) => {
         setAQAttempts(res.attempts);
-        setAttemptsError(null);
       })
-      .catch((e) => {
+      .catch(() => {
         setAQAttempts(null);
-        setAttemptsError(e instanceof Error ? e.message : "Unable to load attempt history");
       });
   }, [auth?.token, report, fetchPath]);
 
@@ -419,9 +414,7 @@ export default function AssessmentReportView({
 
   const evaluation = report.evaluation as Record<string, unknown>;
   const normalizedCode = String(report.assessmentCode || "").toUpperCase();
-  const currentAttemptId = (searchParams?.get("attemptId") || report.attemptId);
-  const showAQAttemptHistory = normalizedCode === "ADVERSITY_TEST";
-  const aqReport = showAQAttemptHistory
+  const aqReport = normalizedCode === "ADVERSITY_TEST"
     ? (() => {
         const evaluation = report.evaluation as unknown as AQEvaluation;
         return evaluation && Array.isArray(evaluation.subscales) ? evaluation : null;
@@ -1066,54 +1059,6 @@ export default function AssessmentReportView({
           </div>
         </div>
       </div>
-
-      {showAQAttemptHistory && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">Your AQ Attempts</h2>
-              <p className="text-sm text-slate-500">Select any attempt to view that report.</p>
-            </div>
-            {attemptsError && <p className="text-sm text-rose-600">{attemptsError}</p>}
-          </div>
-          <div className="space-y-3">
-            {aqAttempts === null ? (
-              <div className="text-sm text-slate-500">Loading attempt history…</div>
-            ) : aqAttempts.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">No previous AQ attempts found.</div>
-            ) : (
-              <div className="grid gap-3 md:grid-cols-2">
-                {aqAttempts.map((attempt) => {
-                  const isCurrent = attempt.attemptId === currentAttemptId;
-                  const score = attempt.evaluation?.totalScore ?? 0;
-                  const level = attempt.evaluation?.aqLevel ?? "—";
-                  return (
-                    <button
-                      key={attempt.attemptId}
-                      onClick={() => {
-                        if (!pathname) return;
-                        router.push(`${pathname}?attemptId=${attempt.attemptId}`);
-                      }}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${isCurrent ? "border-blue-600 bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300"}`}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">Attempt {attempt.attemptNumber}</p>
-                          <p className="text-xs text-slate-500">{attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Not submitted"}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-slate-900">{score}</p>
-                          <p className="text-xs text-slate-500">{level}</p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-wrap justify-end gap-3">
         <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">

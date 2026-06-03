@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { BarChart3, CalendarClock, Sparkles } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { allowsMultipleAttempts, buildStudentResultPath } from "@/lib/assessmentAccess";
 
 type StudentResultItem = {
   id: string;
@@ -143,7 +144,11 @@ export default function StudentResultsPage() {
                   <button
                     onClick={() => {
                       if (!canViewReport) return;
-                      router.push(`/whitelabel/${slug}/student/assessments/${result.assessmentCode}/result`);
+                      router.push(
+                        allowsMultipleAttempts(result.assessmentCode)
+                          ? buildStudentResultPath(slug, result.assessmentCode)
+                          : buildStudentResultPath(slug, result.assessmentCode, { attemptId: result.id })
+                      );
                     }}
                     disabled={!canViewReport}
                     className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.9)] hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"

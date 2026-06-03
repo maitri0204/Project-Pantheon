@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { allowsMultipleAttempts, buildStudentResultPath } from "@/lib/assessmentAccess";
 
 type StudentAssessmentsResponse = {
   assessments: Array<{
@@ -249,8 +250,12 @@ export default function StudentAssessmentsPage() {
   };
 
   const openReport = (assessmentCode: string, attemptId?: string) => {
+    if (allowsMultipleAttempts(assessmentCode)) {
+      router.push(buildStudentResultPath(slug, assessmentCode));
+      return;
+    }
     if (!attemptId) return;
-    router.push(`/whitelabel/${slug}/student/assessments/${assessmentCode}/result?attemptId=${attemptId}`);
+    router.push(buildStudentResultPath(slug, assessmentCode, { attemptId }));
   };
 
   if (loading) {
