@@ -60,6 +60,7 @@ function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
 }
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getTestDashboardBasePath, getTestDashboardMeta } from "@/lib/dashboard/testDashboard";
 
 type Stats = {
   assessments: number;
@@ -205,6 +206,54 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Test dashboards (org admin) */}
+      {role === "ORG_ADMIN" && assessments.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold text-black mb-3">Your Tests</h2>
+          <p className="text-sm text-black/70 mb-4">Open a dedicated dashboard for each assessment.</p>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {assessments.map((assessment) => {
+              const meta = getTestDashboardMeta(assessment.code);
+              const href = meta
+                ? getTestDashboardBasePath(dashboardBasePath, assessment.code)
+                : resolveDashboardHref("/dashboard/assessments");
+              const enabled = Boolean(meta);
+              return (
+                <Link
+                  key={assessment._id}
+                  href={href}
+                  className="group bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-black group-hover:text-blue-700 transition-colors">
+                        {assessment.name}
+                      </p>
+                      <p className="text-sm text-black/80 mt-1">{assessment.category}</p>
+                    </div>
+                    <span
+                      className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${
+                        enabled ? "bg-green-50 text-green-700" : "bg-gray-100 text-black/80"
+                      }`}
+                    >
+                      {enabled ? "Available" : "Soon"}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-black/80">
+                    {enabled
+                      ? "View readiness analytics, student results, and roadmap for this assessment."
+                      : "Dedicated test dashboard coming soon. Manage pricing and students from Assessments."}
+                  </p>
+                  <div className="mt-3 text-blue-600 text-sm font-medium flex items-center gap-1">
+                    Go →
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Quick links */}
       <div>
         <h2 className="text-xl font-semibold text-black mb-3">Quick Actions</h2>
@@ -240,10 +289,12 @@ export default function DashboardPage() {
                   <p className="text-sm text-black/70">{a.category}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
-                    a.questionBankStatus === "imported" ? "bg-green-50 text-green-700" :
-                    a.questionBankStatus === "linked" ? "bg-blue-50 text-blue-700" : "bg-yellow-50 text-yellow-700"
-                  }`}>{a.questionBankStatus}</span>
+                  {role === "SUPERADMIN" && (
+                    <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
+                      a.questionBankStatus === "imported" ? "bg-green-50 text-green-700" :
+                      a.questionBankStatus === "linked" ? "bg-blue-50 text-blue-700" : "bg-yellow-50 text-yellow-700"
+                    }`}>{a.questionBankStatus}</span>
+                  )}
                   <span className="text-sm text-black/80 font-medium">₹{a.basePrice}</span>
                 </div>
               </div>

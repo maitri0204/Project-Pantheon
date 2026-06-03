@@ -7,6 +7,9 @@ import {
   getOrganizationCouponSummary,
   getStudentDashboard,
   getDashboard,
+  getAssessmentAdminDashboard,
+  getAcademicCareerAdminOverview,
+  getAdversityAdminOverview,
   getStudentAssessmentPricing,
   listStudentAssessmentAttempts,
   listStudentInvoices,
@@ -43,6 +46,24 @@ router.get("/assessments", listAssessments);
 router.get("/whitelabel/:slug", optionalAuth, getWhitelabelPortal);
 router.get("/whitelabel-by-host", optionalAuth, getWhitelabelPortalByHost);
 router.get("/dashboard", requireAuth, getDashboard);
+router.get(
+  "/assessments/:code/admin-dashboard",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAssessmentAdminDashboard,
+);
+router.get(
+  "/assessments/ACADEMIC_CAREER/admin-overview",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAcademicCareerAdminOverview,
+);
+router.get(
+  "/assessments/ADVERSITY_TEST/admin-overview",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdversityAdminOverview,
+);
 router.get("/students", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listStudents);
 router.get("/students/:studentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentDetailsForAdmin);
 router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);

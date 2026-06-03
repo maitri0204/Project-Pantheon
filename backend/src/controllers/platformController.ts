@@ -16,6 +16,9 @@ import Question from "../models/Question";
 import StudentAssessmentAttempt, { IAttemptQuestion } from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
 import { DEFAULT_SUPERADMIN_EMAIL } from "../constants/platform";
+import { buildAssessmentAdminDashboard } from "../services/assessmentAdminDashboard.service";
+import { buildAcademicCareerAdminOverview } from "../services/academicCareerAdminOverview.service";
+import { buildAdversityAdminOverview } from "../services/adversityAdminOverview.service";
 import { evaluateAssessmentAttempt } from "../services/assessmentEvaluation";
 import { getCareerDnaSourceQuestion, parseCareerDnaCategory } from "../services/sourceAssessmentData";
 import {
@@ -503,6 +506,125 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
     coupons,
     invoices,
   });
+};
+
+export const getAssessmentAdminDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const codeParam = req.params.code;
+  const code = typeof codeParam === "string" ? normalizeAssessmentCode(codeParam) : "";
+  if (!code) {
+    res.status(400).json({ message: "Assessment code is required" });
+    return;
+  }
+
+  const assessment = await Assessment.findOne({
+    code: { $in: getAssessmentCodeAliases(code) },
+    active: true,
+  });
+
+  if (!assessment) {
+    res.status(404).json({ message: "Assessment not found" });
+    return;
+  }
+
+  const canonicalCode = normalizeAssessmentCode(assessment.code);
+  const scope = req.user.role === "SUPERADMIN"
+    ? {}
+    : { organization: req.user.organization };
+
+  try {
+    const attempts = await StudentAssessmentAttempt.find({
+      ...scope,
+      assessmentCode: { $in: getAssessmentCodeAliases(canonicalCode) },
+      status: "COMPLETED",
+    })
+      .populate("user", "firstName lastName email grade division")
+      .sort({ completedAt: -1, updatedAt: -1 })
+      .limit(500);
+
+    const attemptInputs = attempts.map((attempt) => {
+      const userDoc = attempt.user as {
+        _id?: { toString(): string };
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        grade?: string;
+        division?: string;
+      } | null;
+
+      const studentId = userDoc?._id ? String(userDoc._id) : String(attempt.user || "");
+      const studentName = userDoc
+        ? `${userDoc.firstName || ""} ${userDoc.lastName || ""}`.trim() || userDoc.email || "Student"
+        : "Student";
+
+      return {
+        attemptId: String(attempt._id),
+        studentId,
+        studentName,
+        studentEmail: userDoc?.email || "",
+        grade: userDoc?.grade || "",
+        division: userDoc?.division || "",
+        completedAt: attempt.completedAt || attempt.updatedAt,
+        evaluation: attempt.evaluation as Record<string, unknown> | undefined,
+      };
+    });
+
+    const dashboard = buildAssessmentAdminDashboard(canonicalCode, attemptInputs);
+
+    res.json({
+      assessment: {
+        code: canonicalCode,
+        name: assessment.name,
+        category: assessment.category,
+      },
+      ...dashboard,
+    });
+  } catch (error) {
+    console.error("getAssessmentAdminDashboard error:", error);
+    res.status(500).json({ message: "Failed to load assessment dashboard" });
+  }
+};
+
+export const getAcademicCareerAdminOverview = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const scope = req.user.role === "SUPERADMIN"
+    ? {}
+    : { organization: req.user.organization };
+
+  try {
+    const overview = await buildAcademicCareerAdminOverview(scope);
+    res.json(overview);
+  } catch (error) {
+    console.error("getAcademicCareerAdminOverview error:", error);
+    res.status(500).json({ message: "Failed to load academic career overview" });
+  }
+};
+
+export const getAdversityAdminOverview = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const scope = req.user.role === "SUPERADMIN"
+    ? {}
+    : { organization: req.user.organization };
+
+  try {
+    const overview = await buildAdversityAdminOverview(scope);
+    res.json(overview);
+  } catch (error) {
+    console.error("getAdversityAdminOverview error:", error);
+    res.status(500).json({ message: "Failed to load adversity overview" });
+  }
 };
 
 export const listStudents = async (req: AuthRequest, res: Response): Promise<void> => {

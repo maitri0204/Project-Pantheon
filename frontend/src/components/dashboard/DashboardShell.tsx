@@ -168,7 +168,16 @@ const navDefinitions: NavDefinition[] = [
   },
 ];
 
-const orgAdminAllowedSuffixes = new Set(["", "/assessments", "/users", "/parents", "/coupons", "/ledger", "/profile"]);
+const orgAdminAllowedSuffixes = new Set([
+  "",
+  "/assessments",
+  "/users",
+  "/parents",
+  "/coupons",
+  "/ledger",
+  "/profile",
+  "/tests",
+]);
 const superadminHiddenSuffixes = new Set(["/coupons"]);
 
 export default function DashboardShell({
@@ -258,7 +267,16 @@ export default function DashboardShell({
       return;
     }
 
-    const allowedPaths = [toHref(""), toHref("/assessments"), toHref("/users"), toHref("/parents"), toHref("/coupons"), toHref("/ledger"), toHref("/profile")];
+    const allowedPaths = [
+      toHref(""),
+      toHref("/assessments"),
+      toHref("/users"),
+      toHref("/parents"),
+      toHref("/coupons"),
+      toHref("/ledger"),
+      toHref("/profile"),
+      toHref("/tests"),
+    ];
     const isAllowed = allowedPaths.some((allowedPath) => (
       pathname === allowedPath || pathname.startsWith(`${allowedPath}/`)
     ));

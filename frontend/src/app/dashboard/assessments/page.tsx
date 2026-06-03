@@ -191,9 +191,11 @@ export default function AssessmentsPage() {
                   <h3 className="text-2xl font-bold text-black leading-tight">{a.name}</h3>
                   <p className="text-sm text-black/70 font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
                 </div>
-                <span className={`flex-shrink-0 text-sm rounded-full px-3 py-1.5 font-semibold ${statusBadge(a.questionBankStatus)}`}>
-                  {a.questionBankStatus}
-                </span>
+                {isOrgAdmin !== true && (
+                  <span className={`flex-shrink-0 text-sm rounded-full px-3 py-1.5 font-semibold ${statusBadge(a.questionBankStatus)}`}>
+                    {a.questionBankStatus}
+                  </span>
+                )}
               </div>
 
               <p className="text-base text-black/80 min-h-[3.5rem] leading-relaxed">{a.summary}</p>
