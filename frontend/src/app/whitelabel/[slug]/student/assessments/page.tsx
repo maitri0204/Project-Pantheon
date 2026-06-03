@@ -314,7 +314,7 @@ export default function StudentAssessmentsPage() {
               </div>
 
               <div className="mt-4 flex gap-3">
-                {assessment.code === "ADVERSITY_TEST" && completed ? (
+                {(assessment.code === "ADVERSITY_TEST" || assessment.code === "STUDY_ABROAD") && completed ? (
                   <>
                     <button
                       onClick={() => openReport(assessment.code, assessment.attempt?.id)}

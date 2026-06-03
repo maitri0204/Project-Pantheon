@@ -522,6 +522,55 @@ const content: Record<string, AssessmentPageContent> = {
         ],
       },
 
+      STUDY_ABROAD: {
+        theme: {
+          badge: "Study Abroad Readiness Assessment",
+          badgeClass: "bg-sky-50 text-sky-800",
+          gradient: "from-sky-50 via-white to-slate-50",
+          supportCardClass: "bg-sky-50 text-slate-900",
+          calloutClass: "border-sky-200 bg-sky-50 text-slate-800",
+          glanceTextClass: "text-sky-200",
+        },
+        hero: {
+          title: "Measure Your Readiness to Study Abroad",
+          subtitle:
+            "A structured assessment across 12 dimensions — language, academics, finances, visa, culture, resilience, and decision-making.",
+          supportingLine:
+            "Each session draws 50 questions from a 150-question bank. Answer honestly for an accurate readiness profile and actionable report.",
+          sidePoints: ["50 questions per session", "60-minute timed test", "12-dimension radar report"],
+        },
+        sections: [
+          {
+            title: "Who should take this assessment",
+            cards: [
+              { title: "Students", body: "Planning to apply for undergraduate or postgraduate programs abroad." },
+              { title: "Parents", body: "Who want clarity on gaps before investing in applications and test prep." },
+              { title: "Counselors", body: "Who need evidence-based readiness data for advising and roadmaps." },
+            ],
+          },
+          {
+            title: "12 readiness dimensions",
+            subtitle: "Holistic view of study-abroad preparedness.",
+            cards: [
+              { title: "Language", body: "Academic English, tests, and classroom communication." },
+              { title: "Academic & Scholastic", body: "Subject rigor, study habits, and credential strength." },
+              { title: "Financial & Visa", body: "Budgeting, funding proof, and compliance awareness." },
+              { title: "Psychological & Cultural", body: "Adaptability, resilience, and cross-cultural readiness." },
+            ],
+            callout: "Scores are percentages per dimension; your overall score is raw marks out of 150 (50 questions × 3 max each).",
+          },
+          {
+            title: "What you receive",
+            grid: [
+              { title: "Readiness band", body: "From At Risk to Completely Ready based on your percentage." },
+              { title: "12-axis radar", body: "Visual profile across all dimensions." },
+              { title: "Strengths & focus areas", body: "Top and bottom dimensions with clear labels." },
+              { title: "Downloadable PDF", body: "Detailed report for counselors and family review." },
+            ],
+          },
+        ],
+      },
+
       TEST: {
         theme: {
           badge: "Thinking & Expression Skills Test",
@@ -763,6 +812,12 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Identify top 3", desc: "Primary + supporting strengths", icon: "🥇" },
               { title: "Stream guidance", desc: "Subject-aligned direction", icon: "🧭" },
             ]
+          : normalizedCode === "STUDY_ABROAD"
+          ? [
+              { title: "12 dimensions", desc: "Holistic readiness map", icon: "🌍" },
+              { title: "50 questions", desc: "Randomized per session", icon: "📋" },
+              { title: "Action report", desc: "Strengths, gaps, PDF", icon: "📄" },
+            ]
           : [
               { title: "King", desc: "Control and structure", icon: "👑" },
               { title: "Servant", desc: "Support and independence", icon: "🤝" },
@@ -807,6 +862,12 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Grade-specific fit", desc: "Designed for Grades 8 to 10", icon: "🎓" },
               { title: "Interest domains", desc: "Strength across 10 academic areas", icon: "📊" },
               { title: "Actionable guidance", desc: "Streams, subjects, and exposure paths", icon: "🚀" },
+            ]
+          : normalizedCode === "STUDY_ABROAD"
+          ? [
+              { title: "Timed session", desc: "60 minutes, 50 questions", icon: "⏱️" },
+              { title: "Honest scoring", desc: "No right/wrong — best-fit options", icon: "✅" },
+              { title: "Retake friendly", desc: "New question mix on retakes", icon: "🔁" },
             ]
           : [
               { title: "Confidence", desc: "Your child’s confidence", icon: "🌱" },
@@ -1026,7 +1087,9 @@ const content: Record<string, AssessmentPageContent> = {
         );
       }
 
-      if (normalizedCode === "ACADEMIC_CAREER") {
+      if (normalizedCode === "STUDY_ABROAD" || normalizedCode === "ACADEMIC_CAREER") {
+        const accentBg = normalizedCode === "STUDY_ABROAD" ? "bg-sky-50" : "bg-cyan-50";
+        const accentText = normalizedCode === "STUDY_ABROAD" ? "text-sky-700" : "text-cyan-700";
         return (
           <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
             <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
@@ -1036,9 +1099,15 @@ const content: Record<string, AssessmentPageContent> = {
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
 
-                <div className="mt-8 rounded-3xl bg-cyan-50 p-6 shadow-lg">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">Interest profile snapshot</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-700">Understand domain strengths before stream and subject selection.</p>
+                <div className={`mt-8 rounded-3xl ${accentBg} p-6 shadow-lg`}>
+                  <p className={`text-sm font-semibold uppercase tracking-[0.2em] ${accentText}`}>
+                    {normalizedCode === "STUDY_ABROAD" ? "Readiness snapshot" : "Interest profile snapshot"}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">
+                    {normalizedCode === "STUDY_ABROAD"
+                      ? "See how prepared you are across language, academics, visa, finances, and culture."
+                      : "Understand domain strengths before stream and subject selection."}
+                  </p>
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
                     {heroBadgeItems.map((item) => (
                       <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">

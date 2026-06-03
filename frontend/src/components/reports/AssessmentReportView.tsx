@@ -13,6 +13,9 @@ import { generateCareerDnaCapabilityReport } from "../../lib/reports/generateCar
 import { generateAcademicCareerReport } from "../../lib/reports/generateAcademicCareerReport";
 import QuadrantGraph, { QuadrantLegend } from "./QuadrantGraph";
 import AcademicCareerReport from "./AcademicCareerReport";
+import StudyAbroadReport, { type StudyAbroadEvaluation } from "./StudyAbroadReport";
+import { generateStudyAbroadReportForEmail } from "@/lib/reports/generateStudyAbroadReport";
+import { ALL_TOPICS as STUDY_ABROAD_TOPICS } from "@/lib/studyAbroad/assessmentData";
 import {
   DOMAIN_INFO,
   DIMENSION_COLORS,
@@ -589,6 +592,14 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     return { blob, fileName: `Career_DNA_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
   }
 
+  if (normalizedCode === "STUDY_ABROAD") {
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Study Abroad report");
+    }
+    const { blob, fileName } = await generateStudyAbroadReportForEmail(authToken, report.attemptId);
+    return { blob, fileName };
+  }
+
   if (normalizedCode === "ACADEMIC_CAREER") {
     const blob = await generateAcademicCareerReport({
       studentName: reportStudentName,
@@ -1061,6 +1072,23 @@ export default function AssessmentReportView({
     if (normalizedCode === "ACADEMIC_CAREER") {
       const acEvaluation = evaluation as any;
       return <AcademicCareerReport evaluation={acEvaluation} submittedAt={report.submittedAt} />;
+    }
+
+    if (normalizedCode === "STUDY_ABROAD") {
+      const topicScores = STUDY_ABROAD_TOPICS.reduce((acc, topic) => {
+        acc[topic] = Number((evaluation.topicScores as Record<string, number>)?.[topic] ?? 0);
+        return acc;
+      }, {} as Record<string, number>);
+      const saEvaluation: StudyAbroadEvaluation = {
+        overallScore: Number(evaluation.overallScore ?? 0),
+        overallPercentage: Number(evaluation.overallPercentage ?? 0),
+        band: String(evaluation.band ?? ""),
+        topicScores: topicScores as StudyAbroadEvaluation["topicScores"],
+        topicAnswered: evaluation.topicAnswered as StudyAbroadEvaluation["topicAnswered"],
+        answeredCount: Number(evaluation.answeredCount ?? report.answeredCount),
+        totalQuestions: Number(evaluation.totalQuestions ?? report.totalQuestions),
+      };
+      return <StudyAbroadReport evaluation={saEvaluation} submittedAt={report.submittedAt} />;
     }
 
     return <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">Report generated successfully.</div>;

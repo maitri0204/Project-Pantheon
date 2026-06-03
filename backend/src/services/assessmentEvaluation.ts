@@ -2,6 +2,7 @@ import { IStudentAssessmentAttempt } from "../models/StudentAssessmentAttempt";
 import { getCareerDnaSourceQuestion, parseCareerDnaCategory } from "./sourceAssessmentData";
 import { evaluateAQAnswers } from "./aqScoring.service";
 import { evaluateAcademicCareerAnswers } from "./academicCareerScoring.service";
+import { evaluateStudyAbroadAnswers } from "./studyAbroadScoring.service";
 
 const CAREER_COMPASS_DIMENSION_MAP: Record<number, { a: string; b: string }> = {
   1: { a: "E", b: "I" },
@@ -477,6 +478,8 @@ export async function evaluateAssessmentAttempt(attempt: IStudentAssessmentAttem
       return evaluateAQAnswers(attempt);
     case "ACADEMIC_CAREER":
       return evaluateAcademicCareerAnswers(attempt);
+    case "STUDY_ABROAD":
+      return evaluateStudyAbroadAnswers(attempt);
     default:
       return {
         assessmentCode: attempt.assessmentCode,

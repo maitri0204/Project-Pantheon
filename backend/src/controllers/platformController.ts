@@ -18,6 +18,10 @@ import User from "../models/User";
 import { DEFAULT_SUPERADMIN_EMAIL } from "../constants/platform";
 import { evaluateAssessmentAttempt } from "../services/assessmentEvaluation";
 import { getCareerDnaSourceQuestion, parseCareerDnaCategory } from "../services/sourceAssessmentData";
+import {
+  buildStudyAbroadQuestionSetForAttempt,
+  mapStudyAbroadAttemptQuestions,
+} from "../services/studyAbroadQuestionSelection.service";
 import { sendAssessmentReportToStudent } from "../services/email";
 import { AuthRequest } from "../types/auth";
 
@@ -230,6 +234,37 @@ const isAdversityAssessmentCode = (assessmentCode: string): boolean => (
 const isAcademicCareerAssessmentCode = (assessmentCode: string): boolean => (
   normalizeAssessmentCode(assessmentCode) === "ACADEMIC_CAREER"
 );
+
+const isStudyAbroadAssessmentCode = (assessmentCode: string): boolean => (
+  normalizeAssessmentCode(assessmentCode) === "STUDY_ABROAD"
+);
+
+const getStudyAbroadUsedQuestionNumbers = async (
+  userId: string,
+  organizationId: string
+): Promise<number[]> => {
+  const attempts = await StudentAssessmentAttempt.find({
+    user: userId,
+    organization: organizationId,
+    assessmentCode: "STUDY_ABROAD",
+    status: "COMPLETED",
+  }).select({ questions: 1 });
+
+  const used = new Set<number>();
+  for (const attempt of attempts) {
+    for (const question of attempt.questions) {
+      if (Number.isFinite(question.questionNumber)) {
+        used.add(question.questionNumber);
+      }
+    }
+  }
+
+  const usedList = [...used];
+  if (usedList.length > 100) {
+    return [];
+  }
+  return usedList;
+};
 
 const getAcademicCareerGradeCategory = (grade?: string): string | null => {
   const normalizedGrade = String(grade || "").toLowerCase().trim();
@@ -2129,7 +2164,11 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  if (latestExistingAttempt?.status === "COMPLETED" && !isAdversityAssessmentCode(canonicalCode)) {
+  if (
+    latestExistingAttempt?.status === "COMPLETED"
+    && !isAdversityAssessmentCode(canonicalCode)
+    && !isStudyAbroadAssessmentCode(canonicalCode)
+  ) {
     res.status(409).json({ message: "You have already completed this assessment." });
     return;
   }
@@ -2148,7 +2187,13 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     return;
   }
 
-  const attemptQuestions = mapQuestionBankToAttemptQuestions(questions, canonicalCode);
+  let attemptQuestions = mapQuestionBankToAttemptQuestions(questions, canonicalCode);
+
+  if (isStudyAbroadAssessmentCode(canonicalCode)) {
+    const usedQuestionNumbers = await getStudyAbroadUsedQuestionNumbers(userId, organizationId);
+    const selected = buildStudyAbroadQuestionSetForAttempt(attemptQuestions, usedQuestionNumbers);
+    attemptQuestions = mapStudyAbroadAttemptQuestions(selected);
+  }
 
   const selectedAttemptQuestions = canonicalCode === "CAREER_DNA"
     ? buildCareerDnaQuestionSetForAttempt(attemptQuestions)

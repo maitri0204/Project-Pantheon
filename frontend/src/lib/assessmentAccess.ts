@@ -8,7 +8,8 @@ export function normalizeAssessmentCode(code: string): string {
 
 /** Assessments where students may complete more than one scored attempt. */
 export function allowsMultipleAttempts(assessmentCode: string): boolean {
-  return normalizeAssessmentCode(assessmentCode) === "ADVERSITY_TEST";
+  const code = normalizeAssessmentCode(assessmentCode);
+  return code === "ADVERSITY_TEST" || code === "STUDY_ABROAD";
 }
 
 /** Multi-attempt assessments always use a dedicated attempt list before opening a report. */

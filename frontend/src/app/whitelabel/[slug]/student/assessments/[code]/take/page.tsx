@@ -445,26 +445,58 @@ export default function StudentTakeAssessmentPage() {
     return ai - bi;
   });
 
+  const useFlatQuestionNavigator = code === "STUDY_ABROAD" || code === "ACADEMIC_CAREER";
+
   // Build navigator-ordered list of question indexes (used for sequential Next/Previous)
-  const navigatorOrderedIndexes: number[] = [];
-  categoryGroups.forEach((grp) => {
-    grp.questions.forEach(({ idx }) => navigatorOrderedIndexes.push(idx));
-  });
+  const navigatorOrderedIndexes: number[] = useFlatQuestionNavigator
+    ? questions.map((_, index) => index)
+    : (() => {
+        const ordered: number[] = [];
+        categoryGroups.forEach((grp) => {
+          grp.questions.forEach(({ idx }) => ordered.push(idx));
+        });
+        return ordered;
+      })();
+
   const navigatorQuestionNumbers = new Map<string, number>();
-  let navigatorCounter = 1;
-  categoryGroups.forEach((group) => {
-    group.questions.forEach(({ q }) => {
-      navigatorQuestionNumbers.set(q.questionId, navigatorCounter);
-      navigatorCounter += 1;
+  if (useFlatQuestionNavigator) {
+    questions.forEach((q, index) => {
+      navigatorQuestionNumbers.set(q.questionId, index + 1);
     });
-  });
+  } else {
+    let navigatorCounter = 1;
+    categoryGroups.forEach((group) => {
+      group.questions.forEach(({ q }) => {
+        navigatorQuestionNumbers.set(q.questionId, navigatorCounter);
+        navigatorCounter += 1;
+      });
+    });
+  }
+
+  const flatNavigatorGroup = {
+    cat: "all",
+    label: "",
+    questions: questions.map((q, idx) => ({ q, idx })),
+  };
 
   const getCircleColor = (idx: number, q: AttemptQuestion) => {
-    if (idx === currentIndex) return "bg-blue-600 text-white ring-2 ring-blue-300";
+    if (idx === currentIndex) return "bg-blue-600 text-white border-2 border-blue-300";
     if (answers[q.questionId]) return "bg-green-500 text-white";
     if (visited.has(idx)) return "bg-red-400 text-white";
     return "bg-gray-200 text-gray-600";
   };
+
+  const navigatorButtonClass = (idx: number, q: AttemptQuestion) => {
+    const colors = getCircleColor(idx, q);
+    if (useFlatQuestionNavigator) {
+      return `flex aspect-square w-full max-w-9 min-w-0 items-center justify-center rounded-full text-[11px] font-bold leading-none transition-all cursor-pointer ${colors}`;
+    }
+    return `flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold transition-all cursor-pointer ${colors}`;
+  };
+
+  const flatNavigatorSidebarGridClass = "grid grid-cols-5 gap-2.5";
+  const flatNavigatorMobileGridClass = "grid grid-cols-8 gap-2";
+  const sectionNavigatorGridClass = "grid grid-cols-6 gap-2";
 
   const partColors = ["text-blue-600","text-green-600","text-purple-600","text-amber-600","text-rose-600","text-cyan-600","text-indigo-600","text-teal-600"];
 
@@ -473,6 +505,7 @@ export default function StudentTakeAssessmentPage() {
     if (code.includes("LITMUS")) return "litmus" as const;
     if (code.includes("METACOGNITION")) return "metacognition" as const;
     if (code.includes("DNA")) return "career-dna" as const;
+    if (code === "STUDY_ABROAD") return "study-abroad" as const;
     return "career-compass" as const;
   })();
 
@@ -484,6 +517,7 @@ export default function StudentTakeAssessmentPage() {
     johari: "from-emerald-600 to-teal-600",
     litmus: "from-amber-500 to-orange-500",
     metacognition: "from-indigo-600 to-sky-600",
+    "study-abroad": "from-sky-500 to-indigo-600",
   }[assessmentVariant];
 
   const pageTone = {
@@ -492,6 +526,7 @@ export default function StudentTakeAssessmentPage() {
     johari: "bg-emerald-50/40",
     litmus: "bg-amber-50/40",
     metacognition: "bg-sky-50/40",
+    "study-abroad": "bg-sky-50/40",
   }[assessmentVariant];
 
   const sectionProgress = categoryGroups.map((group) => {
@@ -561,7 +596,9 @@ export default function StudentTakeAssessmentPage() {
 
   const visibleNavigatorGroups = isCareerDna && activeSectionCat
     ? categoryGroups.filter((group) => getCareerDnaTestType(group.questions[0]?.q) === activeSectionCat)
-    : categoryGroups;
+    : useFlatQuestionNavigator
+      ? [flatNavigatorGroup]
+      : categoryGroups;
 
   const activeCareerDnaSection = isCareerDna
     ? careerDnaSections.find((section) => section.cat === activeSectionCat)
@@ -1006,16 +1043,18 @@ export default function StudentTakeAssessmentPage() {
               </ul>
             </div>
 
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-              <h3 className="text-sm font-bold text-blue-800 mb-2">Sections Overview</h3>
-              <div className="space-y-1 text-sm text-blue-700">
-                {categoryGroups.map((grp, i) => (
-                  <p key={grp.cat}>
-                    <strong>Section {i + 1}:</strong> {grp.label} ({grp.questions.length} questions)
-                  </p>
-                ))}
+            {!useFlatQuestionNavigator && (
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <h3 className="text-sm font-bold text-blue-800 mb-2">Sections Overview</h3>
+                <div className="space-y-1 text-sm text-blue-700">
+                  {categoryGroups.map((grp, i) => (
+                    <p key={grp.cat}>
+                      <strong>Section {i + 1}:</strong> {grp.label} ({grp.questions.length} questions)
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -1151,17 +1190,19 @@ export default function StudentTakeAssessmentPage() {
               <div className="space-y-5">
                 {visibleNavigatorGroups.map((grp, grpIdx) => (
                   <div key={grp.cat}>
-                    <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
-                      {grp.label}
-                    </p>
-                    <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+                    {!useFlatQuestionNavigator && (
+                      <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
+                        {grp.label}
+                      </p>
+                    )}
+                    <div className={useFlatQuestionNavigator ? flatNavigatorMobileGridClass : "grid grid-cols-5 gap-2 sm:grid-cols-6"}>
                       {grp.questions.map(({ q, idx }) => {
                         const sectionQuestionNumber = navigatorQuestionNumbers.get(q.questionId) ?? idx + 1;
                         return (
                         <button
                           key={q.questionId}
                           onClick={() => void ensureJohariDefaultAnswerForCurrent().finally(() => goToQuestion(idx))}
-                          className={`h-10 rounded-full text-xs font-bold transition-all cursor-pointer ${getCircleColor(idx, q)}`}
+                          className={navigatorButtonClass(idx, q)}
                         >
                           {sectionQuestionNumber > 0 ? sectionQuestionNumber : idx + 1}
                         </button>
@@ -1184,17 +1225,19 @@ export default function StudentTakeAssessmentPage() {
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
             {visibleNavigatorGroups.map((grp, grpIdx) => (
               <div key={grp.cat}>
-                <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
-                  {grp.label}
-                </p>
-                <div className="grid grid-cols-6 gap-2">
+                {!useFlatQuestionNavigator && (
+                  <p className={`text-xs font-bold mb-3 ${partColors[grpIdx % partColors.length]}`}>
+                    {grp.label}
+                  </p>
+                )}
+                <div className={useFlatQuestionNavigator ? flatNavigatorSidebarGridClass : sectionNavigatorGridClass}>
                   {grp.questions.map(({ q, idx }) => {
                     const sectionQuestionNumber = navigatorQuestionNumbers.get(q.questionId) ?? idx + 1;
                     return (
                     <button
                       key={q.questionId}
                       onClick={() => void ensureJohariDefaultAnswerForCurrent().finally(() => goToQuestion(idx))}
-                      className={`w-10 h-10 rounded-full text-xs font-bold transition-all cursor-pointer ${getCircleColor(idx, q)}`}
+                      className={navigatorButtonClass(idx, q)}
                       title={`Q${sectionQuestionNumber > 0 ? sectionQuestionNumber : idx + 1}`}
                     >
                       {sectionQuestionNumber > 0 ? sectionQuestionNumber : idx + 1}
