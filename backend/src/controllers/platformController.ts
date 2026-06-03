@@ -36,6 +36,24 @@ const normalizeAssessmentCode = (code: string): string => {
   return normalized;
 };
 
+const allowsMultipleAttempts = (code: string): boolean => {
+  const normalized = normalizeAssessmentCode(code);
+  return normalized === "ADVERSITY_TEST" || normalized === "STUDY_ABROAD";
+};
+
+function pickAttemptHistoryEvaluation(
+  evaluation: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | undefined {
+  if (!evaluation || typeof evaluation !== "object") return undefined;
+  const picked: Record<string, unknown> = {};
+  if (evaluation.totalScore != null) picked.totalScore = evaluation.totalScore;
+  if (evaluation.overallScore != null) picked.overallScore = evaluation.overallScore;
+  if (evaluation.overallPercentage != null) picked.overallPercentage = evaluation.overallPercentage;
+  if (evaluation.aqLevel != null) picked.aqLevel = evaluation.aqLevel;
+  if (evaluation.band != null) picked.band = evaluation.band;
+  return Object.keys(picked).length ? picked : undefined;
+}
+
 const getAssessmentCodeAliases = (code: string): string[] => {
   const normalized = normalizeAssessmentCode(code);
   if (normalized === "METACOGNITION_TEST") return ["METACOGNITION_TEST", "METACOGNITION"];
@@ -806,15 +824,36 @@ export const getStudentDetailsForAdmin = async (req: AuthRequest, res: Response)
     user: student._id,
     organization: student.organization,
     status: "COMPLETED",
-  }).sort({ completedAt: -1, updatedAt: -1 });
+  }).sort({ completedAt: 1, updatedAt: 1 });
+
+  const attemptNumberById = new Map<string, number>();
+  const counters = new Map<string, number>();
+  attempts.forEach((attempt) => {
+    const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+    const next = (counters.get(canonicalCode) ?? 0) + 1;
+    counters.set(canonicalCode, next);
+    attemptNumberById.set(String(attempt._id), next);
+  });
+
+  const uniqueAssessmentCodes = new Set(
+    attempts.map((attempt) => normalizeAssessmentCode(attempt.assessmentCode)),
+  );
+
+  const resultsDesc = [...attempts].sort((a, b) => {
+    const aTime = new Date(a.completedAt ?? a.updatedAt ?? 0).getTime();
+    const bTime = new Date(b.completedAt ?? b.updatedAt ?? 0).getTime();
+    return bTime - aTime;
+  });
 
   res.json({
     student: {
       ...student.toObject(),
-      testsTaken: attempts.length,
+      testsTaken: uniqueAssessmentCodes.size,
+      totalAttempts: attempts.length,
     },
-    results: attempts.map((attempt) => {
+    results: resultsDesc.map((attempt) => {
       const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+      const evaluation = attempt.evaluation as Record<string, unknown> | undefined;
       return {
         id: attempt._id,
         assessmentCode: canonicalCode,
@@ -823,9 +862,70 @@ export const getStudentDetailsForAdmin = async (req: AuthRequest, res: Response)
         totalQuestions: attempt.totalQuestions,
         completedAt: attempt.completedAt,
         createdAt: attempt.createdAt,
+        attemptNumber: attemptNumberById.get(String(attempt._id)),
+        allowsMultipleAttempts: allowsMultipleAttempts(canonicalCode),
+        evaluation: pickAttemptHistoryEvaluation(evaluation),
       };
     }),
   });
+};
+
+export const listStudentAssessmentAttemptsForAdmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const codeParam = req.params.code;
+  const code = typeof codeParam === "string" ? codeParam.toUpperCase().trim() : "";
+
+  if (!studentId || !code) {
+    res.status(400).json({ message: "Student ID and assessment code are required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  const canonicalCode = normalizeAssessmentCode(code);
+  if (!allowsMultipleAttempts(canonicalCode)) {
+    res.status(400).json({ message: "This assessment does not support multiple attempts" });
+    return;
+  }
+
+  try {
+    const codeAliases = getAssessmentCodeAliases(canonicalCode);
+    const attempts = await StudentAssessmentAttempt.find({
+      user: student._id,
+      organization: student.organization,
+      assessmentCode: { $in: codeAliases },
+      status: "COMPLETED",
+    }).sort({ completedAt: 1, updatedAt: 1 });
+
+    res.json({
+      attempts: attempts.map((attempt, index) => ({
+        attemptId: attempt._id,
+        assessmentCode: normalizeAssessmentCode(attempt.assessmentCode),
+        assessmentName: getAssessmentDisplayName(
+          normalizeAssessmentCode(attempt.assessmentCode),
+          attempt.assessmentName,
+        ),
+        completedAt: attempt.completedAt,
+        evaluation: pickAttemptHistoryEvaluation(
+          attempt.evaluation as Record<string, unknown> | undefined,
+        ),
+        attemptNumber: index + 1,
+      })),
+    });
+  } catch (error) {
+    console.error("listStudentAssessmentAttemptsForAdmin error:", error);
+    res.status(500).json({ message: "Failed to load assessment attempts" });
+  }
 };
 
 export const getStudentAttemptReportForAdmin = async (req: AuthRequest, res: Response): Promise<void> => {

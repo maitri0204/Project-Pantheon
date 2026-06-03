@@ -1,21 +1,33 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
+import {
+  allowsMultipleAttempts,
+  buildOrgAttemptListPath,
+  normalizeAssessmentCode,
+} from "@/lib/assessmentAccess";
 
 export default function DashboardStudentReportPage() {
   const params = useParams<{ studentId: string; attemptId: string }>();
+  const searchParams = useSearchParams();
   const studentId = params?.studentId || "";
   const attemptId = params?.attemptId || "";
+  const usersBasePath = "/dashboard/users";
+  const assessmentCode = normalizeAssessmentCode(searchParams?.get("assessmentCode") || "");
+  const isMulti = assessmentCode && allowsMultipleAttempts(assessmentCode);
+  const topBackHref = isMulti
+    ? buildOrgAttemptListPath(usersBasePath, studentId, assessmentCode)
+    : `${usersBasePath}/${studentId}`;
 
   return (
     <AssessmentReportView
       fetchPath={`/platform/students/${studentId}/attempts/${attemptId}/report`}
       loginHref="/login"
-      topBackHref={`/dashboard/users/${studentId}`}
-      topBackLabel="Back to Student Details"
-      bottomBackHref={`/dashboard/users/${studentId}`}
+      topBackHref={topBackHref}
+      topBackLabel={isMulti ? "Back to Attempts" : "Back to Student Details"}
+      bottomBackHref={`${usersBasePath}/${studentId}`}
       bottomBackLabel="Back to Student Details"
     />
   );

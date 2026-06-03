@@ -4,6 +4,7 @@ import {
   getStudentAttempt,
   getStudentAttemptReportForAdmin,
   getStudentDetailsForAdmin,
+  listStudentAssessmentAttemptsForAdmin,
   getOrganizationCouponSummary,
   getStudentDashboard,
   getDashboard,
@@ -66,6 +67,12 @@ router.get(
 );
 router.get("/students", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listStudents);
 router.get("/students/:studentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentDetailsForAdmin);
+router.get(
+  "/students/:studentId/assessments/:code/attempts",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  listStudentAssessmentAttemptsForAdmin,
+);
 router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
 router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
 router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);

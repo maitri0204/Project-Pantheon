@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CalendarClock, GraduationCap, Mail, Phone, School, ShieldCheck } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import {
+  allowsMultipleAttempts,
+  buildOrgAttemptListPath,
+  normalizeAssessmentCode,
+  type AttemptHistoryEvaluation,
+} from "@/lib/assessmentAccess";
 
 type StudentResultItem = {
   id: string;
@@ -14,6 +20,15 @@ type StudentResultItem = {
   totalQuestions: number;
   completedAt?: string;
   createdAt?: string;
+  attemptNumber?: number;
+  allowsMultipleAttempts?: boolean;
+  evaluation?: AttemptHistoryEvaluation;
+};
+
+type AssessmentResultGroup = {
+  assessmentCode: string;
+  assessmentName: string;
+  attempts: StudentResultItem[];
 };
 
 type StudentDetailsResponse = {
@@ -55,6 +70,67 @@ const formatDateTime = (value?: string) => {
   return date.toLocaleString("en-IN");
 };
 
+function groupStudentResults(results: StudentResultItem[]): {
+  multiAttemptGroups: AssessmentResultGroup[];
+  singleResults: StudentResultItem[];
+} {
+  const multiMap = new Map<string, AssessmentResultGroup>();
+  const singleByCode = new Map<string, StudentResultItem>();
+
+  for (const result of results) {
+    const code = normalizeAssessmentCode(result.assessmentCode);
+    const isMulti = result.allowsMultipleAttempts ?? allowsMultipleAttempts(code);
+
+    if (isMulti) {
+      const existing = multiMap.get(code);
+      if (existing) {
+        existing.attempts.push({ ...result, assessmentCode: code });
+      } else {
+        multiMap.set(code, {
+          assessmentCode: code,
+          assessmentName: result.assessmentName,
+          attempts: [{ ...result, assessmentCode: code }],
+        });
+      }
+      continue;
+    }
+
+    const prev = singleByCode.get(code);
+    if (!prev) {
+      singleByCode.set(code, { ...result, assessmentCode: code });
+      continue;
+    }
+    const prevTime = new Date(prev.completedAt ?? 0).getTime();
+    const nextTime = new Date(result.completedAt ?? 0).getTime();
+    if (nextTime > prevTime) {
+      singleByCode.set(code, { ...result, assessmentCode: code });
+    }
+  }
+
+  const multiAttemptGroups = Array.from(multiMap.values()).map((group) => ({
+    ...group,
+    attempts: [...group.attempts].sort((a, b) => {
+      if (a.attemptNumber != null && b.attemptNumber != null) {
+        return a.attemptNumber - b.attemptNumber;
+      }
+      return new Date(a.completedAt ?? 0).getTime() - new Date(b.completedAt ?? 0).getTime();
+    }),
+  }));
+
+  multiAttemptGroups.sort((a, b) => {
+    const aLatest = a.attempts[a.attempts.length - 1]?.completedAt ?? "";
+    const bLatest = b.attempts[b.attempts.length - 1]?.completedAt ?? "";
+    return new Date(bLatest).getTime() - new Date(aLatest).getTime();
+  });
+
+  const multiCodes = new Set(multiAttemptGroups.map((g) => g.assessmentCode));
+  const singleResults = Array.from(singleByCode.values())
+    .filter((r) => !multiCodes.has(normalizeAssessmentCode(r.assessmentCode)))
+    .sort((a, b) => new Date(b.completedAt ?? 0).getTime() - new Date(a.completedAt ?? 0).getTime());
+
+  return { multiAttemptGroups, singleResults };
+}
+
 export default function StudentDetailView({ studentId, basePath, loginPath }: StudentDetailViewProps) {
   const router = useRouter();
   const auth = useMemo(() => getStoredAuth(), []);
@@ -94,6 +170,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
   }
 
   const { student, results } = data;
+  const { multiAttemptGroups, singleResults } = groupStudentResults(results);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -157,7 +234,34 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
           <div className="px-5 py-12 text-center text-sm text-slate-500">No completed assessments yet.</div>
         ) : (
           <div className="grid gap-4 p-4">
-            {results.map((result) => (
+            {multiAttemptGroups.map((group) => (
+              <div key={group.assessmentCode} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">
+                      {normalizeDisplayCode(group.assessmentCode)}
+                    </p>
+                    <h3 className="mt-1 text-lg font-bold text-slate-900">{group.assessmentName}</h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {group.attempts.length} attempt{group.attempts.length !== 1 ? "s" : ""} completed
+                    </p>
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500">
+                      <CalendarClock className="h-3.5 w-3.5" />
+                      Latest {formatDateTime(group.attempts[group.attempts.length - 1]?.completedAt)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => router.push(buildOrgAttemptListPath(basePath, studentId, group.assessmentCode))}
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
+                  >
+                    View Reports
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {singleResults.map((result) => (
               <div key={result.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
@@ -170,10 +274,18 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
                     </div>
                   </div>
                   <button
-                    onClick={() => router.push(`${basePath}/${studentId}/reports/${result.id}`)}
+                    type="button"
+                    onClick={() => {
+                      const code = normalizeAssessmentCode(result.assessmentCode);
+                      if (allowsMultipleAttempts(code)) {
+                        router.push(buildOrgAttemptListPath(basePath, studentId, code));
+                        return;
+                      }
+                      router.push(`${basePath}/${studentId}/reports/${result.id}`);
+                    }}
                     className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
                   >
-                    View Report
+                    {allowsMultipleAttempts(result.assessmentCode) ? "View Reports" : "View Report"}
                   </button>
                 </div>
               </div>

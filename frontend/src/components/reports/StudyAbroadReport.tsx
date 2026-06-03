@@ -34,16 +34,32 @@ function topicBadge(score: number) {
   return { bg: "bg-rose-50", text: "text-rose-700", label: "Focus" };
 }
 
+const RADAR_TOPIC_SHORT: Record<string, string> = {
+  "Language Readiness": "Language",
+  "Scholastic Readiness": "Scholastic",
+  "Academic Readiness": "Academic",
+  "Career & Employability Readiness": "Career",
+  "Financial Readiness": "Financial",
+  "Visa & Compliance Readiness": "Visa",
+  "Psychological Readiness": "Psychological",
+  "Social & Cultural Readiness": "Social",
+  "Parental Expectation Readiness": "Parental",
+  "Physical & Lifestyle Readiness": "Physical",
+  "Resilience Readiness": "Resilience",
+  "Decision Readiness": "Decision",
+};
+
 function RadarChart({ scores }: { scores: Record<string, number> }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const topics = ALL_TOPICS;
   const n = topics.length;
   const size = 300;
-  const pad = 40;
+  const pad = 52;
   const vb = size + pad * 2;
   const cx = vb / 2;
   const cy = vb / 2;
-  const R = 105;
+  const R = 100;
+  const labelRadius = R + 38;
   const rings = [20, 40, 60, 80, 100];
 
   const toXY = (pct: number, i: number) => {
@@ -52,39 +68,103 @@ function RadarChart({ scores }: { scores: Record<string, number> }) {
     return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
   };
 
+  const labelXY = (radius: number, i: number) => {
+    const angle = (i * (2 * Math.PI)) / n - Math.PI / 2;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
+  };
+
   const ringPoly = (pct: number) =>
     topics.map((_, i) => `${toXY(pct, i).x},${toXY(pct, i).y}`).join(" ");
 
   const scorePoly = topics.map((t, i) => `${toXY(scores[t] ?? 0, i).x},${toXY(scores[t] ?? 0, i).y}`).join(" ");
 
   return (
-    <svg viewBox={`0 0 ${vb} ${vb}`} className="mx-auto w-full max-w-[340px]">
+    <svg viewBox={`0 0 ${vb} ${vb}`} className="mx-auto w-full max-w-[380px]" role="img" aria-label="12-dimension readiness radar">
       {rings.map((p) => (
         <g key={p}>
-          <polygon points={ringPoly(p)} fill="none" stroke="#e2e8f0" strokeWidth="1" />
+          <polygon
+            points={ringPoly(p)}
+            fill={p === 100 ? "rgba(248,250,252,0.6)" : "none"}
+            stroke={p % 40 === 0 ? "#cbd5e1" : "#e2e8f0"}
+            strokeWidth="1"
+          />
         </g>
       ))}
+      {rings.map((p) => {
+        const pos = toXY(p, 0);
+        return (
+          <text
+            key={`ring-${p}`}
+            x={pos.x + 6}
+            y={pos.y}
+            fontSize="9"
+            fill="#64748b"
+            dominantBaseline="middle"
+          >
+            {p}%
+          </text>
+        );
+      })}
       {topics.map((_, i) => {
         const end = toXY(100, i);
         return <line key={i} x1={cx} y1={cy} x2={end.x} y2={end.y} stroke="#e2e8f0" strokeWidth="1" />;
       })}
-      <polygon points={scorePoly} fill="rgba(165,180,252,0.24)" stroke="#a5b4fc" strokeWidth="2" />
+      <polygon points={scorePoly} fill="rgba(165,180,252,0.24)" stroke="#818cf8" strokeWidth="2" strokeLinejoin="round" />
+      {topics.map((t, i) => {
+        const pos = labelXY(labelRadius, i);
+        const short = RADAR_TOPIC_SHORT[t] ?? t.replace(" Readiness", "");
+        return (
+          <text
+            key={`label-${t}`}
+            x={pos.x}
+            y={pos.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="9"
+            fill="#475569"
+            fontWeight="600"
+          >
+            {short}
+          </text>
+        );
+      })}
       {topics.map((t, i) => {
         const pt = toXY(scores[t] ?? 0, i);
-        const score = scores[t] ?? 0;
-        const dotColor = score >= 70 ? "#86efac" : score >= 45 ? "#a5b4fc" : "#fda4af";
+        const score = Math.round(scores[t] ?? 0);
+        const dotColor = score >= 70 ? "#22c55e" : score >= 45 ? "#6366f1" : "#f43f5e";
+        const angle = (i * (2 * Math.PI)) / n - Math.PI / 2;
+        const scoreOffset = 14;
+        const scoreX = pt.x + scoreOffset * Math.cos(angle);
+        const scoreY = pt.y + scoreOffset * Math.sin(angle);
+        const active = hoveredIdx === i;
+
         return (
-          <circle
+          <g
             key={t}
-            cx={pt.x}
-            cy={pt.y}
-            r={hoveredIdx === i ? 7 : 4}
-            fill={dotColor}
-            stroke="white"
-            strokeWidth="1.5"
             onMouseEnter={() => setHoveredIdx(i)}
             onMouseLeave={() => setHoveredIdx(null)}
-          />
+            style={{ cursor: "default" }}
+          >
+            <circle
+              cx={pt.x}
+              cy={pt.y}
+              r={active ? 7 : 5}
+              fill={dotColor}
+              stroke="white"
+              strokeWidth="1.5"
+            />
+            <text
+              x={scoreX}
+              y={scoreY}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={active ? 11 : 10}
+              fontWeight="700"
+              fill="#0f172a"
+            >
+              {score}%
+            </text>
+          </g>
         );
       })}
     </svg>

@@ -5,19 +5,19 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { allowsMultipleAttempts, buildStudentResultPath } from "@/lib/assessmentAccess";
+import {
+  allowsMultipleAttempts,
+  buildStudentResultPath,
+  formatAttemptHistoryScore,
+  type AttemptHistoryEvaluation,
+} from "@/lib/assessmentAccess";
 
 type AttemptHistoryItem = {
   attemptId: string;
   assessmentCode: string;
   assessmentName: string;
   completedAt?: string;
-  evaluation?: {
-    totalScore?: number;
-    overallPercentage?: number;
-    aqLevel?: string;
-    grade?: string;
-  };
+  evaluation?: AttemptHistoryEvaluation;
   attemptNumber: number;
 };
 
@@ -102,7 +102,7 @@ function AssessmentAttemptHistory(props: {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {attempts.map((attempt) => {
-              const score = attempt.evaluation?.totalScore;
+              const scoreLabel = formatAttemptHistoryScore(assessmentCode, attempt.evaluation);
 
               return (
                 <button
@@ -122,7 +122,7 @@ function AssessmentAttemptHistory(props: {
                   <div className="mt-4 grid gap-2 text-sm text-slate-700">
                     <div className="flex items-center justify-between">
                       <span className="text-slate-500">Score</span>
-                      <span className="font-semibold text-slate-900">{score !== undefined ? score : "—"}</span>
+                      <span className="font-semibold text-slate-900">{scoreLabel}</span>
                     </div>
                   </div>
                 </button>

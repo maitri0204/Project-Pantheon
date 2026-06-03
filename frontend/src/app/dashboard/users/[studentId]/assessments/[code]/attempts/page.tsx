@@ -1,0 +1,52 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+
+import AssessmentAttemptHistoryView from "@/components/dashboard/AssessmentAttemptHistoryView";
+import { apiRequest, getStoredAuth } from "@/lib/api";
+import {
+  buildOrgReportPath,
+  normalizeAssessmentCode,
+} from "@/lib/assessmentAccess";
+
+type AttemptMetaResponse = {
+  attempts: Array<{ assessmentName: string }>;
+};
+
+export default function SuperadminOrgStudentAttemptListPage() {
+  const params = useParams<{ studentId: string; code: string }>();
+  const studentId = params?.studentId || "";
+  const code = normalizeAssessmentCode(String(params?.code || ""));
+  const usersBasePath = "/dashboard/users";
+  const [assessmentName, setAssessmentName] = useState(code);
+  const auth = useMemo(() => getStoredAuth(), []);
+
+  useEffect(() => {
+    if (!auth?.token || !studentId || !code) return;
+    apiRequest<AttemptMetaResponse>(
+      `/platform/students/${studentId}/assessments/${code}/attempts`,
+      {},
+      auth.token,
+    )
+      .then((res) => {
+        const name = res.attempts?.[res.attempts.length - 1]?.assessmentName;
+        if (name) setAssessmentName(name);
+      })
+      .catch(() => undefined);
+  }, [auth?.token, studentId, code]);
+
+  return (
+    <AssessmentAttemptHistoryView
+      fetchPath={`/platform/students/${studentId}/assessments/${code}/attempts`}
+      loginHref="/dashboard/login"
+      assessmentCode={code}
+      assessmentName={assessmentName}
+      topBackHref={`${usersBasePath}/${studentId}`}
+      topBackLabel="Back to Student Details"
+      bottomBackHref={`${usersBasePath}/${studentId}`}
+      bottomBackLabel="Back to Student Details"
+      buildReportHref={(attemptId) => buildOrgReportPath(usersBasePath, studentId, attemptId, code)}
+    />
+  );
+}

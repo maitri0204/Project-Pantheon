@@ -440,10 +440,10 @@ type DetailedReportPdfContext = {
 async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ blob: Blob; fileName: string }> {
   const {
     normalizedCode,
-    report,
+          report,
     evaluation,
-    reportStudentName,
-    reportEmail,
+          reportStudentName,
+          reportEmail,
     classGrade,
     schoolName,
     reportBranding,
@@ -475,119 +475,119 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       blob,
       fileName: `AQ-Report-${reportStudentName.replace(/\s+/g, "-")}.pdf`,
     };
-  }
+      }
 
-  if (normalizedCode === "JOHARI_WINDOW") {
+      if (normalizedCode === "JOHARI_WINDOW") {
     const blob = await generateClearReport({
-      studentName: reportStudentName,
-      classGrade,
-      schoolName,
+          studentName: reportStudentName,
+          classGrade,
+          schoolName,
       submittedAt: submittedLabel,
-      sfScore: toNumber(evaluation.solicitsFeedbackScore),
-      sdScore: toNumber(evaluation.selfDisclosureScore),
-      dominantQuadrant: String(evaluation.dominantQuadrant || "Open Area"),
-      organizationBranding: reportBranding,
+          sfScore: toNumber(evaluation.solicitsFeedbackScore),
+          sdScore: toNumber(evaluation.selfDisclosureScore),
+          dominantQuadrant: String(evaluation.dominantQuadrant || "Open Area"),
+          organizationBranding: reportBranding,
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `CLEAR_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
-  }
+      }
 
-  if (normalizedCode === "CAREER_COMPASS") {
+      if (normalizedCode === "CAREER_COMPASS") {
     const blob = await generateCareerCompassReport({
-      studentName: reportStudentName,
+          studentName: reportStudentName,
       submittedAt: submittedLabel,
-      personalityType: String(evaluation.personalityType || "UNKNOWN"),
-      classGrade,
-      schoolName,
-      organizationBranding: reportBranding,
+          personalityType: String(evaluation.personalityType || "UNKNOWN"),
+          classGrade,
+          schoolName,
+          organizationBranding: reportBranding,
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `Career_Compass_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
-  }
+      }
 
-  if (normalizedCode === "METACOGNITION_TEST") {
-    const domainScores = (evaluation.domainScores || {}) as Record<string, number>;
+      if (normalizedCode === "METACOGNITION_TEST") {
+        const domainScores = (evaluation.domainScores || {}) as Record<string, number>;
     const blob = await generateMetacognitionReport({
-      studentName: reportStudentName,
+          studentName: reportStudentName,
       email: profileFromAuth.email || authEmail || "",
       submittedAt: submittedLabel,
-      classGrade,
-      schoolName,
-      totalScore: toNumber(evaluation.totalScore),
-      domainScores: {
-        domain1: toNumber(domainScores.domain1),
-        domain2: toNumber(domainScores.domain2),
-        domain3: toNumber(domainScores.domain3),
-        domain4: toNumber(domainScores.domain4),
-        domain5: toNumber(domainScores.domain5),
-      },
-      organizationBranding: reportBranding,
+          classGrade,
+          schoolName,
+          totalScore: toNumber(evaluation.totalScore),
+          domainScores: {
+            domain1: toNumber(domainScores.domain1),
+            domain2: toNumber(domainScores.domain2),
+            domain3: toNumber(domainScores.domain3),
+            domain4: toNumber(domainScores.domain4),
+            domain5: toNumber(domainScores.domain5),
+          },
+          organizationBranding: reportBranding,
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `Metacognition_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
-  }
+      }
 
-  if (normalizedCode === "LITMUS_TEST") {
-    const styleScores = (evaluation.styleScores || {}) as Record<string, number>;
+      if (normalizedCode === "LITMUS_TEST") {
+        const styleScores = (evaluation.styleScores || {}) as Record<string, number>;
     const blob = await generateLitmusReport({
-      studentName: reportStudentName,
-      styleScores: {
-        K: toNumber(styleScores.K),
-        S: toNumber(styleScores.S),
-        E: toNumber(styleScores.E),
-        P: toNumber(styleScores.P),
-        J: toNumber(styleScores.J),
-      },
-      organizationBranding: reportBranding,
+          studentName: reportStudentName,
+          styleScores: {
+            K: toNumber(styleScores.K),
+            S: toNumber(styleScores.S),
+            E: toNumber(styleScores.E),
+            P: toNumber(styleScores.P),
+            J: toNumber(styleScores.J),
+          },
+          organizationBranding: reportBranding,
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `Litmus_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
-  }
+      }
 
-  if (normalizedCode === "CAREER_DNA") {
-    const sections = (evaluation.sections || {}) as Record<string, { parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>; totalScore?: number; maxScore?: number; dominantCode?: string }>;
-    const cogParts = sections.COGNITIVE?.parts || [];
-    const aptParts = sections.APTITUDE?.parts || [];
+      if (normalizedCode === "CAREER_DNA") {
+        const sections = (evaluation.sections || {}) as Record<string, { parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>; totalScore?: number; maxScore?: number; dominantCode?: string }>;
+        const cogParts = sections.COGNITIVE?.parts || [];
+        const aptParts = sections.APTITUDE?.parts || [];
     const blob = await generateCareerDnaCapabilityReport({
-      studentName: reportStudentName,
+          studentName: reportStudentName,
       submittedAt: submittedLabel,
-      classGrade,
-      schoolName,
-      organizationBranding: reportBranding,
-      traitScores: {
-        VR: cogParts[0]?.percentage ?? 0,
-        NR: cogParts[1]?.percentage ?? 0,
-        SR: cogParts[2]?.percentage ?? 0,
-        MP: cogParts[3]?.percentage ?? 0,
-        LR: aptParts[0]?.percentage ?? 0,
-        NA: aptParts[1]?.percentage ?? 0,
-        VA: aptParts[2]?.percentage ?? 0,
-        MA: aptParts[3]?.percentage ?? 0,
-        CI: aptParts[4]?.percentage ?? 0,
-      },
-      otherSectionScores: {
-        COGNITIVE: { score: sections.COGNITIVE?.totalScore || 0, maxScore: sections.COGNITIVE?.maxScore || 40, parts: sections.COGNITIVE?.parts || [] },
-        APTITUDE: { score: sections.APTITUDE?.totalScore || 0, maxScore: sections.APTITUDE?.maxScore || 50, parts: sections.APTITUDE?.parts || [] },
-        PERSONALITY: {
-          score: sections.PERSONALITY?.totalScore || 0,
-          maxScore: sections.PERSONALITY?.maxScore || 100,
-          parts: sections.PERSONALITY?.parts || [],
-          traits: (sections.PERSONALITY?.parts || []).map((p) => p.partName).filter(Boolean),
+          classGrade,
+          schoolName,
+          organizationBranding: reportBranding,
+          traitScores: {
+            VR: cogParts[0]?.percentage ?? 0,
+            NR: cogParts[1]?.percentage ?? 0,
+            SR: cogParts[2]?.percentage ?? 0,
+            MP: cogParts[3]?.percentage ?? 0,
+            LR: aptParts[0]?.percentage ?? 0,
+            NA: aptParts[1]?.percentage ?? 0,
+            VA: aptParts[2]?.percentage ?? 0,
+            MA: aptParts[3]?.percentage ?? 0,
+            CI: aptParts[4]?.percentage ?? 0,
+          },
+          otherSectionScores: {
+            COGNITIVE: { score: sections.COGNITIVE?.totalScore || 0, maxScore: sections.COGNITIVE?.maxScore || 40, parts: sections.COGNITIVE?.parts || [] },
+            APTITUDE: { score: sections.APTITUDE?.totalScore || 0, maxScore: sections.APTITUDE?.maxScore || 50, parts: sections.APTITUDE?.parts || [] },
+            PERSONALITY: {
+              score: sections.PERSONALITY?.totalScore || 0,
+              maxScore: sections.PERSONALITY?.maxScore || 100,
+              parts: sections.PERSONALITY?.parts || [],
+              traits: (sections.PERSONALITY?.parts || []).map((p) => p.partName).filter(Boolean),
           personalityType: String((sections.PERSONALITY as { personalityType?: string })?.personalityType || evaluation.personalityType || ""),
           personalityDimensions: (sections.PERSONALITY as { personalityDimensions?: unknown[] })?.personalityDimensions || [],
-        },
-        CAREER_INTEREST: {
-          score: sections.CAREER_INTEREST?.totalScore || 0,
-          maxScore: sections.CAREER_INTEREST?.maxScore || 100,
-          parts: sections.CAREER_INTEREST?.parts || [],
-          dominantCode: String(sections.CAREER_INTEREST?.dominantCode || ""),
-        },
-        EMOTIONAL_INTELLIGENCE: { score: sections.EMOTIONAL_INTELLIGENCE?.totalScore || 0, maxScore: sections.EMOTIONAL_INTELLIGENCE?.maxScore || 100, parts: sections.EMOTIONAL_INTELLIGENCE?.parts || [] },
-        LEARNING_STYLE: {
-          score: sections.LEARNING_STYLE?.totalScore || 0,
-          maxScore: sections.LEARNING_STYLE?.maxScore || 100,
-          parts: sections.LEARNING_STYLE?.parts || [],
-          dominantCode: String(sections.LEARNING_STYLE?.dominantCode || ""),
-        },
-        BEHAVIORAL_SOCIAL: { score: sections.BEHAVIORAL_SOCIAL?.totalScore || 0, maxScore: sections.BEHAVIORAL_SOCIAL?.maxScore || 100, parts: sections.BEHAVIORAL_SOCIAL?.parts || [] },
-        STRESS_RESILIENCE: { score: sections.STRESS_RESILIENCE?.totalScore || 0, maxScore: sections.STRESS_RESILIENCE?.maxScore || 160, parts: sections.STRESS_RESILIENCE?.parts || [] },
-      },
+            },
+            CAREER_INTEREST: {
+              score: sections.CAREER_INTEREST?.totalScore || 0,
+              maxScore: sections.CAREER_INTEREST?.maxScore || 100,
+              parts: sections.CAREER_INTEREST?.parts || [],
+              dominantCode: String(sections.CAREER_INTEREST?.dominantCode || ""),
+            },
+            EMOTIONAL_INTELLIGENCE: { score: sections.EMOTIONAL_INTELLIGENCE?.totalScore || 0, maxScore: sections.EMOTIONAL_INTELLIGENCE?.maxScore || 100, parts: sections.EMOTIONAL_INTELLIGENCE?.parts || [] },
+            LEARNING_STYLE: {
+              score: sections.LEARNING_STYLE?.totalScore || 0,
+              maxScore: sections.LEARNING_STYLE?.maxScore || 100,
+              parts: sections.LEARNING_STYLE?.parts || [],
+              dominantCode: String(sections.LEARNING_STYLE?.dominantCode || ""),
+            },
+            BEHAVIORAL_SOCIAL: { score: sections.BEHAVIORAL_SOCIAL?.totalScore || 0, maxScore: sections.BEHAVIORAL_SOCIAL?.maxScore || 100, parts: sections.BEHAVIORAL_SOCIAL?.parts || [] },
+            STRESS_RESILIENCE: { score: sections.STRESS_RESILIENCE?.totalScore || 0, maxScore: sections.STRESS_RESILIENCE?.maxScore || 160, parts: sections.STRESS_RESILIENCE?.parts || [] },
+          },
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `Career_DNA_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
   }
@@ -598,30 +598,30 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     }
     const { blob, fileName } = await generateStudyAbroadReportForEmail(authToken, report.attemptId);
     return { blob, fileName };
-  }
+      }
 
-  if (normalizedCode === "ACADEMIC_CAREER") {
+      if (normalizedCode === "ACADEMIC_CAREER") {
     const blob = await generateAcademicCareerReport({
-      studentName: reportStudentName,
-      classGrade,
-      schoolName,
+          studentName: reportStudentName,
+          classGrade,
+          schoolName,
       submittedAt: submittedLabel,
       evaluation: evaluation as never,
-      organizationBranding: reportBranding,
+          organizationBranding: reportBranding,
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `Academic_Career_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
-  }
+      }
 
-  const { default: jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
-  pdf.text(`${report.assessmentName} Report`, 15, 20);
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(11);
-  pdf.text(`Submitted: ${formatDateTime(report.submittedAt)}`, 15, 30);
-  pdf.text(`Answered: ${report.answeredCount}/${report.totalQuestions}`, 15, 37);
-  pdf.text(`Attempt ID: ${report.attemptId}`, 15, 44);
+      const { default: jsPDF } = await import("jspdf");
+      const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(18);
+      pdf.text(`${report.assessmentName} Report`, 15, 20);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      pdf.text(`Submitted: ${formatDateTime(report.submittedAt)}`, 15, 30);
+      pdf.text(`Answered: ${report.answeredCount}/${report.totalQuestions}`, 15, 37);
+      pdf.text(`Attempt ID: ${report.attemptId}`, 15, 44);
   return {
     blob: pdf.output("blob"),
     fileName: `${normalizeDisplayCode(report.assessmentCode)}_Report.pdf`,

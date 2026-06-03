@@ -1,3 +1,44 @@
+import { MAX_ASSESSMENT_SCORE } from "@/lib/studyAbroad/assessmentData";
+
+export type AttemptHistoryEvaluation = {
+  totalScore?: number;
+  overallScore?: number;
+  overallPercentage?: number;
+  aqLevel?: string;
+  band?: string;
+};
+
+/** Display label for score on the multi-attempt history list. */
+export function formatAttemptHistoryScore(
+  assessmentCode: string,
+  evaluation?: AttemptHistoryEvaluation | null,
+): string {
+  if (!evaluation) return "—";
+
+  const code = normalizeAssessmentCode(assessmentCode);
+
+  if (code === "STUDY_ABROAD") {
+    const overallScore = Number(evaluation.overallScore);
+    if (Number.isFinite(overallScore)) {
+      return `${overallScore} / ${MAX_ASSESSMENT_SCORE}`;
+    }
+    const pct = Number(evaluation.overallPercentage);
+    if (Number.isFinite(pct)) return `${Math.round(pct)}%`;
+    return "—";
+  }
+
+  if (code === "ADVERSITY_TEST") {
+    const totalScore = Number(evaluation.totalScore);
+    if (Number.isFinite(totalScore)) {
+      return evaluation.aqLevel ? `${totalScore} (${evaluation.aqLevel})` : String(totalScore);
+    }
+    return "—";
+  }
+
+  const totalScore = Number(evaluation.totalScore);
+  return Number.isFinite(totalScore) ? String(totalScore) : "—";
+}
+
 export function normalizeAssessmentCode(code: string): string {
   const normalized = String(code || "").toUpperCase().trim();
   if (normalized === "METACOGNITION") return "METACOGNITION_TEST";
@@ -31,4 +72,27 @@ export function buildStudentResultPath(
 
 export function buildStudentAttemptListPath(slug: string, assessmentCode: string): string {
   return buildStudentResultPath(slug, assessmentCode);
+}
+
+/** Org admin: attempt picker for a student on a multi-attempt assessment. */
+export function buildOrgAttemptListPath(
+  usersBasePath: string,
+  studentId: string,
+  assessmentCode: string,
+): string {
+  const code = normalizeAssessmentCode(assessmentCode);
+  return `${usersBasePath}/${studentId}/assessments/${code}/attempts`;
+}
+
+/** Org admin: open a specific attempt report (optional assessmentCode for back navigation). */
+export function buildOrgReportPath(
+  usersBasePath: string,
+  studentId: string,
+  attemptId: string,
+  assessmentCode?: string,
+): string {
+  const base = `${usersBasePath}/${studentId}/reports/${attemptId}`;
+  if (!assessmentCode) return base;
+  const code = normalizeAssessmentCode(assessmentCode);
+  return `${base}?assessmentCode=${encodeURIComponent(code)}`;
 }
