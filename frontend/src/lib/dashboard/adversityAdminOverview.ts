@@ -50,9 +50,15 @@ export type AdversityAdminOverview = {
   reportsTotal: number;
 };
 
-export async function fetchAdversityAdminOverview(token: string): Promise<AdversityAdminOverview> {
+export async function fetchAdversityAdminOverview(
+  token: string,
+  options?: { organizationSlug?: string },
+): Promise<AdversityAdminOverview> {
+  const slugQuery = options?.organizationSlug
+    ? `?organizationSlug=${encodeURIComponent(options.organizationSlug)}`
+    : "";
   return apiRequest<AdversityAdminOverview>(
-    "/platform/assessments/ADVERSITY_TEST/admin-overview",
+    `/platform/assessments/ADVERSITY_TEST/admin-overview${slugQuery}`,
     {},
     token,
   );

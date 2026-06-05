@@ -10,22 +10,36 @@ type AssessmentOrgDashboardProps = {
   assessmentCode: string;
   orgDashboardBasePath: string;
   loginPath: string;
+  organizationSlug?: string;
 };
 
 export default function AssessmentOrgDashboard({
   assessmentCode,
   orgDashboardBasePath,
   loginPath,
+  organizationSlug,
 }: AssessmentOrgDashboardProps) {
   const code = normalizeAssessmentCode(assessmentCode);
   const studentsPath = `${orgDashboardBasePath}/users`;
 
   if (code === "ACADEMIC_CAREER") {
-    return <AcademicCareerOrgDashboard studentsPath={studentsPath} loginPath={loginPath} />;
+    return (
+      <AcademicCareerOrgDashboard
+        studentsPath={studentsPath}
+        loginPath={loginPath}
+        organizationSlug={organizationSlug}
+      />
+    );
   }
 
   if (code === "ADVERSITY_TEST") {
-    return <AdversityOrgDashboard studentsPath={studentsPath} loginPath={loginPath} />;
+    return (
+      <AdversityOrgDashboard
+        studentsPath={studentsPath}
+        loginPath={loginPath}
+        organizationSlug={organizationSlug}
+      />
+    );
   }
 
   if (ENHANCED_ORG_DASHBOARD_CODES.includes(code)) {
@@ -34,6 +48,7 @@ export default function AssessmentOrgDashboard({
         assessmentCode={code}
         studentsPath={studentsPath}
         loginPath={loginPath}
+        organizationSlug={organizationSlug}
       />
     );
   }

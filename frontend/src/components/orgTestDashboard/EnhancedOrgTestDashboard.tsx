@@ -38,6 +38,7 @@ type EnhancedOrgTestDashboardProps = {
   assessmentCode: string;
   studentsPath: string;
   loginPath: string;
+  organizationSlug?: string;
 };
 
 type StudentRow = {
@@ -592,9 +593,10 @@ export default function EnhancedOrgTestDashboard({
   assessmentCode,
   studentsPath,
   loginPath,
+  organizationSlug,
 }: EnhancedOrgTestDashboardProps) {
   const config = getTestDashboardUiConfig(assessmentCode);
-  const { loading, data, error } = useAssessmentOrgDashboard(loginPath, assessmentCode);
+  const { loading, data, error } = useAssessmentOrgDashboard(loginPath, assessmentCode, organizationSlug);
 
   if (!config) {
     return <p className="text-sm text-rose-600">Dashboard not configured for this assessment.</p>;

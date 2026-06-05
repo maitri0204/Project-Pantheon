@@ -586,7 +586,8 @@ export default function AssessmentReportView({
   bottomBackLabel,
 }: AssessmentReportViewProps) {
   const router = useRouter();
-  const auth = useMemo(() => getStoredAuth(), []);
+  const auth = getStoredAuth();
+  const isStudentReportView = fetchPath.startsWith("/platform/student/");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
@@ -684,9 +685,13 @@ export default function AssessmentReportView({
   };
 
   const downloadDetailedReport = async () => {
+    const currentAuth = getStoredAuth();
     setDownloading(true);
     try {
-      const { blob, fileName } = await buildDetailedReportPdf(pdfContext);
+      const { blob, fileName } = await buildDetailedReportPdf({
+        ...pdfContext,
+        authToken: currentAuth?.token,
+      });
       triggerPdfDownload(blob, fileName);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to generate report PDF");
@@ -696,7 +701,8 @@ export default function AssessmentReportView({
   };
 
   const emailDetailedReport = async () => {
-    if (!report || !auth?.token) return;
+    const currentAuth = getStoredAuth();
+    if (!report || !currentAuth?.token) return;
     setEmailing(true);
     setEmailSuccess(false);
     try {
@@ -706,7 +712,7 @@ export default function AssessmentReportView({
       await apiRequest(
         `/platform/student/attempts/${report.attemptId}/email-report`,
         { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName }) },
-        auth.token,
+        currentAuth.token,
       );
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
@@ -790,10 +796,11 @@ export default function AssessmentReportView({
           totalQuestions={report.totalQuestions}
           actions={{
             onDownload: downloadDetailedReport,
-            onEmail: emailDetailedReport,
+            onEmail: isStudentReportView ? emailDetailedReport : undefined,
             downloading,
             emailing,
             emailSuccess,
+            showEmail: isStudentReportView,
           }}
         />
       );
@@ -993,9 +1000,11 @@ export default function AssessmentReportView({
           <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
             {downloading ? "Generating Report..." : "Download Detailed Report"}
           </button>
-          <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-            {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
-          </button>
+          {isStudentReportView && (
+            <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+              {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+            </button>
+          )}
         </div>
       )}
 

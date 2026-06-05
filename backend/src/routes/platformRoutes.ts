@@ -5,6 +5,8 @@ import {
   getStudentAttemptReportForAdmin,
   downloadAdminCareerDnaReport,
   downloadStudentCareerDnaReport,
+  getAdminCareerDnaReportHtml,
+  getStudentCareerDnaReportHtml,
   getStudentDetailsForAdmin,
   listStudentAssessmentAttemptsForAdmin,
   getOrganizationCouponSummary,
@@ -45,7 +47,7 @@ import { optionalAuth, requireAuth, requireRoles } from "../middleware/auth";
 const router = Router();
 
 router.get("/overview", getPlatformOverview);
-router.get("/assessments", listAssessments);
+router.get("/assessments", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listAssessments);
 router.get("/whitelabel/:slug", optionalAuth, getWhitelabelPortal);
 router.get("/whitelabel-by-host", optionalAuth, getWhitelabelPortalByHost);
 router.get("/dashboard", requireAuth, getDashboard);
@@ -82,6 +84,12 @@ router.get(
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
   downloadAdminCareerDnaReport,
 );
+router.get(
+  "/students/:studentId/attempts/:attemptId/career-dna-report-html",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdminCareerDnaReportHtml,
+);
 router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
 router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentDashboard);
@@ -107,6 +115,12 @@ router.get(
   requireAuth,
   requireRoles("STUDENT", "PARENT"),
   downloadStudentCareerDnaReport,
+);
+router.get(
+  "/student/attempts/:attemptId/career-dna-report-html",
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  getStudentCareerDnaReportHtml,
 );
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);

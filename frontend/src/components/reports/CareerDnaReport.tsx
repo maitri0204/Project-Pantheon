@@ -321,10 +321,11 @@ function SectionRadar({ scores }: { scores: Array<{ label: string; pct: number }
 
 type CareerDnaReportActions = {
   onDownload: () => void;
-  onEmail: () => void;
+  onEmail?: () => void;
   downloading: boolean;
   emailing: boolean;
   emailSuccess: boolean;
+  showEmail?: boolean;
 };
 
 export default function CareerDnaReport({
@@ -435,14 +436,16 @@ export default function CareerDnaReport({
           >
             {actions.downloading ? "Generating Report..." : "Download Detailed Report"}
           </button>
-          <button
-            type="button"
-            onClick={actions.onEmail}
-            disabled={actions.emailing}
-            className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {actions.emailing ? "Sending..." : actions.emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
-          </button>
+          {actions.showEmail && actions.onEmail && (
+            <button
+              type="button"
+              onClick={actions.onEmail}
+              disabled={actions.emailing}
+              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {actions.emailing ? "Sending..." : actions.emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+            </button>
+          )}
         </div>
       )}
 

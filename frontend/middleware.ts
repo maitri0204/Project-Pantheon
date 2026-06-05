@@ -1,13 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const host = request.headers.get("host") || "";
-  const hostname = host.split(":")[0]; // Remove port if present
+const normalizeApiUrl = (value?: string): string => {
+  const fallback = "http://localhost:5000/api";
+  const raw = (value || fallback).trim();
+  if (!raw) return fallback;
+  let normalized = raw.replace(/\/+$/, "");
+  if (!normalized.endsWith("/api")) {
+    normalized = `${normalized}/api`;
+  }
+  return normalized;
+};
 
-  // Get the pathname
+async function resolveWhitelabelSlug(hostname: string): Promise<string | null> {
+  const parts = hostname.split(".");
+  if (parts.length > 1 && parts[0] !== "www") {
+    return parts[0];
+  }
+
+  const apiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
+  try {
+    const response = await fetch(
+      `${apiUrl}/platform/whitelabel-by-host?host=${encodeURIComponent(hostname)}`,
+      { cache: "no-store" },
+    );
+    if (!response.ok) {
+      return null;
+    }
+    const payload = (await response.json()) as { organization?: { slug?: string } };
+    return payload.organization?.slug?.trim().toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host") || "";
+  const hostname = host.split(":")[0];
   const pathname = request.nextUrl.pathname;
 
-  // Never rewrite core platform routes — keep them on the main app
   const corePaths = ["/login", "/register", "/dashboard", "/api"];
   for (const p of corePaths) {
     if (pathname === p || pathname.startsWith(p + "/")) {
@@ -15,7 +45,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Recognize exact app hosts (local dev, configured host, and production domain)
   const exactMainHosts = ["localhost", "127.0.0.1", process.env.NEXT_PUBLIC_APP_HOST, "assessments.admitra.io"]
     .map((v) => String(v || "").trim().toLowerCase())
     .filter(Boolean);
@@ -24,17 +53,16 @@ export function middleware(request: NextRequest) {
     .trim()
     .toLowerCase();
 
-  // Check if hostname matches a whitelabel domain — if it is the main domain or an exact host, don't rewrite
   const isMainDomain =
-    exactMainHosts.includes(hostname) || hostname === mainDomain || hostname === `www.${mainDomain}` || hostname.endsWith(`.${mainDomain}`);
+    exactMainHosts.includes(hostname) ||
+    hostname === mainDomain ||
+    hostname === `www.${mainDomain}` ||
+    hostname.endsWith(`.${mainDomain}`);
 
   if (!isMainDomain) {
-    // This is a whitelabel domain - extract the subdomain
-    const parts = hostname.split(".");
-    if (parts.length > 1 && parts[0] !== "www") {
-      const subdomain = parts[0];
-      // Rewrite to /whitelabel/[slug] route
-      return NextResponse.rewrite(new URL(`/whitelabel/${subdomain}${pathname}`, request.url));
+    const slug = await resolveWhitelabelSlug(hostname);
+    if (slug) {
+      return NextResponse.rewrite(new URL(`/whitelabel/${slug}${pathname}`, request.url));
     }
   }
 
@@ -43,13 +71,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

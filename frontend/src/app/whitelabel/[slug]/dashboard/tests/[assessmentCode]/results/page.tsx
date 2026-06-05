@@ -7,11 +7,12 @@ export default function WhitelabelTestDashboardResultsPage() {
   const params = useParams();
   const router = useRouter();
   const slug = typeof params?.slug === "string" ? params.slug : "";
-  const usersHref = `/whitelabel/${slug}/dashboard/users`;
+  const code = typeof params?.assessmentCode === "string" ? params.assessmentCode : "";
+  const dashboardHref = `/whitelabel/${slug}/dashboard/tests/${code}`;
 
   useEffect(() => {
-    router.replace(usersHref);
-  }, [router, usersHref]);
+    router.replace(dashboardHref);
+  }, [router, dashboardHref]);
 
   return (
     <div className="flex min-h-[40vh] items-center justify-center">

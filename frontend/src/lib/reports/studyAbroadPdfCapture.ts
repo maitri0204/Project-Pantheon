@@ -10,6 +10,43 @@ export const STUDY_ABROAD_A4 = {
 
 const CAPTURE_SCALE = 2;
 
+/** Wait for fonts, images, and layout before PDF capture (replaces fixed timeouts). */
+export async function waitForReportRender(root: HTMLElement, timeoutMs = 5000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+
+  if (document.fonts?.ready) {
+    await Promise.race([
+      document.fonts.ready.catch(() => undefined),
+      new Promise((resolve) => window.setTimeout(resolve, Math.min(1500, timeoutMs))),
+    ]);
+  }
+
+  const images = Array.from(root.querySelectorAll("img"));
+  await Promise.all(
+    images.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete) {
+            resolve();
+            return;
+          }
+          const done = () => resolve();
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", done, { once: true });
+        }),
+    ),
+  );
+
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
+  const remaining = deadline - Date.now();
+  if (remaining > 0) {
+    await new Promise((resolve) => window.setTimeout(resolve, Math.min(300, remaining)));
+  }
+}
+
 /** Replace SVGs with PNG snapshots so html2canvas preserves radar labels and proportions. */
 export async function rasterizeSvgsInElement(root: HTMLElement): Promise<void> {
   const svgs = Array.from(root.querySelectorAll("svg"));
@@ -17,7 +54,7 @@ export async function rasterizeSvgsInElement(root: HTMLElement): Promise<void> {
 }
 
 function rasterizeSvgElement(svg: SVGSVGElement): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve, reject) => {
     const bounds = svg.getBoundingClientRect();
     const width = Math.max(Math.round(bounds.width) || 420, 1);
     const height = Math.max(Math.round(bounds.height) || 420, 1);
@@ -64,7 +101,7 @@ function rasterizeSvgElement(svg: SVGSVGElement): Promise<void> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      resolve();
+      reject(new Error("Failed to rasterize SVG for Study Abroad report"));
     };
     img.src = url;
   });

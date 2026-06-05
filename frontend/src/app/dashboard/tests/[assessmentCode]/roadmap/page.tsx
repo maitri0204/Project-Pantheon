@@ -3,16 +3,16 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-export default function WhitelabelTestDashboardRoadmapPage() {
+export default function SuperadminTestDashboardRoadmapPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = typeof params?.slug === "string" ? params.slug : "";
   const code = typeof params?.assessmentCode === "string" ? params.assessmentCode : "";
-  const dashboardHref = `/whitelabel/${slug}/dashboard/tests/${code}`;
 
   useEffect(() => {
-    router.replace(dashboardHref);
-  }, [router, dashboardHref]);
+    if (code) {
+      router.replace(`/dashboard/tests/${code}`);
+    }
+  }, [router, code]);
 
   return (
     <div className="flex min-h-[40vh] items-center justify-center">

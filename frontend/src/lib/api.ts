@@ -116,7 +116,12 @@ export const apiRequest = async <T>(
   }
 
   if (!response.ok) {
-    if (response.status === 401 && typeof window !== "undefined") {
+    const shouldClearAuth =
+      response.status === 401 &&
+      typeof window !== "undefined" &&
+      Boolean(token) &&
+      !path.includes("/email-report");
+    if (shouldClearAuth) {
       clearStoredAuth();
     }
     throw new Error(data.message || "Request failed");

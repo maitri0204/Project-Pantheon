@@ -7,6 +7,7 @@ import {
   addCanvasToPdfPage,
   captureElementToCanvas,
   STUDY_ABROAD_A4,
+  waitForReportRender,
 } from "@/lib/reports/studyAbroadPdfCapture";
 import {
   fetchStudyAbroadPrintContext,
@@ -77,7 +78,7 @@ async function captureStudyAbroadReportPdf(context: StudyAbroadPrintContext): Pr
           showToolbar: false,
         }),
       );
-      window.setTimeout(() => resolve(), 750);
+      void waitForReportRender(mount).then(resolve).catch(resolve);
     });
 
     const pages = Array.from(

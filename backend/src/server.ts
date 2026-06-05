@@ -6,6 +6,7 @@ import { connectDB } from "./config/db";
 import { bootstrapPlatform } from "./services/bootstrap";
 import { validateEnvironmentVariables } from "./services/envValidator";
 import { ensureInvoiceIndexes, ensureStudentAssessmentAttemptIndexes } from "./services/indexInitializer";
+import { refreshOrganizationCorsOrigins } from "./services/corsOrigins";
 
 // Load .env relative to this file's location so it works regardless of process CWD
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
@@ -24,6 +25,7 @@ const startServer = async (): Promise<void> => {
     await ensureStudentAssessmentAttemptIndexes();
     
     await bootstrapPlatform();
+    await refreshOrganizationCorsOrigins();
 
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console

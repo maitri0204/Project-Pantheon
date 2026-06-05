@@ -9,7 +9,7 @@ import {
   type AdversityAdminOverview,
 } from "@/lib/dashboard/adversityAdminOverview";
 
-export function useAdversityAdminOverview(loginPath: string) {
+export function useAdversityAdminOverview(loginPath: string, organizationSlug?: string) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<AdversityAdminOverview | null>(null);
@@ -22,11 +22,11 @@ export function useAdversityAdminOverview(loginPath: string) {
       return;
     }
 
-    fetchAdversityAdminOverview(auth.token)
+    fetchAdversityAdminOverview(auth.token, { organizationSlug })
       .then((res) => setOverview(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load analytics"))
       .finally(() => setLoading(false));
-  }, [loginPath, router]);
+  }, [loginPath, organizationSlug, router]);
 
   return { loading, overview, error };
 }

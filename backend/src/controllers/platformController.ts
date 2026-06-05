@@ -3,11 +3,12 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import Razorpay from "razorpay";
 
-import Assessment from "../models/Assessment";
+import Assessment, { IAssessment } from "../models/Assessment";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
 import InvoiceCounter from "../models/InvoiceCounter";
 import AssessmentPaymentSession from "../models/AssessmentPaymentSession";
+import ReviewerPayment from "../models/ReviewerPayment";
 import Organization from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
 import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
@@ -15,7 +16,6 @@ import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
 import Question from "../models/Question";
 import StudentAssessmentAttempt, { IAttemptQuestion } from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
-import { DEFAULT_SUPERADMIN_EMAIL } from "../constants/platform";
 import { buildAssessmentAdminDashboard } from "../services/assessmentAdminDashboard.service";
 import { buildAcademicCareerAdminOverview } from "../services/academicCareerAdminOverview.service";
 import { buildAdversityAdminOverview } from "../services/adversityAdminOverview.service";
@@ -25,8 +25,10 @@ import {
   buildStudyAbroadQuestionSetForAttempt,
   mapStudyAbroadAttemptQuestions,
 } from "../services/studyAbroadQuestionSelection.service";
+import { refreshOrganizationCorsOrigins } from "../services/corsOrigins";
 import { sendAssessmentReportToStudent } from "../services/email";
 import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCareerDnaReportData";
+import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCareerDnaExecutiveHtml";
 import { generateCareerDnaExecutivePdf } from "../services/careerDnaReport/generateCareerDnaExecutivePdf";
 import { AuthRequest } from "../types/auth";
 
@@ -282,11 +284,7 @@ const getStudyAbroadUsedQuestionNumbers = async (
     }
   }
 
-  const usedList = [...used];
-  if (usedList.length > 100) {
-    return [];
-  }
-  return usedList;
+  return [...used];
 };
 
 const getAcademicCareerGradeCategory = (grade?: string): string | null => {
@@ -352,6 +350,14 @@ type AssessmentCatalogItem = {
   active?: boolean;
 };
 
+type AssessmentAdminListItem = AssessmentCatalogItem & {
+  basePrice?: number;
+  gstEnabled?: boolean;
+  gstPercentage?: number;
+  currency?: string;
+  questionBankStatus?: IAssessment["questionBankStatus"];
+};
+
 export const getPlatformOverview = async (_req: AuthRequest, res: Response): Promise<void> => {
   const [assessmentCount, organizationCount] = await Promise.all([
     Assessment.countDocuments({ active: true }),
@@ -360,7 +366,6 @@ export const getPlatformOverview = async (_req: AuthRequest, res: Response): Pro
 
   res.json({
     platform: {
-      defaultSuperadminEmail: DEFAULT_SUPERADMIN_EMAIL,
       assessmentCount,
       organizationCount,
       capabilities: [
@@ -376,7 +381,7 @@ export const getPlatformOverview = async (_req: AuthRequest, res: Response): Pro
 export const listAssessments = async (_req: AuthRequest, res: Response): Promise<void> => {
   const assessments = await Assessment.find({ active: true }).sort({ name: 1 });
   const dedupedAssessments = dedupeAssessments(
-    assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
+    assessments.map((assessment) => assessment.toObject() as unknown as AssessmentAdminListItem)
   );
 
   const assessmentsWithCounts = await Promise.all(
@@ -385,7 +390,19 @@ export const listAssessments = async (_req: AuthRequest, res: Response): Promise
         assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
         isActive: true,
       });
-      return { ...assessment, questionCount: count };
+      return {
+        _id: assessment._id,
+        code: assessment.code,
+        name: assessment.name,
+        category: assessment.category,
+        basePrice: assessment.basePrice,
+        gstEnabled: assessment.gstEnabled,
+        gstPercentage: assessment.gstPercentage,
+        currency: assessment.currency,
+        questionBankStatus: assessment.questionBankStatus,
+        active: assessment.active,
+        questionCount: count,
+      };
     })
   );
 
@@ -528,12 +545,41 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
   });
 };
 
-export const getAssessmentAdminDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
+const resolveAdminDashboardScope = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<{ organization?: mongoose.Types.ObjectId | string } | null> => {
   if (!req.user) {
     res.status(401).json({ message: "Authentication required" });
-    return;
+    return null;
   }
 
+  if (req.user.role !== "SUPERADMIN") {
+    return { organization: req.user.organization };
+  }
+
+  const organizationSlug = typeof req.query.organizationSlug === "string"
+    ? req.query.organizationSlug.trim().toLowerCase()
+    : "";
+  if (!organizationSlug) {
+    return {};
+  }
+
+  const scopedOrganization = await Organization.findOne({
+    slug: organizationSlug,
+    isActive: true,
+    type: "WHITELABEL",
+  }).select({ _id: 1 });
+
+  if (!scopedOrganization) {
+    res.status(404).json({ message: "Organization not found for dashboard scope" });
+    return null;
+  }
+
+  return { organization: scopedOrganization._id };
+};
+
+export const getAssessmentAdminDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
   const codeParam = req.params.code;
   const code = typeof codeParam === "string" ? normalizeAssessmentCode(codeParam) : "";
   if (!code) {
@@ -552,9 +598,10 @@ export const getAssessmentAdminDashboard = async (req: AuthRequest, res: Respons
   }
 
   const canonicalCode = normalizeAssessmentCode(assessment.code);
-  const scope = req.user.role === "SUPERADMIN"
-    ? {}
-    : { organization: req.user.organization };
+  const scope = await resolveAdminDashboardScope(req, res);
+  if (!scope) {
+    return;
+  }
 
   try {
     const attempts = await StudentAssessmentAttempt.find({
@@ -610,14 +657,10 @@ export const getAssessmentAdminDashboard = async (req: AuthRequest, res: Respons
 };
 
 export const getAcademicCareerAdminOverview = async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user) {
-    res.status(401).json({ message: "Authentication required" });
+  const scope = await resolveAdminDashboardScope(req, res);
+  if (!scope) {
     return;
   }
-
-  const scope = req.user.role === "SUPERADMIN"
-    ? {}
-    : { organization: req.user.organization };
 
   try {
     const overview = await buildAcademicCareerAdminOverview(scope);
@@ -629,14 +672,10 @@ export const getAcademicCareerAdminOverview = async (req: AuthRequest, res: Resp
 };
 
 export const getAdversityAdminOverview = async (req: AuthRequest, res: Response): Promise<void> => {
-  if (!req.user) {
-    res.status(401).json({ message: "Authentication required" });
+  const scope = await resolveAdminDashboardScope(req, res);
+  if (!scope) {
     return;
   }
-
-  const scope = req.user.role === "SUPERADMIN"
-    ? {}
-    : { organization: req.user.organization };
 
   try {
     const overview = await buildAdversityAdminOverview(scope);
@@ -739,10 +778,7 @@ const buildAttemptReportPayload = async (
 ) => {
   const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
 
-  if (!attempt.evaluation) {
-    (attempt as unknown as { evaluation: unknown }).evaluation = await evaluateAssessmentAttempt(attempt);
-    await attempt.save();
-  }
+  const evaluation = attempt.evaluation ?? await evaluateAssessmentAttempt(attempt);
 
   const [student, organization, orgAdmin, organizationRegistration] = await Promise.all([
     User.findById(studentId).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 }),
@@ -780,7 +816,7 @@ const buildAttemptReportPayload = async (
     answeredCount: attempt.answeredCount,
     totalQuestions: attempt.totalQuestions,
     submittedAt: attempt.completedAt,
-    evaluation: attempt.evaluation as Record<string, unknown> | undefined,
+    evaluation: evaluation as Record<string, unknown> | undefined,
     student: student
       ? {
           firstName: student.firstName,
@@ -1377,6 +1413,18 @@ export const createReviewerPaymentOrder = async (req: AuthRequest, res: Response
       },
     });
 
+    await ReviewerPayment.findOneAndUpdate(
+      { razorpayOrderId: order.id },
+      {
+        user: req.user._id,
+        razorpayOrderId: order.id,
+        amount: REVIEWER_PAYMENT_AMOUNT,
+        currency: REVIEWER_PAYMENT_CURRENCY,
+        status: "CREATED",
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
     res.json({
       keyId: process.env.RAZORPAY_KEY_ID,
       order: {
@@ -1425,11 +1473,46 @@ export const verifyReviewerPayment = async (req: AuthRequest, res: Response): Pr
       .digest("hex");
 
     if (expected !== razorpay_signature) {
+      await ReviewerPayment.findOneAndUpdate(
+        { razorpayOrderId: razorpay_order_id, user: req.user._id },
+        { status: "FAILED" },
+      );
       res.status(400).json({ message: "Payment verification failed" });
       return;
     }
 
-    res.json({ message: "Payment verified" });
+    const paymentRecord = await ReviewerPayment.findOneAndUpdate(
+      {
+        razorpayOrderId: razorpay_order_id,
+        user: req.user._id,
+        status: { $ne: "PAID" },
+      },
+      {
+        $set: {
+          status: "PAID",
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+          verifiedAt: new Date(),
+        },
+      },
+      { new: true },
+    );
+
+    if (!paymentRecord) {
+      const existing = await ReviewerPayment.findOne({
+        razorpayOrderId: razorpay_order_id,
+        user: req.user._id,
+        status: "PAID",
+      });
+      if (existing) {
+        res.json({ message: "Payment already verified", paymentId: String(existing._id) });
+        return;
+      }
+      res.status(404).json({ message: "Reviewer payment order not found" });
+      return;
+    }
+
+    res.json({ message: "Payment verified", paymentId: String(paymentRecord._id) });
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : "Unable to verify reviewer payment" });
   }
@@ -2185,6 +2268,11 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     return;
   }
 
+  if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+    res.status(400).json({ message: "Payment verification payload is incomplete" });
+    return;
+  }
+
   const session = await AssessmentPaymentSession.findOne({
     _id: paymentSessionId,
     user: req.user!._id,
@@ -2201,7 +2289,7 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     return;
   }
 
-  if (session.status === "PAID" || session.status === "CONSUMED") {
+  if (session.status === "PAID" || session.status === "CONSUMED" || session.invoice) {
     res.json({ message: "Payment already verified", paymentSessionId: String(session._id) });
     return;
   }
@@ -2221,10 +2309,31 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
     .digest("hex");
 
-  if (!razorpay_signature || expected !== razorpay_signature || razorpay_order_id !== session.razorpayOrderId) {
+  if (expected !== razorpay_signature || razorpay_order_id !== session.razorpayOrderId) {
     session.status = "FAILED";
     await session.save();
     res.status(400).json({ message: "Payment verification failed" });
+    return;
+  }
+
+  const claimedSession = await AssessmentPaymentSession.findOneAndUpdate(
+    {
+      _id: session._id,
+      status: { $nin: ["PAID", "CONSUMED"] },
+      $or: [{ invoice: { $exists: false } }, { invoice: null }],
+    },
+    {
+      $set: {
+        status: "PAID",
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
+      },
+    },
+    { new: true },
+  );
+
+  if (!claimedSession) {
+    res.json({ message: "Payment already verified", paymentSessionId: String(session._id) });
     return;
   }
 
@@ -2232,25 +2341,22 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     invoiceNumber: await generateInvoiceNumber(req.user!.organization as mongoose.Types.ObjectId | string),
     user: req.user!._id,
     organization: req.user!.organization,
-    assessmentCode: session.assessmentCode,
-    amount: session.amount,
-    discountAmount: session.discountAmount,
-    gstAmount: session.gstAmount,
-    finalAmount: session.finalAmount,
-    currency: session.currency,
-    couponCode: session.couponCode,
+    assessmentCode: claimedSession.assessmentCode,
+    amount: claimedSession.amount,
+    discountAmount: claimedSession.discountAmount,
+    gstAmount: claimedSession.gstAmount,
+    finalAmount: claimedSession.finalAmount,
+    currency: claimedSession.currency,
+    couponCode: claimedSession.couponCode,
     paymentMethod: "RAZORPAY",
     paymentReference: razorpay_payment_id,
     status: "PAID",
   });
 
-  session.status = "PAID";
-  session.razorpayPaymentId = razorpay_payment_id;
-  session.razorpaySignature = razorpay_signature;
-  session.invoice = invoice._id;
-  await session.save();
+  claimedSession.invoice = invoice._id;
+  await claimedSession.save();
 
-  res.json({ message: "Payment verified", paymentSessionId: String(session._id) });
+  res.json({ message: "Payment verified", paymentSessionId: String(claimedSession._id) });
 };
 
 export const startStudentAssessment = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -2670,6 +2776,16 @@ export const submitStudentAttempt = async (req: AuthRequest, res: Response): Pro
     return;
   }
 
+  const tabSwitchThreshold = Math.max(1, Number(process.env.ANTI_CHEAT_TAB_SWITCH_LIMIT || 5));
+  const tabSwitchCount = (attempt.antiCheatEvents || []).filter((entry) => entry.startsWith("tab_switch:")).length;
+  if (tabSwitchCount >= tabSwitchThreshold) {
+    res.status(403).json({
+      message: "Submission blocked due to repeated tab switching during the assessment.",
+      tabSwitchCount,
+    });
+    return;
+  }
+
   // Use atomic findOneAndUpdate to prevent race condition: only submit if status is still IN_PROGRESS
   const evaluationData = await evaluateAssessmentAttempt(attempt);
   const updatedAttempt = await StudentAssessmentAttempt.findOneAndUpdate(
@@ -2763,6 +2879,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
   const attempt = await StudentAssessmentAttempt.findOne({
     _id: attemptId,
     user: req.user!._id,
+    organization: req.user!.organization,
   });
 
   if (!attempt || attempt.status !== "COMPLETED") {
@@ -2781,15 +2898,29 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
   }
 
   const pdfBuffer = Buffer.from(pdfBase64, "base64");
+  const maxEmailPdfBytes = 12 * 1024 * 1024;
+  if (pdfBuffer.length > maxEmailPdfBytes) {
+    res.status(413).json({ message: "Report file is too large to email" });
+    return;
+  }
+
   const safeName = `${attempt.assessmentCode}_Report_${String(student.firstName || "Student").replace(/\s+/g, "_")}.pdf`;
 
-  await sendAssessmentReportToStudent({
-    email: student.email,
-    firstName: student.firstName || "Student",
-    assessmentName: attempt.assessmentName || attempt.assessmentCode,
-    pdfBuffer,
-    fileName: fileName || safeName,
-  });
+  try {
+    await sendAssessmentReportToStudent({
+      email: student.email,
+      firstName: student.firstName || "Student",
+      assessmentName: attempt.assessmentName || attempt.assessmentCode,
+      pdfBuffer,
+      fileName: fileName || safeName,
+    });
+  } catch (error) {
+    console.error("emailStudentAttemptReport error:", error);
+    res.status(503).json({
+      message: error instanceof Error ? error.message : "Failed to send report email",
+    });
+    return;
+  }
 
   res.json({ message: "Report sent to your email successfully" });
 };
@@ -2912,6 +3043,10 @@ export const updateOrganizationProfile = async (req: AuthRequest, res: Response)
     if (!organization) {
       res.status(404).json({ message: "Organization not found" });
       return;
+    }
+
+    if (profile.website !== undefined) {
+      await refreshOrganizationCorsOrigins();
     }
 
     res.json({ organization });
@@ -3154,31 +3289,42 @@ export const getParentDetailsForAdmin = async (req: AuthRequest, res: Response):
   });
 };
 
-const buildCareerDnaPdfBufferForAttempt = async (
+const buildCareerDnaReportDataForAttempt = async (
   attempt: InstanceType<typeof StudentAssessmentAttempt>,
-): Promise<Buffer> => {
+) => {
   const code = normalizeAssessmentCode(attempt.assessmentCode);
   if (code !== "CAREER_DNA") {
     throw new Error("Career DNA executive report is only available for Career DNA attempts");
   }
 
-  if (!attempt.evaluation) {
-    (attempt as unknown as { evaluation: unknown }).evaluation = await evaluateAssessmentAttempt(attempt);
-    await attempt.save();
-  }
-
+  const evaluation = attempt.evaluation ?? await evaluateAssessmentAttempt(attempt);
   const student = await User.findById(attempt.user).select({ firstName: 1, lastName: 1, email: 1 }).lean();
   const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
 
-  const reportData = buildCareerDnaReportData({
+  return {
     studentName,
-    email: student?.email,
-    submittedAt: attempt.completedAt,
-    answeredCount: attempt.answeredCount,
-    totalQuestions: attempt.totalQuestions,
-    evaluation: attempt.evaluation as Record<string, unknown>,
-  });
+    reportData: buildCareerDnaReportData({
+      studentName,
+      email: student?.email,
+      submittedAt: attempt.completedAt,
+      answeredCount: attempt.answeredCount,
+      totalQuestions: attempt.totalQuestions,
+      evaluation: evaluation as Record<string, unknown>,
+    }),
+  };
+};
 
+const buildCareerDnaHtmlForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<string> => {
+  const { reportData } = await buildCareerDnaReportDataForAttempt(attempt);
+  return buildCareerDnaExecutiveHtml(reportData);
+};
+
+const buildCareerDnaPdfBufferForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<Buffer> => {
+  const { reportData } = await buildCareerDnaReportDataForAttempt(attempt);
   return generateCareerDnaExecutivePdf(reportData);
 };
 
@@ -3190,6 +3336,86 @@ const sendCareerDnaExecutivePdf = (res: Response, buffer: Buffer, studentName: s
     "Content-Length": buffer.length,
   });
   res.send(buffer);
+};
+
+export const getStudentCareerDnaReportHtml = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const html = await buildCareerDnaHtmlForAttempt(attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getStudentCareerDnaReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build Career DNA report HTML" });
+  }
+};
+
+export const getAdminCareerDnaReportHtml = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!studentId || !attemptId) {
+    res.status(400).json({ message: "Student ID and attempt ID are required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: student._id,
+      organization: student.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    const html = await buildCareerDnaHtmlForAttempt(attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getAdminCareerDnaReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build Career DNA report HTML" });
+  }
 };
 
 export const downloadStudentCareerDnaReport = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -3227,7 +3453,12 @@ export const downloadStudentCareerDnaReport = async (req: AuthRequest, res: Resp
     sendCareerDnaExecutivePdf(res, buffer, studentName);
   } catch (error) {
     console.error("downloadStudentCareerDnaReport error:", error);
-    res.status(500).json({ message: "Failed to generate Career DNA report" });
+    const message = error instanceof Error ? error.message : "Failed to generate Career DNA report";
+    res.status(503).json({
+      message,
+      fallback: "career-dna-report-html",
+      hint: "Use the in-browser PDF download, which does not require server Chrome.",
+    });
   }
 };
 
@@ -3270,6 +3501,11 @@ export const downloadAdminCareerDnaReport = async (req: AuthRequest, res: Respon
     sendCareerDnaExecutivePdf(res, buffer, studentName);
   } catch (error) {
     console.error("downloadAdminCareerDnaReport error:", error);
-    res.status(500).json({ message: "Failed to generate Career DNA report" });
+    const message = error instanceof Error ? error.message : "Failed to generate Career DNA report";
+    res.status(503).json({
+      message,
+      fallback: "career-dna-report-html",
+      hint: "Use the in-browser PDF download, which does not require server Chrome.",
+    });
   }
 };

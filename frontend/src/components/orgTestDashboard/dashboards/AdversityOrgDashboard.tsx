@@ -26,10 +26,15 @@ type DashboardStudentRow = {
 type AdversityOrgDashboardProps = {
   studentsPath: string;
   loginPath: string;
+  organizationSlug?: string;
 };
 
-export default function AdversityOrgDashboard({ studentsPath, loginPath }: AdversityOrgDashboardProps) {
-  const { loading, overview, error } = useAdversityAdminOverview(loginPath);
+export default function AdversityOrgDashboard({
+  studentsPath,
+  loginPath,
+  organizationSlug,
+}: AdversityOrgDashboardProps) {
+  const { loading, overview, error } = useAdversityAdminOverview(loginPath, organizationSlug);
   const auth = getStoredAuth();
   const adminFirstName = auth?.user?.firstName?.trim() || "Admin";
 

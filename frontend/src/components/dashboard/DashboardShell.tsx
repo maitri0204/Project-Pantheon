@@ -178,7 +178,7 @@ const orgAdminAllowedSuffixes = new Set([
   "/profile",
   "/tests",
 ]);
-const superadminHiddenSuffixes = new Set(["/coupons"]);
+const superadminHiddenSuffixes = new Set<string>([]);
 
 export default function DashboardShell({
   children,

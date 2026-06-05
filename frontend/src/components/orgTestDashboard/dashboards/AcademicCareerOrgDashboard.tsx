@@ -91,10 +91,15 @@ function StatCard({
 type AcademicCareerOrgDashboardProps = {
   studentsPath: string;
   loginPath: string;
+  organizationSlug?: string;
 };
 
-export default function AcademicCareerOrgDashboard({ studentsPath, loginPath }: AcademicCareerOrgDashboardProps) {
-  const { loading, overview, error } = useAcademicCareerAdminOverview(loginPath);
+export default function AcademicCareerOrgDashboard({
+  studentsPath,
+  loginPath,
+  organizationSlug,
+}: AcademicCareerOrgDashboardProps) {
+  const { loading, overview, error } = useAcademicCareerAdminOverview(loginPath, organizationSlug);
 
   const participationRate = useMemo(() => {
     if (!overview) return 0;

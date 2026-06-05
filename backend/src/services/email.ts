@@ -148,9 +148,7 @@ export const sendAssessmentReportToStudent = async ({
   const safeName = firstName.replace(/[<>"]/g, "");
 
   if (!transporter) {
-    // eslint-disable-next-line no-console
-    console.log(`[EMAIL_REPORT] Would send report "${fileName}" to ${email}`);
-    return;
+    throw new Error("Email service is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS.");
   }
 
   await transporter.sendMail({
@@ -196,11 +194,7 @@ export const sendAQReportEmail = async ({
   const safeName = firstName.replace(/[<>"]/g, "");
 
   if (!transporter) {
-    // eslint-disable-next-line no-console
-    console.log(
-      `[EMAIL_AQ_REPORT] Would send AQ report to ${email}: AQ=${aqScore}, Level=${aqLevel}`
-    );
-    return;
+    throw new Error("Email service is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS.");
   }
 
   await transporter.sendMail({

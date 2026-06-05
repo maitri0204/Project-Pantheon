@@ -9,7 +9,7 @@ import {
   type AcademicCareerAdminOverview,
 } from "@/lib/dashboard/academicCareerAdminOverview";
 
-export function useAcademicCareerAdminOverview(loginPath: string) {
+export function useAcademicCareerAdminOverview(loginPath: string, organizationSlug?: string) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<AcademicCareerAdminOverview | null>(null);
@@ -22,11 +22,11 @@ export function useAcademicCareerAdminOverview(loginPath: string) {
       return;
     }
 
-    fetchAcademicCareerAdminOverview(auth.token)
+    fetchAcademicCareerAdminOverview(auth.token, { organizationSlug })
       .then((res) => setOverview(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load analytics"))
       .finally(() => setLoading(false));
-  }, [loginPath, router]);
+  }, [loginPath, organizationSlug, router]);
 
   return { loading, overview, error };
 }

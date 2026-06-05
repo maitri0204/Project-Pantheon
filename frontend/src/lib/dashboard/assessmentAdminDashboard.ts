@@ -90,10 +90,14 @@ export type AssessmentAdminDashboardResponse = {
 export async function fetchAssessmentAdminDashboard(
   token: string,
   assessmentCode: string,
+  options?: { organizationSlug?: string },
 ): Promise<AssessmentAdminDashboardResponse> {
   const code = encodeURIComponent(normalizeAssessmentCode(assessmentCode));
+  const slugQuery = options?.organizationSlug
+    ? `?organizationSlug=${encodeURIComponent(options.organizationSlug)}`
+    : "";
   return apiRequest<AssessmentAdminDashboardResponse>(
-    `/platform/assessments/${code}/admin-dashboard`,
+    `/platform/assessments/${code}/admin-dashboard${slugQuery}`,
     {},
     token,
   );

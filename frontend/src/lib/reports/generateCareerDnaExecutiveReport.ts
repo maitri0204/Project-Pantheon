@@ -1,15 +1,12 @@
 import { API_URL } from "@/lib/api";
+import { captureCareerDnaHtmlToPdf } from "@/lib/reports/careerDnaPdfCapture";
 
-function careerDnaReportApiPath(reportFetchPath: string): string {
-  return reportFetchPath.replace(/\/report$/, "/career-dna-report");
+function careerDnaHtmlApiPath(reportFetchPath: string): string {
+  return reportFetchPath.replace(/\/report$/, "/career-dna-report-html");
 }
 
-export async function generateCareerDnaExecutiveReport(
-  token: string,
-  reportFetchPath: string,
-  studentName: string,
-): Promise<{ blob: Blob; fileName: string }> {
-  const path = careerDnaReportApiPath(reportFetchPath);
+async function fetchCareerDnaReportHtml(token: string, reportFetchPath: string): Promise<string> {
+  const path = careerDnaHtmlApiPath(reportFetchPath);
   const response = await fetch(`${API_URL}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
@@ -17,7 +14,7 @@ export async function generateCareerDnaExecutiveReport(
 
   if (!response.ok) {
     const rawText = await response.text();
-    let message = "Failed to generate Career DNA report";
+    let message = "Failed to load Career DNA report";
     try {
       const data = JSON.parse(rawText) as { message?: string };
       if (data.message) message = data.message;
@@ -27,7 +24,22 @@ export async function generateCareerDnaExecutiveReport(
     throw new Error(message);
   }
 
-  const blob = await response.blob();
+  const data = (await response.json()) as { html?: string };
+  if (!data.html?.trim()) {
+    throw new Error("Career DNA report HTML was empty");
+  }
+
+  return data.html;
+}
+
+/** Build the executive Career DNA PDF in the browser (no server Chrome/Puppeteer required). */
+export async function generateCareerDnaExecutiveReport(
+  token: string,
+  reportFetchPath: string,
+  studentName: string,
+): Promise<{ blob: Blob; fileName: string }> {
+  const html = await fetchCareerDnaReportHtml(token, reportFetchPath);
+  const blob = await captureCareerDnaHtmlToPdf(html);
   const fileName = `Career_DNA_Executive_Report_${studentName.replace(/\s+/g, "_")}.pdf`;
   return { blob, fileName };
 }

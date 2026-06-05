@@ -71,7 +71,8 @@ export function buildStudentResultPath(
 }
 
 export function buildStudentAttemptListPath(slug: string, assessmentCode: string): string {
-  return buildStudentResultPath(slug, assessmentCode);
+  const code = normalizeAssessmentCode(assessmentCode);
+  return `/whitelabel/${slug}/student/assessments/${code}`;
 }
 
 /** Org admin: attempt picker for a student on a multi-attempt assessment. */

@@ -20,6 +20,7 @@ export default function WhitelabelTestDashboardHomePage() {
       assessmentCode={assessmentCode}
       orgDashboardBasePath={orgDashboardBasePath}
       loginPath={loginPath}
+      organizationSlug={slug}
     />
   );
 }

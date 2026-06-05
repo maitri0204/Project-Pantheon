@@ -1,33 +1,39 @@
-import puppeteer, { type Browser } from "puppeteer";
+import puppeteer, { type Browser } from "puppeteer-core";
 
-import { buildReportHtml } from "./reportTemplate";
+import { buildCareerDnaExecutiveHtml } from "./buildCareerDnaExecutiveHtml";
 import type { ReportData } from "./buildCareerDnaReportData";
+import { resolveChromeExecutable } from "./resolveChromeExecutable";
 
 const PUPPETEER_LAUNCH_ARGS = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"];
 
 async function launchPuppeteerBrowser(): Promise<Browser> {
-  const baseOptions = {
-    headless: true,
-    args: PUPPETEER_LAUNCH_ARGS,
-  } as const;
+  const executablePath = await resolveChromeExecutable();
+  if (!executablePath) {
+    throw new Error(
+      "Server-side Career DNA PDF rendering is unavailable. Use the HTML report endpoint and client-side PDF capture instead.",
+    );
+  }
 
   try {
-    return await puppeteer.launch(baseOptions);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes("Could not find Chrome")) {
-      throw error;
-    }
-    return puppeteer.launch({
-      ...baseOptions,
-      channel: "chrome",
+    const chromium = await import("@sparticuz/chromium").catch(() => null);
+    const args = process.platform === "linux" && chromium?.default?.args
+      ? chromium.default.args
+      : PUPPETEER_LAUNCH_ARGS;
+
+    return await puppeteer.launch({
+      executablePath,
+      headless: true,
+      args,
     });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to launch Chrome for Career DNA PDF rendering. (${detail})`);
   }
 }
 
+/** Optional server-side PDF (requires Chrome). Prefer client-side capture via career-dna-report-html. */
 export async function generateCareerDnaExecutivePdf(data: ReportData): Promise<Buffer> {
-  const html = buildReportHtml(data);
-
+  const html = buildCareerDnaExecutiveHtml(data);
   const browser = await launchPuppeteerBrowser();
 
   try {

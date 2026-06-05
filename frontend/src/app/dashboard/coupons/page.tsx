@@ -10,6 +10,9 @@ const ASSESSMENTS = [
   { code: "JOHARI_WINDOW", name: "CLEAR", color: "amber" },
   { code: "LITMUS_TEST", name: "Litmus Test", color: "blue" },
   { code: "METACOGNITION_TEST", name: "TEST", color: "rose" },
+  { code: "ADVERSITY_TEST", name: "Adversity Quotient", color: "orange" },
+  { code: "STUDY_ABROAD", name: "Study Abroad", color: "sky" },
+  { code: "ACADEMIC_CAREER", name: "Academic Career", color: "violet" },
 ] as const;
 
 function getAssessmentDisplayName(code: string, fallback?: string): string {
@@ -19,6 +22,9 @@ function getAssessmentDisplayName(code: string, fallback?: string): string {
     JOHARI_WINDOW: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
     LITMUS_TEST: "LITMUS - Learning & Innovation Through Assessment",
     METACOGNITION_TEST: "TEST - Thinking & Expression Skills Test",
+    ADVERSITY_TEST: "Adversity Quotient (AQ)",
+    STUDY_ABROAD: "Study Abroad Readiness",
+    ACADEMIC_CAREER: "Academic Career & Interest",
   };
   return assessmentMap[code] || fallback || code;
 }
@@ -29,6 +35,9 @@ const COLOR_CLASSES: Record<string, string> = {
   amber: "bg-amber-50 text-amber-700 border-amber-200",
   blue: "bg-blue-50 text-blue-700 border-blue-200",
   rose: "bg-rose-50 text-rose-700 border-rose-200",
+  orange: "bg-orange-50 text-orange-700 border-orange-200",
+  sky: "bg-sky-50 text-sky-700 border-sky-200",
+  violet: "bg-violet-50 text-violet-700 border-violet-200",
 };
 
 type Assessment = { _id: string; code: string; name: string; basePrice: number; gstEnabled?: boolean; gstPercentage?: number };
@@ -59,13 +68,18 @@ type OrganizationCouponSummaryItem = {
 function calcPrice(base: number, coupon: Coupon | null, gst: boolean, gstRatePercent: number) {
   let disc = 0;
   if (coupon) {
-    if (coupon.discountType === "PERCENT") disc = (base * coupon.value) / 100;
-    else disc = Math.min(coupon.value, base);
+    if (coupon.discountType === "PERCENT") {
+      disc = (base * coupon.value) / 100;
+    } else {
+      disc = Number(coupon.value || 0);
+    }
+    disc = Math.min(Math.max(disc, 0), base);
   }
-  const discounted = base - disc;
-  const normalizedRate = Math.max(0, Number(gstRatePercent || 0));
-  const gstAmt = gst ? discounted * (normalizedRate / 100) : 0;
-  return { base, disc, discounted, gstAmt, final: discounted + gstAmt };
+  const normalizedRate = Math.max(0, Math.min(100, Number(gstRatePercent || 0)));
+  const gstAmt = gst ? base * (normalizedRate / 100) : 0;
+  const priceWithGst = base + gstAmt;
+  const final = Math.round(Math.max(priceWithGst - disc, 0));
+  return { base, disc, discounted: base - disc, gstAmt, final };
 }
 
 export default function CouponsPage() {

@@ -4,10 +4,11 @@
  */
 
 export const validateEnvironmentVariables = (): void => {
-  const requiredEnvVars = [
-    "MONGODB_URI",
-    "DB_NAME",
-    "JWT_SECRET",
+  const isProduction = process.env.NODE_ENV === "production";
+
+  const requiredEnvVars = ["MONGODB_URI", "DB_NAME", "JWT_SECRET"];
+
+  const productionOnlyEnvVars = [
     "SMTP_HOST",
     "SMTP_USER",
     "SMTP_PASS",
@@ -16,6 +17,10 @@ export const validateEnvironmentVariables = (): void => {
   ];
 
   const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+  if (isProduction) {
+    missingEnvVars.push(...productionOnlyEnvVars.filter((envVar) => !process.env[envVar]));
+  }
+
   if (missingEnvVars.length > 0) {
     console.error(
       "❌ STARTUP ERROR: Missing required environment variables:\n" +
@@ -23,6 +28,14 @@ export const validateEnvironmentVariables = (): void => {
         "\n\nPlease configure these variables in .env file and restart the server."
     );
     process.exit(1);
+  }
+
+  if (!isProduction) {
+    productionOnlyEnvVars.forEach((name) => {
+      if (!process.env[name]) {
+        console.warn(`⚠️  Optional in development: ${name} is not set`);
+      }
+    });
   }
 
   // Warn about optional but important env vars

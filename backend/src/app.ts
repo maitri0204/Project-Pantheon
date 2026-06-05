@@ -4,9 +4,10 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 import apiRoutes from "./routes";
+import { isOrganizationWebsiteHostname } from "./services/corsOrigins";
 
 const app = express();
-const bodyLimit = process.env.REQUEST_BODY_LIMIT || "50mb";
+const bodyLimit = process.env.REQUEST_BODY_LIMIT || "15mb";
 const allowedOrigins = process.env.FRONTEND_URL?.split(",")
   .map((value) => value.trim())
   .filter(Boolean) ?? [];
@@ -29,7 +30,11 @@ const isAllowedOrigin = (origin: string): boolean => {
       return true;
     }
 
-    return hostname === mainDomain || hostname === `www.${mainDomain}` || hostname.endsWith(`.${mainDomain}`);
+    if (hostname === mainDomain || hostname === `www.${mainDomain}` || hostname.endsWith(`.${mainDomain}`)) {
+      return true;
+    }
+
+    return isOrganizationWebsiteHostname(hostname);
   } catch (err) {
     // Log invalid origin parsing for debugging CORS issues
     // eslint-disable-next-line no-console

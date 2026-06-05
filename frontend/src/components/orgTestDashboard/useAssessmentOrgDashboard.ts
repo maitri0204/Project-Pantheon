@@ -12,6 +12,7 @@ import {
 export function useAssessmentOrgDashboard(
   loginPath: string,
   assessmentCode: string,
+  organizationSlug?: string,
 ) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -25,11 +26,13 @@ export function useAssessmentOrgDashboard(
       return;
     }
 
-    fetchAssessmentAdminDashboard(auth.token, assessmentCode)
+    fetchAssessmentAdminDashboard(auth.token, assessmentCode, {
+      organizationSlug,
+    })
       .then((res) => setData(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load dashboard"))
       .finally(() => setLoading(false));
-  }, [assessmentCode, loginPath, router]);
+  }, [assessmentCode, loginPath, organizationSlug, router]);
 
   return { loading, data, error };
 }

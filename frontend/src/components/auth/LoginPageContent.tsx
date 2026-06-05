@@ -104,7 +104,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
       }
 
       if (auth.user.role === "REVIEWER") {
-        router.replace("/");
+        router.replace("/reviewer/payment");
         return;
       }
 
@@ -333,7 +333,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         ...(finalOrgLogoUrl ? { orgLogoUrl: finalOrgLogoUrl } : {}),
       });
       if (response.user.role === "REVIEWER") {
-        router.push("/");
+        router.push("/reviewer/payment");
         return;
       }
       if (response.user.role === "ORG_ADMIN" && resolvedOrgSlug) {

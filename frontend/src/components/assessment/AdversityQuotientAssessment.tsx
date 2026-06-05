@@ -7,6 +7,12 @@
 
 "use client";
 
+/**
+ * @deprecated Unused legacy AQ flow. The live assessment uses
+ * `/whitelabel/[slug]/student/assessments/ADVERSITY_TEST/take` instead.
+ * API paths below target the current platform routes if this component is revived.
+ */
+
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
@@ -352,7 +358,7 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
       }
 
       const data = await apiRequest<{ result: AQResult }>(
-        `/api/student/assessments/${attemptId}/submit`,
+        `/platform/student/attempts/${attemptId}/submit`,
         {
           method: "POST",
           body: JSON.stringify({ status: "COMPLETED" }),
@@ -378,7 +384,7 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
 
         const [attemptData, questionsData] = await Promise.all([
           apiRequest<{ attempt: AQAttempt }>(
-            `/api/student/assessments/${attemptId}`,
+            `/platform/student/attempts/${attemptId}`,
             { method: "GET" },
             auth.token
           ),
@@ -441,7 +447,7 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
       }
 
       await apiRequest<{ attempt: AQAttempt }>(
-        `/api/student/assessments/${attemptId}`,
+        `/platform/student/attempts/${attemptId}/answers`,
         {
           method: "PATCH",
           body: JSON.stringify({
@@ -633,7 +639,7 @@ export default function AdversityQuotientAssessment() {
         }
 
         const response = await apiRequest<{ attempt: AQAttempt }>(
-          "/api/student/assessments",
+          "/platform/student/assessments/ADVERSITY_TEST/start",
           {
             method: "POST",
             body: JSON.stringify({
