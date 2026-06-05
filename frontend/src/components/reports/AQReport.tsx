@@ -795,7 +795,8 @@ const S = StyleSheet.create({
   // ── Pages — fontFamily + fontWeight set at page level so every Text inherits
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
   contentPage: { position: 'relative', backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 90, fontFamily: 'Inter', fontWeight: 400 },
-  finalPage:   { position: 'relative', backgroundColor: C.dark, paddingHorizontal: 48, paddingTop: 40, paddingBottom: 48, fontFamily: 'Inter', fontWeight: 400 },
+  finalPage:   { position: 'relative', backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
+  finalInner:  { flex: 1, flexDirection: 'column', justifyContent: 'space-between', paddingHorizontal: 48, paddingTop: 44, paddingBottom: 44 },
 
   // ── Content wrapper (flex grow for footer push-down)
   contentWrapper: { flex: 1, display: 'flex', flexDirection: 'column' },
@@ -919,7 +920,7 @@ const S = StyleSheet.create({
   finalMotivationBox: { borderRadius: 8, padding: 12, marginTop: 10, backgroundColor: '#1e293b', alignItems: 'center' },
   finalMotivationText: { fontSize: 10, fontWeight: 700, color: C.white, textAlign: 'center', lineHeight: 1.5, marginBottom: 5 },
   finalMotivationSub: { fontSize: 7, fontWeight: 400, color: '#94a3b8', textAlign: 'center' },
-  finalBranding: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: C.navy, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  finalBranding: { paddingTop: 10, borderTopWidth: 1, borderTopColor: C.navy, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   finalBrandingText: { fontSize: 8, fontWeight: 400, color: '#64748b' },
 
   // ── Two-column layout
@@ -1599,44 +1600,51 @@ function FinalSummaryPage({ d }: { d: AQReportData }) {
   ];
 
   return (
-    <Page size="A4" style={S.finalPage} wrap={false}>
+    <Page size="A4" style={S.finalPage}>
       <Svg width={595} height={841} style={{ position: 'absolute', top: 0, left: 0 } as any}>
         <Circle cx={550} cy={100} r={180} fill={C.sky}    fillOpacity={0.04} />
         <Circle cx={50}  cy={800} r={150} fill={C.purple} fillOpacity={0.04} />
         <Rect x={0} y={0} width={3} height={841} fill={C.sky} fillOpacity={0.5} />
       </Svg>
 
-      <View wrap={false}>
-        <Text style={S.finalTitle}>Final AQ Assessment</Text>
-        <Text style={S.finalSub}>{d.studentName} · {d.generatedDate} · {level} Level ({aq} / 100)</Text>
-
-        <View style={{ flexDirection: 'row', marginBottom: 7 }}>
-          <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[0]!.color }]} wrap={false}>
-            <Text style={S.finalCardTitle}>{cards[0]!.title}</Text>
-            <Text style={S.finalCardBody}>{cards[0]!.body}</Text>
+      <View style={S.finalInner}>
+        <View>
+          <View style={S.finalHeaderBadge}>
+            <Text style={S.finalHeaderBadgeText}>PSYCHOLOGICAL INSIGHT SUMMARY</Text>
           </View>
-          <View style={[S.finalCard, { flex: 1, borderLeftColor: cards[1]!.color }]} wrap={false}>
-            <Text style={S.finalCardTitle}>{cards[1]!.title}</Text>
-            <Text style={S.finalCardBody}>{cards[1]!.body}</Text>
-          </View>
-        </View>
-        <View style={{ flexDirection: 'row', marginBottom: 7 }}>
-          <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[2]!.color }]} wrap={false}>
-            <Text style={S.finalCardTitle}>{cards[2]!.title}</Text>
-            <Text style={S.finalCardBody}>{cards[2]!.body}</Text>
-          </View>
-          <View style={[S.finalCard, { flex: 1, borderLeftColor: cards[3]!.color }]} wrap={false}>
-            <Text style={S.finalCardTitle}>{cards[3]!.title}</Text>
-            <Text style={S.finalCardBody}>{cards[3]!.body}</Text>
-          </View>
+          <Text style={S.finalTitle}>Final AQ Assessment</Text>
+          <Text style={S.finalSub}>{d.studentName} · {d.generatedDate} · {level} Level ({aq} / 100)</Text>
         </View>
 
-        <View style={S.finalMotivationBox} wrap={false}>
-          <Text style={S.finalMotivationText}>{`"${s.motivation}"`}</Text>
-          <Text style={S.finalMotivationSub}>— Your Adversity AQ Analytics Report</Text>
+        <View>
+          <View style={{ flexDirection: 'row', marginBottom: 7 }}>
+            <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[0]!.color }]}>
+              <Text style={S.finalCardTitle}>{cards[0]!.title}</Text>
+              <Text style={S.finalCardBody}>{cards[0]!.body}</Text>
+            </View>
+            <View style={[S.finalCard, { flex: 1, borderLeftColor: cards[1]!.color }]}>
+              <Text style={S.finalCardTitle}>{cards[1]!.title}</Text>
+              <Text style={S.finalCardBody}>{cards[1]!.body}</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+            <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[2]!.color }]}>
+              <Text style={S.finalCardTitle}>{cards[2]!.title}</Text>
+              <Text style={S.finalCardBody}>{cards[2]!.body}</Text>
+            </View>
+            <View style={[S.finalCard, { flex: 1, borderLeftColor: cards[3]!.color }]}>
+              <Text style={S.finalCardTitle}>{cards[3]!.title}</Text>
+              <Text style={S.finalCardBody}>{cards[3]!.body}</Text>
+            </View>
+          </View>
+
+          <View style={S.finalMotivationBox}>
+            <Text style={S.finalMotivationText}>{`"${s.motivation}"`}</Text>
+            <Text style={S.finalMotivationSub}>— Your Adversity AQ Analytics Report</Text>
+          </View>
         </View>
 
-        <View style={S.finalBranding} wrap={false}>
+        <View style={S.finalBranding}>
           <View>
             <Text style={S.finalBrandingText}>Adversity · AQ Analytics Platform</Text>
             <Text style={[S.finalBrandingText, { marginTop: 2 }]}>adversity.app · Confidential & Proprietary</Text>
