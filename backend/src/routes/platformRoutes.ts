@@ -3,6 +3,8 @@ import { Router } from "express";
 import {
   getStudentAttempt,
   getStudentAttemptReportForAdmin,
+  downloadAdminCareerDnaReport,
+  downloadStudentCareerDnaReport,
   getStudentDetailsForAdmin,
   listStudentAssessmentAttemptsForAdmin,
   getOrganizationCouponSummary,
@@ -74,6 +76,12 @@ router.get(
   listStudentAssessmentAttemptsForAdmin,
 );
 router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
+router.get(
+  "/students/:studentId/attempts/:attemptId/career-dna-report",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminCareerDnaReport,
+);
 router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
 router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentDashboard);
@@ -94,6 +102,12 @@ router.patch("/organization/logo", requireAuth, requireRoles("ORG_ADMIN"), updat
 router.post("/student/assessments/:code/start", requireAuth, requireRoles("STUDENT", "PARENT"), startStudentAssessment);
 router.get("/student/attempts/:attemptId", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAttempt);
 router.get("/student/attempts/:attemptId/report", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAttemptReport);
+router.get(
+  "/student/attempts/:attemptId/career-dna-report",
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  downloadStudentCareerDnaReport,
+);
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);
 router.post("/student/attempts/:attemptId/anti-cheat-event", requireAuth, requireRoles("STUDENT", "PARENT"), logAntiCheatEvent);

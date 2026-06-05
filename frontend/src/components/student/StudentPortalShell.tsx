@@ -147,9 +147,9 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
       )}
 
       {/* ── Sidebar ── */}
-      <aside className={`fixed left-0 top-[84px] sm:top-[96px] z-40 w-64 bg-white/95 backdrop-blur border-r border-gray-200 h-[calc(100vh-84px)] sm:h-[calc(100vh-96px)] flex flex-col shadow-sm transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+      <aside className={`fixed left-0 top-[84px] sm:top-[96px] z-40 w-72 bg-white/95 backdrop-blur border-r border-gray-200 h-[calc(100vh-84px)] sm:h-[calc(100vh-96px)] flex flex-col shadow-sm transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
         {/* Navigation */}
-        <nav className="flex-1 p-4 pt-6 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-5 py-6">
           {links.map((item) => {
             const active = pathname === item.href || (pathname?.startsWith(`${item.href}/`) ?? false);
             return (
@@ -157,47 +157,49 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-3 rounded-xl py-3 pl-4 pr-3 text-sm font-medium transition-all duration-200 ${
                   active
                     ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
-                {item.icon}
-                {item.label}
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center">{item.icon}</span>
+                <span className="min-w-0">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* User info + Logout */}
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-              <span className="text-white text-sm font-bold">
+        <div className="border-t border-gray-100 px-5 py-4">
+          <div className="flex items-center gap-3 pl-1">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
+              <span className="text-sm font-bold text-white">
                 {name ? name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase() : "ST"}
               </span>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-900 truncate">{name || "Student"}</p>
-              <p className="text-[11px] text-gray-400 truncate">{email}</p>
+              <p className="truncate text-xs font-semibold text-gray-900">{name || "Student"}</p>
+              <p className="truncate text-[11px] text-gray-400">{email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700"
+            className="mt-3 inline-flex items-center gap-2 pl-1 text-xs font-semibold text-red-600 hover:text-red-700"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </span>
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 md:ml-64 pt-[84px] sm:pt-[96px] min-w-0">
+      <div className="flex-1 md:ml-72 pt-[84px] sm:pt-[96px] min-w-0">
         <main className="p-3 sm:p-5 md:p-6">
           <div className="content-wrap app-panel p-3 sm:p-5 md:p-6">{children}</div>
         </main>

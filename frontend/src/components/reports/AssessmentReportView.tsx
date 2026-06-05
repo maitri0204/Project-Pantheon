@@ -9,11 +9,12 @@ import { generateCareerCompassReport } from "../../lib/reports/generateCareerCom
 import { generateClearReport } from "../../lib/reports/generateClearReport";
 import { generateLitmusReport } from "../../lib/reports/generateLitmusReport";
 import { generateMetacognitionReport } from "../../lib/reports/generateMetacognitionReport";
-import { generateCareerDnaCapabilityReport } from "../../lib/reports/generateCareerDnaCapabilityReport";
+import { generateCareerDnaExecutiveReport } from "@/lib/reports/generateCareerDnaExecutiveReport";
 import { generateAcademicCareerReport } from "../../lib/reports/generateAcademicCareerReport";
 import QuadrantGraph, { QuadrantLegend } from "./QuadrantGraph";
 import AcademicCareerReport from "./AcademicCareerReport";
 import StudyAbroadReport, { type StudyAbroadEvaluation } from "./StudyAbroadReport";
+import CareerDnaReport, { type CareerDnaEvaluation } from "./CareerDnaReport";
 import { generateStudyAbroadReportForEmail } from "@/lib/reports/generateStudyAbroadReport";
 import { ALL_TOPICS as STUDY_ABROAD_TOPICS } from "@/lib/studyAbroad/assessmentData";
 import {
@@ -88,24 +89,6 @@ const STYLE_COLORS: Record<string, string> = {
 };
 
 const STYLE_ORDER = ["K", "S", "E", "P", "J"] as const;
-const CAREER_DNA_PERSONALITY_DIMENSION_NAMES: Record<string, string> = {
-  E: "Social Orientation",
-  I: "Reflective Orientation",
-  S: "Practical Observation",
-  N: "Conceptual Thinking",
-  T: "Logical Decision Style",
-  F: "Value-Based Decision Style",
-  J: "Structured Working Style",
-  P: "Flexible Working Style",
-};
-
-const CAREER_DNA_PERSONALITY_PAIR_NAMES: Record<string, string> = {
-  "E/I": "Social Style",
-  "S/N": "Thinking Style",
-  "T/F": "Decision Style",
-  "J/P": "Working Style",
-};
-
 const G_LEFT = 80;
 const G_TOP = 60;
 const G_SIZE = 500;
@@ -541,55 +524,10 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "CAREER_DNA") {
-        const sections = (evaluation.sections || {}) as Record<string, { parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>; totalScore?: number; maxScore?: number; dominantCode?: string }>;
-        const cogParts = sections.COGNITIVE?.parts || [];
-        const aptParts = sections.APTITUDE?.parts || [];
-    const blob = await generateCareerDnaCapabilityReport({
-          studentName: reportStudentName,
-      submittedAt: submittedLabel,
-          classGrade,
-          schoolName,
-          organizationBranding: reportBranding,
-          traitScores: {
-            VR: cogParts[0]?.percentage ?? 0,
-            NR: cogParts[1]?.percentage ?? 0,
-            SR: cogParts[2]?.percentage ?? 0,
-            MP: cogParts[3]?.percentage ?? 0,
-            LR: aptParts[0]?.percentage ?? 0,
-            NA: aptParts[1]?.percentage ?? 0,
-            VA: aptParts[2]?.percentage ?? 0,
-            MA: aptParts[3]?.percentage ?? 0,
-            CI: aptParts[4]?.percentage ?? 0,
-          },
-          otherSectionScores: {
-            COGNITIVE: { score: sections.COGNITIVE?.totalScore || 0, maxScore: sections.COGNITIVE?.maxScore || 40, parts: sections.COGNITIVE?.parts || [] },
-            APTITUDE: { score: sections.APTITUDE?.totalScore || 0, maxScore: sections.APTITUDE?.maxScore || 50, parts: sections.APTITUDE?.parts || [] },
-            PERSONALITY: {
-              score: sections.PERSONALITY?.totalScore || 0,
-              maxScore: sections.PERSONALITY?.maxScore || 100,
-              parts: sections.PERSONALITY?.parts || [],
-              traits: (sections.PERSONALITY?.parts || []).map((p) => p.partName).filter(Boolean),
-          personalityType: String((sections.PERSONALITY as { personalityType?: string })?.personalityType || evaluation.personalityType || ""),
-          personalityDimensions: (sections.PERSONALITY as { personalityDimensions?: unknown[] })?.personalityDimensions || [],
-            },
-            CAREER_INTEREST: {
-              score: sections.CAREER_INTEREST?.totalScore || 0,
-              maxScore: sections.CAREER_INTEREST?.maxScore || 100,
-              parts: sections.CAREER_INTEREST?.parts || [],
-              dominantCode: String(sections.CAREER_INTEREST?.dominantCode || ""),
-            },
-            EMOTIONAL_INTELLIGENCE: { score: sections.EMOTIONAL_INTELLIGENCE?.totalScore || 0, maxScore: sections.EMOTIONAL_INTELLIGENCE?.maxScore || 100, parts: sections.EMOTIONAL_INTELLIGENCE?.parts || [] },
-            LEARNING_STYLE: {
-              score: sections.LEARNING_STYLE?.totalScore || 0,
-              maxScore: sections.LEARNING_STYLE?.maxScore || 100,
-              parts: sections.LEARNING_STYLE?.parts || [],
-              dominantCode: String(sections.LEARNING_STYLE?.dominantCode || ""),
-            },
-            BEHAVIORAL_SOCIAL: { score: sections.BEHAVIORAL_SOCIAL?.totalScore || 0, maxScore: sections.BEHAVIORAL_SOCIAL?.maxScore || 100, parts: sections.BEHAVIORAL_SOCIAL?.parts || [] },
-            STRESS_RESILIENCE: { score: sections.STRESS_RESILIENCE?.totalScore || 0, maxScore: sections.STRESS_RESILIENCE?.maxScore || 160, parts: sections.STRESS_RESILIENCE?.parts || [] },
-          },
-    }, { returnBlob: true }) as Blob;
-    return { blob, fileName: `Career_DNA_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Career DNA report");
+    }
+    return generateCareerDnaExecutiveReport(authToken, fetchPath, reportStudentName);
   }
 
   if (normalizedCode === "STUDY_ABROAD") {
@@ -844,82 +782,20 @@ export default function AssessmentReportView({
     }
 
     if (normalizedCode === "CAREER_DNA") {
-      const sections = (evaluation.sections || {}) as Record<string, {
-        parts?: Array<{ partName: string; score: number; maxScore: number; percentage: number }>;
-        overallPercentage?: number;
-        totalScore?: number;
-        maxScore?: number;
-        dominantCode?: string;
-        personalityType?: string;
-        personalityDimensions?: Array<{
-          pair: string;
-          winner: string;
-          letterA: string;
-          letterB: string;
-          percentA: number;
-          percentB: number;
-        }>;
-      }>;
-      const sectionOrder = ["COGNITIVE", "APTITUDE", "PERSONALITY", "CAREER_INTEREST", "EMOTIONAL_INTELLIGENCE", "LEARNING_STYLE", "BEHAVIORAL_SOCIAL", "STRESS_RESILIENCE"];
       return (
-        <div className="space-y-4">
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-            <p className="text-sm text-blue-700">Career DNA Score</p>
-            <p className="text-3xl font-bold text-blue-900 mt-1">{toNumber(evaluation.totalScore)}</p>
-          </div>
-          {sectionOrder.map((key) => {
-            const section = sections[key];
-            if (!section) return null;
-            const isPersonality = key === "PERSONALITY";
-            const personalityDimensions = Array.isArray(section.personalityDimensions)
-              ? section.personalityDimensions
-              : [];
-            return (
-              <div key={key} className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-semibold text-slate-900">{key.replaceAll("_", " ")}</h2>
-                  {!isPersonality ? (
-                    <span className="text-sm font-semibold text-slate-600">{toNumber(section.totalScore)}/{toNumber(section.maxScore)}</span>
-                  ) : (
-                    <span className="text-sm font-semibold text-slate-600">Personality Profile</span>
-                  )}
-                </div>
-                {isPersonality && personalityDimensions.length > 0 && (
-                  <div className="mb-3 space-y-2">
-                    {personalityDimensions.map((dimension, idx) => {
-                      const winnerName = CAREER_DNA_PERSONALITY_DIMENSION_NAMES[dimension.winner] || dimension.winner;
-                      const pairName = CAREER_DNA_PERSONALITY_PAIR_NAMES[dimension.pair] || dimension.pair;
-                      const percentWinner = dimension.winner === dimension.letterA ? dimension.percentA : dimension.percentB;
-                      return (
-                        <div key={`${dimension.pair}-${idx}`} className="rounded-lg border border-violet-100 bg-violet-50 px-3 py-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">{pairName}</p>
-                          <p className="text-sm font-semibold text-slate-800">{winnerName}</p>
-                          <p className="text-xs text-slate-600">Alignment: {toNumber(percentWinner)}%</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                {section.dominantCode && <p className="text-sm text-slate-700 mb-2">Dominant Code: {section.dominantCode}</p>}
-                <div className="space-y-2">
-                  {(section.parts || []).map((p, idx) => (
-                    <div key={idx}>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-700">
-                          {isPersonality
-                            ? (CAREER_DNA_PERSONALITY_PAIR_NAMES[p.partName] || p.partName)
-                            : p.partName}
-                        </span>
-                        <span className="font-semibold text-slate-900">{p.score}/{p.maxScore} ({p.percentage}%)</span>
-                      </div>
-                      <div className="mt-1 h-2 rounded-full bg-slate-100 overflow-hidden"><div className="h-2 rounded-full bg-blue-500" style={{ width: `${p.percentage}%` }} /></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <CareerDnaReport
+          evaluation={evaluation as CareerDnaEvaluation}
+          submittedAt={report.submittedAt}
+          answeredCount={report.answeredCount}
+          totalQuestions={report.totalQuestions}
+          actions={{
+            onDownload: downloadDetailedReport,
+            onEmail: emailDetailedReport,
+            downloading,
+            emailing,
+            emailSuccess,
+          }}
+        />
       );
     }
 
@@ -1100,24 +976,28 @@ export default function AssessmentReportView({
         <ArrowLeft className="h-4 w-4" /> {topBackLabel}
       </button>
 
-      <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{report.assessmentName}</h1>
-            <p className="mt-1 text-blue-100 text-sm">Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered</p>
-            <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
+      {normalizedCode !== "CAREER_DNA" && (
+        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">{report.assessmentName}</h1>
+              <p className="mt-1 text-blue-100 text-sm">Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered</p>
+              <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div className="flex flex-wrap justify-end gap-3">
-        <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
-          {downloading ? "Generating Report..." : "Download Detailed Report"}
-        </button>
-        <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-          {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
-        </button>
-      </div>
+      {normalizedCode !== "CAREER_DNA" && (
+        <div className="flex flex-wrap justify-end gap-3">
+          <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+            {downloading ? "Generating Report..." : "Download Detailed Report"}
+          </button>
+          <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+            {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+          </button>
+        </div>
+      )}
 
       {renderBody()}
 

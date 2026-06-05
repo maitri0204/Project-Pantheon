@@ -60,6 +60,7 @@ function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
 }
 
 import OrgAdminHomeDashboard from "@/components/dashboard/OrgAdminHomeDashboard";
+import SuperAdminHomeDashboard from "@/components/dashboard/SuperAdminHomeDashboard";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import { getTestDashboardBasePath, getTestDashboardMeta } from "@/lib/dashboard/testDashboard";
 
@@ -88,11 +89,21 @@ type OrgCard = {
   isActive: boolean;
 };
 
+type InvoiceSnippet = {
+  _id: string;
+  invoiceNumber: string;
+  assessmentCode: string;
+  finalAmount: number;
+  status: string;
+  createdAt: string;
+};
+
 type DashboardResponse = {
   role: string;
   stats: Stats;
   assessments: AssessmentCard[];
   organizations: OrgCard[];
+  invoices?: InvoiceSnippet[];
 };
 
 const statConfig = [
@@ -126,6 +137,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [assessments, setAssessments] = useState<AssessmentCard[]>([]);
   const [organizations, setOrganizations] = useState<OrgCard[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceSnippet[]>([]);
   const [orgSlug, setOrgSlug] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
@@ -155,6 +167,7 @@ export default function DashboardPage() {
         setStats(res.stats);
         setAssessments(res.assessments);
         setOrganizations(res.organizations);
+        setInvoices(res.invoices ?? []);
         if (res.organizations?.length > 0) {
           setOrgSlug(res.organizations[0].slug);
         }
@@ -180,6 +193,20 @@ export default function DashboardPage() {
         orgSlug={orgSlug}
         stats={stats ? { assessments: stats.assessments, students: stats.students } : null}
         assessments={assessments}
+        dashboardBasePath={dashboardBasePath}
+        resolveDashboardHref={resolveDashboardHref}
+      />
+    );
+  }
+
+  if (role === "SUPERADMIN") {
+    return (
+      <SuperAdminHomeDashboard
+        firstName={auth?.user.firstName ?? "Superadmin"}
+        stats={stats}
+        assessments={assessments}
+        organizations={organizations}
+        invoices={invoices}
         dashboardBasePath={dashboardBasePath}
         resolveDashboardHref={resolveDashboardHref}
       />

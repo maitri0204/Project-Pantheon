@@ -26,6 +26,8 @@ import {
   mapStudyAbroadAttemptQuestions,
 } from "../services/studyAbroadQuestionSelection.service";
 import { sendAssessmentReportToStudent } from "../services/email";
+import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCareerDnaReportData";
+import { generateCareerDnaExecutivePdf } from "../services/careerDnaReport/generateCareerDnaExecutivePdf";
 import { AuthRequest } from "../types/auth";
 
 const normalizeAssessmentCode = (code: string): string => {
@@ -3150,4 +3152,124 @@ export const getParentDetailsForAdmin = async (req: AuthRequest, res: Response):
       inProgressTests: attempts.filter((a) => a.status === "IN_PROGRESS").length,
     },
   });
+};
+
+const buildCareerDnaPdfBufferForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<Buffer> => {
+  const code = normalizeAssessmentCode(attempt.assessmentCode);
+  if (code !== "CAREER_DNA") {
+    throw new Error("Career DNA executive report is only available for Career DNA attempts");
+  }
+
+  if (!attempt.evaluation) {
+    (attempt as unknown as { evaluation: unknown }).evaluation = await evaluateAssessmentAttempt(attempt);
+    await attempt.save();
+  }
+
+  const student = await User.findById(attempt.user).select({ firstName: 1, lastName: 1, email: 1 }).lean();
+  const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
+
+  const reportData = buildCareerDnaReportData({
+    studentName,
+    email: student?.email,
+    submittedAt: attempt.completedAt,
+    answeredCount: attempt.answeredCount,
+    totalQuestions: attempt.totalQuestions,
+    evaluation: attempt.evaluation as Record<string, unknown>,
+  });
+
+  return generateCareerDnaExecutivePdf(reportData);
+};
+
+const sendCareerDnaExecutivePdf = (res: Response, buffer: Buffer, studentName: string) => {
+  const safeName = studentName.replace(/\s+/g, "_");
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="Career_DNA_Executive_Report_${safeName}.pdf"`,
+    "Content-Length": buffer.length,
+  });
+  res.send(buffer);
+};
+
+export const downloadStudentCareerDnaReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const studentName = `${req.user!.firstName || ""} ${req.user!.lastName || ""}`.trim() || "Student";
+    const buffer = await buildCareerDnaPdfBufferForAttempt(attempt);
+    sendCareerDnaExecutivePdf(res, buffer, studentName);
+  } catch (error) {
+    console.error("downloadStudentCareerDnaReport error:", error);
+    res.status(500).json({ message: "Failed to generate Career DNA report" });
+  }
+};
+
+export const downloadAdminCareerDnaReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!studentId || !attemptId) {
+    res.status(400).json({ message: "Student ID and attempt ID are required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: student._id,
+      organization: student.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    const studentName = `${student.firstName || ""} ${student.lastName || ""}`.trim() || "Student";
+    const buffer = await buildCareerDnaPdfBufferForAttempt(attempt);
+    sendCareerDnaExecutivePdf(res, buffer, studentName);
+  } catch (error) {
+    console.error("downloadAdminCareerDnaReport error:", error);
+    res.status(500).json({ message: "Failed to generate Career DNA report" });
+  }
 };
