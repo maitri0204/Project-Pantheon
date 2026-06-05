@@ -174,6 +174,13 @@ const SECTION_CONFIG = [
   },
 ] as const;
 
+/** Sections expressed as type/code combinations — not a single aggregate percentage. */
+const COMBINATION_SECTION_KEYS = new Set<string>(["PERSONALITY", "CAREER_INTEREST"]);
+
+function isCombinationSection(key: string): boolean {
+  return COMBINATION_SECTION_KEYS.has(key);
+}
+
 function normalizeMbtiTypeCode(raw: string): string {
   const normalized = String(raw || "").toUpperCase();
   const match = normalized.match(/[EI][SN][TF][JP]/);
@@ -360,14 +367,25 @@ export default function CareerDnaReport({
     [sections],
   );
 
-  const radarScores = sectionScores.map((s) => ({ label: s.label, pct: s.pct }));
-
-  const insights = useMemo(() => collectInsightItems(sections), [sections]);
-  const strengths = [...insights].filter((i) => i.pct >= 75).sort((a, b) => b.pct - a.pct).slice(0, 5);
-  const focusAreas = [...insights].filter((i) => i.pct < 50).sort((a, b) => a.pct - b.pct).slice(0, 4);
-
   const dominantInterest = sections.CAREER_INTEREST?.dominantCode;
   const dominantLearning = sections.LEARNING_STYLE?.dominantCode;
+  const careerInterestLabel = dominantInterest ? formatCareerInterestCode(dominantInterest) : "";
+
+  const radarScores = sectionScores
+    .filter((s) => !isCombinationSection(s.key))
+    .map((s) => ({ label: s.label, pct: s.pct }));
+
+  const insights = useMemo(() => collectInsightItems(sections), [sections]);
+  const strengths = [...insights]
+    .filter((i) => i.section !== "Personality" && i.section !== "Interests")
+    .filter((i) => i.pct >= 75)
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 5);
+  const focusAreas = [...insights]
+    .filter((i) => i.section !== "Personality" && i.section !== "Interests")
+    .filter((i) => i.pct < 50)
+    .sort((a, b) => a.pct - b.pct)
+    .slice(0, 4);
   const activeConfig = SECTION_CONFIG.find((c) => c.key === activeSection) ?? SECTION_CONFIG[0];
   const activeData = sections[activeSection];
 
@@ -452,7 +470,14 @@ export default function CareerDnaReport({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {sectionScores.map(({ key, label, pct, config }) => {
           const Icon = config.icon;
-          const band = scoreBand(pct);
+          const combinationSection = isCombinationSection(key);
+          const band = combinationSection ? null : scoreBand(pct);
+          const combinationLabel =
+            key === "PERSONALITY"
+              ? personalityTypeLabel
+              : key === "CAREER_INTEREST"
+                ? careerInterestLabel
+                : "";
           return (
             <button
               key={key}
@@ -476,17 +501,31 @@ export default function CareerDnaReport({
                 >
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${band.bg} ${band.text} ${band.border}`}>
-                  {band.label}
-                </span>
+                {combinationSection ? (
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${config.chipColor}`}>
+                    Profile
+                  </span>
+                ) : band ? (
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${band.bg} ${band.text} ${band.border}`}>
+                    {band.label}
+                  </span>
+                ) : null}
               </div>
               <p className="mt-3 text-sm font-semibold text-slate-900">{label}</p>
-              <p className="text-2xl font-black" style={{ color: config.color }}>
-                {pct}%
-              </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: config.color }} />
-              </div>
+              {combinationSection ? (
+                <p className="mt-1 text-sm font-bold leading-snug text-slate-800" style={{ color: config.color }}>
+                  {combinationLabel || "—"}
+                </p>
+              ) : (
+                <>
+                  <p className="text-2xl font-black" style={{ color: config.color }}>
+                    {pct}%
+                  </p>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: config.color }} />
+                  </div>
+                </>
+              )}
             </button>
           );
         })}
@@ -556,7 +595,8 @@ export default function CareerDnaReport({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-bold text-slate-900">8-Section Radar</h3>
+          <h3 className="mb-4 text-lg font-bold text-slate-900">Section Radar</h3>
+          <p className="mb-4 text-xs text-slate-500">Scored dimensions only — personality and interests use profile combinations.</p>
           <SectionRadar scores={radarScores} />
         </div>
 
@@ -622,7 +662,7 @@ export default function CareerDnaReport({
                 <h3 className="text-xl font-bold text-slate-900">{activeConfig.title}</h3>
                 <p className="mt-1 text-sm text-slate-600">{activeConfig.description}</p>
               </div>
-              {activeSection !== "PERSONALITY" && activeData && (
+              {!isCombinationSection(activeSection) && activeData && (
                 <div className="text-right">
                   <p className="text-3xl font-black" style={{ color: activeConfig.color }}>
                     {sectionPercent(activeSection, activeData)}%
@@ -632,18 +672,28 @@ export default function CareerDnaReport({
                   </p>
                 </div>
               )}
+              {activeSection === "PERSONALITY" && personalityTypeLabel && (
+                <div className="text-right">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Personality Type</p>
+                  <p className="text-lg font-bold text-slate-900">{personalityTypeLabel}</p>
+                </div>
+              )}
+              {activeSection === "CAREER_INTEREST" && careerInterestLabel && (
+                <div className="text-right">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Interest Profile</p>
+                  <p className="text-lg font-bold text-slate-900">{careerInterestLabel}</p>
+                </div>
+              )}
             </div>
 
-            {activeData?.dominantCode && (
+            {activeData?.dominantCode && activeSection !== "CAREER_INTEREST" && (
               <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2">
                 <Target className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-semibold text-amber-800">
                   Dominant:{" "}
-                  {activeSection === "CAREER_INTEREST"
-                    ? formatCareerInterestCode(activeData.dominantCode)
-                    : activeSection === "LEARNING_STYLE"
-                      ? formatLearningStyleCode(activeData.dominantCode)
-                      : activeData.dominantCode}
+                  {activeSection === "LEARNING_STYLE"
+                    ? formatLearningStyleCode(activeData.dominantCode)
+                    : activeData.dominantCode}
                 </span>
               </div>
             )}
@@ -651,24 +701,33 @@ export default function CareerDnaReport({
             <div className="mt-5 space-y-4">
               {activeSection === "PERSONALITY" && personalityDimensions.length > 0
                 ? personalityDimensions.map((dim, idx) => {
-                    const winnerPct = dim.winner === dim.letterA ? dim.percentA : dim.percentB;
                     const pairName = PERSONALITY_PAIR_NAMES[dim.pair] || dim.pair;
                     const winnerName = PERSONALITY_DIMENSION_NAMES[dim.winner] || dim.winner;
+                    const winnerLetter = LETTER_CODES[dim.winner] ?? dim.winner;
                     return (
-                      <div key={`${dim.pair}-${idx}`}>
-                        <div className="mb-1 flex items-center justify-between gap-2">
-                          <span className="text-sm font-medium text-slate-700">{pairName}</span>
-                          <span className="text-sm font-semibold text-slate-900">{winnerName} · {winnerPct}%</span>
-                        </div>
-                        <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${winnerPct}%`, backgroundColor: barColor(winnerPct) }}
-                          />
-                        </div>
+                      <div
+                        key={`${dim.pair}-${idx}`}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-rose-100 bg-rose-50/50 px-4 py-3"
+                      >
+                        <span className="text-sm font-medium text-slate-700">{pairName}</span>
+                        <span className="text-sm font-semibold text-slate-900">
+                          {winnerLetter} — {winnerName}
+                        </span>
                       </div>
                     );
                   })
+                : activeSection === "CAREER_INTEREST" && careerInterestLabel
+                  ? (
+                    <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Your interest combination</p>
+                      <p className="mt-2 text-base font-bold text-slate-900">{careerInterestLabel}</p>
+                      {(activeData?.parts ?? []).length > 0 && (
+                        <p className="mt-2 text-xs text-slate-600">
+                          Based on your strongest RIASEC themes across realistic, investigative, artistic, social, enterprising, and conventional areas.
+                        </p>
+                      )}
+                    </div>
+                  )
                 : (activeData?.parts ?? []).map((part, idx) => {
                     const label =
                       activeSection === "PERSONALITY"
