@@ -217,6 +217,29 @@ const AQ_RECOMMENDATIONS = (result: AQEvaluation): string[] => {
   return recs.slice(0, 6);
 };
 
+async function loadPublicImageDataUrl(path: string): Promise<string> {
+  const url = path.startsWith("http") || path.startsWith("data:")
+    ? path
+    : `${window.location.origin}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to load report image: ${path}`);
+  }
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error(`Unable to read report image: ${path}`));
+      }
+    };
+    reader.onerror = () => reject(new Error(`Unable to read report image: ${path}`));
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function generateAQReportBlob(
   result: AQEvaluation,
   report: ReportResponse["report"],
@@ -227,6 +250,11 @@ async function generateAQReportBlob(
   const [{ pdf }, { AQReport }] = await Promise.all([
     import("@react-pdf/renderer"),
     import("@/components/reports/AQReport"),
+  ]);
+
+  const [coverImageSrc, backCoverImageSrc] = await Promise.all([
+    loadPublicImageDataUrl("/rq/cover.jpg"),
+    loadPublicImageDataUrl("/rq/back-cover.jpg"),
   ]);
 
   const generatedDate = report.submittedAt
@@ -294,6 +322,8 @@ async function generateAQReportBlob(
     email,
     generatedDate,
     aqHistory,
+    coverImageSrc,
+    backCoverImageSrc,
   });
 
   return pdf(element).toBlob();
@@ -456,7 +486,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     );
     return {
       blob,
-      fileName: `AQ-Report-${reportStudentName.replace(/\s+/g, "-")}.pdf`,
+      fileName: `RQ-Report-${reportStudentName.replace(/\s+/g, "-")}.pdf`,
     };
       }
 
