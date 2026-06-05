@@ -399,10 +399,6 @@ export default function CareerDnaReport({
         <div className="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-8 text-white md:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider">
-                <Sparkles className="h-3.5 w-3.5" />
-                Career DNA Profiler
-              </div>
               <h2 className="text-2xl font-bold md:text-3xl">Your Multi-Dimensional Profile</h2>
               <p className="mt-2 text-sm text-blue-100">Submitted on {submittedLabel}</p>
               {answeredCount != null && totalQuestions != null && (
