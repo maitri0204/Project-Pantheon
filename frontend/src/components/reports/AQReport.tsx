@@ -796,7 +796,7 @@ const S = StyleSheet.create({
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
   contentPage: { position: 'relative', backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 90, fontFamily: 'Inter', fontWeight: 400 },
   finalPage:   { position: 'relative', backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
-  finalInner:  { flex: 1, flexDirection: 'column', justifyContent: 'space-between', paddingHorizontal: 48, paddingTop: 44, paddingBottom: 44 },
+  finalInner:  { flex: 1, flexDirection: 'column', paddingHorizontal: 48, paddingTop: 44, paddingBottom: 44 },
 
   // ── Content wrapper (flex grow for footer push-down)
   contentWrapper: { flex: 1, display: 'flex', flexDirection: 'column' },
@@ -913,14 +913,14 @@ const S = StyleSheet.create({
   finalHeaderBadge: { alignSelf: 'flex-start', borderRadius: 99, backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 4, marginBottom: 16 },
   finalHeaderBadgeText: { fontSize: 8, fontWeight: 700, color: C.sky, letterSpacing: 1 },
   finalTitle: { fontSize: 20, fontWeight: 700, color: C.white, marginBottom: 3 },
-  finalSub: { fontSize: 8.5, fontWeight: 400, color: '#94a3b8', marginBottom: 14 },
+  finalSub: { fontSize: 8.5, fontWeight: 400, color: '#94a3b8', marginBottom: 12 },
   finalCard: { backgroundColor: C.navy, borderRadius: 8, padding: 9, borderLeftWidth: 3, borderLeftColor: C.sky },
   finalCardTitle: { fontSize: 8.5, fontWeight: 700, color: C.white, marginBottom: 3 },
   finalCardBody: { fontSize: 7.2, fontWeight: 400, color: '#94a3b8', lineHeight: 1.45 },
   finalMotivationBox: { borderRadius: 8, padding: 12, marginTop: 10, backgroundColor: '#1e293b', alignItems: 'center' },
   finalMotivationText: { fontSize: 10, fontWeight: 700, color: C.white, textAlign: 'center', lineHeight: 1.5, marginBottom: 5 },
   finalMotivationSub: { fontSize: 7, fontWeight: 400, color: '#94a3b8', textAlign: 'center' },
-  finalBranding: { paddingTop: 10, borderTopWidth: 1, borderTopColor: C.navy, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  finalBranding: { marginTop: 'auto', paddingTop: 10, borderTopWidth: 1, borderTopColor: C.navy, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   finalBrandingText: { fontSize: 8, fontWeight: 400, color: '#64748b' },
 
   // ── Two-column layout
@@ -1614,9 +1614,7 @@ function FinalSummaryPage({ d }: { d: AQReportData }) {
           </View>
           <Text style={S.finalTitle}>Final AQ Assessment</Text>
           <Text style={S.finalSub}>{d.studentName} · {d.generatedDate} · {level} Level ({aq} / 100)</Text>
-        </View>
 
-        <View>
           <View style={{ flexDirection: 'row', marginBottom: 7 }}>
             <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[0]!.color }]}>
               <Text style={S.finalCardTitle}>{cards[0]!.title}</Text>
