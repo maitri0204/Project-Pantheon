@@ -500,6 +500,89 @@ function LineChartWithAxes({ trend }: { trend: AQTrendPoint[] }) {
   );
 }
 
+/* Scale distribution bar chart — SVG bars aligned to shared 0% baseline */
+function ScaleDistributionChart({ trend }: { trend: AQTrendPoint[] }) {
+  const W = 468;
+  const H = 78;
+  const AXIS_W = 24;
+  const CHART_W = W - AXIS_W;
+  const PT = 2;
+  const PB = 2;
+  const cH = H - PT - PB;
+  const levels = ['Exceptional', 'Strong', 'Moderate', 'Developing'] as const;
+  const BAR_GAP = 10;
+  const barW = (CHART_W - BAR_GAP * (levels.length - 1)) / levels.length;
+  const axisY = PT + cH;
+
+  return (
+    <View>
+      <View style={{ flexDirection: 'row', marginLeft: AXIS_W, marginBottom: 5 }}>
+        {levels.map((lvl, i) => {
+          const count = trend.filter(p => p.level === lvl).length;
+          const pct = trend.length > 0 ? Math.round((count / trend.length) * 100) : 0;
+          return (
+            <View key={lvl} style={{ width: barW, alignItems: 'center', marginRight: i < levels.length - 1 ? BAR_GAP : 0 }}>
+              <Text style={{ fontSize: 6.5, fontWeight: 700, color: C.dark, fontFamily: 'Inter' }}>{lvl}</Text>
+              <Text style={{ fontSize: 6, fontWeight: 400, color: C.slate600, fontFamily: 'Inter' }}>{count} · {pct}%</Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={{ flexDirection: 'row' }}>
+        <View style={{
+          width: AXIS_W,
+          height: H,
+          paddingTop: PT - 3,
+          paddingBottom: PB - 3,
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          paddingRight: 4,
+        }}>
+          {[100, 75, 50, 25, 0].map(v => (
+            <Text key={v} style={{ fontSize: 5.5, color: C.slate400, fontFamily: 'Inter', fontWeight: 400 }}>{v}%</Text>
+          ))}
+        </View>
+
+        <Svg width={CHART_W} height={H}>
+          {[100, 75, 50, 25, 0].map(tick => {
+            const y = PT + cH - (tick / 100) * cH;
+            return (
+              <Line
+                key={tick}
+                x1={0}
+                y1={y}
+                x2={CHART_W}
+                y2={y}
+                stroke={tick === 0 ? '#94a3b8' : '#e2e8f0'}
+                strokeWidth={tick === 0 ? 1.5 : 0.5}
+              />
+            );
+          })}
+          {levels.map((lvl, i) => {
+            const count = trend.filter(p => p.level === lvl).length;
+            const pct = trend.length > 0 ? Math.round((count / trend.length) * 100) : 0;
+            const h = count > 0 ? (pct / 100) * cH : 0;
+            const x = i * (barW + BAR_GAP);
+            return (
+              <Rect
+                key={lvl}
+                x={x}
+                y={axisY - h}
+                width={barW}
+                height={h}
+                fill={LEVEL_COLOR[lvl]}
+                rx={3}
+                opacity={count > 0 ? 1 : 0.12}
+              />
+            );
+          })}
+        </Svg>
+      </View>
+    </View>
+  );
+}
+
 function RadarChartSVG({ avgs }: { avgs: SubscaleAverage[] }) {
   const CX = 100, CY = 100, R = 72, W = 200, H = 200;
   const dims = ['Control', 'Ownership', 'Reach', 'Endurance'];
@@ -712,7 +795,7 @@ const S = StyleSheet.create({
   // ── Pages — fontFamily + fontWeight set at page level so every Text inherits
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
   contentPage: { position: 'relative', backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 90, fontFamily: 'Inter', fontWeight: 400 },
-  finalPage:   { position: 'relative', backgroundColor: C.dark, paddingHorizontal: 56, paddingTop: 52, paddingBottom: 90, fontFamily: 'Inter', fontWeight: 400 },
+  finalPage:   { position: 'relative', backgroundColor: C.dark, paddingHorizontal: 48, paddingTop: 40, paddingBottom: 48, fontFamily: 'Inter', fontWeight: 400 },
 
   // ── Content wrapper (flex grow for footer push-down)
   contentWrapper: { flex: 1, display: 'flex', flexDirection: 'column' },
@@ -790,7 +873,7 @@ const S = StyleSheet.create({
   td: { fontSize: 8, fontWeight: 400, color: C.slate700 },
 
   // ── Dimension card (page 4)
-  dimCard: { borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 12, marginBottom: 10 },
+  dimCard: { borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginBottom: 6 },
   dimHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   dimTitle: { fontSize: 11, fontWeight: 700, color: C.dark },
   dimPct: { fontSize: 13, fontWeight: 700, color: C.sky },
@@ -828,15 +911,15 @@ const S = StyleSheet.create({
   // ── Final summary page
   finalHeaderBadge: { alignSelf: 'flex-start', borderRadius: 99, backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 4, marginBottom: 16 },
   finalHeaderBadgeText: { fontSize: 8, fontWeight: 700, color: C.sky, letterSpacing: 1 },
-  finalTitle: { fontSize: 22, fontWeight: 700, color: C.white, marginBottom: 4 },
-  finalSub: { fontSize: 9, fontWeight: 400, color: '#94a3b8', marginBottom: 28 },
-  finalCard: { backgroundColor: C.navy, borderRadius: 10, padding: 14, marginBottom: 10, borderLeftWidth: 3, borderLeftColor: C.sky },
-  finalCardTitle: { fontSize: 9.5, fontWeight: 700, color: C.white, marginBottom: 4 },
-  finalCardBody: { fontSize: 8, fontWeight: 400, color: '#94a3b8', lineHeight: 1.6 },
-  finalMotivationBox: { borderRadius: 10, padding: 18, marginTop: 18, backgroundColor: '#1e293b', alignItems: 'center' },
-  finalMotivationText: { fontSize: 12, fontWeight: 700, color: C.white, textAlign: 'center', lineHeight: 1.6, marginBottom: 8 },
-  finalMotivationSub: { fontSize: 7.5, fontWeight: 400, color: '#94a3b8', textAlign: 'center' },
-  finalBranding: { marginTop: 'auto', paddingTop: 14, borderTopWidth: 1, borderTopColor: C.navy, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  finalTitle: { fontSize: 20, fontWeight: 700, color: C.white, marginBottom: 3 },
+  finalSub: { fontSize: 8.5, fontWeight: 400, color: '#94a3b8', marginBottom: 14 },
+  finalCard: { backgroundColor: C.navy, borderRadius: 8, padding: 9, borderLeftWidth: 3, borderLeftColor: C.sky },
+  finalCardTitle: { fontSize: 8.5, fontWeight: 700, color: C.white, marginBottom: 3 },
+  finalCardBody: { fontSize: 7.2, fontWeight: 400, color: '#94a3b8', lineHeight: 1.45 },
+  finalMotivationBox: { borderRadius: 8, padding: 12, marginTop: 10, backgroundColor: '#1e293b', alignItems: 'center' },
+  finalMotivationText: { fontSize: 10, fontWeight: 700, color: C.white, textAlign: 'center', lineHeight: 1.5, marginBottom: 5 },
+  finalMotivationSub: { fontSize: 7, fontWeight: 400, color: '#94a3b8', textAlign: 'center' },
+  finalBranding: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: C.navy, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   finalBrandingText: { fontSize: 8, fontWeight: 400, color: '#64748b' },
 
   // ── Two-column layout
@@ -1102,7 +1185,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
                     <Text style={[S.kpiLabel, { color, fontSize: 7.5 }]}>{lvl.toUpperCase()} — {label}</Text>
                     <Text style={[S.kpiVal, { fontSize: 20, color }]}>{avgScore !== null ? `${avgScore}/100` : '—'}</Text>
                     <Text style={[S.kpiSub, { fontSize: 7 }]}>{items.length} attempt{items.length !== 1 ? 's' : ''}</Text>
-                    {best !== null && <Text style={[S.kpiSub, { fontSize: 7 }]}>Best: {best}/100 · Lowest: {worst}/100</Text>}
+                    {best !== null && <Text style={[S.kpiSub, { fontSize: 7 }]}>Best: {best}/100</Text>}
                   </View>
                 );
               })}
@@ -1114,66 +1197,9 @@ function HistoryPage({ d }: { d: AQReportData }) {
       {/* Scale-wise distribution (Developing / Moderate / Strong / Exceptional) */}
       {trend.length > 0 && (
         <View style={{ marginTop: 10 }}>
-          <SectionBand title="Scale Distribution" sub="Attempts distributed across the 4 resilience bands (scale ≠ level — scale measures behavioural response, not test difficulty)" />
-          <View style={{ marginBottom: 6 }}>
-            <Text style={{ fontSize: 8, fontWeight: 700, color: C.dark, fontFamily: 'Inter' }}>
-              Total attempts: {trend.length}
-            </Text>
-            <Text style={{ fontSize: 7.2, fontWeight: 400, color: C.dark, fontFamily: 'Inter', marginTop: 2 }}>
-              Reading tip: each bar shows count and percentage for that scale in plain language.
-            </Text>
-          </View>
-          {/* Bar chart area */}
-          <View style={{ backgroundColor: C.slate50, borderRadius: 10, padding: 14 }}>
-            {/* Y-axis grid lines */}
-            <View style={{ position: 'absolute' as any, top: 14, left: 14, right: 14, bottom: 40 }}>
-              {[100, 75, 50, 25, 0].map((tick) => (
-                <View key={tick} style={{
-                  position: 'absolute' as any,
-                  bottom: `${tick}%` as any,
-                  left: 0, right: 0,
-                  borderTopWidth: tick === 0 ? 1.5 : 0.5,
-                  borderTopColor: tick === 0 ? C.slate400 : C.slate200,
-                  flexDirection: 'row', alignItems: 'center',
-                }}>
-                  <Text style={{ fontSize: 5.5, color: C.slate400, fontFamily: 'Inter', fontWeight: 400, marginTop: -4, width: 16 }}>{tick}%</Text>
-                </View>
-              ))}
-            </View>
-            {/* Bars + labels */}
-            <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 100, paddingLeft: 18, gap: 6 }}>
-              {(['Exceptional', 'Strong', 'Moderate', 'Developing'] as const).map(lvl => {
-                const count = trend.filter(p => p.level === lvl).length;
-                const pct = trend.length > 0 ? Math.round((count / trend.length) * 100) : 0;
-                const barH = count > 0 ? Math.max(6, pct) : 0;
-                return (
-                  <View key={lvl} style={{ flex: 1, alignItems: 'center', height: 100, justifyContent: 'flex-end' }}>
-                    {/* Count + pct label above bar in simple format */}
-                    <View style={{ alignItems: 'center', marginBottom: 3 }}>
-                      <Text style={{ fontSize: 6.7, fontWeight: 700, color: C.dark, fontFamily: 'Inter' }}>{lvl}</Text>
-                      <Text style={{ fontSize: 6.7, fontWeight: 700, color: C.dark, fontFamily: 'Inter' }}>Count: {count}</Text>
-                      <Text style={{ fontSize: 6.7, fontWeight: 700, color: C.dark, fontFamily: 'Inter' }}>Percent: {pct}%</Text>
-                    </View>
-                    {/* Bar */}
-                    <View style={{ width: '72%', height: `${barH}%` as any, backgroundColor: LEVEL_COLOR[lvl], borderRadius: 4, opacity: count > 0 ? 1 : 0.15 }} />
-                  </View>
-                );
-              })}
-            </View>
-            {/* X-axis labels */}
-            <View style={{ flexDirection: 'row', paddingLeft: 18, gap: 6, marginTop: 6 }}>
-              {(['Exceptional', 'Strong', 'Moderate', 'Developing'] as const).map(lvl => (
-                <View key={lvl} style={{ flex: 1, alignItems: 'center', gap: 3 }}>
-                  <View style={[S.pill, { backgroundColor: LEVEL_BG[lvl] ?? C.slate100 }]}>
-                    <Text style={[S.pillText, { color: LEVEL_TEXT[lvl] ?? C.dark, fontSize: 6.5 }]}>{lvl}</Text>
-                  </View>
-                  <Text style={{ fontSize: 6, color: C.slate400, fontFamily: 'Inter', fontWeight: 400 }}>
-                    {lvl === 'Exceptional' ? '80–100' : lvl === 'Strong' ? '65–79' : lvl === 'Moderate' ? '50–64' : '0–49'}
-                  </Text>
-                </View>
-              ))}
-            </View>
-            {/* Total attempts footnote */}
+          <SectionBand title="Scale Distribution" sub="Attempts across the 4 resilience bands" />
+          <View style={{ backgroundColor: C.slate50, borderRadius: 10, padding: 12 }}>
+            <ScaleDistributionChart trend={trend} />
             <Text style={{ fontSize: 6.5, color: C.slate400, fontFamily: 'Inter', fontWeight: 400, marginTop: 8, textAlign: 'center' }}>
               Based on {trend.length} attempt{trend.length !== 1 ? 's' : ''}
             </Text>
@@ -1191,41 +1217,41 @@ function HistoryPage({ d }: { d: AQReportData }) {
 function DimensionPage({ d }: { d: AQReportData }) {
   const avgs = d.aqHistory.subscaleAverages ?? [];
 
+  const renderDimCard = (dim: 'Control' | 'Ownership' | 'Reach' | 'Endurance') => {
+    const pct   = getDim(avgs, dim);
+    const info  = DIM_INFO[dim];
+    const color = LEVEL_COLOR[levelOf(pct)] ?? C.sky;
+    return (
+      <View key={dim} style={S.dimCard} wrap={false}>
+        <View style={S.dimHeader}>
+          <Text style={S.dimTitle}>{dim}</Text>
+          <Text style={[S.dimPct, { color }]}>{pct.toFixed(0)}%</Text>
+        </View>
+        <Text style={S.dimDesc}>{info?.desc}</Text>
+        <ProgressBar pct={pct} color={color} />
+        <View style={S.spacer8} />
+        <Text style={S.dimInterp}>{pct >= 65 ? info?.high : info?.low}</Text>
+      </View>
+    );
+  };
+
   return (
     <Page size="A4" style={S.contentPage}>
       <PageHeader title="Dimension Analysis" subtitle="CORE framework — Control, Ownership, Reach, Endurance" pg="4" />
 
-      <View style={{ backgroundColor: C.slate50, borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 10, marginBottom: 10 }}>
-        <Text style={{ fontSize: 9, fontWeight: 700, color: C.dark, marginBottom: 4 }}>CORE Interpretation Guide</Text>
-        <Text style={{ fontSize: 7.6, fontWeight: 400, color: C.dark, lineHeight: 1.55, marginBottom: 4 }}>
-          CORE is the behavioral engine behind your AQ score. Control shows whether you move into action when difficulty appears. Ownership shows whether you use setbacks as feedback for growth or as proof of failure. Reach shows whether one problem stays in one area or spreads into everything else. Endurance shows whether you interpret adversity as temporary and manageable or as long and permanent.
+      <View style={{ backgroundColor: C.slate50, borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginBottom: 8 }}>
+        <Text style={{ fontSize: 9, fontWeight: 700, color: C.dark, marginBottom: 3 }}>CORE Interpretation Guide</Text>
+        <Text style={{ fontSize: 7.4, fontWeight: 400, color: C.dark, lineHeight: 1.5 }}>
+          CORE is the behavioral engine behind your AQ score. Control drives action under difficulty. Ownership turns setbacks into feedback. Reach keeps problems contained. Endurance frames adversity as temporary rather than permanent.
         </Text>
-        <Text style={{ fontSize: 7.6, fontWeight: 400, color: C.dark, lineHeight: 1.55, marginBottom: 5 }}>
-          In high performers, these dimensions work together, not separately. For example, strong Control without Ownership can lead to activity without learning. Strong Ownership without Reach can still result in emotional spillover. The goal is not perfection in one dimension; the goal is balanced strength across all four so your response remains stable in real-life pressure situations.
-        </Text>
-        <View style={{ marginLeft: 4 }}>
-          {[
-            'Control: Converts stress into structured action.',
-            'Ownership: Converts mistakes into learning loops.',
-            'Reach: Protects focus by containing spillover.',
-            'Endurance: Maintains hope and persistence over time.',
-          ].map((line, i) => (
-            <View key={i} style={{ flexDirection: 'row', marginBottom: 2 }}>
-              <Text style={{ fontSize: 7.2, fontWeight: 700, color: C.dark, marginRight: 5 }}>•</Text>
-              <Text style={{ fontSize: 7.2, fontWeight: 400, color: C.dark, lineHeight: 1.4, flex: 1 }}>{line}</Text>
-            </View>
-          ))}
-        </View>
       </View>
 
       <View style={S.twoCol}>
-        {/* Left: Radar + score table */}
         <View style={[S.colL, { maxWidth: 210 }]}>
           <SectionBand title="CORE Radar" />
-          <View style={{ alignItems: 'center', marginBottom: 10 }}>
+          <View style={{ alignItems: 'center', marginBottom: 8 }}>
             <RadarChartWithLabels avgs={avgs} />
           </View>
-          {/* Mini score table */}
           <View style={S.tableHead}>
             <Text style={[S.th, { flex: 2 }]}>DIMENSION</Text>
             <Text style={[S.th, { flex: 1, textAlign: 'right' }]}>AVG %</Text>
@@ -1241,26 +1267,9 @@ function DimensionPage({ d }: { d: AQReportData }) {
           })}
         </View>
 
-        {/* Right: Dimension cards */}
         <View style={S.colR}>
           <SectionBand title="Dimension Breakdown" />
-          {(['Control', 'Ownership', 'Reach', 'Endurance'] as const).map(dim => {
-            const pct   = getDim(avgs, dim);
-            const info  = DIM_INFO[dim];
-            const color = LEVEL_COLOR[levelOf(pct)] ?? C.sky;
-            return (
-              <View key={dim} style={S.dimCard}>
-                <View style={S.dimHeader}>
-                  <Text style={S.dimTitle}>{dim}</Text>
-                  <Text style={[S.dimPct, { color }]}>{pct.toFixed(0)}%</Text>
-                </View>
-                <Text style={S.dimDesc}>{info?.desc}</Text>
-                <ProgressBar pct={pct} color={color} />
-                <View style={S.spacer8} />
-                <Text style={S.dimInterp}>{pct >= 65 ? info?.high : info?.low}</Text>
-              </View>
-            );
-          })}
+          {(['Control', 'Ownership', 'Reach', 'Endurance'] as const).map(renderDimCard)}
         </View>
       </View>
 
@@ -1282,22 +1291,37 @@ function BehavioralPage({ d }: { d: AQReportData }) {
     'Learning & Growth Orientation': 'Long-term effect: regular reflection and re-assessment convert stress into growth data. This creates a compounding cycle where each attempt improves your strategy for the next attempt.',
   };
 
+  const renderPattern = (p: (typeof patterns)[number]) => (
+    <View key={p.title} style={S.insightCard} wrap={false}>
+      <View style={[S.insightDot, { backgroundColor: p.color }]} />
+      <View style={{ flex: 1 }}>
+        <Text style={S.insightTitle}>{p.title}</Text>
+        <Text style={S.insightBody}>{p.body}</Text>
+        <Text style={[S.insightBody, { marginTop: 4, fontSize: 7.4 }]}>{behaviorExtensions[p.title]}</Text>
+      </View>
+    </View>
+  );
+
+  const mainPatterns = patterns.filter(p => p.title !== 'Learning & Growth Orientation');
+  const growthPattern = patterns.find(p => p.title === 'Learning & Growth Orientation');
+
   return (
-    <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Behavioral Patterns" subtitle="Derived behavioral insights from your AQ profile" pg="5" />
-      <SectionBand title="Pattern Analysis" sub="How your AQ score translates into observable behavioral tendencies" />
-      {patterns.map(p => (
-        <View key={p.title} style={S.insightCard}>
-          <View style={[S.insightDot, { backgroundColor: p.color }]} />
-          <View style={{ flex: 1 }}>
-            <Text style={S.insightTitle}>{p.title}</Text>
-            <Text style={S.insightBody}>{p.body}</Text>
-            <Text style={[S.insightBody, { marginTop: 4, fontSize: 7.4 }]}>{behaviorExtensions[p.title]}</Text>
-          </View>
-        </View>
-      ))}
-      <PageFooter name={d.studentName} date={d.generatedDate} />
-    </Page>
+    <>
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="Behavioral Patterns" subtitle="Derived behavioral insights from your AQ profile" pg="5" />
+        <SectionBand title="Pattern Analysis" sub="How your AQ score translates into observable behavioral tendencies" />
+        {mainPatterns.map(renderPattern)}
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
+      {growthPattern ? (
+        <Page size="A4" style={S.contentPage}>
+          <PageHeader title="Behavioral Patterns (Continued)" subtitle="Learning and growth orientation" pg="5" />
+          <SectionBand title="Learning & Growth Orientation" sub="How you convert adversity into long-term development" />
+          {renderPattern(growthPattern)}
+          <PageFooter name={d.studentName} date={d.generatedDate} />
+        </Page>
+      ) : null}
+    </>
   );
 }
 
@@ -1563,56 +1587,64 @@ function FinalSummaryPage({ d }: { d: AQReportData }) {
   const level = d.aqHistory.latestLevel ?? levelOf(aq);
   const s     = finalSummary(d.aqHistory);
 
+  const cards = [
+    { title: 'Overall Interpretation', body: s.interpretation, color: C.sky },
+    { title: 'Behavioral Conclusion', body: s.conclusion, color: C.indigo },
+    { title: 'Growth Outlook', body: s.outlook, color: C.emerald },
+    {
+      title: 'Resilience Potential',
+      body: `Your AQ of ${aq} places you in the ${level} tier. AQ is trainable — every practice in this report compounds your resilience advantage.`,
+      color: C.purple,
+    },
+  ];
+
   return (
-    <Page size="A4" style={S.finalPage}>
-      {/* Decorative overlay */}
+    <Page size="A4" style={S.finalPage} wrap={false}>
       <Svg width={595} height={841} style={{ position: 'absolute', top: 0, left: 0 } as any}>
         <Circle cx={550} cy={100} r={180} fill={C.sky}    fillOpacity={0.04} />
         <Circle cx={50}  cy={800} r={150} fill={C.purple} fillOpacity={0.04} />
         <Rect x={0} y={0} width={3} height={841} fill={C.sky} fillOpacity={0.5} />
       </Svg>
 
-      <View style={S.finalHeaderBadge}>
-        <Text style={S.finalHeaderBadgeText}>PSYCHOLOGICAL INSIGHT SUMMARY</Text>
-      </View>
-      <Text style={S.finalTitle}>Final AQ Assessment</Text>
-      <Text style={S.finalSub}>{d.studentName} · {d.generatedDate} · {level} Level ({aq} / 100) · Page 16</Text>
+      <View wrap={false}>
+        <Text style={S.finalTitle}>Final AQ Assessment</Text>
+        <Text style={S.finalSub}>{d.studentName} · {d.generatedDate} · {level} Level ({aq} / 100)</Text>
 
-      {/* Summary cards */}
-      <View style={[S.finalCard, { borderLeftColor: C.sky }]}>
-        <Text style={S.finalCardTitle}>Overall Interpretation</Text>
-        <Text style={S.finalCardBody}>{s.interpretation}</Text>
-      </View>
-      <View style={[S.finalCard, { borderLeftColor: C.indigo }]}>
-        <Text style={S.finalCardTitle}>Behavioral Conclusion</Text>
-        <Text style={S.finalCardBody}>{s.conclusion}</Text>
-      </View>
-      <View style={[S.finalCard, { borderLeftColor: C.emerald }]}>
-        <Text style={S.finalCardTitle}>Growth Outlook</Text>
-        <Text style={S.finalCardBody}>{s.outlook}</Text>
-      </View>
-      <View style={[S.finalCard, { borderLeftColor: C.purple }]}>
-        <Text style={S.finalCardTitle}>Resilience Potential</Text>
-        <Text style={S.finalCardBody}>
-          {`Your AQ of ${aq} places you in the ${level} tier. AQ is not fixed — it is a trainable behavioral capacity that responds to intentional practice. Every assessment you complete and every recommendation you act upon compounds your resilience advantage. The data in this report is your roadmap.`}
-        </Text>
-      </View>
-
-      {/* Motivational box */}
-      <View style={S.finalMotivationBox}>
-        <Text style={S.finalMotivationText}>{`"${s.motivation}"`}</Text>
-        <Text style={S.finalMotivationSub}>— Your Adversity AQ Analytics Report</Text>
-      </View>
-
-      {/* Branding footer */}
-      <View style={S.finalBranding}>
-        <View>
-          <Text style={S.finalBrandingText}>Adversity · AQ Analytics Platform</Text>
-          <Text style={[S.finalBrandingText, { marginTop: 2 }]}>adversity.app · Confidential & Proprietary</Text>
+        <View style={{ flexDirection: 'row', marginBottom: 7 }}>
+          <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[0]!.color }]} wrap={false}>
+            <Text style={S.finalCardTitle}>{cards[0]!.title}</Text>
+            <Text style={S.finalCardBody}>{cards[0]!.body}</Text>
+          </View>
+          <View style={[S.finalCard, { flex: 1, borderLeftColor: cards[1]!.color }]} wrap={false}>
+            <Text style={S.finalCardTitle}>{cards[1]!.title}</Text>
+            <Text style={S.finalCardBody}>{cards[1]!.body}</Text>
+          </View>
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={S.finalBrandingText}>Generated: {d.generatedDate}</Text>
-          <Text style={S.finalBrandingText}>Student: {d.studentName}</Text>
+        <View style={{ flexDirection: 'row', marginBottom: 7 }}>
+          <View style={[S.finalCard, { flex: 1, marginRight: 7, borderLeftColor: cards[2]!.color }]} wrap={false}>
+            <Text style={S.finalCardTitle}>{cards[2]!.title}</Text>
+            <Text style={S.finalCardBody}>{cards[2]!.body}</Text>
+          </View>
+          <View style={[S.finalCard, { flex: 1, borderLeftColor: cards[3]!.color }]} wrap={false}>
+            <Text style={S.finalCardTitle}>{cards[3]!.title}</Text>
+            <Text style={S.finalCardBody}>{cards[3]!.body}</Text>
+          </View>
+        </View>
+
+        <View style={S.finalMotivationBox} wrap={false}>
+          <Text style={S.finalMotivationText}>{`"${s.motivation}"`}</Text>
+          <Text style={S.finalMotivationSub}>— Your Adversity AQ Analytics Report</Text>
+        </View>
+
+        <View style={S.finalBranding} wrap={false}>
+          <View>
+            <Text style={S.finalBrandingText}>Adversity · AQ Analytics Platform</Text>
+            <Text style={[S.finalBrandingText, { marginTop: 2 }]}>adversity.app · Confidential & Proprietary</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={S.finalBrandingText}>Generated: {d.generatedDate}</Text>
+            <Text style={S.finalBrandingText}>Student: {d.studentName}</Text>
+          </View>
         </View>
       </View>
     </Page>
@@ -1793,15 +1825,10 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
     },
   ];
 
-  return (
-    <Page size="A4" style={S.contentPage}>
-      <PageHeader title="30-Day AQ Development Roadmap" subtitle="Combined weekly goals & daily tasks — your complete personalised resilience growth plan" pg="9" />
-      <SectionBand title="Weekly Goals + Daily Tasks" sub="Each week shows targeted goals (left) alongside concrete daily actions (right) — work both tracks together" />
-
-      {weeks.map((week, wi) => {
-        const phase = phaseMeta[wi]!;
-        return (
-          <View key={wi} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 9, marginBottom: 7 }}>
+  const renderWeek = (week: RoadmapWeek, wi: number) => {
+    const phase = phaseMeta[wi]!;
+    return (
+          <View key={wi} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 9, marginBottom: 7 }} wrap={false}>
             {/* ── Week header ── */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
               <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: phase.color, alignItems: 'center', justifyContent: 'center', marginRight: 8 }}>
@@ -1843,19 +1870,33 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
               <Text style={{ fontSize: 7, color: C.slate600, flex: 1, lineHeight: 1.4, fontFamily: 'Inter', fontWeight: 400 }}>{week.dailyHabit}</Text>
             </View>
           </View>
-        );
-      })}
+    );
+  };
 
-      {/* Compound principle note */}
-      <View style={{ backgroundColor: C.slate50, borderRadius: 6, padding: 8, marginTop: 2 }}>
-        <Text style={{ fontSize: 8, fontWeight: 700, color: C.dark, marginBottom: 2, fontFamily: 'Inter' }}>The Compound Resilience Principle</Text>
-        <Text style={{ fontSize: 7, color: C.slate600, lineHeight: 1.55, fontFamily: 'Inter', fontWeight: 400 }}>
-          AQ improvement is not linear — it is exponential. The first 7 days are the hardest. By Day 14 habits begin to feel natural. By Day 21 behavioural shifts are visible. By Day 30 your neural pathways have measurably changed. Most people quit before Day 10. You will not.
-        </Text>
-      </View>
+  return (
+    <>
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="30-Day AQ Development Roadmap" subtitle="Combined weekly goals & daily tasks — your complete personalised resilience growth plan" pg="9" />
+        <SectionBand title="Weekly Goals + Daily Tasks" sub="Each week shows targeted goals (left) alongside concrete daily actions (right) — work both tracks together" />
+        {weeks.slice(0, 3).map((week, wi) => renderWeek(week, wi))}
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
 
-      <PageFooter name={d.studentName} date={d.generatedDate} />
-    </Page>
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="30-Day AQ Development Roadmap (Continued)" subtitle="Week 4 compounding and consistency phase" pg="9" />
+        <SectionBand title="Week 4 — Compounding & Consistency" sub="Lock in habits, measure growth, and set your next 30-day AQ goal" />
+        {weeks.slice(3).map((week, wi) => renderWeek(week, wi + 3))}
+
+        <View style={{ backgroundColor: C.slate50, borderRadius: 6, padding: 8, marginTop: 2 }}>
+          <Text style={{ fontSize: 8, fontWeight: 700, color: C.dark, marginBottom: 2, fontFamily: 'Inter' }}>The Compound Resilience Principle</Text>
+          <Text style={{ fontSize: 7, color: C.slate600, lineHeight: 1.55, fontFamily: 'Inter', fontWeight: 400 }}>
+            AQ improvement is not linear — it is exponential. The first 7 days are the hardest. By Day 14 habits begin to feel natural. By Day 21 behavioural shifts are visible. By Day 30 your neural pathways have measurably changed. Most people quit before Day 10. You will not.
+          </Text>
+        </View>
+
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
+    </>
   );
 }
 
@@ -1992,25 +2033,39 @@ function MentorshipGuidancePage({ d }: { d: AQReportData }) {
     },
   ];
 
-  return (
-    <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Guidance & Mentorship" subtitle="Evidence-based coaching for emotional resilience, focus, and academic performance" pg="12" />
-      {sections.map((sec) => (
-        <View key={sec.title} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 11, marginBottom: 9 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 7 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: sec.color, marginRight: 8 }} />
-            <Text style={{ fontSize: 10, fontWeight: 700, color: C.dark }}>{sec.title}</Text>
-          </View>
-          {sec.points.map((p, pi) => (
-            <View key={pi} style={{ flexDirection: 'row', paddingLeft: 4, marginBottom: 5 }}>
-              <Text style={{ fontSize: 8, color: sec.color, fontWeight: 700, marginRight: 6 }}>→</Text>
-              <Text style={{ fontSize: 8, fontWeight: 400, color: C.slate700, flex: 1, lineHeight: 1.55 }}>{p}</Text>
-            </View>
-          ))}
+  const renderSection = (sec: (typeof sections)[number]) => (
+    <View key={sec.title} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 11, marginBottom: 9 }} wrap={false}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 7 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: sec.color, marginRight: 8 }} />
+        <Text style={{ fontSize: 10, fontWeight: 700, color: C.dark }}>{sec.title}</Text>
+      </View>
+      {sec.points.map((p, pi) => (
+        <View key={pi} style={{ flexDirection: 'row', paddingLeft: 4, marginBottom: 5 }}>
+          <Text style={{ fontSize: 8, color: sec.color, fontWeight: 700, marginRight: 6 }}>→</Text>
+          <Text style={{ fontSize: 8, fontWeight: 400, color: C.slate700, flex: 1, lineHeight: 1.55 }}>{p}</Text>
         </View>
       ))}
-      <PageFooter name={d.studentName} date={d.generatedDate} />
-    </Page>
+    </View>
+  );
+
+  const primarySections = sections.slice(0, 3);
+  const focusSection = sections.slice(3);
+
+  return (
+    <>
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="Guidance & Mentorship" subtitle="Evidence-based coaching for emotional resilience, focus, and academic performance" pg="12" />
+        {primarySections.map(renderSection)}
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
+
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="Guidance & Mentorship (Continued)" subtitle="Focus, consistency, and sustainable academic performance" pg="12" />
+        <SectionBand title="Focus & Consistency" sub="Strategies for deep work, environment design, and habit formation" />
+        {focusSection.map(renderSection)}
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
+    </>
   );
 }
 
@@ -2023,11 +2078,11 @@ function AQUnderstandingPage({ d }: { d: AQReportData }) {
   const faqs = [
     {
       q: 'What exactly is AQ?',
-      a: 'Adversity Quotient (AQ) is a scientifically-validated measure of how well you respond to adversity — challenges, stress, failure, and pressure. It is distinct from IQ (raw intelligence) and EQ (emotional awareness). AQ specifically measures your resilience capacity: your ability to maintain function and keep moving forward when things go wrong.',
+      a: 'Adversity Quotient (AQ) measures how well you respond to adversity — challenges, stress, failure, and pressure. It is distinct from IQ and EQ. AQ specifically measures your resilience capacity: your ability to maintain function and keep moving forward when things go wrong.',
     },
     {
       q: 'Why does AQ matter for students?',
-      a: 'Research consistently shows that AQ is a stronger predictor of long-term success than academic grades or IQ alone. Students with high AQ recover faster from exam failures, maintain motivation through difficult courses, manage social pressure more effectively, and are significantly less likely to experience burnout. AQ is the "engine" that determines whether your abilities and intelligence actually get used.',
+      a: 'AQ is a strong predictor of long-term success. Students with high AQ recover faster from exam failures, maintain motivation through difficult courses, and manage social pressure more effectively. AQ is the engine that determines whether your abilities actually get used.',
     },
     {
       q: 'Why do I react differently to stress than my friends?',
@@ -2035,7 +2090,7 @@ function AQUnderstandingPage({ d }: { d: AQReportData }) {
     },
     {
       q: 'Can AQ actually improve? How?',
-      a: 'Yes — AQ is one of the most trainable psychological measures available. Unlike IQ, which is largely fixed, AQ responds directly to intentional practice. Neuroplasticity (your brain\'s ability to rewire) means that consistently practising the exercises in this report — the control listing, ownership journaling, domain separation, and endurance reframing — physically changes the neural pathways associated with your adversity response. Measurable improvement typically appears within 21-60 days of consistent practice.',
+      a: 'Yes — AQ is highly trainable. Unlike IQ, AQ responds directly to intentional practice. Consistently practising the exercises in this report — control listing, ownership journaling, domain separation, and endurance reframing — rewires your adversity response. Measurable improvement typically appears within 21-60 days.',
     },
     {
       q: 'What does my score of ' + aq + ' (' + level + ') really mean?',
@@ -2049,7 +2104,7 @@ function AQUnderstandingPage({ d }: { d: AQReportData }) {
     },
     {
       q: 'How long before I see real change?',
-      a: 'Initial shifts in perception and self-awareness: 1-7 days. Noticeable behavioural changes: 14-21 days. Measurable AQ score improvement: 30-60 days. Sustainable resilience habit formation: 60-90 days. These are evidence-based timelines. The key variable is consistency of practice, not intensity. Small, daily practices outperform occasional large efforts.',
+      a: 'Initial shifts: 1-7 days. Noticeable behavioural changes: 14-21 days. Measurable AQ improvement: 30-60 days. Sustainable habit formation: 60-90 days. Consistency of practice matters more than intensity.',
     },
   ];
 
@@ -2122,25 +2177,22 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Study & Productivity Guidance" subtitle="Science-backed strategies for peak academic performance and sustainable output" pg="14" />
-      <SectionBand title="High-Performance Study System" sub="Each section is arranged horizontally: left side = focus area, right side = clear action bullets" />
+      <PageHeader title="Study & Productivity Guidance" subtitle="Science-backed strategies for peak academic performance" pg="14" />
+      <SectionBand title="High-Performance Study System" sub="Focus areas with clear action bullets" />
       {blocks.map((block, bi) => (
-        <View key={bi} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 10, marginBottom: 7 }}>
+        <View key={bi} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginBottom: 6 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
-            <View style={{ width: 145, paddingRight: 8, borderRightWidth: 1, borderRightColor: C.slate200 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <View style={{ width: 130, paddingRight: 8, borderRightWidth: 1, borderRightColor: C.slate200 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: block.color, marginRight: 6 }} />
                 <Text style={{ fontSize: 9, fontWeight: 700, color: C.dark }}>{block.title}</Text>
               </View>
-              <Text style={{ fontSize: 7.2, fontWeight: 400, color: C.dark, lineHeight: 1.45 }}>
-                Focus target: improve consistency, reduce cognitive waste, and protect sustainable output during high-pressure academic periods.
-              </Text>
             </View>
             <View style={{ flex: 1, paddingLeft: 8 }}>
-              {block.items.map((item, ii) => (
-                <View key={ii} style={{ flexDirection: 'row', marginBottom: 4 }}>
-                  <Text style={{ fontSize: 7.4, fontWeight: 700, color: block.color, marginRight: 5 }}>•</Text>
-                  <Text style={{ fontSize: 7.4, fontWeight: 400, color: C.dark, flex: 1, lineHeight: 1.5 }}>{item}</Text>
+              {block.items.slice(0, bi === 0 ? 3 : 4).map((item, ii) => (
+                <View key={ii} style={{ flexDirection: 'row', marginBottom: 3 }}>
+                  <Text style={{ fontSize: 7.3, fontWeight: 700, color: block.color, marginRight: 5 }}>•</Text>
+                  <Text style={{ fontSize: 7.3, fontWeight: 400, color: C.dark, flex: 1, lineHeight: 1.45 }}>{item}</Text>
                 </View>
               ))}
             </View>
@@ -2148,12 +2200,11 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
         </View>
       ))}
 
-      <View style={{ backgroundColor: C.slate50, borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 9, marginTop: 2 }}>
+      <View style={{ backgroundColor: C.slate50, borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginTop: 2 }}>
         <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>Suggested Weekly Tracking Metrics</Text>
         {[
           'Focused study minutes completed (target consistency over volume).',
           'Number of distraction-free deep work blocks completed.',
-          'Sleep quality score (1-10) and its relation to productivity quality.',
         ].map((line, i) => (
           <View key={i} style={{ flexDirection: 'row', marginBottom: 2 }}>
             <Text style={{ fontSize: 7.2, fontWeight: 700, color: C.dark, marginRight: 5 }}>•</Text>
@@ -2176,20 +2227,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
   const avgs  = d.aqHistory.subscaleAverages ?? [];
   const weak  = getDimSolutions(avgs);
 
-  return (
-    <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Parent Guidance Section" subtitle="How to support your child&apos;s emotional resilience and AQ development at home" pg="15" />
-
-      <View style={{ backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: C.sky, padding: 12, marginBottom: 12 }}>
-        <Text style={{ fontSize: 10, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Understanding Your Child's Result</Text>
-        <Text style={{ fontSize: 8.5, fontWeight: 400, color: C.slate700, lineHeight: 1.6 }}>
-          {d.studentName} has completed the Adversity Quotient assessment and scored {aq}/100 ({level} level). This report is not a judgement — it is a map. An AQ score shows where a student is today and exactly what needs to grow. {level === 'Developing' || level === 'Moderate' ? 'A lower-to-moderate AQ score does not predict poor outcomes — it reveals specific growth areas that, with the right support, can improve measurably within 30-60 days.' : 'A strong AQ score indicates your child has developed healthy resilience patterns. Your role now is to sustain the conditions that made this possible.'}
-        </Text>
-      </View>
-
-      <SectionBand title="How Parents Directly Influence AQ" sub="Research shows that parental behaviour is one of the strongest predictors of a student's resilience development" />
-
-      {[
+  const parentItems = [
         {
           title: 'Reduce Outcome Pressure — Increase Process Recognition',
           body: 'Constant focus on grades, ranks, and scores inadvertently trains external attribution ("my value = my result"). Instead, regularly notice and comment on your child\'s effort, persistence, and problem-solving approach. "I noticed you kept working on that even when it was difficult" builds internal locus of control far more than "Great score!"',
@@ -2217,40 +2255,63 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
           body: 'High-AQ students consistently report feeling safe to fail at home. If academic failure triggers significant punishment or disappointment, the student\'s psychological resources are spent managing that fear rather than building resilience. Create space where setbacks can be discussed openly, without shame — focus the conversation on learning, not blame.',
           color: C.amber,
         },
-      ].map((item, i) => (
-        <View key={i} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 10, marginBottom: 7, flexDirection: 'row', alignItems: 'flex-start' }}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: item.color, marginTop: 2.5, marginRight: 9, flexShrink: 0 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 9.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>{item.title}</Text>
-            <Text style={{ fontSize: 7.5, fontWeight: 400, color: C.slate600, lineHeight: 1.6 }}>{item.body}</Text>
-          </View>
+  ];
+
+  const renderParentItem = (item: (typeof parentItems)[number], i: number) => (
+    <View key={i} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 10, marginBottom: 7, flexDirection: 'row', alignItems: 'flex-start' }} wrap={false}>
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: item.color, marginTop: 2.5, marginRight: 9, flexShrink: 0 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 9.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>{item.title}</Text>
+        <Text style={{ fontSize: 7.5, fontWeight: 400, color: C.slate600, lineHeight: 1.6 }}>{item.body}</Text>
+      </View>
+    </View>
+  );
+
+  return (
+    <>
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="Parent Guidance Section" subtitle="How to support your child&apos;s emotional resilience and AQ development at home" pg="15" />
+
+        <View style={{ backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: C.sky, padding: 12, marginBottom: 12 }}>
+          <Text style={{ fontSize: 10, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Understanding Your Child's Result</Text>
+          <Text style={{ fontSize: 8.5, fontWeight: 400, color: C.slate700, lineHeight: 1.6 }}>
+            {d.studentName} has completed the Adversity Quotient assessment and scored {aq}/100 ({level} level). This report is not a judgement — it is a map. An AQ score shows where a student is today and exactly what needs to grow. {level === 'Developing' || level === 'Moderate' ? 'A lower-to-moderate AQ score does not predict poor outcomes — it reveals specific growth areas that, with the right support, can improve measurably within 30-60 days.' : 'A strong AQ score indicates your child has developed healthy resilience patterns. Your role now is to sustain the conditions that made this possible.'}
+          </Text>
         </View>
-      ))}
 
-      <View style={{ backgroundColor: C.slate50, borderRadius: 8, padding: 10, marginTop: 4 }}>
-        <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>A Note for Parents</Text>
-        <Text style={{ fontSize: 8, fontWeight: 400, color: C.slate600, lineHeight: 1.6 }}>
-          The fact that {d.studentName} has completed this assessment demonstrates curiosity and self-awareness — qualities that are already high-AQ behaviors. Your support, framed as belief rather than pressure, will be the single greatest accelerator of their growth. You do not need to become a resilience expert — you just need to create the conditions where resilience can grow.
-        </Text>
-      </View>
+        <SectionBand title="How Parents Directly Influence AQ" sub="Research shows that parental behaviour is one of the strongest predictors of a student's resilience development" />
+        {parentItems.map(renderParentItem)}
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
 
-      <View style={{ backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 10, marginTop: 7 }}>
-        <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Parent Action Dashboard (Weekly)</Text>
-        {[
-          'Weekly 20-minute reflective conversation: ask what challenge was hardest and what was learned from it.',
-          'Use process praise at least 3 times a week (effort, strategy, persistence), not only result praise.',
-          'Keep one low-pressure family routine that supports emotional safety (walk, meal, or device-free talk time).',
-          'Monitor early stress signs: sleep disturbance, irritability, withdrawal, avoidance. Respond with support before escalation.',
-        ].map((item, i) => (
-          <View key={i} style={{ flexDirection: 'row', marginBottom: 3 }}>
-            <Text style={{ fontSize: 7.3, fontWeight: 700, color: C.dark, marginRight: 5 }}>•</Text>
-            <Text style={{ fontSize: 7.3, fontWeight: 400, color: C.dark, lineHeight: 1.45, flex: 1 }}>{item}</Text>
-          </View>
-        ))}
-      </View>
+      <Page size="A4" style={S.contentPage}>
+        <PageHeader title="Parent Guidance Section (Continued)" subtitle="Notes and weekly action dashboard for parents" pg="15" />
 
-      <PageFooter name={d.studentName} date={d.generatedDate} />
-    </Page>
+        <View style={{ backgroundColor: C.slate50, borderRadius: 8, padding: 10, marginBottom: 10 }}>
+          <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>A Note for Parents</Text>
+          <Text style={{ fontSize: 8, fontWeight: 400, color: C.slate600, lineHeight: 1.6 }}>
+            The fact that {d.studentName} has completed this assessment demonstrates curiosity and self-awareness — qualities that are already high-AQ behaviors. Your support, framed as belief rather than pressure, will be the single greatest accelerator of their growth. You do not need to become a resilience expert — you just need to create the conditions where resilience can grow.
+          </Text>
+        </View>
+
+        <View style={{ backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 10 }}>
+          <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Parent Action Dashboard (Weekly)</Text>
+          {[
+            'Weekly 20-minute reflective conversation: ask what challenge was hardest and what was learned from it.',
+            'Use process praise at least 3 times a week (effort, strategy, persistence), not only result praise.',
+            'Keep one low-pressure family routine that supports emotional safety (walk, meal, or device-free talk time).',
+            'Monitor early stress signs: sleep disturbance, irritability, withdrawal, avoidance. Respond with support before escalation.',
+          ].map((item, i) => (
+            <View key={i} style={{ flexDirection: 'row', marginBottom: 3 }}>
+              <Text style={{ fontSize: 7.3, fontWeight: 700, color: C.dark, marginRight: 5 }}>•</Text>
+              <Text style={{ fontSize: 7.3, fontWeight: 400, color: C.dark, lineHeight: 1.45, flex: 1 }}>{item}</Text>
+            </View>
+          ))}
+        </View>
+
+        <PageFooter name={d.studentName} date={d.generatedDate} />
+      </Page>
+    </>
   );
 }
 
