@@ -52,9 +52,9 @@ export default function AdversityOrgDashboard({
   if (!overview || overview.overview.totalAttempts === 0) {
     return (
       <OrgDashboardEmpty
-        title="Adversity Quotient (AQ) — Command Centre"
-        subtitle="CORE dimension analytics appear after students complete the AQ assessment."
-        assessmentName="Adversity Quotient Assessment"
+        title="Resilience Quotient (RQ) — Command Centre"
+        subtitle="CORE dimension analytics appear after students complete the RQ assessment."
+        assessmentName="Resilience Quotient Assessment"
         studentsPath={studentsPath}
         accentClass="from-sky-500 to-blue-500"
       />
@@ -92,9 +92,9 @@ export default function AdversityOrgDashboard({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-black">Adversity Quotient Dashboard</h1>
+          <h1 className="text-2xl font-bold text-black">Resilience Quotient Dashboard</h1>
           <p className="text-sm text-black/70 mt-1">
-            Good morning, {adminFirstName} — live AQ assessment activity for your organization.
+            Good morning, {adminFirstName} — live RQ assessment activity for your organization.
           </p>
         </div>
         <div className="hidden sm:flex">
@@ -115,7 +115,7 @@ export default function AdversityOrgDashboard({
           sub={`${overview.overview.totalAttempts} completed attempts`}
         />
         <StatCard
-          label="Average AQ"
+          label="Average RQ"
           value={overview.overview.avgScore}
           sub={`Best ${overview.overview.bestScore} · Lowest ${overview.overview.worstScore}`}
         />
@@ -127,18 +127,18 @@ export default function AdversityOrgDashboard({
         <StatCard
           label="Assessments Live"
           value={1}
-          sub="Adversity Quotient published"
+          sub="Resilience Quotient published"
         />
       </div>
 
-      <ChartCard title="AQ distribution" description="Current cohort split by resilience band.">
+      <ChartCard title="RQ distribution" description="Current cohort split by resilience band.">
         {hasDistribution ? (
           <PieRiskChart data={adminDistribution} />
         ) : (
           <EmptyState
             variant="analytics"
             title="No distribution data"
-            description="AQ band distribution will appear once students complete assessments."
+            description="RQ band distribution will appear once students complete assessments."
             compact
           />
         )}
@@ -170,7 +170,7 @@ export default function AdversityOrgDashboard({
               },
               { header: "Cohort", render: (row) => <span>{row.className}</span> },
               {
-                header: "AQ Score",
+                header: "RQ Score",
                 render: (row) => (
                   <span
                     className={`font-bold ${
@@ -206,7 +206,7 @@ export default function AdversityOrgDashboard({
             <EmptyState
               variant="students"
               title="No students yet"
-              description="Student records will appear here once accounts complete the AQ assessment."
+              description="Student records will appear here once accounts complete the RQ assessment."
               compact
             />
           </div>
@@ -225,7 +225,7 @@ export default function AdversityOrgDashboard({
         <div className="space-y-2.5">
           <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-black">Adversity Quotient Assessment</p>
+              <p className="truncate text-sm font-semibold text-black">Resilience Quotient Assessment</p>
               <p className="text-xs text-black/60">CORE resilience · Control, Ownership, Reach, Endurance</p>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">

@@ -160,9 +160,9 @@ const AQ_LEVEL_DESCRIPTIONS: Record<string, string> = {
   Exceptional:
     "You operate in the highest tier of adversity intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
   Strong:
-    "Your AQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
+    "Your RQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
   Moderate:
-    "Your AQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
+    "Your RQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
   Developing:
     "Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside.",
 };
@@ -474,7 +474,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
   if (normalizedCode === "ADVERSITY_TEST") {
     const aqEvaluation = parseAqEvaluation(evaluation);
     if (!aqEvaluation) {
-      throw new Error("AQ report data is not available for this attempt");
+      throw new Error("RQ report data is not available for this attempt");
     }
     const attempts = await resolveAqAttemptsForReport(normalizedCode, aqAttempts, authToken, fetchPath);
     const blob = await generateAQReportBlob(
@@ -760,7 +760,7 @@ export default function AssessmentReportView({
         <div className="max-w-6xl mx-auto space-y-6">
           <div className={`rounded-2xl bg-gradient-to-br ${AQ_LEVEL_GRADIENTS[aqReport.aqLevel] || AQ_LEVEL_GRADIENTS.Moderate} p-8 text-white shadow-xl`}>
             <div className="text-center">
-              <p className="text-lg font-semibold opacity-90 mb-4">Your AQ Score</p>
+              <p className="text-lg font-semibold opacity-90 mb-4">Your RQ Score</p>
               <div className="text-7xl font-bold mb-4">{aqReport.totalScore}</div>
               <div className="text-2xl font-semibold mb-2">{aqReport.aqLevel} Resilience</div>
               <p className="text-base opacity-90 max-w-3xl mx-auto">{AQ_LEVEL_DESCRIPTIONS[aqReport.aqLevel] || AQ_LEVEL_DESCRIPTIONS.Moderate}</p>
@@ -797,7 +797,7 @@ export default function AssessmentReportView({
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Key Insights</h3>
                 <ul className="space-y-3 text-slate-700">
-                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Your AQ score indicates your overall capacity to handle adversity and change.</span></li>
+                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Your RQ score indicates your overall capacity to handle adversity and change.</span></li>
                   <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>The four dimensions — Control, Ownership, Reach, and Endurance — show different aspects of resilience.</span></li>
                   <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Focus on dimensions with lower scores to strengthen your overall resilience.</span></li>
                 </ul>

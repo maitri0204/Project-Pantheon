@@ -383,7 +383,7 @@ const content: Record<string, AssessmentPageContent> = {
 
       ADVERSITY_TEST: {
         theme: {
-          badge: "Adversity Quotient (AQ) Assessment",
+          badge: "Resilience Quotient (RQ) Assessment",
           badgeClass: "bg-rose-50 text-rose-800",
           gradient: "from-rose-50 via-white to-slate-50",
           supportCardClass: "bg-rose-50 text-slate-900",
@@ -393,7 +393,7 @@ const content: Record<string, AssessmentPageContent> = {
         hero: {
           title: "Build Resilience. Respond Better Under Pressure.",
           subtitle:
-            "The AQ Assessment measures how students and professionals respond to setbacks, stress, and challenges in real-life situations.",
+            "The RQ Assessment measures how students and professionals respond to setbacks, stress, and challenges in real-life situations.",
           supportingLine:
             "It maps your resilience profile across four proven dimensions: Control, Ownership, Reach, and Endurance.",
           sidePoints: ["30 questions", "CORE model scoring", "Action-focused resilience report"],
@@ -408,7 +408,7 @@ const content: Record<string, AssessmentPageContent> = {
             ],
           },
           {
-            title: "What AQ measures",
+            title: "What RQ measures",
             subtitle: "Your response pattern during difficult situations.",
             cards: [
               { title: "Control", body: "How much influence you feel you have over a difficult situation." },
@@ -416,21 +416,21 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Reach", body: "How far you allow one problem to affect other areas of life." },
               { title: "Endurance", body: "How long you believe setbacks will continue before improvement happens." },
             ],
-            callout: "These four dimensions create your AQ profile and explain how you currently handle adversity.",
+            callout: "These four dimensions create your RQ profile and explain how you currently handle adversity.",
           },
           {
             title: "Why this assessment matters",
             bullets: [
               "Resilience predicts long-term success more reliably than short-term performance",
-              "Students with stronger AQ recover faster from low scores and pressure",
+              "Students with stronger RQ recover faster from low scores and pressure",
               "Ownership mindset improves decision quality and confidence",
-              "AQ can be developed through guided habits and reflection",
+              "RQ can be developed through guided habits and reflection",
             ],
           },
           {
             title: "What you receive in the report",
             grid: [
-              { title: "Overall AQ level", body: "A clear total AQ score with interpretation." },
+              { title: "Overall RQ level", body: "A clear total RQ score with interpretation." },
               { title: "Subscale breakdown", body: "Control, Ownership, Reach, and Endurance scores." },
               { title: "Strength and risk areas", body: "Where your resilience pattern is strongest and where support is needed." },
               { title: "Action roadmap", body: "Practical recommendations to improve stress response and bounce-back behavior." },
@@ -440,11 +440,11 @@ const content: Record<string, AssessmentPageContent> = {
             title: "How to use this report",
             bullets: [
               "Review the result with a counselor, parent, or mentor",
-              "Focus on one weak AQ dimension at a time",
+              "Focus on one weak RQ dimension at a time",
               "Track progress by re-attempting after habit changes",
               "Use insights during exam prep, career planning, and performance review",
             ],
-            callout: "AQ is not fixed. With structure and reflection, resilience can be improved significantly.",
+            callout: "RQ is not fixed. With structure and reflection, resilience can be improved significantly.",
           },
         ],
       },
@@ -1050,7 +1050,7 @@ const content: Record<string, AssessmentPageContent> = {
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
 
                 <div className="mt-8 rounded-3xl bg-rose-50 p-6 shadow-lg">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-700">AQ dimension snapshot</p>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-700">RQ dimension snapshot</p>
                   <p className="mt-2 text-sm leading-7 text-slate-700">A structured view of how you handle pressure, setbacks, and recovery.</p>
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     {heroBadgeItems.map((item) => (

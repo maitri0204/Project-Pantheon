@@ -803,8 +803,8 @@ const S = StyleSheet.create({
   rqCoverBg:   { width: 595, height: 841, position: 'absolute', top: 0, left: 0 },
   rqCoverStudentName: {
     position: 'absolute',
-    left: 56,
-    top: 432,
+    left: 58,
+    top: 400,
     fontSize: 26,
     fontWeight: 700,
     color: C.white,
@@ -812,8 +812,8 @@ const S = StyleSheet.create({
   },
   rqCoverScoreNum: {
     position: 'absolute',
-    left: 56,
-    top: 472,
+    left: 52,
+    top: 536,
     width: 98,
     textAlign: 'center',
     fontSize: 30,
@@ -823,8 +823,8 @@ const S = StyleSheet.create({
   },
   rqCoverScoreLabel: {
     position: 'absolute',
-    left: 56,
-    top: 508,
+    left: 52,
+    top: 566,
     width: 98,
     textAlign: 'center',
     fontSize: 7.5,
@@ -834,8 +834,8 @@ const S = StyleSheet.create({
   },
   rqCoverLevelText: {
     position: 'absolute',
-    left: 162,
-    top: 478,
+    left: 168,
+    top: 536,
     width: 178,
     textAlign: 'center',
     fontSize: 18,
@@ -844,8 +844,8 @@ const S = StyleSheet.create({
   },
   rqCoverLevelLabel: {
     position: 'absolute',
-    left: 162,
-    top: 508,
+    left: 168,
+    top: 566,
     width: 178,
     textAlign: 'center',
     fontSize: 7.5,
@@ -854,8 +854,8 @@ const S = StyleSheet.create({
   },
   rqCoverDate: {
     position: 'absolute',
-    left: 118,
-    bottom: 52,
+    left: 110,
+    bottom: 44,
     fontSize: 8,
     fontWeight: 400,
     color: '#cbd5e1',
@@ -1680,8 +1680,8 @@ function FinalSummaryPage({ d }: { d: AQReportData }) {
 
         <View style={S.finalBranding}>
           <View>
-            <Text style={S.finalBrandingText}>Resilience Quotient · RQ Analytics Platform</Text>
-            <Text style={[S.finalBrandingText, { marginTop: 2 }]}>adversity.app · Confidential & Proprietary</Text>
+            <Text style={S.finalBrandingText}>KAREER studio · Resilience Quotient (RQ)</Text>
+            <Text style={[S.finalBrandingText, { marginTop: 2 }]}>www.kareerstudio.com · Confidential & Proprietary</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={S.finalBrandingText}>Generated: {d.generatedDate}</Text>

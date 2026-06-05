@@ -18,7 +18,7 @@ const TEST_DASHBOARD_META: Record<string, Omit<TestDashboardMeta, "code">> = {
     enabled: true,
   },
   ADVERSITY_TEST: {
-    title: "Adversity Quotient (AQ)",
+    title: "Resilience Quotient (RQ)",
     subtitle: "Resilience levels and CORE dimension analytics",
     gradient: "from-orange-600 to-amber-500",
     accent: "bg-orange-50 text-orange-700 border-orange-100",

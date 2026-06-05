@@ -1,7 +1,7 @@
 /**
- * Adversity Quotient (AQ) Assessment Component
+ * Resilience Quotient (RQ) Assessment Component
  *
- * This component allows users to take the AQ assessment with real-time progress tracking,
+ * This component allows users to take the RQ assessment with real-time progress tracking,
  * dimension scoring, and report generation.
  */
 
@@ -75,9 +75,9 @@ const getLevelDescription = (level: string): string => {
     Exceptional:
       "You operate in the highest tier of adversity intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
     Strong:
-      "Your AQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
+      "Your RQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
     Moderate:
-      "Your AQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
+      "Your RQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
     Developing:
       "Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside.",
   };
@@ -152,9 +152,9 @@ async function downloadAQPdf(result: AQResult, attempt: AQAttempt) {
   };
 
   let y = 20;
-  line("Adversity Quotient Assessment Report", margin, y, 18, true, "#0f172a");
+  line("Resilience Quotient Assessment Report", margin, y, 18, true, "#0f172a");
   y += 8;
-  line(`AQ Level: ${level}`, margin, y, 13, true, level === "Exceptional" ? "#059669" : level === "Strong" ? "#0284c7" : level === "Moderate" ? "#d97706" : "#e11d48");
+  line(`RQ Level: ${level}`, margin, y, 13, true, level === "Exceptional" ? "#059669" : level === "Strong" ? "#0284c7" : level === "Moderate" ? "#d97706" : "#e11d48");
   y += 7;
   line(`Score: ${result.totalScore}/100`, margin, y, 12, true);
   y += 6;
@@ -195,7 +195,7 @@ async function downloadAQPdf(result: AQResult, attempt: AQAttempt) {
   line("Key Insights", margin, y, 13, true);
   y += 7;
   [
-    "Your AQ score indicates your overall capacity to handle adversity and change.",
+    "Your RQ score indicates your overall capacity to handle adversity and change.",
     "The four dimensions show different aspects of resilience: Control, Ownership, Reach, and Endurance.",
     "Focus on dimensions with lower scores to strengthen your overall resilience.",
   ].forEach((bullet) => {
@@ -217,7 +217,7 @@ async function downloadAQPdf(result: AQResult, attempt: AQAttempt) {
     y += 6;
   });
 
-  pdf.save(`Adversity_Quotient_Report_${attempt._id}.pdf`);
+  pdf.save(`Resilience_Quotient_Report_${attempt._id}.pdf`);
 }
 
 const ResultCard: React.FC<ResultProps> = ({ attempt, result }) => {
@@ -227,13 +227,13 @@ const ResultCard: React.FC<ResultProps> = ({ attempt, result }) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">Your AQ Assessment Results</h1>
-          <p className="text-slate-600">Adversity Quotient Analysis & Resilience Profile</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">Your RQ Assessment Results</h1>
+          <p className="text-slate-600">Resilience Quotient Analysis & Resilience Profile</p>
         </div>
 
         <div className={`bg-gradient-to-br ${getLevelBadgeClasses(result.aqLevel)} rounded-2xl shadow-xl p-8 text-white`}>
           <div className="text-center">
-            <p className="text-lg font-semibold opacity-90 mb-4">Your AQ Score</p>
+            <p className="text-lg font-semibold opacity-90 mb-4">Your RQ Score</p>
             <div className="text-7xl font-bold mb-4">{result.totalScore}</div>
             <div className="text-2xl font-semibold mb-2">{result.aqLevel} Resilience</div>
             <p className="text-base opacity-90 max-w-3xl mx-auto">{getLevelDescription(result.aqLevel)}</p>
@@ -270,7 +270,7 @@ const ResultCard: React.FC<ResultProps> = ({ attempt, result }) => {
               <ul className="space-y-3 text-slate-700">
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-3 mt-0.5">•</span>
-                  <span>Your AQ score indicates your overall capacity to handle adversity and change.</span>
+                  <span>Your RQ score indicates your overall capacity to handle adversity and change.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-3 mt-0.5">•</span>
@@ -301,7 +301,7 @@ const ResultCard: React.FC<ResultProps> = ({ attempt, result }) => {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h3 className="text-lg font-semibold text-slate-900">Report Actions</h3>
-              <p className="text-sm text-slate-600">Print or download a copy of your AQ report.</p>
+              <p className="text-sm text-slate-600">Print or download a copy of your RQ report.</p>
             </div>
             <div className="flex gap-3 flex-wrap">
               <button
@@ -512,7 +512,7 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Adversity Quotient Assessment</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Resilience Quotient Assessment</h1>
             <p className="text-slate-600 text-sm">
               Question {currentIndex + 1} of {questions.length}
             </p>
