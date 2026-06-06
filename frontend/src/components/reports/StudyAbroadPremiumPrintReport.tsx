@@ -24,6 +24,12 @@ const SA_COVER_SCALE_X = 794 / 595;
 const SA_COVER_SCALE_Y = 1123 / 841;
 const SA_COVER_IMAGE = '/study-abroad/cover.jpg';
 const SA_BACK_COVER_IMAGE = '/study-abroad/back-cover.jpg';
+/** Nudge score/date up vs RQ base coords to match Study Abroad template placeholders. */
+const SA_COVER_SCORE_NUM_TOP = 526;
+const SA_COVER_SCORE_LABEL_TOP = 564;
+const SA_COVER_LEVEL_TEXT_TOP = 530;
+const SA_COVER_LEVEL_LABEL_TOP = 564;
+const SA_COVER_DATE_BOTTOM_PDF = 50;
 
 function saCoverOverlayStyle(
   pdfLeft: number,
@@ -681,20 +687,21 @@ export default function StudyAbroadPremiumPrintReport({
           </p>
 
           <p
-            style={saCoverOverlayStyle(52, 536, {
+            style={saCoverOverlayStyle(52, SA_COVER_SCORE_NUM_TOP, {
               width: Math.round(98 * SA_COVER_SCALE_X),
               textAlign: 'center',
               fontSize: Math.round(30 * SA_COVER_SCALE_X),
               fontWeight: 700,
               color: '#0ea5e9',
               margin: 0,
+              lineHeight: 1,
               fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
             })}
           >
             {result.overallScore}
           </p>
           <p
-            style={saCoverOverlayStyle(52, 566, {
+            style={saCoverOverlayStyle(52, SA_COVER_SCORE_LABEL_TOP, {
               width: Math.round(98 * SA_COVER_SCALE_X),
               textAlign: 'center',
               fontSize: Math.round(7.5 * SA_COVER_SCALE_X),
@@ -709,20 +716,21 @@ export default function StudyAbroadPremiumPrintReport({
           </p>
 
           <p
-            style={saCoverOverlayStyle(168, 536, {
+            style={saCoverOverlayStyle(168, SA_COVER_LEVEL_TEXT_TOP, {
               width: Math.round(178 * SA_COVER_SCALE_X),
               textAlign: 'center',
               fontSize: Math.round(18 * SA_COVER_SCALE_X),
               fontWeight: 700,
               color: bc.text,
               margin: 0,
+              lineHeight: 1.15,
               fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
             })}
           >
             {bandLabel}
           </p>
           <p
-            style={saCoverOverlayStyle(168, 566, {
+            style={saCoverOverlayStyle(168, SA_COVER_LEVEL_LABEL_TOP, {
               width: Math.round(178 * SA_COVER_SCALE_X),
               textAlign: 'center',
               fontSize: Math.round(7.5 * SA_COVER_SCALE_X),
@@ -740,11 +748,12 @@ export default function StudyAbroadPremiumPrintReport({
             style={{
               position: 'absolute',
               left: Math.round(110 * SA_COVER_SCALE_X),
-              bottom: Math.round(44 * SA_COVER_SCALE_Y),
+              bottom: Math.round(SA_COVER_DATE_BOTTOM_PDF * SA_COVER_SCALE_Y),
               fontSize: Math.round(8 * SA_COVER_SCALE_X),
               fontWeight: 400,
               color: '#cbd5e1',
               margin: 0,
+              lineHeight: 1,
               fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
             }}
           >
