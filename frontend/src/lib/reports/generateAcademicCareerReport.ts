@@ -35,6 +35,7 @@ type ReportData = {
   submittedAt?: string;
   attemptId?: string;
   evaluation: AcademicCareerEvaluation;
+  backCoverImageSrc?: string;
   organizationBranding?: {
     organizationName?: string;
     logoUrl?: string;
@@ -72,6 +73,7 @@ const INTEREST_NAMES: Record<string, string> = {
 };
 
 const buildPdfReportPayload = (data: ReportData): AcademicCareerPdfReport => {
+  const backCoverImageSrc = data.backCoverImageSrc;
   const scores = (data.evaluation.interestScores || []).map((item) => ({
     code: String(item.code || "").toUpperCase(),
     name: INTEREST_NAMES[String(item.code || "").toUpperCase()] || String(item.code || "").toUpperCase(),
@@ -117,6 +119,7 @@ const buildPdfReportPayload = (data: ReportData): AcademicCareerPdfReport => {
           careers: CAREER_FALLBACKS[score.code] ?? ["Career Exploration"],
           streams: [String(data.evaluation.streamAnalysis?.recommendedStream || "Exploratory Stream")],
         })),
+    backCoverImageSrc,
   };
 };
 

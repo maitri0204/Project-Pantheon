@@ -1,5 +1,5 @@
 import React from "react";
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 export type AcademicCareerPdfReport = {
   resultId: string;
@@ -30,6 +30,8 @@ export type AcademicCareerPdfReport = {
     color?: string;
     icon?: string;
   }>;
+  /** Data URL or absolute URL for back cover (3.jpg) */
+  backCoverImageSrc?: string;
 };
 
 type InterestMeta = {
@@ -192,36 +194,38 @@ const styles = StyleSheet.create({
   sectionNum: { fontSize: 7.5, color: "#7eb8d9", marginBottom: 2 },
   sectionTitle: { fontSize: 14, fontFamily: "Helvetica-Bold", color: "#ffffff" },
   subHead: { fontSize: 10.5, fontFamily: "Helvetica-Bold", color: "#0c1e3c", borderLeftWidth: 3, borderLeftColor: "#1d6eb0", paddingLeft: 8, marginBottom: 8, marginTop: 12 },
-  body: { fontSize: 9.5, color: "#111111", lineHeight: 1.65, marginBottom: 7 },
+  body: { fontSize: 9.5, fontFamily: "Helvetica", color: "#111111", lineHeight: 1.65, marginBottom: 7 },
   bodyBold: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#111111", lineHeight: 1.65, marginBottom: 7 },
-  bullet: { fontSize: 9.5, color: "#111111", lineHeight: 1.65, marginBottom: 4, paddingLeft: 14 },
-  note: { fontSize: 9, color: "#333333", lineHeight: 1.6, fontStyle: "italic", marginBottom: 6 },
+  bullet: { fontSize: 9.5, fontFamily: "Helvetica", color: "#111111", lineHeight: 1.65, marginBottom: 4, paddingLeft: 14 },
+  note: { fontSize: 9, fontFamily: "Helvetica", color: "#333333", lineHeight: 1.6, marginBottom: 6 },
   table: { borderWidth: 1, borderColor: "#c8d4e0", borderRadius: 3, marginBottom: 14, overflow: "hidden" },
   thr: { flexDirection: "row", backgroundColor: "#0c1e3c" },
   tr: { flexDirection: "row", borderTopWidth: 1, borderTopColor: "#dce6f0" },
   trAlt: { flexDirection: "row", borderTopWidth: 1, borderTopColor: "#dce6f0", backgroundColor: "#f4f7fb" },
   th: { fontSize: 8.4, fontFamily: "Helvetica-Bold", color: "#ffffff", padding: 7 },
-  td: { fontSize: 8.8, color: "#111111", padding: 7, lineHeight: 1.45 },
+  td: { fontSize: 8.8, fontFamily: "Helvetica", color: "#111111", padding: 7, lineHeight: 1.45 },
   tdB: { fontSize: 8.8, fontFamily: "Helvetica-Bold", color: "#111111", padding: 7 },
   infoBox: { borderWidth: 1, borderColor: "#c8d4e0", borderRadius: 4, padding: 12, marginBottom: 12, backgroundColor: "#f4f7fb" },
   warnBox: { borderWidth: 1, borderColor: "#c8a060", borderRadius: 4, padding: 11, marginBottom: 12, backgroundColor: "#fffbf0" },
   warnTitle: { fontSize: 9.5, fontFamily: "Helvetica-Bold", color: "#7a4800", marginBottom: 5 },
-  warnText: { fontSize: 9, color: "#5a3000", lineHeight: 1.6 },
+  warnText: { fontSize: 9, fontFamily: "Helvetica", color: "#5a3000", lineHeight: 1.6 },
   intCard: { borderWidth: 1, borderColor: "#c8d4e0", borderRadius: 4, padding: 12, marginBottom: 14 },
   intCardRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 7 },
   intCardRank: { fontSize: 8, color: "#4a7a99", backgroundColor: "#e4eef8", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10, fontFamily: "Helvetica-Bold" },
   intCardTitle: { fontSize: 12, fontFamily: "Helvetica-Bold", color: "#0c1e3c", marginBottom: 4 },
-  intCardMeta: { fontSize: 9, color: "#333333", marginBottom: 7 },
+  intCardMeta: { fontSize: 9, fontFamily: "Helvetica", color: "#333333", marginBottom: 7 },
   scoreBarTrack: { height: 8, backgroundColor: "#e2e8f0", borderRadius: 999, overflow: "hidden", flex: 1 },
   scoreBarFill: { height: 8, borderRadius: 999 },
   scoreRow: { flexDirection: "row", alignItems: "center", marginBottom: 9 },
-  scoreLabel: { width: 82, fontSize: 8.6, color: "#334155", paddingRight: 6 },
-  scorePct: { width: 24, fontSize: 8.6, color: "#334155", textAlign: "right", paddingLeft: 6 },
+  scoreLabel: { width: 82, fontSize: 8.6, fontFamily: "Helvetica", color: "#334155", paddingRight: 6 },
+  scorePct: { width: 24, fontSize: 8.6, fontFamily: "Helvetica", color: "#334155", textAlign: "right", paddingLeft: 6 },
   chartGrid: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", height: 165, marginTop: 12, marginBottom: 8 },
   chartWrap: { flex: 1, alignItems: "center" },
   chartBar: { width: 18, backgroundColor: "#0c1e3c", borderTopLeftRadius: 4, borderTopRightRadius: 4 },
-  chartCode: { marginTop: 7, fontSize: 8, color: "#1e293b" },
-  chartPct: { fontSize: 7, color: "#64748b" },
+  chartCode: { marginTop: 7, fontSize: 8, fontFamily: "Helvetica", color: "#1e293b" },
+  chartPct: { fontSize: 7, fontFamily: "Helvetica", color: "#64748b" },
+  backCoverPage: { padding: 0, fontFamily: "Helvetica" },
+  backCoverBg: { width: 595, height: 841, position: "absolute", top: 0, left: 0 },
 });
 
 function pdfDate(date: string) {
@@ -653,16 +657,20 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
         <Text style={styles.body}>
           This does not mean the student must choose only these career areas. It means these areas should be explored seriously through subjects, projects, competitions, reading, workshops, and counseling discussions. Detailed analysis of each of the top three areas follows in Sections 8, 9, and 10.
         </Text>
-        {analysis.careerRecommendations.length > 0 && (
-          <View>
-            {subHeading("Career Areas Recommended for Exploration")}
-            {analysis.careerRecommendations.slice(0, 8).map((career, idx) => (
-              <Text key={`career-rec-${idx}`} style={styles.bullet}>{"\u2022  "}{career}</Text>
-            ))}
-          </View>
-        )}
         {footer(report.student.fullName)}
       </Page>
+
+      {analysis.careerRecommendations.length > 0 && (
+        <Page size="A4" style={styles.page}>
+          {sectionHeader(report.student.fullName, "Section 6 - Top 3 Interest Areas (continued)")}
+          <View style={styles.sectionWrap}><Text style={styles.sectionNum}>Section 6</Text><Text style={styles.sectionTitle}>Top 3 Interest Areas - Overview (continued)</Text></View>
+          {subHeading("Career Areas Recommended for Exploration")}
+          {analysis.careerRecommendations.slice(0, 8).map((career, idx) => (
+            <Text key={`career-rec-${idx}`} style={styles.bullet}>{"\u2022  "}{career}</Text>
+          ))}
+          {footer(report.student.fullName)}
+        </Page>
+      )}
 
       {top3.map((item, index) => {
         const meta = INTEREST_MAP[item.code] ?? INTEREST_MAP["B"];
@@ -750,6 +758,12 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
         </View>
         <Text style={styles.bodyBold}>Stream Guidance</Text>
         {analysis.streamGuidance.map((line, i) => <Text key={i} style={styles.bullet}>{"\u2022  "}{line}</Text>)}
+        {footer(report.student.fullName)}
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+        {sectionHeader(report.student.fullName, "Section 11 - Stream Readiness (continued)")}
+        <View style={styles.sectionWrap}><Text style={styles.sectionNum}>Section 11</Text><Text style={styles.sectionTitle}>Stream Readiness Analysis (continued)</Text></View>
         <View style={styles.warnBox}><Text style={styles.warnTitle}>Caution Areas for This Student</Text>{analysis.streamCautionAreas.map((line, i) => <Text key={i} style={[styles.warnText, { marginBottom: 3 }]}>{"\u2022  "}{line}</Text>)}</View>
         {footer(report.student.fullName)}
       </Page>
@@ -865,6 +879,12 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
           <View style={styles.thr}><Text style={[styles.th, { width: "12%" }]}>Week</Text><Text style={[styles.th, { width: "30%" }]}>5 Goals</Text><Text style={[styles.th, { width: "30%" }]}>5 Weekly Tasks</Text><Text style={[styles.th, { width: "28%" }]}>Detailed Guidance</Text></View>
           {[["Week 1", "1. Understand your top strengths clearly\n2. Set fixed study time daily\n3. Define one priority subject goal\n4. Start reflection journal habit\n5. Build a distraction-control plan", "1. Read full report with parent\n2. Select top 2 focus areas\n3. Do 5 focused sessions (30 min)\n4. Write 1 daily learning summary\n5. Share progress with mentor once", "Focus: Build routine, not perfection.\nExecution: Complete the planned study blocks daily.\nReview: Write one win and one gap every evening.\nAdjustment: If a day is missed, restart the next day without guilt."], ["Week 2", "1. Increase execution speed\n2. Improve weak-topic confidence\n3. Strengthen classroom engagement\n4. Keep daily streak discipline\n5. Build effort before motivation", "1. Complete 2 mini practical activities\n2. Ask 1 teacher for targeted advice\n3. Revise 2 weak concepts deeply\n4. Continue 5 focused sessions\n5. Submit 1 small output (note/model/slides)", "Focus: Build momentum through consistent completion.\nExecution: Do difficult tasks first, then easy tasks.\nReview: Track completion rate instead of mood.\nAdjustment: If consistency drops, reduce scope but keep daily continuity."], ["Week 3", "1. Apply learning under pressure\n2. Improve resilience in difficult topics\n3. Convert knowledge into output\n4. Improve communication confidence\n5. Reduce repeated mistakes", "1. Complete 1 project milestone\n2. Teach 1 concept to a peer\n3. Do 1 timed practice session\n4. Continue daily reflection and review\n5. Identify and correct top 3 recurring errors", "Focus: Stay process-driven under pressure.\nExecution: Follow plan-execute-review-adjust every day.\nReview: Treat mistakes as diagnostic feedback.\nAdjustment: Prioritize steady improvement over emotional ups and downs."], ["Week 4", "1. Measure growth from Week 1 baseline\n2. Consolidate strong study habits\n3. Align effort with long-term stream goals\n4. Build next-month roadmap clearly\n5. Finalize accountability structure", "1. Conduct parent/counselor review meeting\n2. Compare Week 1 vs Week 4 progress\n3. Document strengths and gaps\n4. Write next 30-day action plan\n5. Define 3 new goals with deadlines", "Focus: Consolidate learning and prepare next cycle.\nExecution: Review evidence (sessions, outputs, confidence, alignment).\nReview: Compare Week 1 baseline with Week 4 outcomes.\nAdjustment: Finalize a realistic, time-bound 30-day plan with accountability."]].map((row, i) => <View key={row[0]} style={i % 2 === 0 ? styles.tr : styles.trAlt}><Text style={[styles.tdB, { width: "12%" }]}>{row[0]}</Text><Text style={[styles.td, { width: "30%" }]}>{row[1]}</Text><Text style={[styles.td, { width: "30%" }]}>{row[2]}</Text><Text style={[styles.td, { width: "28%" }]}>{row[3]}</Text></View>)}
         </View>
+        {footer(report.student.fullName)}
+      </Page>
+
+      <Page size="A4" style={styles.page}>
+        {sectionHeader(report.student.fullName, "Section 17 - One-Month Roadmap (continued)")}
+        <View style={styles.sectionWrap}><Text style={styles.sectionNum}>Section 17</Text><Text style={styles.sectionTitle}>Detailed One-Month Weekly Plan</Text></View>
         <Text style={styles.bodyBold}>Weekly Completion Check</Text>
         {bullet("At least 5 focused study sessions completed each week")}
         {bullet("At least 1 practical output completed every week")}
@@ -895,6 +915,10 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
         <Text style={styles.body}>This report is prepared exclusively for {report.student.fullName} and their family. It is intended for personal academic planning and counseling purposes only. It should not be shared publicly, used for institutional selection, or submitted as a formal qualification document.</Text>
         <View style={[styles.infoBox, { marginTop: 10 }]}><Text style={styles.bodyBold}>Report Details</Text><Text style={[styles.body, { marginBottom: 0, marginTop: 4 }]}>Student: {report.student.fullName}  |  Grade: {report.grade}  |  Date: {completedDate}  |  Attempt: {report.attemptNumber} of {report.totalAttempts}{"\n"}Recommended Stream: {analysis.streamName}  |  Confidence: {analysis.streamConfidence}  |  Platform: AIM (Academic Interest Mapping)</Text></View>
         {footer(report.student.fullName)}
+      </Page>
+
+      <Page size="A4" style={styles.backCoverPage}>
+        <Image src={report.backCoverImageSrc ?? "/academic-career/back-cover.jpg"} style={styles.backCoverBg} />
       </Page>
     </Document>
   );

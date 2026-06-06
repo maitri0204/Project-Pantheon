@@ -570,6 +570,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "ACADEMIC_CAREER") {
+    const backCoverImageSrc = await loadPublicImageDataUrl("/academic-career/back-cover.jpg");
     const blob = await generateAcademicCareerReport({
           studentName: reportStudentName,
           classGrade,
@@ -577,6 +578,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       submittedAt: submittedLabel,
       evaluation: evaluation as never,
           organizationBranding: reportBranding,
+      backCoverImageSrc,
     }, { returnBlob: true }) as Blob;
     return { blob, fileName: `Academic_Career_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
       }
