@@ -7,6 +7,8 @@ import {
   downloadStudentCareerDnaReport,
   getAdminCareerDnaReportHtml,
   getStudentCareerDnaReportHtml,
+  getAdminMetacognitionReportHtml,
+  getStudentMetacognitionReportHtml,
   getStudentDetailsForAdmin,
   listStudentAssessmentAttemptsForAdmin,
   getOrganizationCouponSummary,
@@ -96,6 +98,12 @@ router.get(
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
   getAdminCareerDnaReportHtml,
 );
+router.get(
+  "/students/:studentId/attempts/:attemptId/metacognition-report-html",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdminMetacognitionReportHtml,
+);
 router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
 router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentDashboard);
@@ -127,6 +135,12 @@ router.get(
   requireAuth,
   requireRoles("STUDENT", "PARENT"),
   getStudentCareerDnaReportHtml,
+);
+router.get(
+  "/student/attempts/:attemptId/metacognition-report-html",
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  getStudentMetacognitionReportHtml,
 );
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);

@@ -518,24 +518,10 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "METACOGNITION_TEST") {
-        const domainScores = (evaluation.domainScores || {}) as Record<string, number>;
-    const blob = await generateMetacognitionReport({
-          studentName: reportStudentName,
-      email: profileFromAuth.email || authEmail || "",
-      submittedAt: submittedLabel,
-          classGrade,
-          schoolName,
-          totalScore: toNumber(evaluation.totalScore),
-          domainScores: {
-            domain1: toNumber(domainScores.domain1),
-            domain2: toNumber(domainScores.domain2),
-            domain3: toNumber(domainScores.domain3),
-            domain4: toNumber(domainScores.domain4),
-            domain5: toNumber(domainScores.domain5),
-          },
-          organizationBranding: reportBranding,
-    }, { returnBlob: true }) as Blob;
-    return { blob, fileName: `TEST_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
+    if (!authToken) {
+      throw new Error("Sign in is required to download the TEST report");
+    }
+    return generateMetacognitionReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "LITMUS_TEST") {

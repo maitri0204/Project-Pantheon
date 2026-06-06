@@ -30,6 +30,7 @@ import { sendAssessmentReportToStudent } from "../services/email";
 import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCareerDnaReportData";
 import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCareerDnaExecutiveHtml";
 import { generateCareerDnaExecutivePdf } from "../services/careerDnaReport/generateCareerDnaExecutivePdf";
+import { buildMetacognitionReportHtml } from "../services/metacognitionReport/buildMetacognitionReportHtml";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -3520,5 +3521,132 @@ export const downloadAdminCareerDnaReport = async (req: AuthRequest, res: Respon
       fallback: "career-dna-report-html",
       hint: "Use the in-browser PDF download, which does not require server Chrome.",
     });
+  }
+};
+
+const isMetacognitionAssessmentCode = (code: string) => {
+  const normalized = normalizeAssessmentCode(code);
+  return normalized === "METACOGNITION_TEST";
+};
+
+const buildMetacognitionHtmlForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+) => {
+  if (!isMetacognitionAssessmentCode(attempt.assessmentCode)) {
+    throw new Error("TEST report is only available for Thinking & Expression Skills Test attempts");
+  }
+
+  const evaluation = attempt.evaluation ?? await evaluateAssessmentAttempt(attempt);
+  const [student, organization, orgAdmin, organizationRegistration] = await Promise.all([
+    User.findById(attempt.user).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 }).lean(),
+    Organization.findById(attempt.organization).select({ name: 1, branding: 1 }).lean(),
+    User.findOne({
+      role: "ORG_ADMIN",
+      organization: attempt.organization,
+      isActive: true,
+    })
+      .sort({ createdAt: 1 })
+      .select({ firstName: 1, lastName: 1 })
+      .lean(),
+    OrganizationRegistration.findOne({ organization: attempt.organization })
+      .sort({ updatedAt: -1 })
+      .select({ firstName: 1, lastName: 1 })
+      .lean(),
+  ]);
+
+  const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
+  const counselor = `${orgAdmin?.firstName || organizationRegistration?.firstName || ""} ${orgAdmin?.lastName || organizationRegistration?.lastName || ""}`.trim()
+    || organization?.branding?.companyName
+    || organization?.name
+    || "Learning Counselor";
+
+  return buildMetacognitionReportHtml({
+    studentName,
+    grade: student?.grade,
+    school: student?.institutionName || organization?.name,
+    submittedAt: attempt.completedAt || attempt.updatedAt,
+    counselor,
+    domainScores: (evaluation as { domainScores?: Record<string, unknown> }).domainScores,
+    totalScore: (evaluation as { totalScore?: unknown }).totalScore,
+  });
+};
+
+export const getStudentMetacognitionReportHtml = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const html = await buildMetacognitionHtmlForAttempt(attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getStudentMetacognitionReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build TEST report HTML" });
+  }
+};
+
+export const getAdminMetacognitionReportHtml = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!studentId || !attemptId) {
+    res.status(400).json({ message: "Student ID and attempt ID are required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: student._id,
+      organization: student.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    const html = await buildMetacognitionHtmlForAttempt(attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getAdminMetacognitionReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build TEST report HTML" });
   }
 };
