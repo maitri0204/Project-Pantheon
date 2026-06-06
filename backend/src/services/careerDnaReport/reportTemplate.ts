@@ -1,8 +1,32 @@
 import type { reportData as RD } from "./reportData";
+import { careerFitTop10 } from "./careerIntelligenceData";
 import { careerIntelligenceModulePages } from "./careerIntelligencePages";
 import { normalizeReportHtml } from "./reportHtmlNormalize";
 
 type ReportData = typeof RD;
+
+/** Cover overlay positions — RQ layout scaled to 794×1123 capture canvas. */
+const COVER_SCALE_X = 794 / 595;
+const COVER_SCALE_Y = 1123 / 841;
+const COVER_IMAGE = "/career-dna/cover.jpg";
+const BACK_COVER_IMAGE = "/career-dna/back-cover.jpg";
+const COVER_SCORE_NUM_TOP = 524;
+const COVER_SCORE_LABEL_TOP = 564;
+const COVER_PATH_TEXT_TOP = 530;
+const COVER_PATH_LABEL_TOP = 564;
+const COVER_DATE_BOTTOM_PDF = 50;
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function coverOverlayPos(leftPdf: number, topPdf: number): string {
+  return `left:${Math.round(leftPdf * COVER_SCALE_X)}px;top:${Math.round(topPdf * COVER_SCALE_Y)}px;`;
+}
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -182,62 +206,65 @@ function donutSvg(pct: number, color: string, label: string): string {
 
 // ─── pages ──────────────────────────────────────────────────────────────────
 
+function primarySuggestedCareerPath(d: ReportData): string {
+  return (
+    d.careerRecommendations[0]?.career
+    || careerFitTop10[0]?.career
+    || "Career Path"
+  );
+}
+
 function coverPage(d: ReportData): string {
+  const primaryCareer = primarySuggestedCareerPath(d);
+  const pathBoxWidth = Math.round(178 * COVER_SCALE_X);
+  const scoreBoxWidth = Math.round(98 * COVER_SCALE_X);
+
   return `
   <div class="page cover-page">
-    <!-- decorative circles -->
-    <div style="position:absolute;top:-80px;right:-80px;width:320px;height:320px;
-                border-radius:50%;background:rgba(139,124,248,0.18);"></div>
-    <div style="position:absolute;bottom:-60px;left:-60px;width:220px;height:220px;
-                border-radius:50%;background:rgba(139,124,248,0.12);"></div>
+    <img src="${COVER_IMAGE}" alt=""
+         style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"/>
 
-    <!-- logo -->
-    <div style="position:absolute;top:36px;left:40px;display:flex;align-items:center;gap:10px;">
-      <div style="background:#5B4CF0;border-radius:8px;width:32px;height:32px;
-                  display:flex;align-items:center;justify-content:center;">
-        <span style="color:#fff;font-weight:800;font-size:14px;">K</span>
-      </div>
-      <div>
-        <p style="color:#fff;font-weight:700;font-size:13px;margin:0;letter-spacing:0.03em;">KAREER Studio</p>
-        <p style="color:rgba(255,255,255,0.6);font-size:9px;margin:0;letter-spacing:0.1em;">POWERED BY ADMITra</p>
-      </div>
-    </div>
+    <p style="position:absolute;${coverOverlayPos(58, 455)}margin:0;font-size:26px;font-weight:700;color:#ffffff;
+              font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+      ${escapeHtml(d.candidate.name)}
+    </p>
 
-    <!-- centre content -->
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-                text-align:center;padding:60px 40px 40px;">
-      <p style="color:rgba(255,255,255,0.6);font-size:10px;font-weight:600;letter-spacing:0.18em;
-                text-transform:uppercase;margin:0 0 18px;">Career DNA Profiler</p>
-      <h1 style="color:#fff;font-size:40px;font-weight:800;margin:0 0 8px;letter-spacing:-0.01em;">
-        ${d.candidate.name}</h1>
-      <p style="color:rgba(255,255,255,0.55);font-size:12px;margin:0 0 48px;">Code: ${d.candidate.code}</p>
+    <p style="position:absolute;${coverOverlayPos(52, COVER_SCORE_NUM_TOP)}margin:0;width:${scoreBoxWidth}px;
+              text-align:center;font-size:30px;font-weight:700;color:#0ea5e9;line-height:1;
+              font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+      ${d.candidate.totalScore}
+    </p>
+    <p style="position:absolute;${coverOverlayPos(52, COVER_SCORE_LABEL_TOP)}margin:0;width:${scoreBoxWidth}px;
+              text-align:center;font-size:7.5px;font-weight:400;color:#94a3b8;letter-spacing:0.06em;
+              font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+      SCORE
+    </p>
 
-      <!-- score circle -->
-      <div style="width:160px;height:160px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);
-                  display:flex;flex-direction:column;align-items:center;justify-content:center;
-                  background:rgba(255,255,255,0.07);margin-bottom:20px;">
-        <p style="color:#fff;font-size:42px;font-weight:800;margin:0;line-height:1;">${d.candidate.totalScore}</p>
-        <p style="color:rgba(255,255,255,0.6);font-size:10px;letter-spacing:0.1em;
-                  text-transform:uppercase;margin:4px 0 0;">Career DNA Score</p>
-      </div>
+    <p style="position:absolute;${coverOverlayPos(168, COVER_PATH_TEXT_TOP)}margin:0;width:${pathBoxWidth}px;
+              text-align:center;font-size:12px;font-weight:700;color:#15803d;line-height:1.25;
+              font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+      ${escapeHtml(primaryCareer)}
+    </p>
+    <p style="position:absolute;${coverOverlayPos(168, COVER_PATH_LABEL_TOP)}margin:0;width:${pathBoxWidth}px;
+              text-align:center;font-size:7.5px;font-weight:400;color:#15803d;letter-spacing:0.06em;
+              font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+      SUGGESTED CAREER PATH
+    </p>
 
-      <p style="color:rgba(255,255,255,0.7);font-size:11.5px;max-width:340px;line-height:1.7;margin:0;">
-        A comprehensive multi-dimensional assessment of cognitive ability, aptitude, personality,
-        career interests, emotional intelligence, and behavioural competencies.
-      </p>
-    </div>
+    <p style="position:absolute;left:${Math.round(110 * COVER_SCALE_X)}px;
+              bottom:${Math.round(COVER_DATE_BOTTOM_PDF * COVER_SCALE_Y)}px;margin:0;font-size:8px;
+              font-weight:400;color:#cbd5e1;line-height:1;
+              font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+      ${escapeHtml(d.candidate.assessmentDate)}
+    </p>
+  </div>`;
+}
 
-    <!-- footer -->
-    <div style="position:absolute;bottom:36px;left:40px;">
-      <p style="color:rgba(255,255,255,0.45);font-size:9px;text-transform:uppercase;
-                letter-spacing:0.1em;margin:0 0 3px;">Assessment Date</p>
-      <p style="color:rgba(255,255,255,0.85);font-size:11px;font-weight:600;margin:0;">
-        ${d.candidate.assessmentDate}</p>
-    </div>
-    <div style="position:absolute;bottom:36px;right:40px;">
-      <p style="color:rgba(255,255,255,0.45);font-size:9px;text-align:right;margin:0;">
-        ADMITra / KAREER Studio- Confidential</p>
-    </div>
+function backCoverPage(): string {
+  return `
+  <div class="page cover-page">
+    <img src="${BACK_COVER_IMAGE}" alt=""
+         style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"/>
   </div>`;
 }
 
@@ -759,9 +786,7 @@ export function buildReportHtml(data: ReportData): string {
     }
 
     .cover-page {
-      background: linear-gradient(155deg, #2D1B8E 0%, #3730A3 35%, #5B4CF0 70%, #7C3AED 100%);
-      display: flex;
-      flex-direction: column;
+      padding: 0;
       overflow: hidden;
     }
 
@@ -815,6 +840,7 @@ export function buildReportHtml(data: ReportData): string {
   ${behaviouralResiliencePage(data)}
   ${careerModule.html}
   ${finalPage(data, finalPageNum)}
+  ${backCoverPage()}
 </body>
 </html>`;
 

@@ -55,7 +55,7 @@ const highlights = [
 ];
 
 const metrics = [
-  { value: "4+", label: "Assessment journeys", icon: BarChart3 },
+  { value: "8", label: "Assessment journeys", icon: BarChart3 },
   { value: "1", label: "Unified platform", icon: BadgeCheck },
 ];
 
@@ -161,7 +161,7 @@ export default function Home() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">Live platform snapshot</p>
-                      <h3 className="mt-1 text-2xl font-black">Beautifully organized control.</h3>
+                      <h3 className="mt-1 text-2xl font-black">Scientifically Designed Assessments Control</h3>
                     </div>
                     <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-cyan-50 backdrop-blur">
                       Secure + whitelabel
@@ -193,7 +193,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  {/* <div className="grid gap-3 sm:grid-cols-3">
                     {[
                       ["Students", "Assessments, results"],
                       ["Parents", "Litmus test access"],
@@ -204,7 +204,7 @@ export default function Home() {
                         <p className="mt-1 text-xs text-cyan-100/85">{detail}</p>
                       </div>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
