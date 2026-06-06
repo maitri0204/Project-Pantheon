@@ -271,14 +271,18 @@ export default function StudentRegisterPage() {
 
           {step === "form" && (
             <div className="overflow-hidden rounded-3xl border border-white bg-white shadow-[0_20px_60px_rgba(15,23,42,0.10)]" style={{ animation: "fadeUp 0.5s ease both" }}>
-              <div className="relative overflow-hidden px-8 py-8 text-center sm:px-10" style={{ background: `linear-gradient(135deg,${primary}18 0%,${accent}0a 100%)` }}>
+              <div className="relative overflow-hidden px-8 py-6 text-center sm:px-10" style={{ background: `linear-gradient(135deg,${primary}18 0%,${accent}0a 100%)` }}>
                 <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full blur-3xl opacity-30" style={{ background: accent }} />
-                <div className="relative flex flex-col items-center gap-5">
-                  <div className="flex h-32 w-36 items-center justify-center overflow-hidden">
-                    {organization.branding.logoUrl
-                      ? <img src={organization.branding.logoUrl} alt="logo" className="h-full w-full object-contain" />
-                      : <span className="text-5xl font-black text-slate-900">{organization.branding.companyName.charAt(0)}</span>}
-                  </div>
+                <div className="relative flex flex-col items-center gap-3">
+                  {organization.branding.logoUrl
+                    ? (
+                      <img
+                        src={organization.branding.logoUrl}
+                        alt="logo"
+                        className="h-28 w-auto max-w-[320px] object-contain sm:h-32 sm:max-w-[380px]"
+                      />
+                    )
+                    : <span className="text-5xl font-black text-slate-900">{organization.branding.companyName.charAt(0)}</span>}
                   <h1 className="text-2xl font-black leading-tight text-slate-900 sm:text-3xl">Create your account</h1>
                   <p className="text-sm text-slate-500">
                     Join <span className="font-semibold text-slate-800">{organization.branding.companyName}</span> and unlock your assessments.
