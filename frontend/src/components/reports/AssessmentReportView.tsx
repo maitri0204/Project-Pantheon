@@ -534,7 +534,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
           },
           organizationBranding: reportBranding,
     }, { returnBlob: true }) as Blob;
-    return { blob, fileName: `Metacognition_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
+    return { blob, fileName: `TEST_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
       }
 
       if (normalizedCode === "LITMUS_TEST") {

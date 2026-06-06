@@ -335,9 +335,9 @@ function finalSummary(d: AQHistoryResponse) {
   const items: Record<string, { interpretation: string; conclusion: string; outlook: string; motivation: string }> = {
     Exceptional: {
       interpretation: 'Your RQ profile reveals exceptional psychological resilience across all four CORE dimensions. You approach adversity with agency, accountability, compartmentalization, and temporal wisdom that places you in the top tier of behavioral resilience.',
-      conclusion:     'Your CORE framework is operating at a high level. You are well-positioned to lead, perform, and thrive under significant pressure — and to help others develop their RQ.',
+      conclusion:     'Your CORE framework is operating at a high level. You are well-positioned to lead, perform, and thrive under significant pressure - and to help others develop their RQ.',
       outlook:        'Maintain your resilience practices and continue to challenge yourself with increasingly complex adversity. Your next growth edge is translating your own resilience into leadership that builds resilience in others.',
-      motivation:     'Your RQ is not just a number — it is proof that you have chosen to face challenges with growth instead of retreat. Keep leading by example.',
+      motivation:     'Your RQ is not just a number - it is proof that you have chosen to face challenges with growth instead of retreat. Keep leading by example.',
     },
     Strong: {
       interpretation: 'Your RQ profile demonstrates strong behavioral resilience. You navigate most adversities effectively with clear, targeted opportunities to reach the Exceptional tier.',
@@ -738,7 +738,7 @@ function DonutWithScore({ score, level }: { score: number; level: string }) {
 
 /* ─────────────────────────── Common Layout Parts ─────────────────────────── */
 
-function PageHeader({ title, subtitle, pg }: { title: string; subtitle?: string; pg: string }) {
+function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <View style={S.header}>
       <View>
@@ -747,7 +747,7 @@ function PageHeader({ title, subtitle, pg }: { title: string; subtitle?: string;
       </View>
       <View style={S.headerRight}>
         <Text style={S.headerBrand}>RESILIENCE QUOTIENT (RQ)</Text>
-        <Text style={S.headerPg}>Page {pg}</Text>
+        <Text style={S.headerPg} render={({ pageNumber }) => `Page ${pageNumber}`} />
       </View>
     </View>
   );
@@ -783,7 +783,7 @@ function PageFooter({ name, date }: { name: string; date: string }) {
   return (
     <View style={[S.footer, S.footerFixed]} fixed>
       <Text style={S.footerL}>Resilience Quotient (RQ) Analytics Report · {name}</Text>
-      <Text style={S.footerR}>Generated {date} · Confidential</Text>
+      <Text style={S.footerR}>Generated on {date} · Confidential</Text>
     </View>
   );
 }
@@ -804,7 +804,7 @@ const S = StyleSheet.create({
   rqCoverStudentName: {
     position: 'absolute',
     left: 58,
-    top: 400,
+    top: 455,
     fontSize: 26,
     fontWeight: 700,
     color: C.white,
@@ -1046,7 +1046,7 @@ function ExecutiveSummaryPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Executive Summary" subtitle="RQ Score Overview & Resilience Profile" pg="2" />
+      <PageHeader title="Executive Summary" subtitle="RQ Score Overview & Resilience Profile" />
 
       {/* KPI row */}
       <View style={S.kpiRow}>
@@ -1121,7 +1121,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="RQ History & Attempts" subtitle="All assessment attempts, scores, and growth trajectory" pg="3" />
+      <PageHeader title="RQ History & Attempts" subtitle="All assessment attempts, scores, and growth trajectory" />
 
       <SectionBand title="RQ Growth Trend" sub="Score progression across all attempts — Y-axis: Score (0–100) · X-axis: Assessment Attempts" />
       {trend.length >= 2 ? (
@@ -1274,7 +1274,7 @@ function DimensionPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Dimension Analysis" subtitle="CORE framework — Control, Ownership, Reach, Endurance" pg="4" />
+      <PageHeader title="Dimension Analysis" subtitle="CORE framework — Control, Ownership, Reach, Endurance" />
 
       <View style={{ backgroundColor: C.slate50, borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginBottom: 8 }}>
         <Text style={{ fontSize: 9, fontWeight: 700, color: C.dark, marginBottom: 3 }}>CORE Interpretation Guide</Text>
@@ -1345,14 +1345,14 @@ function BehavioralPage({ d }: { d: AQReportData }) {
   return (
     <>
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Behavioral Patterns" subtitle="Derived behavioral insights from your RQ profile" pg="5" />
+        <PageHeader title="Behavioral Patterns" subtitle="Derived behavioral insights from your RQ profile" />
         <SectionBand title="Pattern Analysis" sub="How your RQ score translates into observable behavioral tendencies" />
         {mainPatterns.map(renderPattern)}
         <PageFooter name={d.studentName} date={d.generatedDate} />
       </Page>
       {growthPattern ? (
         <Page size="A4" style={S.contentPage}>
-          <PageHeader title="Behavioral Patterns (Continued)" subtitle="Learning and growth orientation" pg="5" />
+          <PageHeader title="Behavioral Patterns (Continued)" subtitle="Learning and growth orientation" />
           <SectionBand title="Learning & Growth Orientation" sub="How you convert adversity into long-term development" />
           {renderPattern(growthPattern)}
           <PageFooter name={d.studentName} date={d.generatedDate} />
@@ -1377,7 +1377,7 @@ function EmotionalPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Emotional & Stress Analysis" subtitle="Emotional coping capacity and stress response intelligence" pg="6" />
+      <PageHeader title="Emotional & Stress Analysis" subtitle="Emotional coping capacity and stress response intelligence" />
 
       {/* Two indicator cards */}
       <View style={[S.twoCol, { marginBottom: 14 }]}>
@@ -1454,7 +1454,7 @@ function StrengthsPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Strengths & Weaknesses" subtitle="Dimension-level profile of your RQ assets and growth edges" pg="7" />
+      <PageHeader title="Strengths & Weaknesses" subtitle="Dimension-level profile of your RQ assets and growth edges" />
 
       {balanced ? (
         <View style={[S.analyticsCard, { alignItems: 'center', paddingVertical: 24 }]}>
@@ -1587,7 +1587,7 @@ function RecommendationsPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Recommendations" subtitle="Personalised RQ development strategies for measurable growth" pg="8" />
+      <PageHeader title="Recommendations" subtitle="Personalised RQ development strategies for measurable growth" />
       <SectionBand title="Your Growth Blueprint" sub="Evidence-based practices tailored to your specific RQ profile" />
       {recs.map((r, i) => (
         <View key={r.title} style={S.recCard}>
@@ -1918,14 +1918,14 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
   return (
     <>
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="30-Day RQ Development Roadmap" subtitle="Combined weekly goals & daily tasks — your complete personalised resilience growth plan" pg="9" />
+        <PageHeader title="30-Day RQ Development Roadmap" subtitle="Combined weekly goals & daily tasks — your complete personalised resilience growth plan" />
         <SectionBand title="Weekly Goals + Daily Tasks" sub="Each week shows targeted goals (left) alongside concrete daily actions (right) — work both tracks together" />
         {weeks.slice(0, 3).map((week, wi) => renderWeek(week, wi))}
         <PageFooter name={d.studentName} date={d.generatedDate} />
       </Page>
 
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="30-Day RQ Development Roadmap (Continued)" subtitle="Week 4 compounding and consistency phase" pg="9" />
+        <PageHeader title="30-Day RQ Development Roadmap (Continued)" subtitle="Week 4 compounding and consistency phase" />
         <SectionBand title="Week 4 — Compounding & Consistency" sub="Lock in habits, measure growth, and set your next 30-day RQ goal" />
         {weeks.slice(3).map((week, wi) => renderWeek(week, wi + 3))}
 
@@ -2003,13 +2003,13 @@ function PracticalSolutionsPage({ d }: { d: AQReportData }) {
   return (
     <>
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Practical Solutions for Growth Areas" subtitle="Deep-dive action plans for your lowest-scoring CORE dimensions" pg="10" />
+        <PageHeader title="Practical Solutions for Growth" subtitle="Deep-dive action plans for your lowest-scoring CORE dimensions" />
         {coSolutions.map(renderSolutionCard)}
         <PageFooter name={d.studentName} date={d.generatedDate} />
       </Page>
 
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Practical Solutions for Growth Areas (Continued)" subtitle="Reach and Endurance deep-dive action plans" pg="11" />
+        <PageHeader title="Practical Solutions for Growth" subtitle="Reach and Endurance deep-dive action plans" />
         {reSolutions.map(renderSolutionCard)}
         <PageFooter name={d.studentName} date={d.generatedDate} />
       </Page>
@@ -2096,13 +2096,13 @@ function MentorshipGuidancePage({ d }: { d: AQReportData }) {
   return (
     <>
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Guidance & Mentorship" subtitle="Evidence-based coaching for emotional resilience, focus, and academic performance" pg="12" />
+        <PageHeader title="Guidance & Mentorship" subtitle="Evidence-based coaching for emotional resilience, focus, and academic performance" />
         {primarySections.map(renderSection)}
         <PageFooter name={d.studentName} date={d.generatedDate} />
       </Page>
 
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Guidance & Mentorship (Continued)" subtitle="Focus, consistency, and sustainable academic performance" pg="12" />
+        <PageHeader title="Guidance & Mentorship" subtitle="Focus, consistency, and sustainable academic performance" />
         <SectionBand title="Focus & Consistency" sub="Strategies for deep work, environment design, and habit formation" />
         {focusSection.map(renderSection)}
         <PageFooter name={d.studentName} date={d.generatedDate} />
@@ -2152,7 +2152,7 @@ function AQUnderstandingPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Understanding Your RQ" subtitle="Clear answers to the most important questions about your results and your journey" pg="13" />
+      <PageHeader title="Understanding Your RQ" subtitle="Clear answers to the most important questions about your results and your journey" />
       <SectionBand title="Student RQ Clarity Guide" sub="Reduce confusion, increase confidence — know exactly what your results mean and what to do next" />
 
       {faqs.map((item, i) => (
@@ -2219,7 +2219,7 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Study & Productivity Guidance" subtitle="Science-backed strategies for peak academic performance" pg="14" />
+      <PageHeader title="Study & Productivity Guidance" subtitle="Science-backed strategies for peak academic performance" />
       <SectionBand title="High-Performance Study System" sub="Focus areas with clear action bullets" />
       {blocks.map((block, bi) => (
         <View key={bi} style={{ borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginBottom: 6 }}>
@@ -2312,7 +2312,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
   return (
     <>
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Parent Guidance Section" subtitle="How to support your child&apos;s emotional resilience and RQ development at home" pg="15" />
+        <PageHeader title="Parent Guidance Section" subtitle="How to support your child&apos;s emotional resilience and RQ development at home" />
 
         <View style={{ backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: C.sky, padding: 12, marginBottom: 12 }}>
           <Text style={{ fontSize: 10, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Understanding Your Child's Result</Text>
@@ -2327,7 +2327,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
       </Page>
 
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Parent Guidance Section (Continued)" subtitle="Notes and weekly action dashboard for parents" pg="15" />
+        <PageHeader title="Parent Guidance Section" subtitle="Notes and weekly action dashboard for parents" />
 
         <View style={{ backgroundColor: C.slate50, borderRadius: 8, padding: 10, marginBottom: 10 }}>
           <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>A Note for Parents</Text>
