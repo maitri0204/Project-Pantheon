@@ -161,7 +161,7 @@ export default function Home() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">Live platform snapshot</p>
-                      <h3 className="mt-1 text-2xl font-black">Scientifically Designed Assessments Control</h3>
+                      <h3 className="mt-1 text-2xl font-black">Scientifically Designed Assessments</h3>
                     </div>
                     <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-cyan-50 backdrop-blur">
                       Secure + whitelabel
@@ -187,7 +187,7 @@ export default function Home() {
                         <BadgeCheck className="h-6 w-6 text-emerald-300" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-cyan-50">Role-aware workflow</p>
+                        <p className="text-sm font-semibold text-cyan-50">Assessment workflow</p>
                         <p className="text-sm text-cyan-100/85">Students, parents, admins, and superadmins see only what they need.</p>
                       </div>
                     </div>

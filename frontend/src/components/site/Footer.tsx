@@ -32,8 +32,8 @@ export default function Footer() {
                 src="/white-logo.png"
                 srcSet="/white-logo.png 1x, /white-logo@2x.png 2x"
                 alt="Assessment Center"
-                width={1072}
-                height={233}
+                width={798}
+                height={178}
                 decoding="async"
                 className="block h-[64px] w-auto sm:h-[72px] md:h-[80px]"
                 style={{ maxWidth: "min(100%, 560px)" }}
