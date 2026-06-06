@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/api";
 import {
   mapStudyAbroadEvaluationToResult,
+  normalizeTopicScores,
   type AssessmentResult,
   type Topic,
 } from "@/lib/studyAbroad/assessmentData";
@@ -106,11 +107,12 @@ export function studyAbroadEvaluationFromReport(
   evaluation: Record<string, unknown>,
   report: { answeredCount: number; totalQuestions: number },
 ): StudyAbroadEvaluationPayload & { topicScores: Record<Topic, number> } {
-  const topicScores = evaluation.topicScores as Record<string, number> | undefined;
   return {
     overallScore: Number(evaluation.overallScore ?? 0),
     band: String(evaluation.band ?? ""),
-    topicScores: (topicScores ?? {}) as Record<Topic, number>,
+    topicScores: normalizeTopicScores(
+      evaluation.topicScores as Record<string, number> | undefined,
+    ),
     topicAnswered: evaluation.topicAnswered as Record<Topic, number> | undefined,
     answeredCount: Number(evaluation.answeredCount ?? report.answeredCount),
     totalQuestions: Number(evaluation.totalQuestions ?? report.totalQuestions),

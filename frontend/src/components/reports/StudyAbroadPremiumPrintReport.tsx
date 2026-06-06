@@ -1,7 +1,7 @@
 /* eslint-disable */
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import {
   ALL_TOPICS,
   type AssessmentResult,
@@ -18,6 +18,25 @@ import {
 export const SA_PREMIUM_REPORT_ROOT = 'sa-premium-print-report';
 
 const REPORT_PAGE_PADDING = '68px 68px 53px';
+
+/** Cover overlay positions — same coordinates as RQ report, scaled to 794×1123 capture canvas. */
+const SA_COVER_SCALE_X = 794 / 595;
+const SA_COVER_SCALE_Y = 1123 / 841;
+const SA_COVER_IMAGE = '/study-abroad/cover.jpg';
+const SA_BACK_COVER_IMAGE = '/study-abroad/back-cover.jpg';
+
+function saCoverOverlayStyle(
+  pdfLeft: number,
+  pdfTop: number,
+  extra: CSSProperties = {},
+): CSSProperties {
+  return {
+    position: 'absolute',
+    left: Math.round(pdfLeft * SA_COVER_SCALE_X),
+    top: Math.round(pdfTop * SA_COVER_SCALE_Y),
+    ...extra,
+  };
+}
 
 /** Whole cards per page before continuation (avoids clipped boxes in PDF capture). */
 const STRENGTHS_ON_FIRST_PAGE = 2;
@@ -601,7 +620,8 @@ export default function StudyAbroadPremiumPrintReport({
   const roadmapStartIndex = strengthFocusStartIndex + strengthFocusPageCount;
   const finalPageIndex = roadmapStartIndex + roadmapPageCount;
   const counselorPageIndex = finalPageIndex + 1;
-  const totalPages = counselorPageIndex + 1;
+  const backCoverPageIndex = counselorPageIndex + 1;
+  const totalPages = backCoverPageIndex + 1;
 
   const rootClassName = showToolbar
     ? `${SA_PREMIUM_REPORT_ROOT} ${SA_PREMIUM_REPORT_ROOT}--toolbar`
@@ -629,7 +649,7 @@ export default function StudyAbroadPremiumPrintReport({
       <div style={{ background: '#f1f5f9' }}>
 
         {/* ═══════════════════════════════════════════════════════════════
-            PAGE 1 - COVER
+            PAGE 1 - COVER (template + dynamic overlays, same layout as RQ)
         ════════════════════════════════════════════════════════════════ */}
         <div
           data-report-page={0}
@@ -637,60 +657,99 @@ export default function StudyAbroadPremiumPrintReport({
             width: '794px',
             height: '1123px',
             margin: '0 auto',
-            background: 'linear-gradient(155deg, #1e1b4b 0%, #312e81 28%, #4c1d95 55%, #1e1b4b 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '60px 68px',
             position: 'relative',
             overflow: 'hidden',
             boxSizing: 'border-box',
           }}
         >
-          {/* decorative circles */}
-          <div style={{ position: 'absolute', top: '-60mm', right: '-40mm', width: '120mm', height: '120mm', borderRadius: '50%', background: 'rgba(139,92,246,0.15)' }} />
-          <div style={{ position: 'absolute', bottom: '-40mm', left: '-30mm', width: '90mm', height: '90mm', borderRadius: '50%', background: 'rgba(99,102,241,0.12)' }} />
+          <img
+            src={SA_COVER_IMAGE}
+            alt=""
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          />
 
-          {/* branding */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,#818cf8,#c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: 'white', fontWeight: 900, fontSize: 14 }}>K</span>
-              </div>
-              <div>
-                <p style={{ color: 'white', fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>KAREER Studio</p>
-                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9.5, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Powered by admitra</p>
-              </div>
-            </div>
-          </div>
+          <p
+            style={saCoverOverlayStyle(58, 455, {
+              fontSize: Math.round(26 * SA_COVER_SCALE_X),
+              fontWeight: 700,
+              color: '#ffffff',
+              margin: 0,
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            })}
+          >
+            {displayName}
+          </p>
 
-          {/* main content */}
-          <div style={{ textAlign: 'center', zIndex: 1, marginTop: '-8mm' }}>
-            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 15, letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 700, marginBottom: 20 }}>Study Abroad Readiness Assessment</p>
-            <h1 style={{ color: 'white', fontSize: 38, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.15, marginBottom: 6 }}>{displayName}</h1>
-            {profile?.city && profile?.country && (
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 28 }}>{profile.city}, {profile.country}</p>
-            )}
+          <p
+            style={saCoverOverlayStyle(52, 536, {
+              width: Math.round(98 * SA_COVER_SCALE_X),
+              textAlign: 'center',
+              fontSize: Math.round(30 * SA_COVER_SCALE_X),
+              fontWeight: 700,
+              color: '#0ea5e9',
+              margin: 0,
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            })}
+          >
+            {result.overallScore}
+          </p>
+          <p
+            style={saCoverOverlayStyle(52, 566, {
+              width: Math.round(98 * SA_COVER_SCALE_X),
+              textAlign: 'center',
+              fontSize: Math.round(7.5 * SA_COVER_SCALE_X),
+              fontWeight: 400,
+              color: '#94a3b8',
+              margin: 0,
+              letterSpacing: '0.06em',
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            })}
+          >
+            SCORE
+          </p>
 
-            {/* score ring */}
-            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '2px solid rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)', margin: '0 auto 24px' }}>
-              <span style={{ color: 'white', fontSize: 42, fontWeight: 900, lineHeight: 1 }}>{pct}<span style={{ fontSize: 22 }}>%</span></span>
-              <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, marginTop: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Readiness</span>
-            </div>
+          <p
+            style={saCoverOverlayStyle(168, 536, {
+              width: Math.round(178 * SA_COVER_SCALE_X),
+              textAlign: 'center',
+              fontSize: Math.round(18 * SA_COVER_SCALE_X),
+              fontWeight: 700,
+              color: bc.text,
+              margin: 0,
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            })}
+          >
+            {bandLabel}
+          </p>
+          <p
+            style={saCoverOverlayStyle(168, 566, {
+              width: Math.round(178 * SA_COVER_SCALE_X),
+              textAlign: 'center',
+              fontSize: Math.round(7.5 * SA_COVER_SCALE_X),
+              fontWeight: 400,
+              color: bc.text,
+              margin: 0,
+              letterSpacing: '0.06em',
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            })}
+          >
+            READINESS LEVEL
+          </p>
 
-            {/* band badge */}
-            <div style={{ display: 'inline-block', background: bc.bg, borderRadius: 24, padding: '6px 20px', border: `1px solid ${bc.accent}30` }}>
-              <span style={{ color: bc.text, fontWeight: 700, fontSize: 14 }}>{bandLabel}</span>
-            </div>
-          </div>
-
-          {/* footer */}
-          <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'flex-end', zIndex: 1 }}>
-            <div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginBottom: 2 }}>Assessment Date</p>
-              <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: 600 }}>{assessDate}</p>
-            </div>
-          </div>
+          <p
+            style={{
+              position: 'absolute',
+              left: Math.round(110 * SA_COVER_SCALE_X),
+              bottom: Math.round(44 * SA_COVER_SCALE_Y),
+              fontSize: Math.round(8 * SA_COVER_SCALE_X),
+              fontWeight: 400,
+              color: '#cbd5e1',
+              margin: 0,
+              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            }}
+          >
+            {assessDate}
+          </p>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
@@ -983,6 +1042,28 @@ export default function StudyAbroadPremiumPrintReport({
 
           <PFooter page={counselorPageIndex + 1} total={totalPages} />
         </Page>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            BACK COVER
+        ════════════════════════════════════════════════════════════════ */}
+        <div
+          data-report-page={backCoverPageIndex}
+          className="page-break"
+          style={{
+            width: '794px',
+            height: '1123px',
+            margin: '0 auto',
+            position: 'relative',
+            overflow: 'hidden',
+            boxSizing: 'border-box',
+          }}
+        >
+          <img
+            src={SA_BACK_COVER_IMAGE}
+            alt=""
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
 
       </div>
     </div>

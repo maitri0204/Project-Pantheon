@@ -6,6 +6,7 @@ import {
   bandFromPercentage,
   bandMeta,
   getTopAndBottomTopics,
+  normalizeTopicScores,
   scoreToPercentage,
   type Topic,
 } from "@/lib/studyAbroad/assessmentData";
@@ -180,6 +181,10 @@ export default function StudyAbroadReport({
 }) {
   const pct = evaluation.overallPercentage ?? scoreToPercentage(evaluation.overallScore);
   const band = bandFromPercentage(pct);
+  const topicScores = useMemo(
+    () => normalizeTopicScores(evaluation.topicScores),
+    [evaluation.topicScores],
+  );
 
   const resultLike = useMemo(
     () => ({
@@ -189,10 +194,10 @@ export default function StudyAbroadReport({
       answeredCount: evaluation.answeredCount ?? evaluation.totalQuestions ?? 50,
       totalQuestions: evaluation.totalQuestions ?? 50,
       band,
-      topicScores: evaluation.topicScores,
+      topicScores,
       topicAnswered: evaluation.topicAnswered || ({} as Record<Topic, number>),
     }),
-    [evaluation, submittedAt, band]
+    [evaluation, submittedAt, band, topicScores],
   );
 
   const { top, bottom } = getTopAndBottomTopics(resultLike, 4);
@@ -200,7 +205,7 @@ export default function StudyAbroadReport({
 
   const topics = ALL_TOPICS.map((topic) => ({
     topic,
-    score: evaluation.topicScores[topic] ?? 0,
+    score: topicScores[topic] ?? 0,
   })).sort((a, b) => b.score - a.score);
 
   return (
@@ -250,7 +255,7 @@ export default function StudyAbroadReport({
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-bold text-slate-900">12-Dimension Radar</h2>
-          <RadarChart scores={evaluation.topicScores as Record<string, number>} />
+          <RadarChart scores={topicScores} />
         </div>
 
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">

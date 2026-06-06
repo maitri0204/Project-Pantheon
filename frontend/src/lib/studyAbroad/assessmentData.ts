@@ -177,6 +177,26 @@ export function createEmptyTopicMap<TValue>(initial: TValue): Record<Topic, TVal
   }, {} as Record<Topic, TValue>);
 }
 
+export function normalizeTopicScores(
+  raw?: Record<string, number | string> | null,
+): TopicScoreMap {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  return ALL_TOPICS.reduce((acc, topic) => {
+    acc[topic] = Number(source[topic] ?? 0);
+    return acc;
+  }, createEmptyTopicMap(0) as TopicScoreMap);
+}
+
+export function normalizeTopicAnswered(
+  raw?: Record<string, number | string> | null,
+): TopicAnsweredMap {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  return ALL_TOPICS.reduce((acc, topic) => {
+    acc[topic] = Number(source[topic] ?? 0);
+    return acc;
+  }, createEmptyTopicMap(0) as TopicAnsweredMap);
+}
+
 export function getResultHistory(): AssessmentResult[] {
   const history = readLocalStorage<AssessmentResult[]>(getScopedStorageKey(RESULT_HISTORY_KEY), []);
   if (!Array.isArray(history)) return [];
@@ -220,21 +240,14 @@ export function mapStudyAbroadEvaluationToResult(
   evaluation: {
     overallScore: number;
     band?: string;
-    topicScores: Record<string, number>;
-    topicAnswered?: Record<string, number>;
+    topicScores?: Record<string, number> | null;
+    topicAnswered?: Record<string, number> | null;
     answeredCount?: number;
     totalQuestions?: number;
   },
 ): AssessmentResult {
-  const topicScores = ALL_TOPICS.reduce((acc, topic) => {
-    acc[topic] = Number(evaluation.topicScores[topic] ?? 0);
-    return acc;
-  }, createEmptyTopicMap(0) as TopicScoreMap);
-
-  const topicAnswered = ALL_TOPICS.reduce((acc, topic) => {
-    acc[topic] = Number(evaluation.topicAnswered?.[topic] ?? 0);
-    return acc;
-  }, createEmptyTopicMap(0) as TopicAnsweredMap);
+  const topicScores = normalizeTopicScores(evaluation.topicScores);
+  const topicAnswered = normalizeTopicAnswered(evaluation.topicAnswered);
 
   const pct = scoreToPercentage(evaluation.overallScore);
 
