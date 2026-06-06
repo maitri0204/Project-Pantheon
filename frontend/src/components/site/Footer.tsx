@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ArrowUpRight, BadgeInfo, Mail, PhoneCall, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowUpRight, BadgeInfo, Clock3, MapPin, PhoneCall, ShieldCheck } from "lucide-react";
 
 const quickLinks = [
   { href: "/", label: "Home" },
   { href: "/login", label: "Login" },
-  { href: "https://assessments.admitra.io/whitelabel/kareer-studio/student/register", label: "Register" },
+  { href: "/whitelabel/kareer-studio/student/register", label: "Register" },
 ];
 
 const legalLinks = [
@@ -13,8 +13,6 @@ const legalLinks = [
   { href: "/disclaimer", label: "Disclaimer" },
   { href: "/refund-policy", label: "Refund Policy" },
 ];
-
-// platformLinks removed per design — toolbar keeps quick links and legal links only
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -27,13 +25,18 @@ export default function Footer() {
       </div>
 
       <div className="content-wrap relative mx-auto px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-3">
-          <div className="space-y-5">
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-8">
+          <div className="space-y-5 lg:col-span-5">
             <div className="space-y-4">
               <img
-                src="/logo.png"
-                alt="Logo"
-                className="h-16 w-auto brightness-0 invert drop-shadow-[0_0_8px_rgba(255,255,255,0.22)]"
+                src="/white-logo.png"
+                srcSet="/white-logo.png 1x, /white-logo@2x.png 2x"
+                alt="Assessment Center"
+                width={1072}
+                height={233}
+                decoding="async"
+                className="block h-[64px] w-auto sm:h-[72px] md:h-[80px]"
+                style={{ maxWidth: "min(100%, 560px)" }}
               />
               <div>
                 <h2 className="max-w-xl text-3xl font-black tracking-tight text-white sm:text-4xl">
@@ -64,7 +67,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
+          <div className="lg:col-span-2">
             <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Quick Links</h3>
             <ul className="mt-5 space-y-3">
               {quickLinks.map((link) => (
@@ -79,29 +82,48 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Platform section removed as requested */}
-
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Legal & Support</h3>
-            <ul className="mt-5 space-y-3">
-              {legalLinks.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="group inline-flex items-center gap-2 transition hover:text-white">
-                    <span className="h-0.5 w-4 bg-purple-400/70 transition-all group-hover:w-6" />
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-start gap-3">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                <span className="text-sm text-slate-300">hello@admitra.io</span>
+          <div className="lg:col-span-5">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-[180px]">
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Legal & Support</h3>
+                <ul className="mt-5 space-y-3">
+                  {legalLinks.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} className="group inline-flex items-center gap-2 transition hover:text-white">
+                        <span className="h-0.5 w-4 bg-purple-400/70 transition-all group-hover:w-6" />
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex items-start gap-3">
-                <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                <span className="text-sm text-slate-300">Mon - Sat: 10:00 AM - 7:00 PM</span>
+
+              <div className="w-full max-w-xs space-y-4 lg:ml-auto">
+                <div className="flex items-start gap-3">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                  <address className="text-sm not-italic leading-6 text-slate-300">
+                    303, Rajshree Center,
+                    <br />
+                    Near Kalaghoda,
+                    <br />
+                    Sayajigunj,
+                    <br />
+                    Vadodara-390020
+                    <br />
+                    GJ, IN
+                  </address>
+                </div>
+                <div className="flex items-start gap-3">
+                  <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                  <div className="text-sm leading-6 text-slate-300">
+                    <p>+91 265 31 38 392</p>
+                    <p>+91 810 42 15 365</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                  <span className="text-sm text-slate-300">Mon - Sat: 10:00 AM - 7:00 PM</span>
+                </div>
               </div>
             </div>
           </div>

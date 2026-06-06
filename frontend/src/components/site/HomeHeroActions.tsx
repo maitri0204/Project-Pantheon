@@ -22,13 +22,13 @@ export default function HomeHeroActions() {
         href="/login"
         className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:translate-y-[-1px]"
       >
-        Enter dashboard
+        Login
       </a>
       <a
-        href="/signup"
+        href="/whitelabel/kareer-studio/student/register"
         className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
       >
-        Create account
+        Register
       </a>
     </div>
   );

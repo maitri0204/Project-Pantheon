@@ -455,6 +455,13 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
                 {loading ? "Sending OTP..." : "Send OTP"}
               </button>
 
+              {portalOrganizationSlug ? (
+                <p className="text-center text-xs text-slate-500">
+                  This login is restricted to users of this organization portal.
+                </p>
+              ) : null}
+
+              {/* Registering a whitelabel organization? Start here
               {!portalOrganizationSlug ? (
                 <p className="text-center text-sm text-slate-600">
                   Registering a whitelabel organization?{" "}
@@ -462,11 +469,8 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
                     Start here
                   </Link>
                 </p>
-              ) : (
-                <p className="text-center text-xs text-slate-500">
-                  This login is restricted to users of this organization portal.
-                </p>
-              )}
+              ) : null}
+              */}
             </form>
           ) : (
             <form className="space-y-5" onSubmit={handleVerifyOtp}>
