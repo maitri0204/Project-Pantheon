@@ -200,17 +200,17 @@ export const sendAQReportEmail = async ({
   await transporter.sendMail({
     from: `"Assessment Centre" <${process.env.SMTP_USER}>`,
     to: email,
-    subject: `Your Adversity Quotient (AQ) Assessment Report - ${aqLevel} Resilience`,
+    subject: `Your Resilience Quotient (RQ) Assessment Report - ${aqLevel} Resilience`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px; background: #f8fafc; border-radius: 16px;">
         <div style="background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <h1 style="margin: 0 0 8px; color: #2563eb; font-size: 28px;">Adversity Quotient Assessment</h1>
+          <h1 style="margin: 0 0 8px; color: #2563eb; font-size: 28px;">Resilience Quotient Assessment</h1>
           <p style="margin: 0 0 24px; color: #334155;">Hi <strong>${safeName}</strong>, here's your detailed assessment report:</p>
           
-          <!-- AQ Score Summary -->
+          <!-- RQ Score Summary -->
           <div style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); color: white; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
             <div style="font-size: 48px; font-weight: bold; margin: 0 0 8px;">${aqScore}</div>
-            <div style="font-size: 18px; margin: 0;">AQ Score</div>
+            <div style="font-size: 18px; margin: 0;">RQ Score</div>
             <div style="font-size: 14px; margin-top: 12px; opacity: 0.9;">Level: <strong>${aqLevel}</strong></div>
           </div>
           

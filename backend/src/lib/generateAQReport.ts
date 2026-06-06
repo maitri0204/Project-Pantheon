@@ -1,7 +1,7 @@
 /**
- * AQ Report Generation Service for Project Pantheon
+ * RQ Report Generation Service for Project Pantheon
  *
- * Generates comprehensive Adversity Quotient (AQ) assessment reports
+ * Generates comprehensive Resilience Quotient (RQ) assessment reports
  * including subscale breakdowns, interpretations, and recommendations.
  */
 
@@ -34,7 +34,7 @@ export interface AQReportData {
 }
 
 /**
- * Generate comprehensive AQ report data
+ * Generate comprehensive RQ report data
  */
 export async function generateAQReportData(
   attempt: IStudentAssessmentAttempt,
@@ -86,7 +86,7 @@ export async function generateAQReportData(
 }
 
 /**
- * Generate personalized recommendations based on AQ evaluation
+ * Generate personalized recommendations based on RQ evaluation
  */
 function generateRecommendations(
   evaluation: AQEvaluationResult,
@@ -140,7 +140,7 @@ function generateRecommendations(
 }
 
 /**
- * Format AQ report as HTML for email or web display
+ * Format RQ report as HTML for email or web display
  */
 export function formatAQReportAsHTML(reportData: AQReportData): string {
   const subscaleHTML = reportData.subscales
@@ -159,7 +159,7 @@ export function formatAQReportAsHTML(reportData: AQReportData): string {
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h1 style="color: #2563eb; text-align: center;">Adversity Quotient (AQ) Assessment Report</h1>
+      <h1 style="color: #2563eb; text-align: center;">Resilience Quotient (RQ) Assessment Report</h1>
       
       <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
         <p><strong>Student:</strong> ${reportData.studentName}</p>
@@ -169,7 +169,7 @@ export function formatAQReportAsHTML(reportData: AQReportData): string {
       </div>
 
       <div style="background-color: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-        <h2 style="color: #2563eb; margin: 0;">Overall AQ Score: ${reportData.totalScore}/100</h2>
+        <h2 style="color: #2563eb; margin: 0;">Overall RQ Score: ${reportData.totalScore}/100</h2>
         <h3 style="color: #1976d2; margin: 10px 0;">Level: ${reportData.aqLevel}</h3>
         <p style="color: #555; line-height: 1.6;">${reportData.aqLevelDescription}</p>
       </div>

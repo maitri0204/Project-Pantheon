@@ -8,7 +8,7 @@
 "use client";
 
 /**
- * @deprecated Unused legacy AQ flow. The live assessment uses
+ * @deprecated Unused legacy RQ flow. The live assessment uses
  * `/whitelabel/[slug]/student/assessments/ADVERSITY_TEST/take` instead.
  * API paths below target the current platform routes if this component is revived.
  */
@@ -73,7 +73,7 @@ interface ResultProps {
 const getLevelDescription = (level: string): string => {
   const descriptions: Record<string, string> = {
     Exceptional:
-      "You operate in the highest tier of adversity intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
+      "You operate in the highest tier of resilience intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
     Strong:
       "Your RQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
     Moderate:

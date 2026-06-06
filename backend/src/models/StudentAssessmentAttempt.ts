@@ -81,8 +81,8 @@ const studentAssessmentAttemptSchema = new Schema<IStudentAssessmentAttempt>(
   { timestamps: true }
 );
 
-// No global unique index here; single-attempt enforcement for non-AQ handled at application level
-// This allows AQ to have multiple attempts without DB constraint conflicts
+// No global unique index here; single-attempt enforcement for non-RQ handled at application level
+// This allows RQ to have multiple attempts without DB constraint conflicts
 studentAssessmentAttemptSchema.index({ user: 1, assessmentCode: 1 });
 
 export default mongoose.model<IStudentAssessmentAttempt>(

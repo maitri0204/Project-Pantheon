@@ -64,6 +64,12 @@ router.get(
   getAcademicCareerAdminOverview,
 );
 router.get(
+  "/assessments/RESILIENCE_TEST/admin-overview",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdversityAdminOverview,
+);
+router.get(
   "/assessments/ADVERSITY_TEST/admin-overview",
   requireAuth,
   requireRoles("SUPERADMIN", "ORG_ADMIN"),

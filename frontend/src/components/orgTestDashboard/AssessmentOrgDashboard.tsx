@@ -4,7 +4,7 @@ import AcademicCareerOrgDashboard from "@/components/orgTestDashboard/dashboards
 import AdversityOrgDashboard from "@/components/orgTestDashboard/dashboards/AdversityOrgDashboard";
 import EnhancedOrgTestDashboard from "@/components/orgTestDashboard/EnhancedOrgTestDashboard";
 import { ENHANCED_ORG_DASHBOARD_CODES } from "@/components/orgTestDashboard/testDashboardUiConfig";
-import { normalizeAssessmentCode } from "@/lib/assessmentAccess";
+import { isResilienceAssessment, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 
 type AssessmentOrgDashboardProps = {
   assessmentCode: string;
@@ -32,7 +32,7 @@ export default function AssessmentOrgDashboard({
     );
   }
 
-  if (code === "ADVERSITY_TEST") {
+  if (isResilienceAssessment(code)) {
     return (
       <AdversityOrgDashboard
         studentsPath={studentsPath}

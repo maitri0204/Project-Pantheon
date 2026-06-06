@@ -381,7 +381,7 @@ const content: Record<string, AssessmentPageContent> = {
         ],
       },
 
-      ADVERSITY_TEST: {
+      RESILIENCE_TEST: {
         theme: {
           badge: "Resilience Quotient (RQ) Assessment",
           badgeClass: "bg-rose-50 text-rose-800",
@@ -686,6 +686,9 @@ const content: Record<string, AssessmentPageContent> = {
       THINKING_EXPRESSION_TEST: "TEST",
       "THINKING-EXPRESSION-TEST": "TEST",
       TEST: "TEST",
+      ADVERSITY_TEST: "RESILIENCE_TEST",
+      RQ_TEST: "RESILIENCE_TEST",
+      RESILIENCE: "RESILIENCE_TEST",
     };
 
     function normalizeAssessmentCode(code: string): keyof typeof content | null {
@@ -799,7 +802,7 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Learn", desc: "Plan and monitor learning", icon: "📚" },
               { title: "Express", desc: "Communicate ideas clearly", icon: "🗣️" },
             ]
-          : normalizedCode === "ADVERSITY_TEST"
+          : normalizedCode === "RESILIENCE_TEST"
           ? [
               { title: "Control", desc: "Influence under pressure", icon: "🎛️" },
               { title: "Ownership", desc: "Responsibility in setbacks", icon: "🧭" },
@@ -851,7 +854,7 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Learning Strategy", desc: "Plan and organize study", icon: "🗂️" },
               { title: "Self-Monitoring", desc: "Recognize gaps and adjust", icon: "🔍" },
             ]
-          : normalizedCode === "ADVERSITY_TEST"
+          : normalizedCode === "RESILIENCE_TEST"
           ? [
               { title: "Resilience profile", desc: "How you respond to adversity", icon: "🧱" },
               { title: "Stress response", desc: "Reaction under pressure", icon: "⚡" },
@@ -1039,7 +1042,7 @@ const content: Record<string, AssessmentPageContent> = {
         );
       }
 
-      if (normalizedCode === "ADVERSITY_TEST") {
+      if (normalizedCode === "RESILIENCE_TEST") {
         return (
           <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
             <div className="grid lg:grid-cols-[1.15fr_0.85fr]">

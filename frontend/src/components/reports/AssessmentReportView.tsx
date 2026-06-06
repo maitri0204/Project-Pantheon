@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "../../lib/api";
+import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 import { generateCareerCompassReport } from "../../lib/reports/generateCareerCompassReport";
 import { generateClearReport } from "../../lib/reports/generateClearReport";
 import { generateLitmusReport } from "../../lib/reports/generateLitmusReport";
@@ -66,9 +67,9 @@ type AssessmentReportViewProps = {
 };
 
 const normalizeDisplayCode = (code: string) => {
-  const normalized = String(code || "").toUpperCase().trim();
+  const normalized = normalizeAssessmentCode(code);
   if (normalized === "JOHARI_WINDOW") return "CLEAR";
-  if (normalized === "METACOGNITION_TEST" || normalized === "METACOGNITION") return "TEST";
+  if (normalized === "METACOGNITION_TEST") return "TEST";
   return normalized;
 };
 
@@ -106,20 +107,20 @@ const formatDateTime = (value?: string) => {
   return date.toLocaleString("en-IN");
 };
 
-type AQSubscale = {
+type RQSubscale = {
   dimension: string;
   rawScore: number;
   maxScore: number;
   percentage: number;
 };
 
-type AQEvaluation = {
+type RQEvaluation = {
   totalScore: number;
   aqLevel: string;
-  subscales: AQSubscale[];
+  subscales: RQSubscale[];
 };
 
-type AQTrendPoint = {
+type RQTrendPoint = {
   attempt: number;
   score: number;
   level: string;
@@ -129,7 +130,7 @@ type AQTrendPoint = {
   difficulty?: string;
 };
 
-type AQAttemptItem = {
+type RQAttemptItem = {
   attemptId: string;
   assessmentCode: string;
   assessmentName: string;
@@ -146,19 +147,19 @@ type SubscaleAverage = {
   avgPercentage: number;
 };
 
-type AQHistoryResponse = {
+type RQHistoryResponse = {
   totalAttempts: number;
   bestScore: number;
   avgScore: number;
   latestScore: number | null;
   latestLevel: string | null;
-  trend: AQTrendPoint[];
+  trend: RQTrendPoint[];
   subscaleAverages: SubscaleAverage[];
 };
 
-const AQ_LEVEL_DESCRIPTIONS: Record<string, string> = {
+const RQ_LEVEL_DESCRIPTIONS: Record<string, string> = {
   Exceptional:
-    "You operate in the highest tier of adversity intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
+    "You operate in the highest tier of resilience intelligence. Your Control, Ownership, Reach, and Endurance profile enables you to navigate challenges with agency, accountability, and psychological strength.",
   Strong:
     "Your RQ profile demonstrates strong behavioral resilience. You handle most adversities with skill and composure. Targeted development in your lower dimensions will move you into the Exceptional tier.",
   Moderate:
@@ -167,7 +168,7 @@ const AQ_LEVEL_DESCRIPTIONS: Record<string, string> = {
     "Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside.",
 };
 
-const AQ_DIMENSION_INSIGHTS: Record<string, { high: string; low: string }> = {
+const RQ_DIMENSION_INSIGHTS: Record<string, { high: string; low: string }> = {
   Control: {
     high: "You exhibit a strong internal locus of control. You approach adversity believing you can shape outcomes through intentional action.",
     low: "You may feel that adversity is largely beyond your control. A daily 'sphere of influence' practice will help rebuild agency.",
@@ -186,21 +187,21 @@ const AQ_DIMENSION_INSIGHTS: Record<string, { high: string; low: string }> = {
   },
 };
 
-const AQ_LEVEL_GRADIENTS: Record<string, string> = {
+const RQ_LEVEL_GRADIENTS: Record<string, string> = {
   Exceptional: "from-emerald-500 to-teal-600",
   Strong: "from-sky-500 to-cyan-600",
   Moderate: "from-amber-500 to-orange-600",
   Developing: "from-rose-500 to-red-600",
 };
 
-const AQ_LEVEL_ACCENTS: Record<string, string> = {
+const RQ_LEVEL_ACCENTS: Record<string, string> = {
   Exceptional: "text-emerald-700 bg-emerald-50 border-emerald-200",
   Strong: "text-sky-700 bg-sky-50 border-sky-200",
   Moderate: "text-amber-700 bg-amber-50 border-amber-200",
   Developing: "text-rose-700 bg-rose-50 border-rose-200",
 };
 
-const AQ_RECOMMENDATIONS = (result: AQEvaluation): string[] => {
+const RQ_RECOMMENDATIONS = (result: RQEvaluation): string[] => {
   const control = result.subscales.find((s) => s.dimension === "Control")?.percentage ?? 0;
   const ownership = result.subscales.find((s) => s.dimension === "Ownership")?.percentage ?? 0;
   const reach = result.subscales.find((s) => s.dimension === "Reach")?.percentage ?? 0;
@@ -240,12 +241,12 @@ async function loadPublicImageDataUrl(path: string): Promise<string> {
   });
 }
 
-async function generateAQReportBlob(
-  result: AQEvaluation,
+async function generateRQReportBlob(
+  result: RQEvaluation,
   report: ReportResponse["report"],
   studentName: string,
   email: string,
-  attempts?: AQAttemptItem[]
+  attempts?: RQAttemptItem[]
 ): Promise<Blob> {
   const [{ pdf }, { AQReport }] = await Promise.all([
     import("@react-pdf/renderer"),
@@ -304,7 +305,7 @@ async function generateAQReportBlob(
     ? Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1))
     : result.totalScore;
 
-  const aqHistory: AQHistoryResponse = {
+  const aqHistory: RQHistoryResponse = {
     totalAttempts: attemptList.length,
     bestScore,
     avgScore,
@@ -356,7 +357,7 @@ const toNumber = (value: unknown, fallback = 0): number => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-function parseAqEvaluation(evaluation: unknown): AQEvaluation | null {
+function parseRqEvaluation(evaluation: unknown): RQEvaluation | null {
   if (!evaluation || typeof evaluation !== "object") {
     return null;
   }
@@ -390,7 +391,7 @@ function parseAqEvaluation(evaluation: unknown): AQEvaluation | null {
         percentage: toNumber(sub.percentage),
       };
     })
-    .filter((item): item is AQSubscale => item !== null);
+    .filter((item): item is RQSubscale => item !== null);
 
   if (!subscales.length) {
     return null;
@@ -399,24 +400,24 @@ function parseAqEvaluation(evaluation: unknown): AQEvaluation | null {
   return { totalScore, aqLevel, subscales };
 }
 
-async function resolveAqAttemptsForReport(
+async function resolveRqAttemptsForReport(
   normalizedCode: string,
-  aqAttempts: AQAttemptItem[] | null,
+  rqAttempts: RQAttemptItem[] | null,
   authToken: string | undefined,
   fetchPath: string
-): Promise<AQAttemptItem[] | undefined> {
-  if (normalizedCode !== "ADVERSITY_TEST") {
+): Promise<RQAttemptItem[] | undefined> {
+  if (normalizedCode !== "RESILIENCE_TEST") {
     return undefined;
   }
-  if (Array.isArray(aqAttempts)) {
-    return aqAttempts;
+  if (Array.isArray(rqAttempts)) {
+    return rqAttempts;
   }
   if (!authToken || !fetchPath.startsWith("/platform/student/")) {
     return undefined;
   }
 
   try {
-    const res = await apiRequest<{ attempts: AQAttemptItem[] }>(
+    const res = await apiRequest<{ attempts: RQAttemptItem[] }>(
       `/platform/student/assessments/${normalizedCode}/attempts`,
       {},
       authToken
@@ -445,7 +446,7 @@ type DetailedReportPdfContext = {
   };
   profileFromAuth: { grade?: string; institutionName?: string; firstName?: string; lastName?: string; email?: string };
   authEmail?: string;
-  aqAttempts: AQAttemptItem[] | null;
+  rqAttempts: RQAttemptItem[] | null;
   authToken?: string;
   fetchPath: string;
 };
@@ -462,7 +463,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     reportBranding,
     profileFromAuth,
     authEmail,
-    aqAttempts,
+    rqAttempts,
     authToken,
     fetchPath,
   } = ctx;
@@ -471,14 +472,14 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
     : "—";
 
-  if (normalizedCode === "ADVERSITY_TEST") {
-    const aqEvaluation = parseAqEvaluation(evaluation);
-    if (!aqEvaluation) {
+  if (normalizedCode === "RESILIENCE_TEST") {
+    const rqEvaluation = parseRqEvaluation(evaluation);
+    if (!rqEvaluation) {
       throw new Error("RQ report data is not available for this attempt");
     }
-    const attempts = await resolveAqAttemptsForReport(normalizedCode, aqAttempts, authToken, fetchPath);
-    const blob = await generateAQReportBlob(
-      aqEvaluation,
+    const attempts = await resolveRqAttemptsForReport(normalizedCode, rqAttempts, authToken, fetchPath);
+    const blob = await generateRQReportBlob(
+      rqEvaluation,
       report,
       reportStudentName,
       reportEmail,
@@ -621,7 +622,7 @@ export default function AssessmentReportView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
-  const [aqAttempts, setAQAttempts] = useState<AQAttemptItem[] | null>(null);
+  const [rqAttempts, setRQAttempts] = useState<RQAttemptItem[] | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [emailing, setEmailing] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
@@ -643,17 +644,17 @@ export default function AssessmentReportView({
       return;
     }
 
-    const normalizedCode = String(report.assessmentCode || "").toUpperCase();
-    if (normalizedCode !== "ADVERSITY_TEST") {
+    const normalizedCode = normalizeAssessmentCode(String(report.assessmentCode || ""));
+    if (normalizedCode !== "RESILIENCE_TEST") {
       return;
     }
 
-    apiRequest<{ attempts: AQAttemptItem[] }>(`/platform/student/assessments/${normalizedCode}/attempts`, {}, auth.token)
+    apiRequest<{ attempts: RQAttemptItem[] }>(`/platform/student/assessments/${report.assessmentCode}/attempts`, {}, auth.token)
       .then((res) => {
-        setAQAttempts(res.attempts);
+        setRQAttempts(res.attempts);
       })
       .catch(() => {
-        setAQAttempts(null);
+        setRQAttempts(null);
       });
   }, [auth?.token, report, fetchPath]);
 
@@ -681,8 +682,9 @@ export default function AssessmentReportView({
   }
 
   const evaluation = report.evaluation as Record<string, unknown>;
-  const normalizedCode = String(report.assessmentCode || "").toUpperCase();
-  const aqReport = normalizedCode === "ADVERSITY_TEST" ? parseAqEvaluation(evaluation) : null;
+  const normalizedCode = normalizeAssessmentCode(String(report.assessmentCode || ""));
+  const reportTitle = getAssessmentDisplayName(normalizedCode, report.assessmentName);
+  const rqReport = normalizedCode === "RESILIENCE_TEST" ? parseRqEvaluation(evaluation) : null;
   const profileFromReport = report.student || {};
   const profileFromAuth = (auth?.user || {}) as { grade?: string; institutionName?: string; firstName?: string; lastName?: string; email?: string };
   const classGrade = profileFromReport.grade || profileFromAuth.grade || "";
@@ -709,7 +711,7 @@ export default function AssessmentReportView({
     reportBranding,
     profileFromAuth,
     authEmail: (auth?.user as { email?: string })?.email,
-    aqAttempts,
+    rqAttempts,
     authToken: auth?.token,
     fetchPath,
   };
@@ -754,16 +756,16 @@ export default function AssessmentReportView({
   };
 
   const renderBody = () => {
-    if (normalizedCode === "ADVERSITY_TEST" && aqReport) {
-      const recommendations = AQ_RECOMMENDATIONS(aqReport);
+    if (normalizedCode === "RESILIENCE_TEST" && rqReport) {
+      const recommendations = RQ_RECOMMENDATIONS(rqReport);
       return (
         <div className="max-w-6xl mx-auto space-y-6">
-          <div className={`rounded-2xl bg-gradient-to-br ${AQ_LEVEL_GRADIENTS[aqReport.aqLevel] || AQ_LEVEL_GRADIENTS.Moderate} p-8 text-white shadow-xl`}>
+          <div className={`rounded-2xl bg-gradient-to-br ${RQ_LEVEL_GRADIENTS[rqReport.aqLevel] || RQ_LEVEL_GRADIENTS.Moderate} p-8 text-white shadow-xl`}>
             <div className="text-center">
               <p className="text-lg font-semibold opacity-90 mb-4">Your RQ Score</p>
-              <div className="text-7xl font-bold mb-4">{aqReport.totalScore}</div>
-              <div className="text-2xl font-semibold mb-2">{aqReport.aqLevel} Resilience</div>
-              <p className="text-base opacity-90 max-w-3xl mx-auto">{AQ_LEVEL_DESCRIPTIONS[aqReport.aqLevel] || AQ_LEVEL_DESCRIPTIONS.Moderate}</p>
+              <div className="text-7xl font-bold mb-4">{rqReport.totalScore}</div>
+              <div className="text-2xl font-semibold mb-2">{rqReport.aqLevel} Resilience</div>
+              <p className="text-base opacity-90 max-w-3xl mx-auto">{RQ_LEVEL_DESCRIPTIONS[rqReport.aqLevel] || RQ_LEVEL_DESCRIPTIONS.Moderate}</p>
             </div>
           </div>
 
@@ -771,13 +773,13 @@ export default function AssessmentReportView({
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-slate-100">
               <h2 className="text-2xl font-bold text-slate-900 mb-4">Dimension Breakdown</h2>
               <div className="space-y-5">
-                {aqReport.subscales.map((subscale) => (
+                {rqReport.subscales.map((subscale) => (
                   <div key={subscale.dimension} className="border-b border-slate-200 pb-5 last:border-b-0 last:pb-0">
                     <div className="flex justify-between items-start gap-4 mb-2">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-900">{subscale.dimension}</h3>
                         <p className="text-sm text-slate-600 mt-1">
-                          {AQ_DIMENSION_INSIGHTS[subscale.dimension]?.[subscale.percentage >= 70 ? "high" : "low"] || ""}
+                          {RQ_DIMENSION_INSIGHTS[subscale.dimension]?.[subscale.percentage >= 70 ? "high" : "low"] || ""}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
@@ -1017,7 +1019,7 @@ export default function AssessmentReportView({
         <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl font-bold">{report.assessmentName}</h1>
+              <h1 className="text-2xl font-bold">{reportTitle}</h1>
               <p className="mt-1 text-blue-100 text-sm">Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered</p>
               <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
             </div>

@@ -9,6 +9,8 @@ import {
   allowsMultipleAttempts,
   buildStudentResultPath,
   formatAttemptHistoryScore,
+  getAssessmentDisplayName,
+  normalizeAssessmentCode,
   type AttemptHistoryEvaluation,
 } from "@/lib/assessmentAccess";
 
@@ -188,7 +190,11 @@ function AttemptHistoryOrRedirect(props: {
           return;
         }
 
-        const resolvedName = attempts[attempts.length - 1]?.assessmentName || props.assessmentCode;
+        const latest = attempts[attempts.length - 1];
+        const resolvedName = getAssessmentDisplayName(
+          normalizeAssessmentCode(latest?.assessmentCode || props.assessmentCode),
+          latest?.assessmentName || props.assessmentCode,
+        );
         setAssessmentName(resolvedName);
 
         if (allowsMultipleAttempts(props.assessmentCode)) {
@@ -266,7 +272,7 @@ export default function StudentAssessmentResultPage() {
   const params = useParams<{ slug?: string; code?: string }>();
   const searchParams = useSearchParams();
   const slug = params?.slug || "";
-  const code = String(params?.code || "").toUpperCase();
+  const code = normalizeAssessmentCode(String(params?.code || ""));
   const attemptId = searchParams?.get("attemptId") || "";
 
   const attemptListHref = buildStudentResultPath(slug, code);

@@ -16,6 +16,9 @@ import {
 } from "../constants/platform";
 import { ADVERSITY_TEST_QUESTIONS } from "../scripts/seedAdversityQuestions";
 
+/** Assessments that allow multiple completed attempts per student — never merge/delete during alias migration. */
+const MULTI_ATTEMPT_ASSESSMENT_CODES = new Set(["RESILIENCE_TEST", "STUDY_ABROAD"]);
+
 const LEGACY_ASSESSMENT_ALIASES: Array<{ alias: string; canonical: string; canonicalName: string }> = [
   {
     alias: "CLEAR",
@@ -32,6 +35,11 @@ const LEGACY_ASSESSMENT_ALIASES: Array<{ alias: string; canonical: string; canon
     canonical: "METACOGNITION_TEST",
     canonicalName: "TEST - Thinking & Expression Skills Test",
   },
+  {
+    alias: "ADVERSITY_TEST",
+    canonical: "RESILIENCE_TEST",
+    canonicalName: "Resilience Quotient (RQ) Assessment",
+  },
 ];
 
 const pickAttemptWinner = (
@@ -42,6 +50,14 @@ const pickAttemptWinner = (
   if (b.status === "COMPLETED" && a.status !== "COMPLETED") return b;
   if (a.answeredCount !== b.answeredCount) return a.answeredCount > b.answeredCount ? a : b;
   return new Date(a.updatedAt).getTime() >= new Date(b.updatedAt).getTime() ? a : b;
+};
+
+/** Rename every legacy attempt to the canonical code (preserves all rows). */
+const renameLegacyAttempts = async (alias: string, canonical: string, canonicalName: string) => {
+  await StudentAssessmentAttempt.updateMany(
+    { assessmentCode: alias },
+    { $set: { assessmentCode: canonical, assessmentName: canonicalName } },
+  );
 };
 
 const mergeLegacyAttempts = async (alias: string, canonical: string, canonicalName: string) => {
@@ -111,7 +127,11 @@ const cleanupLegacyAssessmentAliases = async () => {
     await mergeLegacyQuestions(alias, canonical);
     await Invoice.updateMany({ assessmentCode: alias }, { $set: { assessmentCode: canonical } });
 
-    await mergeLegacyAttempts(alias, canonical, canonicalName);
+    if (MULTI_ATTEMPT_ASSESSMENT_CODES.has(canonical)) {
+      await renameLegacyAttempts(alias, canonical, canonicalName);
+    } else {
+      await mergeLegacyAttempts(alias, canonical, canonicalName);
+    }
 
     const coupons = await Coupon.find({ applicableAssessmentCodes: alias });
     for (const coupon of coupons) {
@@ -198,14 +218,14 @@ export const bootstrapPlatform = async (): Promise<void> => {
     );
   }
 
-  // Seed Adversity Test questions if not already present
-  const adversityTestQuestionCount = await Question.countDocuments({
-    assessmentCode: "ADVERSITY_TEST",
+  // Seed RQ assessment questions if not already present
+  const resilienceQuestionCount = await Question.countDocuments({
+    assessmentCode: { $in: ["RESILIENCE_TEST", "ADVERSITY_TEST"] },
   });
 
-  if (adversityTestQuestionCount === 0) {
+  if (resilienceQuestionCount === 0) {
     await Question.insertMany(ADVERSITY_TEST_QUESTIONS);
-    console.log("✅ Adversity Test questions seeded successfully");
+    console.log("✅ Resilience Quotient (RQ) questions seeded successfully");
   }
 
   await cleanupLegacyAssessmentAliases();

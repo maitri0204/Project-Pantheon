@@ -31,7 +31,7 @@ export const ensureStudentAssessmentAttemptIndexes = async (): Promise<void> => 
       );
     }
 
-    // Single-attempt enforcement for non-AQ is now handled at application level in startStudentAssessment()
+    // Single-attempt enforcement for non-RQ is now handled at application level in startStudentAssessment()
     console.log("✓ StudentAssessmentAttempt indexes ensured");
   } catch (error) {
     console.warn("ensureStudentAssessmentAttemptIndexes: failed to create or update indexes", error);

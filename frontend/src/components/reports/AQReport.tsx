@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * AQReport.tsx — Premium RQ Behavioral Analytics PDF
+ * RQReport.tsx — Premium RQ Behavioral Analytics PDF
  * Rendered with @react-pdf/renderer v4
  *
  * Font system: Inter (jsDelivr @fontsource CDN)
@@ -141,7 +141,7 @@ const LEVEL_TEXT: Record<string, string> = {
 const LEVEL_DESC: Record<string, { title: string; body: string }> = {
   Exceptional: {
     title: 'Exceptional Resilience',
-    body:  'You operate in the highest tier of adversity intelligence. Your CORE profile — Control, Ownership, Reach, Endurance — is firing on all dimensions, enabling you to navigate challenges with agency, accountability, and psychological strength.',
+    body:  'You operate in the highest tier of resilience intelligence. Your CORE profile — Control, Ownership, Reach, Endurance — is firing on all dimensions, enabling you to navigate challenges with agency, accountability, and psychological strength.',
   },
   Strong: {
     title: 'Strong Resilience',
@@ -2113,7 +2113,7 @@ function MentorshipGuidancePage({ d }: { d: AQReportData }) {
 
 /* ─────────────────────────── Page 14 — Understanding Your RQ ────────────── */
 
-function AQUnderstandingPage({ d }: { d: AQReportData }) {
+function RQUnderstandingPage({ d }: { d: AQReportData }) {
   const aq    = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 50;
   const level = d.aqHistory.latestLevel ?? levelOf(aq);
 
@@ -2327,7 +2327,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
       </Page>
 
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="Parent Guidance Section" subtitle="Notes and weekly action dashboard for parents" />
+        <PageHeader title="Parent Guidance Section (Continued)" subtitle="Notes and weekly action dashboard for parents" />
 
         <View style={{ backgroundColor: C.slate50, borderRadius: 8, padding: 10, marginBottom: 10 }}>
           <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>A Note for Parents</Text>
@@ -2379,7 +2379,7 @@ export function AQReport(props: AQReportData) {
       <ImprovementRoadmapPage d={props} />
       <PracticalSolutionsPage d={props} />
       <MentorshipGuidancePage d={props} />
-      <AQUnderstandingPage    d={props} />
+      <RQUnderstandingPage    d={props} />
       <StudyProductivityPage  d={props} />
       <ParentGuidancePage     d={props} />
       <FinalSummaryPage       d={props} />

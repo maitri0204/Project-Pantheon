@@ -5,7 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { BarChart3, CalendarClock, Sparkles } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { allowsMultipleAttempts, buildStudentResultPath } from "@/lib/assessmentAccess";
+import {
+  allowsMultipleAttempts,
+  buildStudentResultPath,
+  getAssessmentDisplayName,
+  normalizeAssessmentCode,
+} from "@/lib/assessmentAccess";
 
 type StudentResultItem = {
   id: string;
@@ -25,9 +30,9 @@ type StudentResultsResponse = {
 };
 
 const normalizeDisplayCode = (code: string) => {
-  const normalized = String(code || "").toUpperCase().trim();
+  const normalized = normalizeAssessmentCode(code);
   if (normalized === "JOHARI_WINDOW") return "CLEAR";
-  if (normalized === "METACOGNITION_TEST" || normalized === "METACOGNITION") return "TEST";
+  if (normalized === "METACOGNITION_TEST") return "TEST";
   return normalized;
 };
 
@@ -122,7 +127,9 @@ export default function StudentResultsPage() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-600">{normalizeDisplayCode(result.assessmentCode)}</p>
-                    <h3 className="text-lg font-bold text-slate-900 mt-0.5">{result.assessmentName}</h3>
+                    <h3 className="text-lg font-bold text-slate-900 mt-0.5">
+                      {getAssessmentDisplayName(result.assessmentCode, result.assessmentName)}
+                    </h3>
                     <p className="mt-1 text-sm text-slate-600">
                       {result.answeredCount}/{result.totalQuestions} answered
                     </p>

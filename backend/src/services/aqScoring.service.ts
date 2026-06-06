@@ -1,7 +1,7 @@
 /**
- * AQ (Adversity Quotient) Scoring Service for Project Pantheon
+ * RQ (Resilience Quotient) Scoring Service for Project Pantheon
  *
- * Evaluates Adversity Quotient based on four dimensions:
+ * Evaluates Resilience Quotient based on four dimensions:
  * - Control: Ability to influence outcomes (6 questions × 4 points = 24 max)
  * - Ownership: Taking responsibility (5 questions × 4 points = 20 max)
  * - Reach: Limiting scope of setbacks (7 questions × 4 points = 28 max)
@@ -47,7 +47,10 @@ let scoringMap: Record<string, Record<string, number>> | null = null;
 async function initializeMaps(): Promise<void> {
   if (dimensionMap && scoringMap) return;
 
-  const questions = await Question.find({ assessmentCode: "ADVERSITY_TEST", isActive: true });
+  const questions = await Question.find({
+    assessmentCode: { $in: ["RESILIENCE_TEST", "ADVERSITY_TEST"] },
+    isActive: true,
+  });
 
   dimensionMap = {};
   scoringMap = {};
@@ -65,7 +68,7 @@ async function initializeMaps(): Promise<void> {
 }
 
 /**
- * Classify AQ Level based on total score
+ * Classify RQ level based on total score
  */
 function classifyAQLevel(totalScore: number): AQLevel {
   if (totalScore >= 80) return "Exceptional";
@@ -75,7 +78,7 @@ function classifyAQLevel(totalScore: number): AQLevel {
 }
 
 /**
- * Evaluate AQ answers from a StudentAssessmentAttempt
+ * Evaluate RQ answers from a StudentAssessmentAttempt
  */
 export async function evaluateAQAnswers(attempt: IStudentAssessmentAttempt): Promise<AQEvaluationResult> {
   await initializeMaps();
@@ -122,7 +125,7 @@ export async function evaluateAQAnswers(attempt: IStudentAssessmentAttempt): Pro
 }
 
 /**
- * Get AQ level description
+ * Get RQ level description
  */
 export function getAQLevelDescription(level: AQLevel): string {
   const descriptions: Record<AQLevel, string> = {

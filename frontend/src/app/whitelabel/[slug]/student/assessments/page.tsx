@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { allowsMultipleAttempts, buildStudentResultPath } from "@/lib/assessmentAccess";
+import { allowsMultipleAttempts, buildStudentResultPath, isResilienceAssessment } from "@/lib/assessmentAccess";
 
 type StudentAssessmentsResponse = {
   assessments: Array<{
@@ -314,7 +314,7 @@ export default function StudentAssessmentsPage() {
               </div>
 
               <div className="mt-4 flex gap-3">
-                {(assessment.code === "ADVERSITY_TEST" || assessment.code === "STUDY_ABROAD") && completed ? (
+                {(isResilienceAssessment(assessment.code) || assessment.code === "STUDY_ABROAD") && completed ? (
                   <>
                     <button
                       onClick={() => openReport(assessment.code, assessment.attempt?.id)}

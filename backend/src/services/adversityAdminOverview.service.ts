@@ -99,7 +99,7 @@ export async function buildAdversityAdminOverview(
 
   const attempts = await StudentAssessmentAttempt.find({
     ...organizationFilter,
-    assessmentCode: { $in: ["ADVERSITY_TEST"] },
+    assessmentCode: { $in: ["RESILIENCE_TEST", "ADVERSITY_TEST"] },
     status: "COMPLETED",
   })
     .sort({ completedAt: -1, updatedAt: -1 })

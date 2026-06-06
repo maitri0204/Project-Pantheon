@@ -1,5 +1,5 @@
 /**
- * Adversity Test Questions Seed Data for Project Pantheon
+ * Resilience Quotient (RQ) Questions Seed Data for Project Pantheon
  *
  * The local fallback below keeps Pantheon bootable, but when the
  * Adversity-Test source file is available on this machine we prefer
@@ -22,7 +22,7 @@ type ExternalAdversityQuestion = {
 };
 
 type PantheonAdversityQuestion = {
-  assessmentCode: "ADVERSITY_TEST";
+  assessmentCode: "RESILIENCE_TEST";
   category: string;
   categoryLabel: string;
   questionNumber: number;
@@ -33,7 +33,7 @@ type PantheonAdversityQuestion = {
 
 const normalizeExternalAdversityQuestions = (questions: ExternalAdversityQuestion[]): PantheonAdversityQuestion[] => {
   return questions.map((question, index) => ({
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: question.aqDimension,
     categoryLabel: question.aqDimension,
     questionNumber: index + 1,
@@ -75,7 +75,7 @@ const loadExternalAdversityQuestions = (): PantheonAdversityQuestion[] | null =>
     return normalizeExternalAdversityQuestions(loaded as ExternalAdversityQuestion[]);
   } catch (error) {
     console.warn(
-      `Failed to load Adversity-Test source from ${path.basename(EXTERNAL_ADVERSITY_TEST_SOURCE)}; falling back to local AQ seed data.`,
+      `Failed to load external RQ source from ${path.basename(EXTERNAL_ADVERSITY_TEST_SOURCE)}; falling back to local RQ seed data.`,
       error
     );
     return null;
@@ -85,7 +85,7 @@ const loadExternalAdversityQuestions = (): PantheonAdversityQuestion[] | null =>
 const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
   // ─── CONTROL DIMENSION (6 questions) ─────────────────────────────────────
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Control",
     categoryLabel: "Control",
     questionNumber: 1,
@@ -99,7 +99,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Control",
     categoryLabel: "Control",
     questionNumber: 2,
@@ -113,7 +113,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Control",
     categoryLabel: "Control",
     questionNumber: 3,
@@ -127,7 +127,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Control",
     categoryLabel: "Control",
     questionNumber: 4,
@@ -141,7 +141,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Control",
     categoryLabel: "Control",
     questionNumber: 5,
@@ -155,7 +155,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Control",
     categoryLabel: "Control",
     questionNumber: 6,
@@ -171,7 +171,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
 
   // ─── OWNERSHIP DIMENSION (5 questions) ───────────────────────────────────
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Ownership",
     categoryLabel: "Ownership",
     questionNumber: 7,
@@ -185,7 +185,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Ownership",
     categoryLabel: "Ownership",
     questionNumber: 8,
@@ -199,7 +199,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Ownership",
     categoryLabel: "Ownership",
     questionNumber: 9,
@@ -213,7 +213,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Ownership",
     categoryLabel: "Ownership",
     questionNumber: 10,
@@ -227,7 +227,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Ownership",
     categoryLabel: "Ownership",
     questionNumber: 11,
@@ -243,7 +243,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
 
   // ─── REACH DIMENSION (7 questions) ───────────────────────────────────────
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 12,
@@ -257,7 +257,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 13,
@@ -271,7 +271,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 14,
@@ -285,7 +285,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 15,
@@ -299,7 +299,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 16,
@@ -313,7 +313,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 17,
@@ -327,7 +327,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reach",
     categoryLabel: "Reach",
     questionNumber: 18,
@@ -343,7 +343,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
 
   // ─── ENDURANCE DIMENSION (7 questions) ───────────────────────────────────
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 19,
@@ -357,7 +357,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 20,
@@ -371,7 +371,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 21,
@@ -385,7 +385,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 22,
@@ -399,7 +399,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 23,
@@ -413,7 +413,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 24,
@@ -427,7 +427,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Endurance",
     categoryLabel: "Endurance",
     questionNumber: 25,
@@ -443,7 +443,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
 
   // ─── REFLECTION DIMENSION (5 questions) ──────────────────────────────────
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reflection",
     categoryLabel: "Reflection",
     questionNumber: 26,
@@ -457,7 +457,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reflection",
     categoryLabel: "Reflection",
     questionNumber: 27,
@@ -471,7 +471,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reflection",
     categoryLabel: "Reflection",
     questionNumber: 28,
@@ -485,7 +485,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reflection",
     categoryLabel: "Reflection",
     questionNumber: 29,
@@ -499,7 +499,7 @@ const LOCAL_ADVERSITY_TEST_QUESTIONS: PantheonAdversityQuestion[] = [
     ],
   },
   {
-    assessmentCode: "ADVERSITY_TEST",
+    assessmentCode: "RESILIENCE_TEST",
     category: "Reflection",
     categoryLabel: "Reflection",
     questionNumber: 30,

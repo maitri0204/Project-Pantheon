@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 
 type AttemptOption = {
   label: string;
@@ -161,7 +162,7 @@ export default function StudentTakeAssessmentPage() {
   const slug = params?.slug || routeParts[1] || "";
   const fallbackCodeFromRest = Array.isArray(params?.rest) ? params.rest[2] : "";
   const fallbackCodeFromPath = routeParts[5] || "";
-  const code = (params?.code || fallbackCodeFromRest || fallbackCodeFromPath || "").toUpperCase();
+  const code = normalizeAssessmentCode(params?.code || fallbackCodeFromRest || fallbackCodeFromPath || "");
   const paymentSessionId = searchParams?.get("paymentSessionId") || undefined;
   const auth = useMemo(() => getStoredAuth(), []);
 
@@ -199,7 +200,7 @@ export default function StudentTakeAssessmentPage() {
         }
 
         setAttemptId(attempt.id);
-        setAssessmentName(attempt.assessmentName);
+        setAssessmentName(getAssessmentDisplayName(code, attempt.assessmentName));
         setQuestions(attempt.questions);
 
         // Restore any already-saved answers
@@ -425,7 +426,7 @@ export default function StudentTakeAssessmentPage() {
     categoryMap.get(q.category)!.questions.push({ q, idx });
   });
   const categoryGroups = Array.from(categoryMap.entries()).map(([cat, val]) => ({ cat, ...val }));
-  // Ensure the navigator groups follow the canonical AQ dimension order
+  // Ensure the navigator groups follow the canonical RQ dimension order
   const desiredCategoryOrder = ["Control", "Endurance", "Reach", "Ownership"];
   const categoryOrderMap = new Map(desiredCategoryOrder.map((c, i) => [c, i]));
 

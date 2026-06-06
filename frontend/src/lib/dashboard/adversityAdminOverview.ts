@@ -58,7 +58,7 @@ export async function fetchAdversityAdminOverview(
     ? `?organizationSlug=${encodeURIComponent(options.organizationSlug)}`
     : "";
   return apiRequest<AdversityAdminOverview>(
-    `/platform/assessments/ADVERSITY_TEST/admin-overview${slugQuery}`,
+    `/platform/assessments/RESILIENCE_TEST/admin-overview${slugQuery}`,
     {},
     token,
   );

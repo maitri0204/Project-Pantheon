@@ -70,6 +70,7 @@ const getAssessmentDisplayName = (code: string, fallbackName: string): string =>
   const normalized = code.toUpperCase().trim();
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
   if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
+  if (normalized === "RESILIENCE_TEST" || normalized === "ADVERSITY_TEST") return "Resilience Quotient (RQ) Assessment";
   return fallbackName;
 };
 

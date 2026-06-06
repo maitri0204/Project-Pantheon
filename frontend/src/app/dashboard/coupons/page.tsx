@@ -10,7 +10,7 @@ const ASSESSMENTS = [
   { code: "JOHARI_WINDOW", name: "CLEAR", color: "amber" },
   { code: "LITMUS_TEST", name: "Litmus Test", color: "blue" },
   { code: "METACOGNITION_TEST", name: "TEST", color: "rose" },
-  { code: "ADVERSITY_TEST", name: "Resilience Quotient", color: "orange" },
+  { code: "RESILIENCE_TEST", name: "Resilience Quotient", color: "orange" },
   { code: "STUDY_ABROAD", name: "Study Abroad", color: "sky" },
   { code: "ACADEMIC_CAREER", name: "Academic Career", color: "violet" },
 ] as const;
@@ -22,7 +22,8 @@ function getAssessmentDisplayName(code: string, fallback?: string): string {
     JOHARI_WINDOW: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
     LITMUS_TEST: "LITMUS - Learning & Innovation Through Assessment",
     METACOGNITION_TEST: "TEST - Thinking & Expression Skills Test",
-    ADVERSITY_TEST: "Resilience Quotient (RQ)",
+    RESILIENCE_TEST: "Resilience Quotient (RQ) Assessment",
+    ADVERSITY_TEST: "Resilience Quotient (RQ) Assessment",
     STUDY_ABROAD: "Study Abroad Readiness",
     ACADEMIC_CAREER: "Academic Career & Interest",
   };

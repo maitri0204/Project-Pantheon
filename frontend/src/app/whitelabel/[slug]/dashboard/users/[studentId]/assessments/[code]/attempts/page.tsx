@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 import AssessmentAttemptHistoryView from "@/components/dashboard/AssessmentAttemptHistoryView";
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { buildOrgReportPath, normalizeAssessmentCode } from "@/lib/assessmentAccess";
+import { buildOrgReportPath, getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 
 type AttemptMetaResponse = {
   attempts: Array<{ assessmentName: string }>;
@@ -28,8 +28,10 @@ export default function WhitelabelOrgStudentAttemptListPage() {
       auth.token,
     )
       .then((res) => {
-        const name = res.attempts?.[res.attempts.length - 1]?.assessmentName;
-        if (name) setAssessmentName(name);
+        const latest = res.attempts?.[res.attempts.length - 1];
+        if (latest) {
+          setAssessmentName(getAssessmentDisplayName(code, latest.assessmentName));
+        }
       })
       .catch(() => undefined);
   }, [auth?.token, studentId, code]);

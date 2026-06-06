@@ -17,7 +17,7 @@ const TEST_DASHBOARD_META: Record<string, Omit<TestDashboardMeta, "code">> = {
     accent: "bg-blue-50 text-blue-700 border-blue-100",
     enabled: true,
   },
-  ADVERSITY_TEST: {
+  RESILIENCE_TEST: {
     title: "Resilience Quotient (RQ)",
     subtitle: "Resilience levels and CORE dimension analytics",
     gradient: "from-orange-600 to-amber-500",

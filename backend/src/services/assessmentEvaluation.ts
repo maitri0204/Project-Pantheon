@@ -474,6 +474,7 @@ export async function evaluateAssessmentAttempt(attempt: IStudentAssessmentAttem
       return evaluateMetacognition(attempt);
     case "CAREER_DNA":
       return evaluateCareerDna(attempt);
+    case "RESILIENCE_TEST":
     case "ADVERSITY_TEST":
       return evaluateAQAnswers(attempt);
     case "ACADEMIC_CAREER":

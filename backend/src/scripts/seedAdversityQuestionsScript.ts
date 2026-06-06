@@ -1,5 +1,5 @@
 /**
- * Seed Script: Adversity Test Questions
+ * Seed Script: Resilience Quotient (RQ) Questions
  * 
  * This script imports the ADVERSITY_TEST questions into the MongoDB database
  * when the platform is bootstrapped.
@@ -25,38 +25,38 @@ const seedAdversityQuestions = async (): Promise<void> => {
     await mongoose.connect(mongoUri);
     console.log("✅ MongoDB connected");
 
-    console.log("📝 Seeding Adversity Test questions...");
+    console.log("📝 Seeding Resilience Quotient (RQ) questions...");
 
     // Clear existing ADVERSITY_TEST questions to avoid duplicates
     const deleteResult = await Question.deleteMany({
-      assessmentCode: "ADVERSITY_TEST",
+      assessmentCode: "RESILIENCE_TEST",
     });
     console.log(`🗑️  Cleared ${deleteResult.deletedCount} existing questions`);
 
     // Insert new questions
     const insertResult = await Question.insertMany(ADVERSITY_TEST_QUESTIONS);
-    console.log(`✅ Inserted ${insertResult.length} Adversity Test questions`);
+    console.log(`✅ Inserted ${insertResult.length} Resilience Quotient (RQ) questions`);
 
     // Verify insertion by dimension
     const dimensionCounts = await Promise.all([
       Question.countDocuments({
-        assessmentCode: "ADVERSITY_TEST",
+        assessmentCode: "RESILIENCE_TEST",
         category: "Control",
       }),
       Question.countDocuments({
-        assessmentCode: "ADVERSITY_TEST",
+        assessmentCode: "RESILIENCE_TEST",
         category: "Ownership",
       }),
       Question.countDocuments({
-        assessmentCode: "ADVERSITY_TEST",
+        assessmentCode: "RESILIENCE_TEST",
         category: "Reach",
       }),
       Question.countDocuments({
-        assessmentCode: "ADVERSITY_TEST",
+        assessmentCode: "RESILIENCE_TEST",
         category: "Endurance",
       }),
       Question.countDocuments({
-        assessmentCode: "ADVERSITY_TEST",
+        assessmentCode: "RESILIENCE_TEST",
         category: "Reflection",
       }),
     ]);
@@ -70,10 +70,10 @@ const seedAdversityQuestions = async (): Promise<void> => {
     console.log(`  Total:      ${dimensionCounts.reduce((a: number, b: number) => a + b, 0)} questions`);
 
     console.log(
-      "\n✨ Adversity Test questions seeded successfully!\n"
+      "\n✨ Resilience Quotient (RQ) questions seeded successfully!\n"
     );
   } catch (error) {
-    console.error("❌ Error seeding Adversity Test questions:", error);
+    console.error("❌ Error seeding Resilience Quotient (RQ) questions:", error);
     process.exit(1);
   } finally {
     await mongoose.connection.close();

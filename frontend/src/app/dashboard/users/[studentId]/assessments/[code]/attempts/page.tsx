@@ -7,6 +7,7 @@ import AssessmentAttemptHistoryView from "@/components/dashboard/AssessmentAttem
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import {
   buildOrgReportPath,
+  getAssessmentDisplayName,
   normalizeAssessmentCode,
 } from "@/lib/assessmentAccess";
 
@@ -30,8 +31,10 @@ export default function SuperadminOrgStudentAttemptListPage() {
       auth.token,
     )
       .then((res) => {
-        const name = res.attempts?.[res.attempts.length - 1]?.assessmentName;
-        if (name) setAssessmentName(name);
+        const latest = res.attempts?.[res.attempts.length - 1];
+        if (latest) {
+          setAssessmentName(getAssessmentDisplayName(code, latest.assessmentName));
+        }
       })
       .catch(() => undefined);
   }, [auth?.token, studentId, code]);

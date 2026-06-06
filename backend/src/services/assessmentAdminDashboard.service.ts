@@ -457,6 +457,7 @@ function parseEvaluation(
       const parsed = parseStudyAbroad(evaluation);
       return parsed ? { ...parsed } : null;
     }
+    case "RESILIENCE_TEST":
     case "ADVERSITY_TEST": {
       const parsed = parseAdversity(evaluation);
       return parsed ? { ...parsed } : null;
@@ -536,9 +537,10 @@ function buildSummary(
       summary.metricSub = scores.length ? bandFromStudyAbroadScore(avgScore) : undefined;
       break;
     }
+    case "RESILIENCE_TEST":
     case "ADVERSITY_TEST": {
       const scores = rows.map((r) => r.score).filter((s): s is number => Number.isFinite(s));
-      summary.metricLabel = "Avg AQ Score";
+      summary.metricLabel = "Avg RQ Score";
       summary.metricValue = scores.length ? `${avg(scores)} / 100` : "—";
       summary.metricSub = distributions[0]?.label;
       break;
@@ -582,6 +584,12 @@ const DIMENSION_LABELS: Record<string, Record<string, string>> = {
   STUDY_ABROAD: Object.fromEntries(
     STUDY_ABROAD_TOPICS.map((t) => [t, t.replace(" Readiness", "")]),
   ),
+  RESILIENCE_TEST: {
+    Control: "Control",
+    Ownership: "Ownership",
+    Reach: "Reach",
+    Endurance: "Endurance",
+  },
   ADVERSITY_TEST: {
     Control: "Control",
     Ownership: "Ownership",

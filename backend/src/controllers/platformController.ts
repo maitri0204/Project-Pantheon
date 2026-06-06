@@ -32,17 +32,21 @@ import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCa
 import { generateCareerDnaExecutivePdf } from "../services/careerDnaReport/generateCareerDnaExecutivePdf";
 import { AuthRequest } from "../types/auth";
 
+const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
+const LEGACY_RESILIENCE_CODES = new Set(["ADVERSITY_TEST", "RQ_TEST", "RESILIENCE"]);
+
 const normalizeAssessmentCode = (code: string): string => {
   const normalized = code.toUpperCase().trim();
   if (normalized === "METACOGNITION") return "METACOGNITION_TEST";
   if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
   if (normalized === "LITMUS") return "LITMUS_TEST";
+  if (LEGACY_RESILIENCE_CODES.has(normalized)) return RESILIENCE_ASSESSMENT_CODE;
   return normalized;
 };
 
 const allowsMultipleAttempts = (code: string): boolean => {
   const normalized = normalizeAssessmentCode(code);
-  return normalized === "ADVERSITY_TEST" || normalized === "STUDY_ABROAD";
+  return normalized === RESILIENCE_ASSESSMENT_CODE || normalized === "STUDY_ABROAD";
 };
 
 function pickAttemptHistoryEvaluation(
@@ -63,6 +67,7 @@ const getAssessmentCodeAliases = (code: string): string[] => {
   if (normalized === "METACOGNITION_TEST") return ["METACOGNITION_TEST", "METACOGNITION"];
   if (normalized === "JOHARI_WINDOW") return ["JOHARI_WINDOW", "JOHARI", "CLEAR"];
   if (normalized === "LITMUS_TEST") return ["LITMUS_TEST", "LITMUS"];
+  if (normalized === RESILIENCE_ASSESSMENT_CODE) return [RESILIENCE_ASSESSMENT_CODE, "ADVERSITY_TEST"];
   return [normalized];
 };
 
@@ -217,6 +222,8 @@ const getAssessmentDisplayName = (code: string, fallbackName: string): string =>
   const normalized = normalizeAssessmentCode(code);
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
   if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
+  if (normalized === RESILIENCE_ASSESSMENT_CODE) return "Resilience Quotient (RQ) Assessment";
+  if (/adversity quotient|\(aq\)/i.test(fallbackName)) return "Resilience Quotient (RQ) Assessment";
   return fallbackName;
 };
 
@@ -253,7 +260,7 @@ const isLitmusAssessmentCode = (assessmentCode: string): boolean => (
 );
 
 const isAdversityAssessmentCode = (assessmentCode: string): boolean => (
-  normalizeAssessmentCode(assessmentCode) === "ADVERSITY_TEST"
+  normalizeAssessmentCode(assessmentCode) === RESILIENCE_ASSESSMENT_CODE
 );
 
 const isAcademicCareerAssessmentCode = (assessmentCode: string): boolean => (
@@ -682,7 +689,7 @@ export const getAdversityAdminOverview = async (req: AuthRequest, res: Response)
     res.json(overview);
   } catch (error) {
     console.error("getAdversityAdminOverview error:", error);
-    res.status(500).json({ message: "Failed to load adversity overview" });
+    res.status(500).json({ message: "Failed to load RQ overview" });
   }
 };
 
@@ -2020,10 +2027,11 @@ export const listStudentAssessmentAttempts = async (req: AuthRequest, res: Respo
   }
 
   try {
+    const codeAliases = getAssessmentCodeAliases(canonicalCode);
     const attempts = await StudentAssessmentAttempt.find({
       user: req.user!._id,
       organization: req.user!.organization,
-      assessmentCode: canonicalCode,
+      assessmentCode: { $in: codeAliases },
       status: "COMPLETED",
     }).sort({ completedAt: 1, updatedAt: 1 });
 
@@ -2031,9 +2039,14 @@ export const listStudentAssessmentAttempts = async (req: AuthRequest, res: Respo
       attempts: attempts.map((attempt, index) => ({
         attemptId: attempt._id,
         assessmentCode: normalizeAssessmentCode(attempt.assessmentCode),
-        assessmentName: attempt.assessmentName,
+        assessmentName: getAssessmentDisplayName(
+          normalizeAssessmentCode(attempt.assessmentCode),
+          attempt.assessmentName,
+        ),
         completedAt: attempt.completedAt,
-        evaluation: attempt.evaluation ?? undefined,
+        evaluation: pickAttemptHistoryEvaluation(
+          attempt.evaluation as Record<string, unknown> | undefined,
+        ) ?? attempt.evaluation ?? undefined,
         attemptNumber: index + 1,
       })),
     });

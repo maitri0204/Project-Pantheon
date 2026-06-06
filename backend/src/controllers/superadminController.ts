@@ -11,10 +11,15 @@ import Question from "../models/Question";
 import User from "../models/User";
 import { AuthRequest } from "../types/auth";
 
+const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
+const LEGACY_RESILIENCE_CODES = new Set(["ADVERSITY_TEST", "RQ_TEST", "RESILIENCE"]);
+
 const normalizeAssessmentCode = (code: string): string => {
   const normalized = code.toUpperCase().trim();
   if (normalized === "METACOGNITION") return "METACOGNITION_TEST";
   if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
+  if (normalized === "LITMUS") return "LITMUS_TEST";
+  if (LEGACY_RESILIENCE_CODES.has(normalized)) return RESILIENCE_ASSESSMENT_CODE;
   return normalized;
 };
 
@@ -29,6 +34,8 @@ const getAssessmentDisplayName = (code: string, fallbackName: string): string =>
   const normalized = normalizeAssessmentCode(code);
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
   if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
+  if (normalized === RESILIENCE_ASSESSMENT_CODE) return "Resilience Quotient (RQ) Assessment";
+  if (/adversity quotient|\(aq\)/i.test(fallbackName)) return "Resilience Quotient (RQ) Assessment";
   return fallbackName;
 };
 
