@@ -492,17 +492,10 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "JOHARI_WINDOW") {
-    const blob = await generateClearReport({
-          studentName: reportStudentName,
-          classGrade,
-          schoolName,
-      submittedAt: submittedLabel,
-          sfScore: toNumber(evaluation.solicitsFeedbackScore),
-          sdScore: toNumber(evaluation.selfDisclosureScore),
-          dominantQuadrant: String(evaluation.dominantQuadrant || "Open Area"),
-          organizationBranding: reportBranding,
-    }, { returnBlob: true }) as Blob;
-    return { blob, fileName: `CLEAR_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
+    if (!authToken) {
+      throw new Error("Sign in is required to download the CLEAR report");
+    }
+    return generateClearReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "CAREER_COMPASS") {

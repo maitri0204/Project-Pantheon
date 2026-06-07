@@ -31,6 +31,7 @@ import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCaree
 import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCareerDnaExecutiveHtml";
 import { generateCareerDnaExecutivePdf } from "../services/careerDnaReport/generateCareerDnaExecutivePdf";
 import { buildMetacognitionReportHtml } from "../services/metacognitionReport/buildMetacognitionReportHtml";
+import { buildClearReportHtml } from "../services/clearReport/buildClearReportHtml";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -3648,5 +3649,135 @@ export const getAdminMetacognitionReportHtml = async (req: AuthRequest, res: Res
   } catch (error) {
     console.error("getAdminMetacognitionReportHtml error:", error);
     res.status(500).json({ message: "Failed to build TEST report HTML" });
+  }
+};
+
+const isClearAssessmentCode = (code: string) => {
+  const normalized = normalizeAssessmentCode(code);
+  return normalized === "JOHARI_WINDOW";
+};
+
+const buildClearHtmlForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+) => {
+  if (!isClearAssessmentCode(attempt.assessmentCode)) {
+    throw new Error("CLEAR report is only available for CLEAR assessment attempts");
+  }
+
+  const evaluation = attempt.evaluation ?? await evaluateAssessmentAttempt(attempt);
+  const [student, organization, orgAdmin, organizationRegistration] = await Promise.all([
+    User.findById(attempt.user).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1, email: 1 }).lean(),
+    Organization.findById(attempt.organization).select({ name: 1, branding: 1 }).lean(),
+    User.findOne({
+      role: "ORG_ADMIN",
+      organization: attempt.organization,
+      isActive: true,
+    })
+      .sort({ createdAt: 1 })
+      .select({ firstName: 1, lastName: 1 })
+      .lean(),
+    OrganizationRegistration.findOne({ organization: attempt.organization })
+      .sort({ updatedAt: -1 })
+      .select({ firstName: 1, lastName: 1 })
+      .lean(),
+  ]);
+
+  const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
+  const counselor = `${orgAdmin?.firstName || organizationRegistration?.firstName || ""} ${orgAdmin?.lastName || organizationRegistration?.lastName || ""}`.trim()
+    || organization?.branding?.companyName
+    || organization?.name
+    || "Learning Counselor";
+
+  return buildClearReportHtml({
+    studentName,
+    grade: student?.grade,
+    school: student?.institutionName || organization?.name,
+    email: student?.email,
+    submittedAt: attempt.completedAt || attempt.updatedAt,
+    counselor,
+    solicitsFeedbackScore: (evaluation as { solicitsFeedbackScore?: unknown }).solicitsFeedbackScore,
+    selfDisclosureScore: (evaluation as { selfDisclosureScore?: unknown }).selfDisclosureScore,
+    dominantQuadrant: String((evaluation as { dominantQuadrant?: unknown }).dominantQuadrant || "Open Area"),
+    totalAnswered: (evaluation as { totalAnswered?: unknown }).totalAnswered,
+  });
+};
+
+export const getStudentClearReportHtml = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const html = await buildClearHtmlForAttempt(attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getStudentClearReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build CLEAR report HTML" });
+  }
+};
+
+export const getAdminClearReportHtml = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  const studentIdParam = req.params.studentId;
+  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!studentId || !attemptId) {
+    res.status(400).json({ message: "Student ID and attempt ID are required" });
+    return;
+  }
+
+  const student = await getScopedStudentRecord(req, studentId);
+  if (!student) {
+    res.status(404).json({ message: "Student not found" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: student._id,
+      organization: student.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    const html = await buildClearHtmlForAttempt(attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getAdminClearReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build CLEAR report HTML" });
   }
 };
