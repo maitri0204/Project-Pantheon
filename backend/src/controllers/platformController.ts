@@ -1704,6 +1704,30 @@ const buildSequentialCouponCode = (prefix: string, sequence: number): string => 
   return `${safePrefix}${Math.max(1, Number(sequence) || 1)}`;
 };
 
+const parseOrgSequentialCoupon = (
+  couponCode: string,
+  config: { prefix?: string; totalCoupons?: number },
+): { sequence: number } | null => {
+  const normalizedPrefix = String(config.prefix || "").trim().toUpperCase();
+  const couponInput = String(couponCode || "").trim().toUpperCase();
+  if (!normalizedPrefix || !couponInput.startsWith(normalizedPrefix)) {
+    return null;
+  }
+
+  const suffix = couponInput.slice(normalizedPrefix.length);
+  const sequence = Number(suffix);
+  if (
+    !/^\d+$/.test(suffix)
+    || !Number.isInteger(sequence)
+    || sequence < 1
+    || sequence > Number(config.totalCoupons || 0)
+  ) {
+    return null;
+  }
+
+  return { sequence };
+};
+
 const allocateOrganizationCouponForStudent = async (args: {
   organizationId: mongoose.Types.ObjectId | string;
   userId: mongoose.Types.ObjectId | string;
@@ -1788,6 +1812,125 @@ const allocateOrganizationCouponForStudent = async (args: {
     couponCode,
     configId: String(allocatedConfig._id),
   };
+};
+
+const resolveOrganizationCouponAfterPayment = async (args: {
+  organizationId: mongoose.Types.ObjectId | string;
+  userId: mongoose.Types.ObjectId | string;
+  assessmentCode: string;
+  paymentCouponCode?: string;
+  paidFinalAmount: number;
+}): Promise<{ couponCode?: string; configId?: string }> => {
+  const {
+    organizationId,
+    userId,
+    assessmentCode,
+    paymentCouponCode,
+    paidFinalAmount,
+  } = args;
+  const organizationScope = getReferenceId(organizationId);
+  const userScope = getReferenceId(userId);
+
+  if (!organizationScope || !userScope) {
+    throw new Error("Student organization details are invalid.");
+  }
+
+  const config = await OrganizationCouponConfig.findOne({
+    organization: organizationScope,
+    assessmentCode,
+    isActive: true,
+  });
+
+  if (!config) {
+    return {};
+  }
+
+  const existingUsage = await OrganizationCouponUsage.findOne({
+    organization: organizationScope,
+    user: userScope,
+    assessmentCode,
+  });
+
+  if (existingUsage) {
+    return {
+      couponCode: existingUsage.couponCode,
+      configId: String(config._id),
+    };
+  }
+
+  const normalizedPaymentCoupon = String(paymentCouponCode || "").trim().toUpperCase();
+  const orgCoupon = normalizedPaymentCoupon
+    ? parseOrgSequentialCoupon(normalizedPaymentCoupon, config)
+    : null;
+
+  // Paid in full via Razorpay without an org coupon — payment itself grants access.
+  if (paidFinalAmount > 0 && !orgCoupon) {
+    return {};
+  }
+
+  if (orgCoupon) {
+    const conflict = await OrganizationCouponUsage.findOne({
+      organization: organizationScope,
+      assessmentCode,
+      couponCode: normalizedPaymentCoupon,
+    });
+
+    if (conflict && String(conflict.user) !== userScope) {
+      throw new Error("This coupon has already been used.");
+    }
+
+    if (conflict) {
+      return {
+        couponCode: conflict.couponCode,
+        configId: String(config._id),
+      };
+    }
+
+    try {
+      await OrganizationCouponUsage.create({
+        config: config._id,
+        organization: organizationScope,
+        user: userScope,
+        assessmentCode,
+        couponCode: normalizedPaymentCoupon,
+        sequence: orgCoupon.sequence,
+        usedAt: new Date(),
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("resolveOrganizationCouponAfterPayment: failed to create usage", err);
+      const fallback = await OrganizationCouponUsage.findOne({
+        organization: organizationScope,
+        user: userScope,
+        assessmentCode,
+      });
+      if (fallback) {
+        return {
+          couponCode: fallback.couponCode,
+          configId: String(config._id),
+        };
+      }
+      throw new Error("Unable to register coupon for this assessment.");
+    }
+
+    if (orgCoupon.sequence >= Number(config.nextSequence || 1)) {
+      await OrganizationCouponConfig.updateOne(
+        { _id: config._id },
+        { $set: { nextSequence: orgCoupon.sequence + 1 } },
+      );
+    }
+
+    return {
+      couponCode: normalizedPaymentCoupon,
+      configId: String(config._id),
+    };
+  }
+
+  return allocateOrganizationCouponForStudent({
+    organizationId,
+    userId,
+    assessmentCode,
+  });
 };
 
 export const getOrganizationCouponSummary = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -2617,10 +2760,12 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
   let allocatedCouponCode: string | undefined;
   let allocatedConfigId: string | undefined;
   try {
-    const allocation = await allocateOrganizationCouponForStudent({
+    const allocation = await resolveOrganizationCouponAfterPayment({
       organizationId,
       userId,
       assessmentCode: canonicalCode,
+      paymentCouponCode: paidSession.couponCode,
+      paidFinalAmount: Number(paidSession.finalAmount || 0),
     });
     allocatedCouponCode = allocation.couponCode;
     allocatedConfigId = allocation.configId;

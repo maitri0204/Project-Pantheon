@@ -133,15 +133,6 @@ export default function AssessmentsPage() {
     a.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      imported: "bg-green-50 text-green-700",
-      linked: "bg-blue-50 text-blue-700",
-      "pending-import": "bg-yellow-50 text-yellow-700",
-    };
-    return map[status] ?? "bg-gray-100 text-black";
-  };
-
   return (
     <div className="max-w-7xl mx-auto space-y-5">
       {/* Header */}
@@ -185,17 +176,10 @@ export default function AssessmentsPage() {
               key={a._id}
               className="bg-white/95 rounded-2xl border border-blue-100 shadow-[0_10px_26px_-14px_rgba(37,99,235,0.45)] hover:shadow-[0_18px_35px_-18px_rgba(37,99,235,0.5)] transition-shadow p-6 flex flex-col gap-4"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 space-y-1">
-                  <p className="text-sm text-black uppercase tracking-wide">{normalizeAssessmentCategoryForDisplay(a.category, a.code)}</p>
-                  <h3 className="text-2xl font-bold text-black leading-tight">{a.name}</h3>
-                  <p className="text-sm text-black font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
-                </div>
-                {isOrgAdmin !== true && (
-                  <span className={`flex-shrink-0 text-sm rounded-full px-3 py-1.5 font-semibold ${statusBadge(a.questionBankStatus)}`}>
-                    {a.questionBankStatus}
-                  </span>
-                )}
+              <div className="min-w-0 space-y-1">
+                <p className="text-sm text-black uppercase tracking-wide">{normalizeAssessmentCategoryForDisplay(a.category, a.code)}</p>
+                <h3 className="text-2xl font-bold text-black leading-tight">{a.name}</h3>
+                <p className="text-sm text-black font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
               </div>
 
               <p className="text-base text-black min-h-[3.5rem] leading-relaxed">{a.summary}</p>

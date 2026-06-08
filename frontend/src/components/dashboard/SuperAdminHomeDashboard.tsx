@@ -109,12 +109,6 @@ function displayCode(code: string) {
   return normalized.replace(/_/g, " ");
 }
 
-function questionBankBadge(status: string) {
-  if (status === "imported") return "bg-emerald-50 text-emerald-700";
-  if (status === "linked") return "bg-blue-50 text-blue-700";
-  return "bg-amber-50 text-amber-700";
-}
-
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -344,7 +338,7 @@ export default function SuperAdminHomeDashboard({
                 Assessment analytics
               </h2>
               <p className="mt-1 text-sm text-black">
-                Platform-wide cohort insights — open a dedicated dashboard for each test.
+                Platform-wide cohort insights - open a dedicated dashboard for each test.
               </p>
             </div>
             <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
@@ -389,12 +383,7 @@ export default function SuperAdminHomeDashboard({
                     <p className="mt-1.5 text-sm leading-relaxed text-black">
                       {meta?.subtitle ?? assessment.category}
                     </p>
-                    <div className="mt-3 flex items-center justify-between text-xs text-black">
-                      <span className={`rounded-full px-2 py-0.5 font-medium ${questionBankBadge(assessment.questionBankStatus)}`}>
-                        {assessment.questionBankStatus}
-                      </span>
-                      <span className="font-semibold text-black">₹{assessment.basePrice}</span>
-                    </div>
+                    <p className="mt-3 text-xs font-semibold text-black">₹{assessment.basePrice}</p>
                     <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-indigo-600">
                       Open dashboard
                       <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -448,12 +437,7 @@ export default function SuperAdminHomeDashboard({
                   <p className="truncate text-sm font-semibold text-black">{a.name}</p>
                   <p className="text-xs text-black">{a.category}</p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${questionBankBadge(a.questionBankStatus)}`}>
-                    {a.questionBankStatus}
-                  </span>
-                  <span className="text-sm font-semibold text-black">₹{a.basePrice}</span>
-                </div>
+                <span className="shrink-0 text-sm font-semibold text-black">₹{a.basePrice}</span>
               </div>
             ))}
           </div>
