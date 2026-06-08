@@ -1,6 +1,6 @@
-import { buildPersonalityReportProfile } from "./buildPersonalityReportProfile";
-import type { CareerCompassAssessmentData } from "./types";
-import { reportStyles } from "./styles";
+import { buildPersonalityReportProfile } from "./buildPersonalityReportProfile.js";
+import type { CareerCompassAssessmentData } from "./types.js";
+import { reportStyles } from "./styles.js";
 
 function footer(page: number, total: number, student: string): string {
   return `
