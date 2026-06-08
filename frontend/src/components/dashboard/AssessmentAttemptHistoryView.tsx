@@ -86,14 +86,14 @@ export default function AssessmentAttemptHistoryView({
       <button
         type="button"
         onClick={() => router.replace(topBackHref)}
-        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+        className="inline-flex items-center gap-2 text-sm text-black hover:text-black"
       >
         ← {topBackLabel}
       </button>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">{assessmentName}</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <h1 className="text-2xl font-bold text-black">{assessmentName}</h1>
+        <p className="mt-2 text-sm text-black">
           Select a past attempt to view the full report for this student.
         </p>
       </div>
@@ -115,7 +115,7 @@ export default function AssessmentAttemptHistoryView({
             </button>
           </div>
         ) : !attempts || attempts.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-black">
             No completed attempts found for this assessment.
           </div>
         ) : (
@@ -132,8 +132,8 @@ export default function AssessmentAttemptHistoryView({
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">Attempt {attempt.attemptNumber}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="text-sm font-semibold text-black">Attempt {attempt.attemptNumber}</p>
+                      <p className="mt-1 text-xs text-black">
                         {attempt.completedAt
                           ? new Date(attempt.completedAt).toLocaleString("en-IN", {
                               day: "numeric",
@@ -143,14 +143,14 @@ export default function AssessmentAttemptHistoryView({
                           : "Not submitted yet"}
                       </p>
                     </div>
-                    <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                    <div className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-black">
                       View report
                       <ArrowRight className="h-3 w-3" />
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between text-sm text-slate-700">
-                    <span className="text-slate-500">Score</span>
-                    <span className="font-semibold text-slate-900">{scoreLabel}</span>
+                  <div className="mt-4 flex items-center justify-between text-sm text-black">
+                    <span className="text-black">Score</span>
+                    <span className="font-semibold text-black">{scoreLabel}</span>
                   </div>
                 </button>
               );
@@ -163,7 +163,7 @@ export default function AssessmentAttemptHistoryView({
         <button
           type="button"
           onClick={() => router.push(bottomBackHref)}
-          className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-black hover:bg-slate-50"
         >
           {bottomBackLabel}
         </button>

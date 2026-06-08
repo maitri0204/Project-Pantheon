@@ -292,8 +292,8 @@ export default function DashboardShell({
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
           <div>
-            <p className="text-base font-semibold text-slate-900">Loading dashboard...</p>
-            <p className="text-sm text-slate-500">Preparing the correct workspace for your account.</p>
+            <p className="text-base font-semibold text-black">Loading dashboard...</p>
+            <p className="text-sm text-black">Preparing the correct workspace for your account.</p>
           </div>
         </div>
       </div>
@@ -322,7 +322,7 @@ export default function DashboardShell({
       <header className="fixed top-0 left-0 right-0 z-50 h-[72px] sm:h-[88px] bg-white/95 backdrop-blur border-b border-gray-200 flex items-center pl-3 pr-3 sm:pl-5 sm:pr-4 md:pl-8 gap-2 sm:gap-4 shadow-sm">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+          className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-black"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -375,7 +375,7 @@ export default function DashboardShell({
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   active
                     ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    : "text-black hover:bg-gray-100 hover:text-black"
                 }`}
               >
                 <span className={active ? "text-blue-600" : "text-gray-400"}>{item.icon}</span>
@@ -391,8 +391,8 @@ export default function DashboardShell({
               {userName.charAt(0).toUpperCase() || "S"}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-900 truncate">{userName}</p>
-              <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
+              <p className="text-xs font-semibold text-black truncate">{userName}</p>
+              <p className="text-[11px] text-black truncate">{userEmail}</p>
               <button
                 onClick={handleLogout}
                 className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700"

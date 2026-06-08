@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ResponsiveContainer,
@@ -35,13 +35,127 @@ const STREAM_COLORS: Record<string, string> = {
   Hybrid: "#10b981",
 };
 
+/** True when the chart container is wide enough for single-line axis labels. */
+function useChartWideLayout(
+  containerRef: React.RefObject<HTMLElement | null>,
+  wideAtOrAbovePx = 620,
+) {
+  const [isWide, setIsWide] = useState(false);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return undefined;
+
+    const update = (width: number) => setIsWide(width >= wideAtOrAbovePx);
+    update(element.getBoundingClientRect().width);
+
+    const observer = new ResizeObserver(([entry]) => {
+      update(entry.contentRect.width);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [containerRef, wideAtOrAbovePx]);
+
+  return isWide;
+}
+
+/** Split long domain names into two balanced lines for compact chart layouts. */
+function splitRadarLabel(label: string): string[] {
+  const ampersandSep = " & ";
+  const ampersandIdx = label.lastIndexOf(ampersandSep);
+  if (ampersandIdx > 0 && ampersandIdx < label.length - ampersandSep.length) {
+    return [
+      label.slice(0, ampersandIdx + 1).trim(),
+      label.slice(ampersandIdx + ampersandSep.length).trim(),
+    ];
+  }
+
+  const commaSep = ", ";
+  const commaIdx = label.indexOf(commaSep);
+  if (commaIdx > 0) {
+    const nextComma = label.indexOf(commaSep, commaIdx + commaSep.length);
+    if (nextComma > 0) {
+      return [
+        label.slice(0, nextComma + 1).trim(),
+        label.slice(nextComma + commaSep.length).trim(),
+      ];
+    }
+    return [label.slice(0, commaIdx + 1).trim(), label.slice(commaIdx + commaSep.length).trim()];
+  }
+
+  const words = label.split(/\s+/).filter(Boolean);
+  if (words.length <= 3) return [label];
+  const mid = Math.ceil(words.length / 2);
+  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+}
+
+type PolarTickProps = {
+  x?: number;
+  y?: number;
+  payload?: { value: string };
+  textAnchor?: string;
+  isWide: boolean;
+};
+
+function RadarPolarAngleTick({ x, y, payload, textAnchor, isWide }: PolarTickProps) {
+  if (typeof x !== "number" || typeof y !== "number" || !payload?.value) return null;
+
+  const lines = isWide ? [payload.value] : splitRadarLabel(payload.value);
+  const fontSize = isWide ? 12 : 10;
+  const lineHeight = fontSize + 4;
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#000000"
+      fontSize={fontSize}
+      fontWeight={600}
+      textAnchor={textAnchor as "start" | "middle" | "end" | "inherit" | undefined}
+    >
+      {lines.map((line, index) => (
+        <tspan key={`${payload.value}-${index}`} x={x} dy={index === 0 ? 0 : lineHeight}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
+}
+
+type CategoryTickProps = {
+  x?: number;
+  y?: number;
+  payload?: { value: string };
+  isWide: boolean;
+  axisWidth: number;
+};
+
+function DomainCategoryTick({ x, y, payload, isWide, axisWidth }: CategoryTickProps) {
+  if (typeof y !== "number" || !payload?.value) return null;
+
+  const labelX = Math.max((x ?? axisWidth) - axisWidth + 4, 0);
+
+  return (
+    <foreignObject x={labelX} y={y - 14} width={axisWidth - 8} height={36}>
+      <div
+        xmlns="http://www.w3.org/1999/xhtml"
+        className={`text-[10px] leading-snug text-black text-right pr-1 ${
+          isWide ? "whitespace-nowrap" : "whitespace-normal break-words line-clamp-2"
+        }`}
+      >
+        {payload.value}
+      </div>
+    </foreignObject>
+  );
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderStreamLabel = (props: any) => {
   const { x, y, value, payload } = props;
   if (typeof x !== "number" || typeof y !== "number") return null;
 
   return (
-    <text x={x} y={y} fill="#475569" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
+    <text x={x} y={y} fill="#000000" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={600}>
       {`${payload.stream} (${value})`}
     </text>
   );
@@ -79,11 +193,11 @@ function StatCard({
     >
       <div className={`pointer-events-none absolute inset-x-4 bottom-0 h-px bg-gradient-to-r ${cfg.accent} opacity-70 transition-all duration-300 group-hover:h-0.5`} />
       <div className="relative mb-3 flex items-start justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-black">{title}</p>
         <div className={`rounded-xl border border-slate-200 bg-slate-50 p-2 ${cfg.chip}`}>{icon}</div>
       </div>
-      <p className="relative text-2xl font-bold text-slate-900">{value}</p>
-      <p className="relative mt-1 text-xs text-slate-500">{subtitle}</p>
+      <p className="relative text-2xl font-bold text-black">{value}</p>
+      <p className="relative mt-1 text-xs text-black">{subtitle}</p>
     </motion.div>
   );
 }
@@ -99,6 +213,16 @@ export default function AcademicCareerOrgDashboard({
   loginPath,
   organizationSlug,
 }: AcademicCareerOrgDashboardProps) {
+  const radarChartRef = useRef<HTMLDivElement>(null);
+  const domainChartRef = useRef<HTMLDivElement>(null);
+  const isRadarWide = useChartWideLayout(radarChartRef, 620);
+  const isDomainChartWide = useChartWideLayout(domainChartRef, 560);
+  const domainAxisWidth = isDomainChartWide ? 190 : 220;
+  const radarMargin = isRadarWide
+    ? { top: 36, right: 40, bottom: 36, left: 40 }
+    : { top: 40, right: 80, bottom: 40, left: 80 };
+  const radarOuterRadius = isRadarWide ? "68%" : "54%";
+
   const { loading, overview, error } = useAcademicCareerAdminOverview(loginPath, organizationSlug);
 
   const participationRate = useMemo(() => {
@@ -149,9 +273,9 @@ export default function AcademicCareerOrgDashboard({
       >
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-            Dashboard
+            AIM Dashboard
           </h1>
-          <p className="text-sm text-slate-500">Real-time educational CRM analytics from student assessments</p>
+          <p className="text-sm text-black">Real-time educational CRM analytics from student assessments</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
@@ -188,23 +312,23 @@ export default function AcademicCareerOrgDashboard({
         >
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-bold text-slate-800">Assessment Participation Trends</h2>
-              <p className="text-xs text-slate-500">Students vs completed attempts</p>
+              <h2 className="text-sm font-bold text-black">Assessment Participation Trends</h2>
+              <p className="text-xs text-black">Students vs completed attempts</p>
             </div>
             <span className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-600">Monthly</span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={overview.assessmentParticipationTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Line type="monotone" dataKey="registeredStudents" name="Registered Students" stroke="#6366f1" strokeWidth={2.5} dot={{ r: 3 }}>
-                <LabelList dataKey="registeredStudents" position="top" fontSize={10} />
+                <LabelList dataKey="registeredStudents" position="top" fontSize={10} fill="#000000" />
               </Line>
               <Line type="monotone" dataKey="completedAssessments" name="Completed Assessments" stroke="#0ea5e9" strokeWidth={2.5} dot={{ r: 3 }}>
-                <LabelList dataKey="completedAssessments" position="top" fontSize={10} />
+                <LabelList dataKey="completedAssessments" position="top" fontSize={10} fill="#000000" />
               </Line>
             </LineChart>
           </ResponsiveContainer>
@@ -217,8 +341,8 @@ export default function AcademicCareerOrgDashboard({
           className="group relative xl:col-span-2 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md"
         >
           <div className="mb-4">
-            <h2 className="text-sm font-bold text-slate-800">Stream Distribution</h2>
-            <p className="text-xs text-slate-500">All attempts</p>
+            <h2 className="text-sm font-bold text-black">Stream Distribution</h2>
+            <p className="text-xs text-black">All attempts</p>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
@@ -251,17 +375,17 @@ export default function AcademicCareerOrgDashboard({
           className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800">Grade-wise Student Count</h2>
+            <h2 className="text-sm font-bold text-black">Grade-wise Student Count</h2>
             <div className="rounded-lg bg-indigo-50 p-1.5 text-indigo-500"><GraduationCap size={15} /></div>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={overview.gradeWiseStudents}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="grade" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="grade" tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} />
               <Bar dataKey="count" fill="url(#gradeGrad)" radius={[8, 8, 0, 0]}>
-                <LabelList dataKey="count" position="top" fontSize={10} />
+                <LabelList dataKey="count" position="top" fontSize={10} fill="#000000" />
               </Bar>
               <defs>
                 <linearGradient id="gradeGrad" x1="0" y1="0" x2="0" y2="1">
@@ -274,20 +398,34 @@ export default function AcademicCareerOrgDashboard({
         </motion.div>
 
         <motion.div
+          ref={domainChartRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.65, duration: 0.4 }}
           className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800">Top Interest Domains</h2>
-            <span className="text-xs text-slate-500">Strongest-domain counts</span>
+            <h2 className="text-sm font-bold text-black">Top Interest Domains</h2>
+            <span className="text-xs text-black">Strongest-domain counts</span>
           </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={overview.topInterestDomains} layout="vertical" margin={{ left: 12, right: 20 }}>
+          <ResponsiveContainer width="100%" height={isDomainChartWide ? 260 : 300}>
+            <BarChart
+              data={overview.topInterestDomains}
+              layout="vertical"
+              margin={{ left: 8, right: 20, top: 4, bottom: 4 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="domain" width={170} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
+              <YAxis
+                type="category"
+                dataKey="domain"
+                width={domainAxisWidth}
+                axisLine={false}
+                tickLine={false}
+                tick={(props) => (
+                  <DomainCategoryTick {...props} isWide={isDomainChartWide} axisWidth={domainAxisWidth} />
+                )}
+              />
               <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} />
               <Bar dataKey="count" fill="url(#domainGrad)" radius={[0, 8, 8, 0]}>
                 <LabelList dataKey="count" position="right" fontSize={10} />
@@ -305,19 +443,27 @@ export default function AcademicCareerOrgDashboard({
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <motion.div
+          ref={radarChartRef}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.4 }}
           className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800">Grade Comparison Radar</h2>
-            <span className="text-xs text-slate-500">Domain intensity by grade</span>
+            <h2 className="text-sm font-bold text-black">Grade Comparison Radar</h2>
+            <span className="text-xs text-black">Domain intensity by grade</span>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <RadarChart data={overview.gradeComparisonDomains.slice(0, 8)}>
+          <ResponsiveContainer width="100%" height={isRadarWide ? 380 : 420}>
+            <RadarChart
+              data={overview.gradeComparisonDomains.slice(0, 8)}
+              margin={radarMargin}
+              outerRadius={radarOuterRadius}
+            >
               <PolarGrid stroke="#e2e8f0" />
-              <PolarAngleAxis dataKey="domain" tick={{ fontSize: 9 }} />
+              <PolarAngleAxis
+                dataKey="domain"
+                tick={(props) => <RadarPolarAngleTick {...props} isWide={isRadarWide} />}
+              />
               <Radar name="Grade 8" dataKey="grade8" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.18} />
               <Radar name="Grade 9" dataKey="grade9" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.18} />
               <Radar name="Grade 10" dataKey="grade10" stroke="#6366f1" fill="#6366f1" fillOpacity={0.18} />
@@ -334,14 +480,14 @@ export default function AcademicCareerOrgDashboard({
           className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm"
         >
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800">Stream Analytics by Grade</h2>
-            <span className="text-xs text-slate-500">Latest reports only</span>
+            <h2 className="text-sm font-bold text-black">Stream Analytics by Grade</h2>
+            <span className="text-xs text-black">Latest reports only</span>
           </div>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={overview.streamAnalyticsByGrade}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="grade" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="grade" tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: "#000000" }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Bar dataKey="Science" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
@@ -360,15 +506,15 @@ export default function AcademicCareerOrgDashboard({
         className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden"
       >
         <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-5 py-3.5">
-          <h2 className="text-sm font-bold text-slate-800">Recent Assessment Activity</h2>
-          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-slate-500">Latest 10</span>
+          <h2 className="text-sm font-bold text-black">Recent Assessment Activity</h2>
+          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-black">Latest 10</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/80">
                 {["Student", "Grade", "Completed", "Top 3 Interests", "Strongest Domain", "Stream"].map((head) => (
-                  <th key={head} className="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  <th key={head} className="whitespace-nowrap px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-black">
                     {head}
                   </th>
                 ))}
@@ -382,7 +528,7 @@ export default function AcademicCareerOrgDashboard({
                   Arts: "bg-violet-50 text-violet-700 border-violet-200",
                   Hybrid: "bg-emerald-50 text-emerald-700 border-emerald-200",
                 };
-                const streamClass = streamColors[row.streamRecommendation] ?? "bg-slate-50 text-slate-600 border-slate-200";
+                const streamClass = streamColors[row.streamRecommendation] ?? "bg-slate-50 text-black border-slate-200";
                 return (
                   <motion.tr
                     key={row.resultId}
@@ -397,25 +543,30 @@ export default function AcademicCareerOrgDashboard({
                           {row.studentName.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-[13px] font-semibold text-slate-800 group-hover:text-violet-700">{row.studentName}</p>
-                          <p className="text-[11px] text-slate-500">{row.studentEmail}</p>
+                          <p className="text-[13px] font-semibold text-black group-hover:text-violet-700">{row.studentName}</p>
+                          <p className="text-[11px] text-black">{row.studentEmail}</p>
                         </div>
                       </Link>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600">{row.gradeLabel}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-[12px] text-slate-500">{new Date(row.completedAt).toLocaleString()}</td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5 text-[12px] text-black">{new Date(row.completedAt).toLocaleString()}</td>
+                    <td className="px-4 py-2.5 min-w-[10rem] max-w-[14rem]">
                       <div className="flex flex-wrap gap-1">
                         {row.topInterests.slice(0, 3).map((interest) => (
-                          <span key={interest.code} className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700">
+                          <span
+                            key={interest.code}
+                            className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-[11px] leading-snug text-sky-700 xl:whitespace-nowrap whitespace-normal text-center"
+                          >
                             {interest.name}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-[12px] font-medium text-slate-700">{row.strongestDomain}</td>
+                    <td className="px-4 py-2.5 min-w-[9rem] max-w-[12rem] text-[12px] font-medium text-black leading-snug xl:whitespace-nowrap whitespace-normal">
+                      {row.strongestDomain}
+                    </td>
                     <td className="px-4 py-2.5">
                       <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${streamClass}`}>
                         {row.streamRecommendation}

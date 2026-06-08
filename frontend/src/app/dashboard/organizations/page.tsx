@@ -69,7 +69,7 @@ export default function OrganizationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-black">Organizations</h1>
-          <p className="text-black/80 mt-1 text-base">Manage whitelabel organizations that can host the Pantheon platform.</p>
+          <p className="text-black mt-1 text-base">Manage whitelabel organizations that can host the Pantheon platform.</p>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export default function OrganizationsPage() {
       )}
       {/* Search */}
       <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
@@ -99,12 +99,12 @@ export default function OrganizationsPage() {
           {filtered.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
                 </svg>
               </div>
-              <p className="text-black/80 text-base">No organizations found.</p>
+              <p className="text-black text-base">No organizations found.</p>
             </div>
           ) : (
             <>
@@ -119,29 +119,29 @@ export default function OrganizationsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-black truncate">{org.name}</p>
-                          <p className="text-xs text-black/60 font-mono truncate">{org.slug}</p>
+                          <p className="text-xs text-black font-mono truncate">{org.slug}</p>
                         </div>
                       </div>
                       <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium whitespace-nowrap ${
-                        org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                        org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"
                       }`}>
                         {org.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
                     <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Type</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Type</p>
                         <span className="mt-1 inline-flex bg-purple-50 text-purple-700 text-xs rounded-full px-2.5 py-0.5 font-medium">
                           {org.type}
                         </span>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Contact</p>
-                        <p className="mt-1 text-black/80 break-all">{org.contactEmail || "—"}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Contact</p>
+                        <p className="mt-1 text-black break-all">{org.contactEmail || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Added On</p>
-                        <p className="mt-1 text-black/80">{formatDate(org.createdAt)}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Added On</p>
+                        <p className="mt-1 text-black">{formatDate(org.createdAt)}</p>
                       </div>
                     </div>
                     <div className="mt-4">
@@ -161,13 +161,13 @@ export default function OrganizationsPage() {
                 <table className="w-full min-w-[760px] text-base">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Name</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Slug</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Type</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Contact</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Status</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Actions</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Name</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Slug</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Type</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Contact</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Added On</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Status</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -181,17 +181,17 @@ export default function OrganizationsPage() {
                             <span className="font-medium text-black">{org.name}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-black/80 font-mono text-sm">{org.slug}</td>
+                        <td className="px-5 py-3.5 text-black font-mono text-sm">{org.slug}</td>
                         <td className="px-5 py-3.5">
                           <span className="bg-purple-50 text-purple-700 text-xs rounded-full px-2.5 py-0.5 font-medium">
                             {org.type}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-black/80">{org.contactEmail || "—"}</td>
-                        <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(org.createdAt)}</td>
+                        <td className="px-5 py-3.5 text-black">{org.contactEmail || "—"}</td>
+                        <td className="px-5 py-3.5 text-black text-sm">{formatDate(org.createdAt)}</td>
                         <td className="px-5 py-3.5">
                           <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
-                            org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                            org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"
                           }`}>
                             {org.isActive ? "Active" : "Inactive"}
                           </span>

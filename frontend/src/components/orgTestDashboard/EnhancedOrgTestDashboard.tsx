@@ -117,12 +117,14 @@ function RecentStudentsSection({
   data,
   studentsPath,
   resultLabel,
+  hideResultColumn,
   formatResult,
   audience,
 }: {
   data: AssessmentAdminDashboardResponse;
   studentsPath: string;
   resultLabel: string;
+  hideResultColumn?: boolean;
   formatResult?: (label: string) => string;
   audience?: DashboardAudienceLabels;
 }) {
@@ -137,17 +139,19 @@ function RecentStudentsSection({
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 text-xs font-bold text-white">
             {row.name[0]}
           </span>
-          <p className="text-sm font-semibold text-slate-800 group-hover:text-sky-600">{row.name}</p>
+          <p className="text-sm font-semibold text-black group-hover:text-sky-600">{row.name}</p>
         </Link>
       ),
     },
     ...(labels.hideGradeColumn
       ? []
       : [{ header: "Grade", render: (row: StudentRow) => <span>{row.grade}</span> }]),
-    { header: resultLabel, render: (row: StudentRow) => <span className="font-semibold text-black">{row.result}</span> },
+    ...(hideResultColumn
+      ? []
+      : [{ header: resultLabel, render: (row: StudentRow) => <span className="font-semibold text-black">{row.result}</span> }]),
     {
       header: "Details",
-      render: (row: StudentRow) => <span className="text-black/70">{row.detail ?? "—"}</span>,
+      render: (row: StudentRow) => <span className="text-black">{row.detail ?? "—"}</span>,
     },
   ];
 
@@ -284,7 +288,7 @@ function JohariLayout({ data }: { data: AssessmentAdminDashboardResponse }) {
   return (
     <ChartCard
       title="CLEAR self-awareness visualisation"
-      description="Org-average Johari window position and how quadrant area is distributed."
+      description="Org-average position and how quadrant area is distributed."
     >
       <ClearJohariOrgChart
         avgSolicitsFeedback={avgSf}
@@ -400,7 +404,7 @@ function MetacognitionLayout({
           {radarItems.length >= 3 ? (
             <RadarChart items={radarItems} stroke="#0891b2" fill="rgba(8, 145, 178, 0.15)" size={280} />
           ) : (
-            <p className="text-sm text-black/60 text-center py-8">Domain data not available yet.</p>
+            <p className="text-sm text-black text-center py-8">Domain data not available yet.</p>
           )}
         </ChartCard>
         <DistributionChart
@@ -433,7 +437,7 @@ function CombinationDistributionGrid({
             className="rounded-xl border border-fuchsia-100 bg-gradient-to-br from-fuchsia-50 to-white p-4"
           >
             <p className="text-sm font-bold text-fuchsia-900 leading-snug">{item.label}</p>
-            <p className="text-xs text-black/60 mt-2">
+            <p className="text-xs text-black mt-2">
               {item.count} student{item.count !== 1 ? "s" : ""}
             </p>
           </div>
@@ -489,7 +493,7 @@ function CareerDnaLayout({
               barClass={config.barClass}
             />
             {topSection && (
-              <p className="mt-4 text-sm text-black/80">
+              <p className="mt-4 text-sm text-black">
                 Strongest scored section:{" "}
                 <span className="font-semibold text-fuchsia-700">{topSection.label}</span> at {topSection.value}%.
               </p>
@@ -567,6 +571,7 @@ function AnalyticsBody({
         data={data}
         studentsPath={studentsPath}
         resultLabel={config.resultColumnLabel ?? "Result"}
+        hideResultColumn={config.hideResultColumn}
         formatResult={formatResult}
         audience={config.audience}
       />
@@ -575,11 +580,11 @@ function AnalyticsBody({
         <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-black">{data.assessment.name}</p>
-            <p className="text-xs text-black/60">{data.assessment.category}</p>
+            <p className="text-xs text-black">{data.assessment.category}</p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
             <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-600">Published</span>
-            <span className="text-xs font-medium text-black/60">
+            <span className="text-xs font-medium text-black">
               {data.summary.totalAttempts.toLocaleString()} attempts
             </span>
           </div>
@@ -629,7 +634,7 @@ export default function EnhancedOrgTestDashboard({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-black">{config.title}</h1>
-          <p className="text-sm text-black/70 mt-1">{config.subtitle}</p>
+          <p className="text-sm text-black mt-1">{config.subtitle}</p>
         </div>
         <Link href={studentsPath} className="text-sm font-medium text-blue-600 hover:underline">
           {config.audience?.viewAllLabel

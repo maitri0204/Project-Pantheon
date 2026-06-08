@@ -34,8 +34,8 @@ export function LineTrendChart({
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50">
           <TrendingUp className="h-5 w-5 text-sky-400" />
         </div>
-        <p className="text-sm font-semibold text-slate-700">{emptyMessage}</p>
-        <p className="text-xs text-slate-500">Analytics will appear once assessments are completed</p>
+        <p className="text-sm font-semibold text-black">{emptyMessage}</p>
+        <p className="text-xs text-black">Analytics will appear once assessments are completed</p>
       </div>
     );
   }
@@ -45,8 +45,8 @@ export function LineTrendChart({
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 5, right: 12, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" />
-          <XAxis dataKey={xKey} stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+          <XAxis dataKey={xKey} stroke="#000000" fontSize={12} tickLine={false} axisLine={false} />
+          <YAxis stroke="#000000" fontSize={12} tickLine={false} axisLine={false} />
           <Tooltip
             cursor={{ stroke: "#bae6fd", strokeWidth: 1 }}
             contentStyle={{

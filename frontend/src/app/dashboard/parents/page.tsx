@@ -99,13 +99,13 @@ export default function ParentsPage() {
     <div className="max-w-6xl mx-auto space-y-5">
       <div>
         <h1 className="text-3xl font-bold text-black">Parents</h1>
-        <p className="text-black/80 mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Parents from your organization." : "Parents registered across the platform."}</p>
+        <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Parents from your organization." : "Parents registered across the platform."}</p>
       </div>
 
       {/* Filters */}
       <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px]" : "lg:grid-cols-[minmax(0,1fr)]"}`}>
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -132,15 +132,15 @@ export default function ParentsPage() {
       {/* Stats row */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-sm text-black/80 mb-1">Parents</p>
+          <p className="text-sm text-black mb-1">Parents</p>
           <p className="text-3xl font-bold text-black">{stats.parentCount}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-sm text-black/80 mb-1">Tests Completed</p>
+          <p className="text-sm text-black mb-1">Tests Completed</p>
           <p className="text-3xl font-bold text-black">{stats.testsCompleted}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-          <p className="text-sm text-black/80 mb-1">Tests Pending</p>
+          <p className="text-sm text-black mb-1">Tests Pending</p>
           <p className="text-3xl font-bold text-black">{stats.testsPending}</p>
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function ParentsPage() {
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {filtered.length === 0 ? (
-            <p className="text-center text-black/70 text-base py-16">No parents found.</p>
+            <p className="text-center text-black text-base py-16">No parents found.</p>
           ) : (
             <>
               <div className="grid gap-4 p-4 lg:hidden">
@@ -169,19 +169,19 @@ export default function ParentsPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-black truncate">{user.firstName} {user.lastName}</p>
-                          <p className="text-sm text-black/70 break-all">{user.email}</p>
+                          <p className="text-sm text-black break-all">{user.email}</p>
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Organization</p>
-                        <p className="mt-1 text-black/80">{user.organization ? user.organization.name : "—"}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Organization</p>
+                        <p className="mt-1 text-black">{user.organization ? user.organization.name : "—"}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-black/50">Tests</p>
-                        <p className="mt-1 text-black/80">{user.testsCompleted ?? user.testsTaken ?? 0} completed</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Tests</p>
+                        <p className="mt-1 text-black">{user.testsCompleted ?? user.testsTaken ?? 0} completed</p>
                       </div>
                     </div>
 
@@ -201,13 +201,13 @@ export default function ParentsPage() {
                 <table className="w-full min-w-[800px] text-base">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Name</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Email</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Organization</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests Completed</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Tests Pending</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Added On</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black/80 uppercase tracking-wide">Action</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Name</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Email</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Organization</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Tests Completed</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Tests Pending</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Added On</th>
+                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -221,13 +221,13 @@ export default function ParentsPage() {
                             <span className="font-medium text-black">{user.firstName} {user.lastName}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-black/80">{user.email}</td>
-                        <td className="px-5 py-3.5 text-black/80 text-sm">
+                        <td className="px-5 py-3.5 text-black">{user.email}</td>
+                        <td className="px-5 py-3.5 text-black text-sm">
                           {user.organization ? user.organization.name : "—"}
                         </td>
-                        <td className="px-5 py-3.5 text-black/80">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
-                        <td className="px-5 py-3.5 text-black/80">{user.testsPending ?? 0}</td>
-                        <td className="px-5 py-3.5 text-black/80 text-sm">{formatDate(user.createdAt)}</td>
+                        <td className="px-5 py-3.5 text-black">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
+                        <td className="px-5 py-3.5 text-black">{user.testsPending ?? 0}</td>
+                        <td className="px-5 py-3.5 text-black text-sm">{formatDate(user.createdAt)}</td>
                         <td className="px-5 py-3.5">
                           <button
                             onClick={() => router.push(`${detailsBasePath}/${user._id}`)}

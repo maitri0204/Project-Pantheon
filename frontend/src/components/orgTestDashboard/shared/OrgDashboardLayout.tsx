@@ -39,7 +39,7 @@ export function OrgDashboardEmpty({
           <Sparkles className="w-7 h-7 text-white" />
         </div>
         <h2 className="text-lg font-semibold text-black">No assessment data yet</h2>
-        <p className="text-sm text-black/80 mt-2 max-w-xl mx-auto">
+        <p className="text-sm text-black mt-2 max-w-xl mx-auto">
           When students complete {assessmentName}, organization analytics will appear here.
         </p>
         <Link href={studentsPath} className="inline-block mt-4 text-sm font-medium text-blue-600 hover:underline">
@@ -103,13 +103,13 @@ export function RecentAttemptsList({
       </div>
       <div className="space-y-2">
         {attempts.length === 0 ? (
-          <p className="text-sm text-black/70 text-center py-6">No attempts yet.</p>
+          <p className="text-sm text-black text-center py-6">No attempts yet.</p>
         ) : (
           attempts.slice(0, 8).map((row) => (
             <div key={row.attemptId} className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-black truncate">{row.studentName}</p>
-                <p className="text-xs text-black/70">
+                <p className="text-xs text-black">
                   {renderMeta ? renderMeta(row) : `${row.resultLabel}${row.resultDetail ? ` · ${row.resultDetail}` : ""}`}
                   {row.completedAt ? ` · ${new Date(row.completedAt).toLocaleDateString()}` : ""}
                 </p>
@@ -138,9 +138,9 @@ export function StatCard({
 }) {
   return (
     <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 ${className}`}>
-      <p className="text-sm text-black/70">{label}</p>
+      <p className="text-sm text-black">{label}</p>
       <p className="text-2xl font-bold text-black mt-1">{value}</p>
-      {sub && <p className="text-xs text-black/60 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-black mt-1">{sub}</p>}
     </div>
   );
 }

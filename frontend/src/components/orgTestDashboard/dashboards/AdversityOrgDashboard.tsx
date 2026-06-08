@@ -93,7 +93,7 @@ export default function AdversityOrgDashboard({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-black">Resilience Quotient Dashboard</h1>
-          <p className="text-sm text-black/70 mt-1">
+          <p className="text-sm text-black mt-1">
             Good morning, {adminFirstName} — live RQ assessment activity for your organization.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function AdversityOrgDashboard({
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-blue-600 text-xs font-bold text-white">
                       {row.name[0]}
                     </span>
-                    <p className="text-sm font-semibold text-slate-800 group-hover:text-sky-600">{row.name}</p>
+                    <p className="text-sm font-semibold text-black group-hover:text-sky-600">{row.name}</p>
                   </Link>
                 ),
               },
@@ -190,7 +190,7 @@ export default function AdversityOrgDashboard({
                         ? "text-emerald-600"
                         : row.trend === "Declining"
                           ? "text-rose-500"
-                          : "text-slate-500"
+                          : "text-black"
                     }`}
                   >
                     {row.trend === "Improving" ? "↑" : row.trend === "Declining" ? "↓" : "→"} {row.trend}
@@ -226,13 +226,13 @@ export default function AdversityOrgDashboard({
           <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-4 py-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-black">Resilience Quotient Assessment</p>
-              <p className="text-xs text-black/60">CORE resilience · Control, Ownership, Reach, Endurance</p>
+              <p className="text-xs text-black">CORE resilience · Control, Ownership, Reach, Endurance</p>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
               <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-600">
                 Published
               </span>
-              <span className="text-xs font-medium text-black/60">
+              <span className="text-xs font-medium text-black">
                 {overview.overview.totalAttempts.toLocaleString()} attempts
               </span>
             </div>

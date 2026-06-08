@@ -139,7 +139,7 @@ export default function AssessmentsPage() {
       linked: "bg-blue-50 text-blue-700",
       "pending-import": "bg-yellow-50 text-yellow-700",
     };
-    return map[status] ?? "bg-gray-100 text-gray-600";
+    return map[status] ?? "bg-gray-100 text-black";
   };
 
   return (
@@ -147,7 +147,7 @@ export default function AssessmentsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-black">Assessments</h1>
-        <p className="text-black/80 mt-1 text-base">
+        <p className="text-black mt-1 text-base">
           {isOrgAdmin === true
             ? "View all available assessments. Pricing and configuration are read-only for organization users."
             : "View all assessments and update their pricing."}
@@ -163,7 +163,7 @@ export default function AssessmentsPage() {
 
       {/* Search */}
       <div className="relative">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
@@ -187,9 +187,9 @@ export default function AssessmentsPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 space-y-1">
-                  <p className="text-sm text-black/70 uppercase tracking-wide">{normalizeAssessmentCategoryForDisplay(a.category, a.code)}</p>
+                  <p className="text-sm text-black uppercase tracking-wide">{normalizeAssessmentCategoryForDisplay(a.category, a.code)}</p>
                   <h3 className="text-2xl font-bold text-black leading-tight">{a.name}</h3>
-                  <p className="text-sm text-black/70 font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
+                  <p className="text-sm text-black font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
                 </div>
                 {isOrgAdmin !== true && (
                   <span className={`flex-shrink-0 text-sm rounded-full px-3 py-1.5 font-semibold ${statusBadge(a.questionBankStatus)}`}>
@@ -198,27 +198,27 @@ export default function AssessmentsPage() {
                 )}
               </div>
 
-              <p className="text-base text-black/80 min-h-[3.5rem] leading-relaxed">{a.summary}</p>
+              <p className="text-base text-black min-h-[3.5rem] leading-relaxed">{a.summary}</p>
 
               <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-sm">
                 <div className="space-y-0.5">
-                  <dt className="text-black/70">Questions</dt>
+                  <dt className="text-black">Questions</dt>
                   <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "—"}</dd>
                 </div>
                 <div className="space-y-0.5 text-right">
-                  <dt className="text-black/70">Currency</dt>
+                  <dt className="text-black">Currency</dt>
                   <dd className="font-semibold text-black">{a.currency}</dd>
                 </div>
                 <div className="space-y-0.5">
-                  <dt className="text-black/70">Status</dt>
-                  <dd className={`font-semibold ${a.active ? "text-green-700" : "text-black/60"}`}>{a.active ? "Active" : "Inactive"}</dd>
+                  <dt className="text-black">Status</dt>
+                  <dd className={`font-semibold ${a.active ? "text-green-700" : "text-black"}`}>{a.active ? "Active" : "Inactive"}</dd>
                 </div>
               </dl>
 
               {/* Pricing */}
               {isOrgAdmin === false && (
               <div className="pt-3 border-t border-gray-200">
-                <label className="text-sm text-black/80 font-semibold mb-2 block">Base Price (₹)</label>
+                <label className="text-sm text-black font-semibold mb-2 block">Base Price (₹)</label>
                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
                   <input
                     type="number"
@@ -239,7 +239,7 @@ export default function AssessmentsPage() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5">
-                  <span className="text-sm font-semibold text-black/80">GST Enabled</span>
+                  <span className="text-sm font-semibold text-black">GST Enabled</span>
                   <button
                     type="button"
                     onClick={() => setGstEnabledDrafts((prev) => ({ ...prev, [a.code]: !prev[a.code] }))}
@@ -250,7 +250,7 @@ export default function AssessmentsPage() {
                 </div>
 
                 <div className="mt-3">
-                  <label className="text-sm text-black/80 font-semibold mb-2 block">GST Percentage (%)</label>
+                  <label className="text-sm text-black font-semibold mb-2 block">GST Percentage (%)</label>
                   <input
                     type="number"
                     min={0}
@@ -266,11 +266,11 @@ export default function AssessmentsPage() {
               {isOrgAdmin === true && (
               <div className="pt-3 border-t border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-black/80 font-semibold">Base Price</span>
+                  <span className="text-sm text-black font-semibold">Base Price</span>
                   <span className="text-lg font-bold text-black">₹{priceDrafts[a.code] ?? a.basePrice}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-sm text-black/70">GST</span>
+                  <span className="text-sm text-black">GST</span>
                   <span className="text-sm font-semibold text-black">{a.gstEnabled ? `On (${a.gstPercentage ?? 18}%)` : "Off"}</span>
                 </div>
               </div>
@@ -279,7 +279,7 @@ export default function AssessmentsPage() {
           ))}
 
           {filtered.length === 0 && (
-            <p className="col-span-full text-center text-black/70 text-base py-12">No assessments found.</p>
+            <p className="col-span-full text-center text-black text-base py-12">No assessments found.</p>
           )}
         </div>
       )}

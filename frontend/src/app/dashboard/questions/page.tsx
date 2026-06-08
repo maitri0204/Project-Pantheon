@@ -110,7 +110,7 @@ function CareerDnaCorrectAnswerField({
     ];
     return (
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+        <label className="block text-sm font-semibold text-black mb-1.5">
           Dimension for Option A
         </label>
         <select
@@ -123,7 +123,7 @@ function CareerDnaCorrectAnswerField({
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-black">
           The personality dimension awarded when the student picks <strong>Option A</strong>.
           Option B automatically awards the opposite dimension.
           Part 1 = Social Orientation (SO), Part 2 = Practical Observation (PO),
@@ -146,7 +146,7 @@ function CareerDnaCorrectAnswerField({
   // COGNITIVE or APTITUDE — standard correct answer label
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Correct Answer</label>
+      <label className="block text-sm font-semibold text-black mb-1.5">Correct Answer</label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value.toUpperCase())}
@@ -154,7 +154,7 @@ function CareerDnaCorrectAnswerField({
         maxLength={1}
         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
-      <p className="mt-1 text-xs text-gray-400">
+      <p className="mt-1 text-xs text-black">
         The option label that is correct. Student earns 1 point per match.
       </p>
     </div>
@@ -429,8 +429,8 @@ export default function QuestionsPage() {
     <div className="max-w-7xl mx-auto space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Question Banks</h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <h1 className="text-2xl font-bold text-black">Question Banks</h1>
+          <p className="text-black mt-1 text-sm">
             Add, edit, and manage questions for each assessment.
           </p>
         </div>
@@ -464,7 +464,7 @@ export default function QuestionsPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="border-b border-gray-100 p-4 grid md:grid-cols-2 gap-3 bg-gray-50/40">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Assessment</label>
+            <label className="block text-sm font-semibold text-black mb-1.5">Assessment</label>
             <select
               value={activeCode}
               onChange={(e) => setActiveCode(e.target.value)}
@@ -478,7 +478,7 @@ export default function QuestionsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sub-Type</label>
+            <label className="block text-sm font-semibold text-black mb-1.5">Sub-Type</label>
             <select
               value={activeCat}
               onChange={(e) => setActiveCat(e.target.value)}
@@ -505,7 +505,7 @@ export default function QuestionsPage() {
           ) : filteredQuestions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-                <svg className="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -514,7 +514,7 @@ export default function QuestionsPage() {
                   />
                 </svg>
               </div>
-              <p className="text-gray-500 text-sm mb-2">No questions yet for {activeAssessment?.name}.</p>
+              <p className="text-black text-sm mb-2">No questions yet for {activeAssessment?.name}.</p>
               <button
                 onClick={() => setShowAdd(true)}
                 className="text-blue-600 text-sm font-medium hover:underline"
@@ -542,24 +542,24 @@ export default function QuestionsPage() {
                           const shortName = ASSESSMENT_SHORT_NAME[question.assessmentCode];
                           const displayTitle = shortName ?? (question.title !== activeAssessment?.name ? question.title : "");
                           return displayTitle ? (
-                            <p className="text-base font-semibold text-gray-900">{displayTitle}</p>
+                            <p className="text-base font-semibold text-black">{displayTitle}</p>
                           ) : null;
                         })()}
-                        <span className="text-sm bg-white border border-gray-200 text-gray-500 rounded px-1.5 py-0.5">
+                        <span className="text-sm bg-white border border-gray-200 text-black rounded px-1.5 py-0.5">
                           {question.categoryLabel} · Q{question.questionNumber}
                         </span>
                       </div>
-                      <p className="text-base text-gray-600 leading-relaxed">{question.questionText}</p>
+                      <p className="text-base text-black leading-relaxed">{question.questionText}</p>
                       {question.options && question.options.length > 0 && (
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">
                           {question.options.map((option, optionIndex) => (
                             <div
                               key={`${question._id}-${optionIndex}`}
-                              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600"
+                              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-black"
                             >
-                              <span className="font-semibold text-gray-800">{option.label}.</span> {option.text}
+                              <span className="font-semibold text-black">{option.label}.</span> {option.text}
                               {option.score !== undefined && (
-                                <span className="text-gray-400"> · Score {option.score}</span>
+                                <span className="text-black"> · Score {option.score}</span>
                               )}
                             </div>
                           ))}
@@ -572,7 +572,7 @@ export default function QuestionsPage() {
                         className={`p-1.5 rounded-lg transition ${
                           editQuestion?._id === question._id
                             ? "bg-blue-100 text-blue-600"
-                            : "hover:bg-blue-50 text-gray-400 hover:text-blue-600"
+                            : "hover:bg-blue-50 text-black hover:text-blue-600"
                         }`}
                         title="Edit"
                       >
@@ -587,7 +587,7 @@ export default function QuestionsPage() {
                       </button>
                       <button
                         onClick={() => void handleDelete(question._id)}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-black hover:text-red-500 transition"
                         title="Delete"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -613,12 +613,12 @@ export default function QuestionsPage() {
                           {editQuestion.questionNumber}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-900">Editing Question</p>
-                          <p className="text-xs text-gray-400">{editQuestion.categoryLabel} · Q{editQuestion.questionNumber}</p>
+                          <p className="text-sm font-bold text-black">Editing Question</p>
+                          <p className="text-xs text-black">{editQuestion.categoryLabel} · Q{editQuestion.questionNumber}</p>
                         </div>
                         <button
                           onClick={() => setEditQuestion(null)}
-                          className="ml-auto p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                          className="ml-auto p-1.5 text-black hover:text-black hover:bg-gray-100 rounded-lg transition"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -629,7 +629,7 @@ export default function QuestionsPage() {
                       <form onSubmit={handleEdit} className="space-y-4">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Key</label>
+                            <label className="block text-sm font-semibold text-black mb-1.5">Category Key</label>
                             <input
                               value={editForm.category}
                               onChange={(e) => setEditForm((form) => ({ ...form, category: e.target.value }))}
@@ -637,7 +637,7 @@ export default function QuestionsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Label</label>
+                            <label className="block text-sm font-semibold text-black mb-1.5">Category Label</label>
                             <input
                               value={editForm.categoryLabel}
                               onChange={(e) => setEditForm((form) => ({ ...form, categoryLabel: e.target.value }))}
@@ -647,7 +647,7 @@ export default function QuestionsPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Number</label>
+                          <label className="block text-sm font-semibold text-black mb-1.5">Question Number</label>
                           <input
                             type="number"
                             min={1}
@@ -658,7 +658,7 @@ export default function QuestionsPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
+                          <label className="block text-sm font-semibold text-black mb-1.5">Title</label>
                           <input
                             type="text"
                             value={editForm.title}
@@ -668,7 +668,7 @@ export default function QuestionsPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Text</label>
+                          <label className="block text-sm font-semibold text-black mb-1.5">Question Text</label>
                           <textarea
                             rows={3}
                             value={editForm.questionText}
@@ -679,7 +679,7 @@ export default function QuestionsPage() {
 
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-sm font-semibold text-gray-700">Options</label>
+                            <label className="block text-sm font-semibold text-black">Options</label>
                             <button
                               type="button"
                               onClick={() => setEditForm((form) => ({
@@ -693,14 +693,14 @@ export default function QuestionsPage() {
                           </div>
                           <div className="space-y-3">
                             {editForm.options.length === 0 && (
-                              <div className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500">
+                              <div className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-black">
                                 No options added yet.
                               </div>
                             )}
                             {editForm.options.map((option, optIdx) => (
                               <div key={optIdx} className="grid gap-2 md:grid-cols-[120px_1fr_120px_auto] items-end">
                                 <div>
-                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                                  <label className="block text-xs font-semibold text-black mb-1">Label</label>
                                   <input
                                     value={option.label}
                                     onChange={(e) => updateEditOption(optIdx, "label", e.target.value)}
@@ -708,7 +708,7 @@ export default function QuestionsPage() {
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-semibold text-gray-600 mb-1">Text</label>
+                                  <label className="block text-xs font-semibold text-black mb-1">Text</label>
                                   <input
                                     value={option.text}
                                     onChange={(e) => updateEditOption(optIdx, "text", e.target.value)}
@@ -717,7 +717,7 @@ export default function QuestionsPage() {
                                 </div>
                                 {activeCode !== "CAREER_DNA" && (
                                   <div>
-                                    <label className="block text-xs font-semibold text-gray-600 mb-1">Score</label>
+                                    <label className="block text-xs font-semibold text-black mb-1">Score</label>
                                     <input
                                       type="number"
                                       value={option.score ?? ""}
@@ -759,7 +759,7 @@ export default function QuestionsPage() {
                           <button
                             type="button"
                             onClick={() => setEditQuestion(null)}
-                            className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                            className="flex-1 px-4 py-2.5 border border-gray-200 text-black rounded-xl text-sm font-medium hover:bg-gray-50 transition"
                           >
                             Cancel
                           </button>
@@ -786,15 +786,15 @@ export default function QuestionsPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 my-0 sm:my-4">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Add Question</h3>
-                <p className="text-sm text-gray-500">{activeAssessment?.name}</p>
+                <h3 className="text-lg font-bold text-black">Add Question</h3>
+                <p className="text-sm text-black">{activeAssessment?.name}</p>
               </div>
               <button
                 onClick={() => {
                   setShowAdd(false);
                   setAddError(null);
                 }}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                className="p-1.5 text-black hover:text-black hover:bg-gray-100 rounded-lg transition"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -805,7 +805,7 @@ export default function QuestionsPage() {
             <form onSubmit={handleAdd} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Key *</label>
+                  <label className="block text-sm font-semibold text-black mb-1.5">Category Key *</label>
                   <input
                     required
                     value={addForm.category}
@@ -815,7 +815,7 @@ export default function QuestionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category Label</label>
+                  <label className="block text-sm font-semibold text-black mb-1.5">Category Label</label>
                   <input
                     value={addForm.categoryLabel}
                     onChange={(e) => setAddForm((form) => ({ ...form, categoryLabel: e.target.value }))}
@@ -826,7 +826,7 @@ export default function QuestionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Number *</label>
+                <label className="block text-sm font-semibold text-black mb-1.5">Question Number *</label>
                 <input
                   required
                   type="number"
@@ -838,7 +838,7 @@ export default function QuestionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title *</label>
+                <label className="block text-sm font-semibold text-black mb-1.5">Title *</label>
                 <input
                   required
                   value={addForm.title}
@@ -849,7 +849,7 @@ export default function QuestionsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Question Text *</label>
+                <label className="block text-sm font-semibold text-black mb-1.5">Question Text *</label>
                 <textarea
                   required
                   rows={4}
@@ -862,7 +862,7 @@ export default function QuestionsPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-semibold text-gray-700">Options</label>
+                  <label className="block text-sm font-semibold text-black">Options</label>
                   <button
                     type="button"
                     onClick={() => setAddForm((form) => ({
@@ -876,14 +876,14 @@ export default function QuestionsPage() {
                 </div>
                 <div className="space-y-3">
                   {addForm.options.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-500">
+                    <div className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-sm text-black">
                       No options added yet.
                     </div>
                   )}
                   {addForm.options.map((option, index) => (
                     <div key={index} className="grid gap-2 md:grid-cols-[120px_1fr_120px_auto] items-end">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Label</label>
+                        <label className="block text-xs font-semibold text-black mb-1">Label</label>
                         <input
                           value={option.label}
                           onChange={(e) => updateAddOption(index, "label", e.target.value)}
@@ -892,7 +892,7 @@ export default function QuestionsPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1">Text</label>
+                        <label className="block text-xs font-semibold text-black mb-1">Text</label>
                         <input
                           value={option.text}
                           onChange={(e) => updateAddOption(index, "text", e.target.value)}
@@ -902,7 +902,7 @@ export default function QuestionsPage() {
                       </div>
                       {activeCode !== "CAREER_DNA" && (
                         <div>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Score</label>
+                          <label className="block text-xs font-semibold text-black mb-1">Score</label>
                           <input
                             type="number"
                             value={option.score ?? ""}
@@ -948,7 +948,7 @@ export default function QuestionsPage() {
                     setShowAdd(false);
                     setAddError(null);
                   }}
-                  className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+                  className="flex-1 px-4 py-2.5 border border-gray-200 text-black rounded-xl text-sm font-medium hover:bg-gray-50 transition"
                 >
                   Cancel
                 </button>

@@ -19,8 +19,8 @@ export function ChartCard({ title, description, children, action, noPad }: Chart
     >
       <div className="flex items-start justify-between gap-4 px-5 pb-4 pt-5">
         <div>
-          <h3 className="text-sm font-bold text-slate-800">{title}</h3>
-          {description ? <p className="mt-0.5 text-xs text-slate-500">{description}</p> : null}
+          <h3 className="text-sm font-bold text-black">{title}</h3>
+          {description ? <p className="mt-0.5 text-xs text-black">{description}</p> : null}
         </div>
         {action}
       </div>

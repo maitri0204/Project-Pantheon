@@ -101,8 +101,8 @@ function StudentRegistrationPanel({ orgSlug }: { orgSlug: string }) {
             <Link2 className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Student registration link</h2>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
+            <h2 className="text-lg font-bold text-black">Student registration link</h2>
+            <p className="mt-1 max-w-xl text-sm text-black">
               Share this URL so new students join your organization automatically after email verification.
             </p>
           </div>
@@ -119,7 +119,7 @@ function StudentRegistrationPanel({ orgSlug }: { orgSlug: string }) {
         )}
       </div>
       <div className="relative mt-4 flex items-center gap-2">
-        <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 font-mono text-xs text-slate-700 truncate select-all">
+        <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 font-mono text-xs text-black truncate select-all">
           {regLink || "Loading registration link…"}
         </div>
         <button
@@ -175,9 +175,9 @@ export default function OrgAdminHomeDashboard({
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-400" />
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-slate-500">Assessment catalog</p>
-              <p className="mt-1 text-4xl font-black text-slate-900">{stats?.assessments ?? "—"}</p>
-              <p className="mt-2 text-sm text-slate-600">Published on your portal</p>
+              <p className="text-sm font-medium text-black">Assessment catalog</p>
+              <p className="mt-1 text-4xl font-black text-black">{stats?.assessments ?? "—"}</p>
+              <p className="mt-2 text-sm text-black">Published on your portal</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition group-hover:scale-105">
               <ClipboardList className="h-7 w-7" />
@@ -191,9 +191,9 @@ export default function OrgAdminHomeDashboard({
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-slate-500">Students</p>
-              <p className="mt-1 text-4xl font-black text-slate-900">{stats?.students ?? "—"}</p>
-              <p className="mt-2 text-sm text-slate-600">Profiles, grades, and reports</p>
+              <p className="text-sm font-medium text-black">Students</p>
+              <p className="mt-1 text-4xl font-black text-black">{stats?.students ?? "—"}</p>
+              <p className="mt-2 text-sm text-black">Profiles, grades, and reports</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition group-hover:scale-105">
               <Users className="h-7 w-7" />
@@ -207,11 +207,11 @@ export default function OrgAdminHomeDashboard({
         <section>
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-black">
                 <BarChart3 className="h-5 w-5 text-blue-600" />
                 Assessment analytics
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-black">
                 Open a dedicated dashboard for cohort insights, distributions, and student outcomes.
               </p>
             </div>
@@ -235,23 +235,23 @@ export default function OrgAdminHomeDashboard({
                     <div className="flex items-start justify-between gap-3">
                       <span
                         className={`rounded-lg border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                          meta?.accent ?? "bg-slate-50 text-slate-600 border-slate-100"
+                          meta?.accent ?? "bg-slate-50 text-black border-slate-100"
                         }`}
                       >
                         {displayCode(assessment.code)}
                       </span>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-                          enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-black"
                         }`}
                       >
                         {enabled ? "Live" : "Soon"}
                       </span>
                     </div>
-                    <h3 className="mt-3 text-base font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                    <h3 className="mt-3 text-base font-bold text-black group-hover:text-blue-700 transition-colors">
                       {meta?.title ?? assessment.name}
                     </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                    <p className="mt-1.5 text-sm leading-relaxed text-black">
                       {meta?.subtitle ?? assessment.category}
                     </p>
                     <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-blue-600">
@@ -268,7 +268,7 @@ export default function OrgAdminHomeDashboard({
 
       {/* Quick actions */}
       <section>
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Quick shortcuts</h2>
+        <h2 className="mb-4 text-lg font-bold text-black">Quick shortcuts</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -283,8 +283,8 @@ export default function OrgAdminHomeDashboard({
                 >
                   <Icon className="h-5 w-5" />
                 </div>
-                <p className="font-semibold text-slate-900 group-hover:text-blue-700">{action.label}</p>
-                <p className="mt-1 text-sm text-slate-600">{action.desc}</p>
+                <p className="font-semibold text-black group-hover:text-blue-700">{action.label}</p>
+                <p className="mt-1 text-sm text-black">{action.desc}</p>
               </Link>
             );
           })}

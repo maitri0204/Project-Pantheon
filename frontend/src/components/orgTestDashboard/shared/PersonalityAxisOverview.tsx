@@ -16,7 +16,7 @@ type PersonalityAxisOverviewProps = {
 export function PersonalityAxisOverview({ pairs }: PersonalityAxisOverviewProps) {
   if (!pairs.length) {
     return (
-      <p className="text-sm text-black/60 text-center py-8">
+      <p className="text-sm text-black text-center py-8">
         Dimension data will appear once students complete Career Compass.
       </p>
     );
@@ -38,7 +38,7 @@ export function PersonalityAxisOverview({ pairs }: PersonalityAxisOverviewProps)
             key={pair.pair}
             className="flex flex-col rounded-2xl border border-slate-100 bg-gradient-to-b from-white to-slate-50/80 p-4"
           >
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500 text-center mb-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-black text-center mb-3">
               {pair.styleLabel}
             </p>
             <div
@@ -56,14 +56,14 @@ export function PersonalityAxisOverview({ pairs }: PersonalityAxisOverviewProps)
                 </p>
               </div>
             </div>
-            <p className="mt-3 text-center text-xs text-black/70 leading-snug">
+            <p className="mt-3 text-center text-xs text-black leading-snug">
               <span className="font-medium">{otherName}</span> · {otherPct}%
             </p>
             <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-slate-100">
               <div style={{ width: `${pair.percentA}%`, backgroundColor: colors.a }} />
               <div style={{ width: `${pair.percentB}%`, backgroundColor: colors.b }} />
             </div>
-            <div className="mt-1.5 flex justify-between text-[10px] text-black/50">
+            <div className="mt-1.5 flex justify-between text-[10px] text-black">
               <span className="truncate pr-1">{pair.nameA}</span>
               <span className="truncate pl-1 text-right">{pair.nameB}</span>
             </div>

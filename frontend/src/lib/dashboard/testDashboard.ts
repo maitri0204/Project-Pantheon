@@ -39,7 +39,7 @@ const TEST_DASHBOARD_META: Record<string, Omit<TestDashboardMeta, "code">> = {
     enabled: true,
   },
   JOHARI_WINDOW: {
-    title: "CLEAR (Johari Window)",
+    title: "CLEAR",
     subtitle: "Self-awareness quadrant patterns",
     gradient: "from-indigo-600 to-blue-500",
     accent: "bg-indigo-50 text-indigo-700 border-indigo-100",
@@ -53,7 +53,7 @@ const TEST_DASHBOARD_META: Record<string, Omit<TestDashboardMeta, "code">> = {
     enabled: true,
   },
   METACOGNITION_TEST: {
-    title: "Thinking & Expression Skills",
+    title: "Thinking & Expression Skills Test",
     subtitle: "Domain score patterns across completed tests",
     gradient: "from-cyan-600 to-sky-500",
     accent: "bg-cyan-50 text-cyan-700 border-cyan-100",

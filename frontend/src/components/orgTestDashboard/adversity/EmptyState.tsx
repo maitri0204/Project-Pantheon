@@ -85,7 +85,7 @@ export function EmptyState({
         {cfg.icon}
       </motion.div>
       <h3 className="mt-5 text-base font-semibold text-black">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm text-black/70">{description}</p>
+      <p className="mt-2 max-w-sm text-sm text-black">{description}</p>
       {actionLabel && onAction ? (
         <button
           type="button"

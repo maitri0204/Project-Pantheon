@@ -83,7 +83,7 @@ export const DEFAULT_ASSESSMENTS: AssessmentSeedDefinition[] = [
     code: "METACOGNITION_TEST",
     slug: "metacognition-test",
     name: "TEST - Thinking & Expression Skills Test",
-    category: "metacognition",
+    category: "test",
     summary: "Domain-based assessment for students and parents.",
     sourceProject: "Project-Metacognition_Test",
     sourceDbName: "metacognition_test",

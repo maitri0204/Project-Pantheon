@@ -161,7 +161,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
   if (error || !data) {
     return (
       <div className="space-y-4">
-        <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+        <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-black hover:text-black">
           <ArrowLeft className="h-4 w-4" /> Back to Students
         </button>
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error || "Student not found."}</div>
@@ -174,7 +174,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+      <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-black hover:text-black">
         <ArrowLeft className="h-4 w-4" /> Back to Students
       </button>
 
@@ -201,37 +201,37 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Organization</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{student.organization?.name || "—"}</p>
+          <div className="flex items-center gap-2 text-black"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Organization</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{student.organization?.name || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><GraduationCap className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Grade</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{student.grade || "—"}</p>
+          <div className="flex items-center gap-2 text-black"><GraduationCap className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Grade</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{student.grade || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><GraduationCap className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Division</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{student.division || "—"}</p>
+          <div className="flex items-center gap-2 text-black"><GraduationCap className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Division</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{student.division || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Institute</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{student.institutionName || "—"}</p>
+          <div className="flex items-center gap-2 text-black"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Institute</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{student.institutionName || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><ShieldCheck className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Joined</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{formatDateTime(student.createdAt)}</p>
+          <div className="flex items-center gap-2 text-black"><ShieldCheck className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Joined</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{formatDateTime(student.createdAt)}</p>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Completed Results</h2>
-            <p className="text-sm text-slate-500">All assessments completed by this student.</p>
+            <h2 className="text-lg font-bold text-black">Completed Results</h2>
+            <p className="text-sm text-black">All assessments completed by this student.</p>
           </div>
         </div>
 
         {results.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-slate-500">No completed assessments yet.</div>
+          <div className="px-5 py-12 text-center text-sm text-black">No completed assessments yet.</div>
         ) : (
           <div className="grid gap-4 p-4">
             {multiAttemptGroups.map((group) => (
@@ -241,11 +241,11 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">
                       {normalizeDisplayCode(group.assessmentCode)}
                     </p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">{group.assessmentName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <h3 className="mt-1 text-lg font-bold text-black">{group.assessmentName}</h3>
+                    <p className="mt-1 text-sm text-black">
                       {group.attempts.length} attempt{group.attempts.length !== 1 ? "s" : ""} completed
                     </p>
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500">
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-black">
                       <CalendarClock className="h-3.5 w-3.5" />
                       Latest {formatDateTime(group.attempts[group.attempts.length - 1]?.completedAt)}
                     </div>
@@ -266,9 +266,9 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">{normalizeDisplayCode(result.assessmentCode)}</p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">{result.assessmentName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">{result.answeredCount}/{result.totalQuestions} answered</p>
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-slate-500 border border-slate-200">
+                    <h3 className="mt-1 text-lg font-bold text-black">{result.assessmentName}</h3>
+                    <p className="mt-1 text-sm text-black">{result.answeredCount}/{result.totalQuestions} answered</p>
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-black border border-slate-200">
                       <CalendarClock className="h-3.5 w-3.5" />
                       Completed {formatDateTime(result.completedAt)}
                     </div>

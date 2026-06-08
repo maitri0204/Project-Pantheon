@@ -135,7 +135,7 @@ export default function OrganizationProfilePage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="text-slate-600">Loading profile...</p>
+          <p className="text-black">Loading profile...</p>
         </div>
       </div>
     );
@@ -147,8 +147,8 @@ export default function OrganizationProfilePage() {
         <div className="min-h-screen bg-slate-50 px-4 py-8">
           <div className="mx-auto max-w-2xl">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-slate-900">Superadmin Profile</h1>
-              <p className="mt-2 text-slate-600">Your platform account details</p>
+              <h1 className="text-3xl font-bold text-black">Superadmin Profile</h1>
+              <p className="mt-2 text-black">Your platform account details</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -157,8 +157,8 @@ export default function OrganizationProfilePage() {
                   {user.firstName?.charAt(0)?.toUpperCase() || "A"}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xl font-semibold text-slate-900 truncate">{`${user.firstName} ${user.lastName}`.trim()}</p>
-                  <p className="text-sm text-slate-600 truncate">{user.email}</p>
+                  <p className="text-xl font-semibold text-black truncate">{`${user.firstName} ${user.lastName}`.trim()}</p>
+                  <p className="text-sm text-black truncate">{user.email}</p>
                   <span className="mt-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                     SUPERADMIN
                   </span>
@@ -167,16 +167,16 @@ export default function OrganizationProfilePage() {
 
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">First Name</p>
-                  <p className="mt-1 text-base font-semibold text-slate-900">{user.firstName || "—"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black">First Name</p>
+                  <p className="mt-1 text-base font-semibold text-black">{user.firstName || "—"}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Last Name</p>
-                  <p className="mt-1 text-base font-semibold text-slate-900">{user.lastName || "—"}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black">Last Name</p>
+                  <p className="mt-1 text-base font-semibold text-black">{user.lastName || "—"}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
-                  <p className="mt-1 text-base font-semibold text-slate-900 break-all">{user.email}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-black">Email</p>
+                  <p className="mt-1 text-base font-semibold text-black break-all">{user.email}</p>
                 </div>
               </div>
 
@@ -200,8 +200,8 @@ export default function OrganizationProfilePage() {
       <div className="mx-auto max-w-2xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Organization Profile</h1>
-          <p className="mt-2 text-slate-600">Manage your organization's branding and contact information</p>
+          <h1 className="text-3xl font-bold text-black">Organization Profile</h1>
+          <p className="mt-2 text-black">Manage your organization's branding and contact information</p>
         </div>
 
         {/* Alert Messages */}
@@ -218,7 +218,7 @@ export default function OrganizationProfilePage() {
 
         {isOrgAdmin && (
           <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900">Organization Logo</h2>
+            <h2 className="mb-4 text-lg font-semibold text-black">Organization Logo</h2>
 
             <div className="flex flex-col gap-6 md:flex-row md:items-start">
               <div
@@ -235,8 +235,8 @@ export default function OrganizationProfilePage() {
                   />
                 ) : (
                   <div className="text-center">
-                    <Upload className="mx-auto mb-2 h-8 w-8 text-slate-400" />
-                    <p className="text-xs text-slate-500">No logo</p>
+                    <Upload className="mx-auto mb-2 h-8 w-8 text-black" />
+                    <p className="text-xs text-black">No logo</p>
                   </div>
                 )}
               </div>
@@ -267,58 +267,58 @@ export default function OrganizationProfilePage() {
 
         {/* Profile Details Section - Read Only */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-semibold text-slate-900">
+          <h2 className="mb-6 text-lg font-semibold text-black">
             {isOrgAdmin ? "Organization Details" : "Account Details"}
           </h2>
 
           {isOrgAdmin ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="rounded-lg bg-gradient-to-br from-blue-50 to-slate-50 p-4 border border-blue-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Company Name</p>
-                <p className="text-lg font-semibold text-slate-900 break-words">{displayCompanyName}</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Company Name</p>
+                <p className="text-lg font-semibold text-black break-words">{displayCompanyName}</p>
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-cyan-50 to-slate-50 p-4 border border-cyan-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Website</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Website</p>
                 {displayWebsite ? (
                   <a href={displayWebsite} target="_blank" rel="noopener noreferrer" className="text-base md:text-lg font-semibold text-blue-600 hover:text-blue-700 break-all">
                     {displayWebsite}
                   </a>
                 ) : (
-                  <p className="text-lg font-semibold text-slate-400">—</p>
+                  <p className="text-lg font-semibold text-black">—</p>
                 )}
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-purple-50 to-slate-50 p-4 border border-purple-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Contact Email</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Contact Email</p>
                 {displayContactEmail ? (
                   <a href={`mailto:${displayContactEmail}`} className="text-base md:text-lg font-semibold text-blue-600 hover:text-blue-700 break-all">
                     {displayContactEmail}
                   </a>
                 ) : (
-                  <p className="text-lg font-semibold text-slate-400">—</p>
+                  <p className="text-lg font-semibold text-black">—</p>
                 )}
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-slate-50 p-4 border border-emerald-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Contact Phone</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Contact Phone</p>
                 {displayContactPhone ? (
                   <a href={`tel:${displayContactPhone}`} className="text-base md:text-lg font-semibold text-blue-600 hover:text-blue-700">
                     {displayContactPhone}
                   </a>
                 ) : (
-                  <p className="text-lg font-semibold text-slate-400">—</p>
+                  <p className="text-lg font-semibold text-black">—</p>
                 )}
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-rose-50 to-slate-50 p-4 border border-rose-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Representative Name</p>
-                <p className="text-lg font-semibold text-slate-900 break-words">{displayRepresentativeName || "—"}</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Representative Name</p>
+                <p className="text-lg font-semibold text-black break-words">{displayRepresentativeName || "—"}</p>
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-slate-50 p-4 border border-indigo-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Organization Type</p>
-                <p className="text-lg font-semibold text-slate-900">
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Organization Type</p>
+                <p className="text-lg font-semibold text-black">
                   {organization.type === "WHITELABEL" ? "White Label" : "Platform"}
                 </p>
               </div>
@@ -326,20 +326,20 @@ export default function OrganizationProfilePage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="rounded-lg bg-gradient-to-br from-blue-50 to-slate-50 p-4 border border-blue-100 sm:col-span-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Full Name</p>
-                <p className="text-lg font-semibold text-slate-900 break-words">{`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "—"}</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Full Name</p>
+                <p className="text-lg font-semibold text-black break-words">{`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "—"}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-br from-cyan-50 to-slate-50 p-4 border border-cyan-100 sm:col-span-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Email</p>
-                <p className="text-lg font-semibold text-slate-900 break-all">{user?.email || "—"}</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Email</p>
+                <p className="text-lg font-semibold text-black break-all">{user?.email || "—"}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-br from-purple-50 to-slate-50 p-4 border border-purple-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Role</p>
-                <p className="text-lg font-semibold text-slate-900">SUPERADMIN</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Role</p>
+                <p className="text-lg font-semibold text-black">SUPERADMIN</p>
               </div>
               <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-slate-50 p-4 border border-emerald-100">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Account Status</p>
-                <p className="text-lg font-semibold text-slate-900">Active</p>
+                <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Account Status</p>
+                <p className="text-lg font-semibold text-black">Active</p>
               </div>
             </div>
           )}

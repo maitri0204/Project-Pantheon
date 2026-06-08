@@ -12,7 +12,7 @@ interface DashboardTableProps<T> {
 export function DashboardTable<T>({ columns, data, emptyMessage }: DashboardTableProps<T>) {
   if (!data.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-sm text-slate-600">
+      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-sm text-black">
         {emptyMessage}
       </div>
     );
@@ -26,7 +26,7 @@ export function DashboardTable<T>({ columns, data, emptyMessage }: DashboardTabl
             {columns.map((column) => (
               <th
                 key={column.header}
-                className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-black"
               >
                 {column.header}
               </th>
@@ -41,7 +41,7 @@ export function DashboardTable<T>({ columns, data, emptyMessage }: DashboardTabl
               className="transition-colors"
             >
               {columns.map((column) => (
-                <td key={column.header} className={`px-4 py-2.5 text-sm text-slate-800 ${column.className ?? ""}`}>
+                <td key={column.header} className={`px-4 py-2.5 text-sm text-black ${column.className ?? ""}`}>
                   {column.render(row)}
                 </td>
               ))}

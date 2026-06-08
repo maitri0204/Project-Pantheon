@@ -82,7 +82,7 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
   if (error || !data) {
     return (
       <div className="space-y-4">
-        <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+        <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-black hover:text-black">
           <ArrowLeft className="h-4 w-4" /> Back to Parents
         </button>
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error || "Parent not found."}</div>
@@ -94,7 +94,7 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
+      <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-black hover:text-black">
         <ArrowLeft className="h-4 w-4" /> Back to Parents
       </button>
 
@@ -121,29 +121,29 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Organization</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{parent.organization?.name || "—"}</p>
+          <div className="flex items-center gap-2 text-black"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Organization</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{parent.organization?.name || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><ShieldCheck className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Joined</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{formatDateTime(parent.createdAt)}</p>
+          <div className="flex items-center gap-2 text-black"><ShieldCheck className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Joined</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{formatDateTime(parent.createdAt)}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500"><Phone className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Phone</span></div>
-          <p className="mt-2 text-base font-semibold text-slate-900">{`${parent.phoneCode || ""}${parent.phone || ""}`.trim() || "—"}</p>
+          <div className="flex items-center gap-2 text-black"><Phone className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Phone</span></div>
+          <p className="mt-2 text-base font-semibold text-black">{`${parent.phoneCode || ""}${parent.phone || ""}`.trim() || "—"}</p>
         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Completed Assessments</h2>
-            <p className="text-sm text-slate-500">All assessments completed by this parent.</p>
+            <h2 className="text-lg font-bold text-black">Completed Assessments</h2>
+            <p className="text-sm text-black">All assessments completed by this parent.</p>
           </div>
         </div>
 
         {attempts.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-slate-500">No completed assessments yet.</div>
+          <div className="px-5 py-12 text-center text-sm text-black">No completed assessments yet.</div>
         ) : (
           <div className="grid gap-4 p-4">
             {attempts.map((result) => (
@@ -151,9 +151,9 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">{normalizeDisplayCode(result.assessmentCode)}</p>
-                    <h3 className="mt-1 text-lg font-bold text-slate-900">{result.assessmentName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">{result.answeredCount}/{result.totalQuestions} answered</p>
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-slate-500 border border-slate-200">
+                    <h3 className="mt-1 text-lg font-bold text-black">{result.assessmentName}</h3>
+                    <p className="mt-1 text-sm text-black">{result.answeredCount}/{result.totalQuestions} answered</p>
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-black border border-slate-200">
                       <CalendarClock className="h-3.5 w-3.5" />
                       Completed {formatDateTime(result.completedAt)}
                     </div>

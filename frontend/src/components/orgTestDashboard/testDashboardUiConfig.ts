@@ -45,6 +45,7 @@ export type TestDashboardUiConfig = {
   dimensionsDescription: string;
   buildStatCards: (data: AssessmentAdminDashboardResponse) => StatCardDef[];
   resultColumnLabel?: string;
+  hideResultColumn?: boolean;
   audience?: DashboardAudienceLabels;
 };
 
@@ -128,7 +129,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     distributionDescription: "",
     dimensionsTitle: "",
     dimensionsDescription: "",
-    resultColumnLabel: "Profile",
+    hideResultColumn: true,
     buildStatCards: (data) => {
       const j = data.johariSummary;
       return [

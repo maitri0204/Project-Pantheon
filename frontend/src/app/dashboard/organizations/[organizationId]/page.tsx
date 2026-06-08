@@ -191,23 +191,23 @@ export default function OrganizationDetailsPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/dashboard/organizations"
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 font-medium"
+          className="flex items-center gap-1.5 text-sm text-black hover:text-black font-medium"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Organizations
         </Link>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm font-semibold text-gray-800">{organization.name}</span>
+        <span className="text-black">/</span>
+        <span className="text-sm font-semibold text-black">{organization.name}</span>
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-black">{organization.name}</h1>
-          <p className="text-black/70 mt-1 text-base">Organization details and coupon configuration.</p>
+          <p className="text-black mt-1 text-base">Organization details and coupon configuration.</p>
         </div>
-        <span className={`mt-1 text-sm px-3 py-1 rounded-full font-semibold ${organization.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+        <span className={`mt-1 text-sm px-3 py-1 rounded-full font-semibold ${organization.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"}`}>
           {organization.isActive ? "Active" : "Inactive"}
         </span>
       </div>
@@ -225,7 +225,7 @@ export default function OrganizationDetailsPage() {
         <h2 className="text-xl font-bold text-black mb-4">Organization Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Website Link</p>
+            <p className="text-xs uppercase tracking-wide text-black font-semibold">Website Link</p>
             {organization.website ? (
               <a
                 href={getWebsiteHref(organization.website)}
@@ -236,28 +236,28 @@ export default function OrganizationDetailsPage() {
                 {getWebsiteHref(organization.website)}
               </a>
             ) : (
-              <p className="mt-1.5 text-base font-semibold text-gray-900">—</p>
+              <p className="mt-1.5 text-base font-semibold text-black">—</p>
             )}
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Name</p>
-            <p className="mt-1.5 text-base font-semibold text-gray-900">{organization.contactPersonName || "—"}</p>
+            <p className="text-xs uppercase tracking-wide text-black font-semibold">Name</p>
+            <p className="mt-1.5 text-base font-semibold text-black">{organization.contactPersonName || "—"}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Phone Number</p>
-            <p className="mt-1.5 text-base font-semibold text-gray-900">{formatPhoneNumber(organization.phoneNumber)}</p>
+            <p className="text-xs uppercase tracking-wide text-black font-semibold">Phone Number</p>
+            <p className="mt-1.5 text-base font-semibold text-black">{formatPhoneNumber(organization.phoneNumber)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Institute / Company Name</p>
-            <p className="mt-1.5 text-base font-semibold text-gray-900 break-words">{organization.companyName || organization.name || "—"}</p>
+            <p className="text-xs uppercase tracking-wide text-black font-semibold">Institute / Company Name</p>
+            <p className="mt-1.5 text-base font-semibold text-black break-words">{organization.companyName || organization.name || "—"}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Contact Email</p>
-            <p className="mt-1.5 text-base font-semibold text-gray-900 break-all">{organization.contactEmail || "—"}</p>
+            <p className="text-xs uppercase tracking-wide text-black font-semibold">Contact Email</p>
+            <p className="mt-1.5 text-base font-semibold text-black break-all">{organization.contactEmail || "—"}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-wide text-gray-400 font-semibold">Created On</p>
-            <p className="mt-1.5 text-base font-semibold text-gray-900">{formatDate(organization.createdAt)}</p>
+            <p className="text-xs uppercase tracking-wide text-black font-semibold">Created On</p>
+            <p className="mt-1.5 text-base font-semibold text-black">{formatDate(organization.createdAt)}</p>
           </div>
         </div>
       </div>
@@ -267,19 +267,19 @@ export default function OrganizationDetailsPage() {
         <h2 className="text-xl font-bold text-black mb-3">Coupon Summary</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-1">
-            <p className="text-sm text-gray-500 font-medium">Total Coupons</p>
-            <p className="text-4xl font-bold text-slate-900 mt-1">{totalCoupons}</p>
-            <p className="text-xs text-gray-400 mt-1">Across all assessments</p>
+            <p className="text-sm text-black font-medium">Total Coupons</p>
+            <p className="text-4xl font-bold text-black mt-1">{totalCoupons}</p>
+            <p className="text-xs text-black mt-1">Across all assessments</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-1">
-            <p className="text-sm text-gray-500 font-medium">Total Used</p>
+            <p className="text-sm text-black font-medium">Total Used</p>
             <p className="text-4xl font-bold text-emerald-600 mt-1">{totalUsed}</p>
-            <p className="text-xs text-gray-400 mt-1">Allocated to students</p>
+            <p className="text-xs text-black mt-1">Allocated to students</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-1">
-            <p className="text-sm text-gray-500 font-medium">Total Remaining</p>
+            <p className="text-sm text-black font-medium">Total Remaining</p>
             <p className="text-4xl font-bold text-blue-600 mt-1">{totalRemaining}</p>
-            <p className="text-xs text-gray-400 mt-1">Available to allocate</p>
+            <p className="text-xs text-black mt-1">Available to allocate</p>
           </div>
         </div>
       </div>
@@ -340,22 +340,22 @@ export default function OrganizationDetailsPage() {
                 <div className="grid grid-cols-3 gap-3 mb-5">
                   <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
                     <p className={`text-2xl font-bold ${colors.text}`}>{item.totalCoupons}</p>
-                    <p className="text-xs text-gray-600 font-medium mt-0.5">Total</p>
+                    <p className="text-xs text-black font-medium mt-0.5">Total</p>
                   </div>
                   <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
                     <p className="text-2xl font-bold text-emerald-600">{item.usedCoupons}</p>
-                    <p className="text-xs text-gray-600 font-medium mt-0.5">Used</p>
+                    <p className="text-xs text-black font-medium mt-0.5">Used</p>
                   </div>
                   <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
                     <p className="text-2xl font-bold text-blue-600">{item.remainingCoupons}</p>
-                    <p className="text-xs text-gray-600 font-medium mt-0.5">Remaining</p>
+                    <p className="text-xs text-black font-medium mt-0.5">Remaining</p>
                   </div>
                 </div>
 
                 {/* Progress bar */}
                 {item.isConfigured && item.totalCoupons > 0 && (
                   <div className="mb-5">
-                    <div className="flex justify-between text-xs font-semibold text-gray-600 mb-2">
+                    <div className="flex justify-between text-xs font-semibold text-black mb-2">
                       <span>Allocation Progress</span>
                       <span>{usedPct}%</span>
                     </div>
@@ -378,7 +378,7 @@ export default function OrganizationDetailsPage() {
                 <div className="bg-white/50 backdrop-blur rounded-2xl p-4 shadow-md border border-white/60">
                   <div className="grid grid-cols-1 sm:grid-cols-6 gap-3 items-end">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Prefix</label>
+                      <label className="block text-xs font-bold text-black mb-1.5 uppercase tracking-wide">Prefix</label>
                       <input
                         value={draft.prefix}
                         onChange={(e) => setCouponDrafts((prev) => ({
@@ -390,7 +390,7 @@ export default function OrganizationDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Coupon Limit</label>
+                      <label className="block text-xs font-bold text-black mb-1.5 uppercase tracking-wide">Coupon Limit</label>
                       <input
                         type="number"
                         min={1}
@@ -404,7 +404,7 @@ export default function OrganizationDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Discount (₹)</label>
+                      <label className="block text-xs font-bold text-black mb-1.5 uppercase tracking-wide">Discount (₹)</label>
                       <input
                         type="number"
                         min={0}
@@ -418,7 +418,7 @@ export default function OrganizationDetailsPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Status</label>
+                      <label className="block text-xs font-bold text-black mb-1.5 uppercase tracking-wide">Status</label>
                       <button
                         onClick={() => setCouponDrafts((prev) => ({
                           ...prev,
@@ -427,7 +427,7 @@ export default function OrganizationDetailsPage() {
                         className={`w-full py-2.5 px-3 rounded-xl font-bold text-sm transition-all shadow-md ${
                           draft.isActive
                             ? "bg-green-500 text-white hover:bg-green-600"
-                            : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                            : "bg-gray-300 text-black hover:bg-gray-400"
                         }`}
                       >
                         {draft.isActive ? "Enabled" : "Disabled"}
@@ -449,12 +449,12 @@ export default function OrganizationDetailsPage() {
           {couponSummary.length === 0 && (
             <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 shadow-sm px-8 py-16 text-center">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <p className="text-gray-600 font-semibold">No assessments available</p>
-              <p className="text-sm text-gray-500 mt-1">Configure assessments when they become available.</p>
+              <p className="text-black font-semibold">No assessments available</p>
+              <p className="text-sm text-black mt-1">Configure assessments when they become available.</p>
             </div>
           )}
         </div>

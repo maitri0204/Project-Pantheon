@@ -22,8 +22,8 @@ export function AnalyticsCard({ label, value, helper, change, icon: Icon, accent
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">{label}</p>
-          <p className="mt-2 text-[28px] font-bold leading-none tracking-tight text-slate-900">{value}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-black">{label}</p>
+          <p className="mt-2 text-[28px] font-bold leading-none tracking-tight text-black">{value}</p>
         </div>
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition-transform duration-300 group-hover:scale-110 ${accent}`}
@@ -33,10 +33,10 @@ export function AnalyticsCard({ label, value, helper, change, icon: Icon, accent
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2">
-        <p className="text-[12px] leading-tight text-slate-600">{helper}</p>
+        <p className="text-[12px] leading-tight text-black">{helper}</p>
         <span
           className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-            isPositive ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-600"
+            isPositive ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-black"
           }`}
         >
           {change}

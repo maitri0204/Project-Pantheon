@@ -28,8 +28,9 @@ function dataX(sf: number) {
   return G_LEFT + (Math.min(50, Math.max(0, sf)) / 50) * G_SIZE;
 }
 
+/** Self-disclosure increases downward (0 at top, 50 at bottom) — matches CLEAR report Johari layout. */
 function dataY(sd: number) {
-  return G_BOTTOM - (Math.min(50, Math.max(0, sd)) / 50) * G_SIZE;
+  return G_TOP + (Math.min(50, Math.max(0, sd)) / 50) * G_SIZE;
 }
 
 const QUADRANT_PIE = [
@@ -60,7 +61,7 @@ export function ClearJohariOrgChart({
     <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-white p-4">
         <p className="text-sm font-semibold text-black mb-1">Org-average CLEAR map</p>
-        <p className="text-xs text-black/60 mb-4">
+        <p className="text-xs text-black mb-4">
           Cohort position on Solicits Feedback (horizontal) and Self-Disclosure (vertical).
         </p>
         <div className="flex justify-center overflow-x-auto">
@@ -89,7 +90,7 @@ export function ClearJohariOrgChart({
                   {t > 0 && t < 50 ? (
                     <line x1={x} y1={G_TOP} x2={x} y2={G_BOTTOM} stroke="#e2e8f0" strokeWidth={0.6} />
                   ) : null}
-                  <text x={x} y={G_TOP - 10} textAnchor="middle" fontSize={11} fill="#64748b">
+                  <text x={x} y={G_TOP - 10} textAnchor="middle" fontSize={11} fill="#000000">
                     {t}
                   </text>
                 </g>
@@ -106,7 +107,7 @@ export function ClearJohariOrgChart({
                   {t > 0 && t < 50 ? (
                     <line x1={G_LEFT} y1={y} x2={G_RIGHT} y2={y} stroke="#e2e8f0" strokeWidth={0.6} />
                   ) : null}
-                  <text x={G_LEFT - 8} y={y + 4} textAnchor="end" fontSize={11} fill="#64748b">
+                  <text x={G_LEFT - 8} y={y + 4} textAnchor="end" fontSize={11} fill="#000000">
                     {t}
                   </text>
                 </g>
@@ -148,7 +149,7 @@ export function ClearJohariOrgChart({
       <div className="space-y-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-sm font-semibold text-black">Quadrant area share</p>
-          <p className="text-xs text-black/60 mb-3">Average proportion of each Johari region.</p>
+          <p className="text-xs text-black mb-3">Average proportion of each region.</p>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

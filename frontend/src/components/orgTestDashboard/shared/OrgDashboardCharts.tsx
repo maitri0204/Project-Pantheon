@@ -41,7 +41,7 @@ export function DonutChart({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <p className="text-3xl font-bold text-black leading-none">{Math.round(percentage)}%</p>
           {(centerLabel || label) && (
-            <p className="text-xs text-black/70 font-medium mt-1 text-center px-2">{centerLabel || label}</p>
+            <p className="text-xs text-black font-medium mt-1 text-center px-2">{centerLabel || label}</p>
           )}
         </div>
       </div>
@@ -71,7 +71,7 @@ export function HorizontalBarChart({
             <div key={item.label}>
               <div className="flex justify-between text-sm mb-1">
                 <span className="font-medium text-black truncate pr-2">{item.label}</span>
-                <span className="text-black/80 shrink-0">
+                <span className="text-black shrink-0">
                   {item.value}
                   {item.suffix ?? (max !== 100 ? `/${max}` : "")}
                 </span>
@@ -122,7 +122,7 @@ export function VerticalBarChart({
                 className={`w-full max-w-[48px] rounded-t-lg ${item.color || barClass}`}
                 style={{ height: h }}
               />
-              <span className="text-[10px] text-black/70 mt-2 text-center leading-tight truncate w-full">
+              <span className="text-[10px] text-black mt-2 text-center leading-tight truncate w-full">
                 {item.label}
               </span>
             </div>
@@ -181,7 +181,7 @@ export function PieChartVisual({
             <div key={p.label} className="flex items-center gap-2 text-sm">
               <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
               <span className="text-black flex-1 truncate">{p.label}</span>
-              <span className="text-black/70">{p.value}</span>
+              <span className="text-black">{p.value}</span>
             </div>
           ))}
         </div>
@@ -293,7 +293,7 @@ export function JohariQuadrantGrid({
         >
           <p className={`text-sm font-semibold ${q.text}`}>{q.label}</p>
           <p className={`text-3xl font-bold ${q.text}`}>{q.value.toFixed(1)}%</p>
-          <p className="text-xs text-black/60">Org average</p>
+          <p className="text-xs text-black">Org average</p>
         </div>
       ))}
     </div>
@@ -319,7 +319,7 @@ export function TypeFrequencyGrid({
             style={{ opacity: 0.5 + (item.count / max) * 0.5 }}
           >
             <p className="text-sm font-bold text-black leading-snug line-clamp-3">{item.label}</p>
-            <p className="text-xs text-black/70 mt-1">{item.count} student{item.count !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-black mt-1">{item.count} student{item.count !== 1 ? "s" : ""}</p>
           </div>
         ))}
       </div>
@@ -336,10 +336,10 @@ export function SectionScoreCards({
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {items.map((item) => (
         <div key={item.label} className="rounded-2xl border border-fuchsia-100 bg-gradient-to-br from-fuchsia-50 to-white p-5">
-          <p className="text-sm font-medium text-black/80">{item.label}</p>
+          <p className="text-sm font-medium text-black">{item.label}</p>
           <div className="flex items-end gap-2 mt-2">
             <p className="text-3xl font-bold text-fuchsia-700">{item.value}%</p>
-            <p className="text-xs text-black/60 mb-1">avg completion</p>
+            <p className="text-xs text-black mb-1">avg completion</p>
           </div>
           <div className="mt-3 h-2 rounded-full bg-fuchsia-100 overflow-hidden">
             <div className="h-full bg-fuchsia-500 rounded-full" style={{ width: `${Math.min(100, item.value)}%` }} />

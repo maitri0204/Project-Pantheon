@@ -58,7 +58,7 @@ export default function CareerDnaOrgDashboard({ data, studentsPath }: OrgDashboa
             barClass="bg-fuchsia-500"
           />
           {topSection && (
-            <p className="mt-4 text-sm text-black/80">
+            <p className="mt-4 text-sm text-black">
               Strongest org-wide section: <span className="font-semibold text-fuchsia-700">{topSection.label}</span> at {topSection.value}%.
             </p>
           )}

@@ -162,11 +162,11 @@ function PlatformHealthBar({
           ) : null,
         )}
       </div>
-      <div className="flex flex-wrap gap-4 text-xs text-slate-600">
+      <div className="flex flex-wrap gap-4 text-xs text-black">
         {segments.map((seg) => (
           <span key={seg.label} className="inline-flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: seg.color }} />
-            {seg.label}: <strong className="text-slate-800">{seg.value}</strong>
+            {seg.label}: <strong className="text-black">{seg.value}</strong>
           </span>
         ))}
       </div>
@@ -292,9 +292,9 @@ export default function SuperAdminHomeDashboard({
               <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent}`} />
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-slate-500">{item.label}</p>
-                  <p className="mt-1 text-3xl font-black text-slate-900">{item.value}</p>
-                  <p className="mt-1 text-xs text-slate-500">{item.sub}</p>
+                  <p className="text-sm font-medium text-black">{item.label}</p>
+                  <p className="mt-1 text-3xl font-black text-black">{item.value}</p>
+                  <p className="mt-1 text-xs text-black">{item.sub}</p>
                 </div>
                 <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition group-hover:scale-105 ${item.iconBg}`}>
                   <Icon className="h-5 w-5" />
@@ -308,8 +308,8 @@ export default function SuperAdminHomeDashboard({
       {/* Platform health + recent activity */}
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-bold text-slate-900">Question bank health</h2>
-          <p className="mt-1 text-sm text-slate-600">Import and linkage status across the assessment catalog.</p>
+          <h2 className="text-base font-bold text-black">Question bank health</h2>
+          <p className="mt-1 text-sm text-black">Import and linkage status across the assessment catalog.</p>
           <div className="mt-5">
             <PlatformHealthBar imported={importedBanks} linked={linkedBanks} pending={pendingBanks} />
           </div>
@@ -324,26 +324,26 @@ export default function SuperAdminHomeDashboard({
 
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-bold text-slate-900">Recent transactions</h2>
+            <h2 className="text-base font-bold text-black">Recent transactions</h2>
             <Link href={resolveDashboardHref("/dashboard/ledger")} className="text-sm font-medium text-blue-600 hover:underline">
               View ledger
             </Link>
           </div>
           <div className="mt-4 divide-y divide-slate-100">
             {invoices.length === 0 ? (
-              <p className="py-6 text-sm text-slate-500">No invoices recorded yet.</p>
+              <p className="py-6 text-sm text-black">No invoices recorded yet.</p>
             ) : (
               invoices.slice(0, 5).map((inv) => (
                 <div key={inv._id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">{inv.invoiceNumber}</p>
-                    <p className="text-xs text-slate-500">{displayCode(inv.assessmentCode)}</p>
+                    <p className="truncate text-sm font-semibold text-black">{inv.invoiceNumber}</p>
+                    <p className="text-xs text-black">{displayCode(inv.assessmentCode)}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-slate-900">{formatCurrency(inv.finalAmount)}</p>
+                    <p className="text-sm font-bold text-black">{formatCurrency(inv.finalAmount)}</p>
                     <span
                       className={`text-[10px] font-semibold uppercase ${
-                        inv.status === "PAID" ? "text-emerald-600" : inv.status === "VOID" ? "text-slate-400" : "text-amber-600"
+                        inv.status === "PAID" ? "text-emerald-600" : inv.status === "VOID" ? "text-black" : "text-amber-600"
                       }`}
                     >
                       {inv.status}
@@ -361,11 +361,11 @@ export default function SuperAdminHomeDashboard({
         <section>
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-black">
                 <BarChart3 className="h-5 w-5 text-indigo-600" />
                 Assessment analytics
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-black">
                 Platform-wide cohort insights — open a dedicated dashboard for each test.
               </p>
             </div>
@@ -392,30 +392,30 @@ export default function SuperAdminHomeDashboard({
                     <div className="flex items-start justify-between gap-3">
                       <span
                         className={`rounded-lg border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                          meta?.accent ?? "bg-slate-50 text-slate-600 border-slate-100"
+                          meta?.accent ?? "bg-slate-50 text-black border-slate-100"
                         }`}
                       >
                         {displayCode(assessment.code)}
                       </span>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-                          enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-black"
                         }`}
                       >
                         {enabled ? "Live" : "Soon"}
                       </span>
                     </div>
-                    <h3 className="mt-3 text-base font-bold text-slate-900 transition-colors group-hover:text-indigo-700">
+                    <h3 className="mt-3 text-base font-bold text-black transition-colors group-hover:text-indigo-700">
                       {meta?.title ?? assessment.name}
                     </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                    <p className="mt-1.5 text-sm leading-relaxed text-black">
                       {meta?.subtitle ?? assessment.category}
                     </p>
-                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-3 flex items-center justify-between text-xs text-black">
                       <span className={`rounded-full px-2 py-0.5 font-medium ${questionBankBadge(assessment.questionBankStatus)}`}>
                         {assessment.questionBankStatus}
                       </span>
-                      <span className="font-semibold text-slate-700">₹{assessment.basePrice}</span>
+                      <span className="font-semibold text-black">₹{assessment.basePrice}</span>
                     </div>
                     <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-indigo-600">
                       Open dashboard
@@ -431,7 +431,7 @@ export default function SuperAdminHomeDashboard({
 
       {/* Quick shortcuts */}
       <section>
-        <h2 className="mb-4 text-lg font-bold text-slate-900">Quick shortcuts</h2>
+        <h2 className="mb-4 text-lg font-bold text-black">Quick shortcuts</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
@@ -446,8 +446,8 @@ export default function SuperAdminHomeDashboard({
                 >
                   <Icon className="h-5 w-5" />
                 </div>
-                <p className="font-semibold text-slate-900 group-hover:text-indigo-700">{action.label}</p>
-                <p className="mt-1 text-sm text-slate-600">{action.desc}</p>
+                <p className="font-semibold text-black group-hover:text-indigo-700">{action.label}</p>
+                <p className="mt-1 text-sm text-black">{action.desc}</p>
               </Link>
             );
           })}
@@ -458,7 +458,7 @@ export default function SuperAdminHomeDashboard({
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <h2 className="text-base font-bold text-slate-900">Assessment catalog</h2>
+            <h2 className="text-base font-bold text-black">Assessment catalog</h2>
             <Link href={resolveDashboardHref("/dashboard/assessments")} className="text-sm font-medium text-blue-600 hover:underline">
               View all
             </Link>
@@ -467,14 +467,14 @@ export default function SuperAdminHomeDashboard({
             {assessments.slice(0, 6).map((a) => (
               <div key={a._id} className="flex items-center justify-between gap-3 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-900">{a.name}</p>
-                  <p className="text-xs text-slate-500">{a.category}</p>
+                  <p className="truncate text-sm font-semibold text-black">{a.name}</p>
+                  <p className="text-xs text-black">{a.category}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${questionBankBadge(a.questionBankStatus)}`}>
                     {a.questionBankStatus}
                   </span>
-                  <span className="text-sm font-semibold text-slate-700">₹{a.basePrice}</span>
+                  <span className="text-sm font-semibold text-black">₹{a.basePrice}</span>
                 </div>
               </div>
             ))}
@@ -483,14 +483,14 @@ export default function SuperAdminHomeDashboard({
 
         <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-            <h2 className="text-base font-bold text-slate-900">Organizations ({organizations.length})</h2>
+            <h2 className="text-base font-bold text-black">Organizations ({organizations.length})</h2>
             <Link href={resolveDashboardHref("/dashboard/organizations")} className="text-sm font-medium text-blue-600 hover:underline">
               View all
             </Link>
           </div>
           <div className="divide-y divide-slate-50">
             {organizations.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-slate-500">No organizations yet.</p>
+              <p className="px-5 py-8 text-center text-sm text-black">No organizations yet.</p>
             ) : (
               organizations.slice(0, 6).map((org) => (
                 <Link
@@ -499,12 +499,12 @@ export default function SuperAdminHomeDashboard({
                   className="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">{org.name}</p>
-                    <p className="truncate text-xs text-slate-500">{org.slug}</p>
+                    <p className="truncate text-sm font-semibold text-black">{org.name}</p>
+                    <p className="truncate text-xs text-black">{org.slug}</p>
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      org.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"
+                      org.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-black"
                     }`}
                   >
                     {org.isActive ? "Active" : "Inactive"}

@@ -80,7 +80,7 @@ type LedgerResponse = {
 const STATUS_COLORS: Record<string, string> = {
   PAID: "bg-green-50 text-green-700",
   DRAFT: "bg-yellow-50 text-yellow-700",
-  VOID: "bg-gray-100 text-gray-500",
+  VOID: "bg-gray-100 text-black",
 };
 
 function fmt(n: number) {
@@ -175,7 +175,7 @@ export default function LedgerPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-black sm:text-3xl">Payment Ledger</h1>
-        <p className="mt-1 text-sm text-black/70">All transactions across every assessment on this platform.</p>
+        <p className="mt-1 text-sm text-black">All transactions across every assessment on this platform.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
@@ -186,7 +186,7 @@ export default function LedgerPage() {
           { label: "Net Revenue", value: fmt(summary?.totalNet ?? 0), colorCls: "text-indigo-700" },
         ].map(({ label, value, colorCls }) => (
           <div key={label} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
-            <p className="mb-1 text-xs text-black/70 sm:text-sm">{label}</p>
+            <p className="mb-1 text-xs text-black sm:text-sm">{label}</p>
             <p className={`text-base font-bold sm:text-xl ${colorCls}`}>{value}</p>
           </div>
         ))}
@@ -195,7 +195,7 @@ export default function LedgerPage() {
       <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
-            <label className="mb-1 block text-xs font-medium text-black/70 sm:text-sm">Search</label>
+            <label className="mb-1 block text-xs font-medium text-black sm:text-sm">Search</label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -204,7 +204,7 @@ export default function LedgerPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-black/70 sm:text-sm">Assessment</label>
+            <label className="mb-1 block text-xs font-medium text-black sm:text-sm">Assessment</label>
             <select
               value={filterAssessment}
               onChange={(e) => setFilterAssessment(e.target.value)}
@@ -219,7 +219,7 @@ export default function LedgerPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-black/70 sm:text-sm">Status</label>
+            <label className="mb-1 block text-xs font-medium text-black sm:text-sm">Status</label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -235,7 +235,7 @@ export default function LedgerPage() {
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="w-full rounded-xl border border-gray-200 py-2 text-sm text-black/70 hover:bg-gray-50"
+                className="w-full rounded-xl border border-gray-200 py-2 text-sm text-black hover:bg-gray-50"
               >
                 Clear Filters
               </button>
@@ -244,7 +244,7 @@ export default function LedgerPage() {
         </div>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:mt-4 sm:grid-cols-2 sm:gap-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-black/70 sm:text-sm">From Date</label>
+            <label className="mb-1 block text-xs font-medium text-black sm:text-sm">From Date</label>
             <input
               type="date"
               value={filterFrom}
@@ -253,7 +253,7 @@ export default function LedgerPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-black/70 sm:text-sm">To Date</label>
+            <label className="mb-1 block text-xs font-medium text-black sm:text-sm">To Date</label>
             <input
               type="date"
               value={filterTo}
@@ -271,7 +271,7 @@ export default function LedgerPage() {
       </div>
 
       {filteredWithBalance.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-12 text-center text-sm text-black/60 shadow-sm">
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-12 text-center text-sm text-black shadow-sm">
           {invoices.length === 0 ? "No transactions recorded yet." : "No results match your filters."}
         </div>
       ) : (
@@ -290,12 +290,12 @@ export default function LedgerPage() {
                 <div key={inv._id} className="space-y-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-mono text-xs font-semibold text-gray-900">{inv.invoiceNumber}</p>
-                      <p className="mt-0.5 text-[11px] text-gray-400">{dateStr}</p>
+                      <p className="font-mono text-xs font-semibold text-black">{inv.invoiceNumber}</p>
+                      <p className="mt-0.5 text-[11px] text-black">{dateStr}</p>
                     </div>
                     <div className="flex flex-shrink-0 items-center gap-2">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-black"}`}
                       >
                         {inv.status}
                       </span>
@@ -304,32 +304,32 @@ export default function LedgerPage() {
 
                   <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-gray-600"}`}
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-black"}`}
                     >
                       {meta?.name ?? inv.assessmentCode}
                     </span>
-                    {inv.couponCode && <span className="font-mono text-xs text-gray-400">{inv.couponCode}</span>}
+                    {inv.couponCode && <span className="font-mono text-xs text-black">{inv.couponCode}</span>}
                   </div>
 
                   <div>
-                    <p className="text-xs font-medium text-gray-900">{userName}</p>
-                    <p className="text-[11px] text-gray-400">{inv.user?.email ?? ""}</p>
+                    <p className="text-xs font-medium text-black">{userName}</p>
+                    <p className="text-[11px] text-black">{inv.user?.email ?? ""}</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 border-t border-gray-50 pt-2">
                     <div>
-                      <p className="text-[10px] uppercase text-gray-400">Gross</p>
-                      <p className="mt-0.5 text-xs font-medium text-gray-700">{fmt(inv.amount)}</p>
+                      <p className="text-[10px] uppercase text-black">Gross</p>
+                      <p className="mt-0.5 text-xs font-medium text-black">{fmt(inv.amount)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase text-gray-400">Discount</p>
+                      <p className="text-[10px] uppercase text-black">Discount</p>
                       <p className="mt-0.5 text-xs font-medium text-green-700">
                         {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase text-gray-400">Net</p>
-                      <p className="mt-0.5 text-xs font-bold text-gray-900">{fmt(inv.finalAmount)}</p>
+                      <p className="text-[10px] uppercase text-black">Net</p>
+                      <p className="mt-0.5 text-xs font-bold text-black">{fmt(inv.finalAmount)}</p>
                     </div>
                   </div>
 
@@ -340,17 +340,17 @@ export default function LedgerPage() {
 
             <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-4">
               <div>
-                <p className="mb-0.5 text-[10px] uppercase text-gray-400">Gross</p>
-                <p className="text-xs font-bold text-gray-900">{fmt(filteredSummary.gross)}</p>
+                <p className="mb-0.5 text-[10px] uppercase text-black">Gross</p>
+                <p className="text-xs font-bold text-black">{fmt(filteredSummary.gross)}</p>
               </div>
               <div>
-                <p className="mb-0.5 text-[10px] uppercase text-gray-400">Discount</p>
+                <p className="mb-0.5 text-[10px] uppercase text-black">Discount</p>
                 <p className="text-xs font-bold text-green-700">
                   {filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "—"}
                 </p>
               </div>
               <div>
-                <p className="mb-0.5 text-[10px] uppercase text-gray-400">Net</p>
+                <p className="mb-0.5 text-[10px] uppercase text-black">Net</p>
                 <p className="text-xs font-bold text-indigo-700">{fmt(filteredSummary.net)}</p>
               </div>
             </div>
@@ -360,7 +360,7 @@ export default function LedgerPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-black/70">
+                  <tr className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-black">
                     <th className="px-4 py-3 text-left">#</th>
                     <th className="px-4 py-3 text-left">Invoice</th>
                     <th className="px-4 py-3 text-left">Date &amp; Time</th>
@@ -391,30 +391,30 @@ export default function LedgerPage() {
 
                     return (
                       <tr key={inv._id} className="transition-colors hover:bg-gray-50">
-                        <td className="px-4 py-3 text-xs text-gray-400">{idx + 1}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-xs text-black">{idx + 1}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-black">
                           {inv.invoiceNumber}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-500">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-black">
                           <span className="block">{dateStr}</span>
-                          <span className="text-gray-400">{timeStr}</span>
+                          <span className="text-black">{timeStr}</span>
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-gray-600"}`}
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-black"}`}
                           >
                             {meta?.name ?? inv.assessmentCode}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="whitespace-nowrap text-xs font-medium text-gray-900">{userName}</p>
-                          <p className="text-[11px] text-gray-400">{userEmail}</p>
+                          <p className="whitespace-nowrap text-xs font-medium text-black">{userName}</p>
+                          <p className="text-[11px] text-black">{userEmail}</p>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-gray-700">{fmt(inv.amount)}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-black">{fmt(inv.amount)}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-green-700">
                           {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-gray-900">
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-black">
                           {fmt(inv.finalAmount)}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-medium text-indigo-700">
@@ -422,26 +422,26 @@ export default function LedgerPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-500"}`}
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-black"}`}
                           >
                             {inv.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-black">{inv.couponCode ?? "—"}</td>
                       </tr>
                     );
                   })}
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-gray-200 bg-gray-50 text-sm font-semibold">
-                    <td colSpan={5} className="px-4 py-3 text-gray-700">
+                    <td colSpan={5} className="px-4 py-3 text-black">
                       Totals ({filtered.length} records)
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-900">{fmt(filteredSummary.gross)}</td>
+                    <td className="px-4 py-3 text-right text-black">{fmt(filteredSummary.gross)}</td>
                     <td className="px-4 py-3 text-right text-green-700">
                       {filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-900">{fmt(filteredSummary.net)}</td>
+                    <td className="px-4 py-3 text-right text-black">{fmt(filteredSummary.net)}</td>
                     <td className="px-4 py-3 text-right text-indigo-700">
                       {fmt(filteredWithBalance.at(-1)?.runningBalance ?? 0)}
                     </td>

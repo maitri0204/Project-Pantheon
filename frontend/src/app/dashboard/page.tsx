@@ -25,7 +25,7 @@ function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
       </div>
       <div className="p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 font-mono truncate select-all">
+          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-black font-mono truncate select-all">
             {regLink || "Loading..."}
           </div>
           <button
@@ -37,9 +37,9 @@ function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
-        <div className="text-sm text-gray-600 space-y-1">
-          <p className="font-medium text-gray-700">Students registering via this link will:</p>
-          <ul className="list-disc list-inside space-y-0.5 text-gray-600">
+        <div className="text-sm text-black space-y-1">
+          <p className="font-medium text-black">Students registering via this link will:</p>
+          <ul className="list-disc list-inside space-y-0.5 text-black">
             <li>Be automatically linked to your organization</li>
             <li>Receive OTP verification on their email</li>
             <li>Be able to log in via your portal and access all assessments</li>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
             className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4 transition-all ${colorMap[color].card}`}
           >
             <div>
-              <p className="text-base text-black/80">{label}</p>
+              <p className="text-base text-black">{label}</p>
               <p className="text-3xl font-bold text-black">{stats ? stats[key as keyof Stats] : "—"}</p>
             </div>
           </Link>
@@ -252,7 +252,7 @@ export default function DashboardPage() {
       {role === "ORG_ADMIN" && assessments.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold text-black mb-3">Your Tests</h2>
-          <p className="text-sm text-black/70 mb-4">Open a dedicated dashboard for each assessment.</p>
+          <p className="text-sm text-black mb-4">Open a dedicated dashboard for each assessment.</p>
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {assessments.map((assessment) => {
               const meta = getTestDashboardMeta(assessment.code);
@@ -271,17 +271,17 @@ export default function DashboardPage() {
                       <p className="text-base font-semibold text-black group-hover:text-blue-700 transition-colors">
                         {assessment.name}
                       </p>
-                      <p className="text-sm text-black/80 mt-1">{assessment.category}</p>
+                      <p className="text-sm text-black mt-1">{assessment.category}</p>
                     </div>
                     <span
                       className={`text-xs font-medium rounded-full px-2.5 py-0.5 ${
-                        enabled ? "bg-green-50 text-green-700" : "bg-gray-100 text-black/80"
+                        enabled ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"
                       }`}
                     >
                       {enabled ? "Available" : "Soon"}
                     </span>
                   </div>
-                  <p className="mt-3 text-sm text-black/80">
+                  <p className="mt-3 text-sm text-black">
                     {enabled
                       ? "View readiness analytics, student results, and roadmap for this assessment."
                       : "Dedicated test dashboard coming soon. Manage pricing and students from Assessments."}
@@ -305,7 +305,7 @@ export default function DashboardPage() {
               className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow group"
             >
               <p className="text-base font-semibold text-black group-hover:text-blue-700 transition-colors">{ql.label}</p>
-              <p className="mt-1 text-sm text-black/80">{ql.desc}</p>
+              <p className="mt-1 text-sm text-black">{ql.desc}</p>
               <div className="mt-3 text-blue-600 text-sm font-medium flex items-center gap-1">
                 Go →
               </div>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
               <div key={a._id} className="px-5 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-base font-medium text-black truncate">{a.name}</p>
-                  <p className="text-sm text-black/70">{a.category}</p>
+                  <p className="text-sm text-black">{a.category}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {role === "SUPERADMIN" && (
@@ -337,7 +337,7 @@ export default function DashboardPage() {
                       a.questionBankStatus === "linked" ? "bg-blue-50 text-blue-700" : "bg-yellow-50 text-yellow-700"
                     }`}>{a.questionBankStatus}</span>
                   )}
-                  <span className="text-sm text-black/80 font-medium">₹{a.basePrice}</span>
+                  <span className="text-sm text-black font-medium">₹{a.basePrice}</span>
                 </div>
               </div>
             ))}
@@ -352,16 +352,16 @@ export default function DashboardPage() {
             </div>
             <div className="divide-y divide-gray-50">
               {organizations.length === 0 ? (
-                <p className="px-5 py-8 text-base text-black/70 text-center">No organizations yet.</p>
+                <p className="px-5 py-8 text-base text-black text-center">No organizations yet.</p>
               ) : (
                 organizations.slice(0, 6).map((org) => (
                   <div key={org._id} className="px-5 py-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-base font-medium text-black truncate">{org.name}</p>
-                      <p className="text-sm text-black/70">{org.slug}</p>
+                      <p className="text-sm text-black">{org.slug}</p>
                     </div>
                     <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
-                      org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"
+                      org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"
                     }`}>{org.isActive ? "Active" : "Inactive"}</span>
                   </div>
                 ))

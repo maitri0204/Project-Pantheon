@@ -116,20 +116,20 @@ export default function OrgLedgerPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Payment Ledger</h1>
-        <p className="mt-1 text-sm text-gray-500">All completed payments in your organization.</p>
+        <h1 className="text-2xl font-bold text-black sm:text-3xl">Payment Ledger</h1>
+        <p className="mt-1 text-sm text-black">All completed payments in your organization.</p>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {[
-          { label: "Total Transactions", value: filtered.length.toString(), colorCls: "text-gray-900" },
-          { label: "Gross Revenue", value: fmt(summary.gross), colorCls: "text-gray-900" },
+          { label: "Total Transactions", value: filtered.length.toString(), colorCls: "text-black" },
+          { label: "Gross Revenue", value: fmt(summary.gross), colorCls: "text-black" },
           { label: "Net Revenue", value: fmt(summary.net), colorCls: "text-indigo-700" },
         ].map((card) => (
           <div key={card.label} className="rounded-xl border border-gray-100 bg-white p-4">
-            <p className="mb-1 text-xs text-gray-500">{card.label}</p>
+            <p className="mb-1 text-xs text-black">{card.label}</p>
             <p className={`text-xl font-bold ${card.colorCls}`}>{card.value}</p>
           </div>
         ))}
@@ -143,7 +143,7 @@ export default function OrgLedgerPage() {
       />
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-12 text-center text-base text-black/70">
+        <div className="rounded-2xl border border-gray-100 bg-white px-5 py-12 text-center text-base text-black">
           {invoices.length === 0 ? "No transactions recorded yet." : "No results match your search."}
         </div>
       ) : (
@@ -161,59 +161,59 @@ export default function OrgLedgerPage() {
                 <div key={inv._id} className="space-y-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-mono text-xs font-semibold text-gray-900">{inv.invoiceNumber}</p>
-                      <p className="mt-0.5 text-[11px] text-gray-400">{dateStr}</p>
+                      <p className="font-mono text-xs font-semibold text-black">{inv.invoiceNumber}</p>
+                      <p className="mt-0.5 text-[11px] text-black">{dateStr}</p>
                     </div>
                   </div>
 
                   <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-gray-600"}`}
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-black"}`}
                   >
                     {meta?.name ?? inv.assessmentCode}
                   </span>
 
                   <div>
-                    <p className="text-xs font-medium text-gray-900">
+                    <p className="text-xs font-medium text-black">
                       {inv.user.firstName} {inv.user.lastName}
                     </p>
-                    <p className="text-[11px] text-gray-400">{inv.user.email}</p>
+                    <p className="text-[11px] text-black">{inv.user.email}</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 border-t border-gray-50 pt-2">
                     <div>
-                      <p className="text-[10px] uppercase text-gray-400">Gross</p>
-                      <p className="mt-0.5 text-xs font-medium text-gray-700">{fmt(inv.amount)}</p>
+                      <p className="text-[10px] uppercase text-black">Gross</p>
+                      <p className="mt-0.5 text-xs font-medium text-black">{fmt(inv.amount)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase text-gray-400">Discount</p>
+                      <p className="text-[10px] uppercase text-black">Discount</p>
                       <p className="mt-0.5 text-xs font-medium text-green-700">
                         {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase text-gray-400">Net</p>
-                      <p className="mt-0.5 text-xs font-bold text-gray-900">{fmt(inv.finalAmount)}</p>
+                      <p className="text-[10px] uppercase text-black">Net</p>
+                      <p className="mt-0.5 text-xs font-bold text-black">{fmt(inv.finalAmount)}</p>
                     </div>
                   </div>
 
-                  {inv.couponCode && <p className="font-mono text-[11px] text-gray-400">Coupon: {inv.couponCode}</p>}
+                  {inv.couponCode && <p className="font-mono text-[11px] text-black">Coupon: {inv.couponCode}</p>}
                 </div>
               );
             })}
 
             <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-4">
               <div>
-                <p className="mb-0.5 text-[10px] uppercase text-gray-400">Gross</p>
-                <p className="text-xs font-bold text-gray-900">{fmt(summary.gross)}</p>
+                <p className="mb-0.5 text-[10px] uppercase text-black">Gross</p>
+                <p className="text-xs font-bold text-black">{fmt(summary.gross)}</p>
               </div>
               <div>
-                <p className="mb-0.5 text-[10px] uppercase text-gray-400">Discount</p>
+                <p className="mb-0.5 text-[10px] uppercase text-black">Discount</p>
                 <p className="text-xs font-bold text-green-700">
                   {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "—"}
                 </p>
               </div>
               <div>
-                <p className="mb-0.5 text-[10px] uppercase text-gray-400">Net</p>
+                <p className="mb-0.5 text-[10px] uppercase text-black">Net</p>
                 <p className="text-xs font-bold text-indigo-700">{fmt(summary.net)}</p>
               </div>
             </div>
@@ -223,7 +223,7 @@ export default function OrgLedgerPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-black/70">
+                  <tr className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-black">
                     <th className="px-4 py-3 text-left">#</th>
                     <th className="px-4 py-3 text-left">Invoice</th>
                     <th className="px-4 py-3 text-left">Date</th>
@@ -246,46 +246,46 @@ export default function OrgLedgerPage() {
 
                     return (
                       <tr key={inv._id} className="transition-colors hover:bg-gray-50">
-                        <td className="px-4 py-3 text-xs text-gray-400">{idx + 1}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-xs text-black">{idx + 1}</td>
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-black">
                           {inv.invoiceNumber}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-gray-500">{dateStr}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-black">{dateStr}</td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-gray-600"}`}
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-black"}`}
                           >
                             {meta?.name ?? inv.assessmentCode}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="whitespace-nowrap text-xs font-medium text-gray-900">
+                          <p className="whitespace-nowrap text-xs font-medium text-black">
                             {inv.user.firstName} {inv.user.lastName}
                           </p>
-                          <p className="text-[11px] text-gray-400">{inv.user.email}</p>
+                          <p className="text-[11px] text-black">{inv.user.email}</p>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-gray-700">{fmt(inv.amount)}</td>
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-black">{fmt(inv.amount)}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-green-700">
                           {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-gray-900">
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-black">
                           {fmt(inv.finalAmount)}
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-black">{inv.couponCode ?? "—"}</td>
                       </tr>
                     );
                   })}
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-gray-200 bg-gray-50 text-xs font-semibold">
-                    <td colSpan={5} className="px-4 py-3 text-gray-700">
+                    <td colSpan={5} className="px-4 py-3 text-black">
                       Totals ({filtered.length} records)
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-900">{fmt(summary.gross)}</td>
+                    <td className="px-4 py-3 text-right text-black">{fmt(summary.gross)}</td>
                     <td className="px-4 py-3 text-right text-green-700">
                       {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-900">{fmt(summary.net)}</td>
+                    <td className="px-4 py-3 text-right text-black">{fmt(summary.net)}</td>
                     <td colSpan={1} />
                   </tr>
                 </tfoot>
