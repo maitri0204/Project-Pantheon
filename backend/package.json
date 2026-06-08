@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc && cp -r src/services/litmusReport/assets dist/services/litmusReport/assets",
+    "build": "tsc && cp -r src/services/litmusReport/assets dist/services/litmusReport/assets && cp -r src/services/careerCompassReport/assets dist/services/careerCompassReport/assets",
     "start": "node dist/server.js",
     "seed:platform": "ts-node src/scripts/seedPlatform.ts",
     "seed:questions": "ts-node src/scripts/seedQuestions.ts",

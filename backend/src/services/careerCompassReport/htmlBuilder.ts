@@ -214,7 +214,6 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
           <div class="cover-meta-item"><div class="cover-meta-label">Student Name</div><div class="cover-meta-value">${s.name}</div></div>
           <div class="cover-meta-item"><div class="cover-meta-label">Assessment Date</div><div class="cover-meta-value">${s.assessmentDate}</div></div>
           <div class="cover-meta-item"><div class="cover-meta-label">Grade</div><div class="cover-meta-value">Class ${s.grade}</div></div>
-          <div class="cover-meta-item"><div class="cover-meta-label">Institute</div><div class="cover-meta-value">${s.institute}</div></div>
         </div>
         <div class="exec-statement">
           ${profile.coverStatement}

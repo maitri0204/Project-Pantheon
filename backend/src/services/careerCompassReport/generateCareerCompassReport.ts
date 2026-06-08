@@ -1,6 +1,7 @@
 import puppeteer, { type Browser } from "puppeteer-core";
 
 import { buildReportHtml } from "./htmlBuilder";
+import { mergeCareerCompassReportPdf } from "./mergeCareerCompassPdf";
 import type { CareerCompassAssessmentData } from "./types";
 import { resolveChromeExecutable } from "../careerDnaReport/resolveChromeExecutable";
 
@@ -39,13 +40,13 @@ export async function generateCareerCompassReportPdf(data: CareerCompassAssessme
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load", timeout: 120_000 });
 
-    const buffer = await page.pdf({
+    const contentBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: { top: "0", right: "0", bottom: "0", left: "0" },
     });
 
-    return Buffer.from(buffer);
+    return mergeCareerCompassReportPdf(Buffer.from(contentBuffer));
   } finally {
     await browser.close();
   }
