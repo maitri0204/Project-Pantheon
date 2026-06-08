@@ -215,9 +215,6 @@ export default function OrgAdminHomeDashboard({
                 Open a dedicated dashboard for cohort insights, distributions, and student outcomes.
               </p>
             </div>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-              {dashboardReadyCount} dashboards ready
-            </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {assessments.map((assessment) => {
