@@ -11,7 +11,9 @@ import {
   getStudentMetacognitionReportHtml,
   getAdminClearReportHtml,
   getStudentClearReportHtml,
+  downloadAdminCareerCompassReport,
   downloadAdminLitmusReport,
+  downloadStudentCareerCompassReport,
   downloadStudentLitmusReport,
   getStudentDetailsForAdmin,
   listStudentAssessmentAttemptsForAdmin,
@@ -140,6 +142,18 @@ router.get(
   getAdminClearReportHtml,
 );
 router.get(
+  "/students/:studentId/attempts/:attemptId/career-compass-report",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminCareerCompassReport,
+);
+router.get(
+  "/parents/:parentId/attempts/:attemptId/career-compass-report",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminCareerCompassReport,
+);
+router.get(
   "/students/:studentId/attempts/:attemptId/litmus-report",
   requireAuth,
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
@@ -194,6 +208,12 @@ router.get(
   requireAuth,
   requireRoles("STUDENT", "PARENT"),
   getStudentClearReportHtml,
+);
+router.get(
+  "/student/attempts/:attemptId/career-compass-report",
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  downloadStudentCareerCompassReport,
 );
 router.get(
   "/student/attempts/:attemptId/litmus-report",

@@ -34,6 +34,8 @@ import { buildMetacognitionReportHtml } from "../services/metacognitionReport/bu
 import { buildClearReportHtml } from "../services/clearReport/buildClearReportHtml";
 import { buildLitmusReportData } from "../services/litmusReport/buildLitmusReportData";
 import { generateLitmusReportPdf } from "../services/litmusReport/generateLitmusReport";
+import { buildCareerCompassReportData } from "../services/careerCompassReport/buildCareerCompassReportData";
+import { generateCareerCompassReportPdf } from "../services/careerCompassReport/generateCareerCompassReport";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -265,6 +267,10 @@ const isLearnerRole = (role?: string): role is LearnerRole => role === "STUDENT"
 
 const isLitmusAssessmentCode = (assessmentCode: string): boolean => (
   normalizeAssessmentCode(assessmentCode) === "LITMUS_TEST"
+);
+
+const isCareerCompassAssessmentCode = (assessmentCode: string): boolean => (
+  normalizeAssessmentCode(assessmentCode) === "CAREER_COMPASS"
 );
 
 const isAdversityAssessmentCode = (assessmentCode: string): boolean => (
@@ -3975,5 +3981,104 @@ export const downloadAdminLitmusReport = async (req: AuthRequest, res: Response)
     console.error("downloadAdminLitmusReport error:", error);
     const message = error instanceof Error ? error.message : "Failed to generate Litmus report";
     res.status(500).json({ message });
+  }
+};
+
+const buildCareerCompassPdfBufferForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<{ buffer: Buffer; studentName: string }> => {
+  if (!isCareerCompassAssessmentCode(attempt.assessmentCode)) {
+    throw new Error("Career Compass report is only available for Career Compass attempts");
+  }
+
+  const evaluation = attempt.evaluation ?? await evaluateAssessmentAttempt(attempt);
+  const [student, organization] = await Promise.all([
+    User.findById(attempt.user).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 }).lean(),
+    Organization.findById(attempt.organization).select({ name: 1, branding: 1, settings: 1 }).lean(),
+  ]);
+
+  const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
+  const reportData = buildCareerCompassReportData({
+    studentName,
+    grade: student?.grade,
+    institute: student?.institutionName || organization?.branding?.companyName || organization?.name,
+    counselor: organization?.settings?.representativeName || organization?.branding?.companyName || organization?.name || "Career Counselor",
+    submittedAt: attempt.completedAt || attempt.updatedAt,
+    personalityCode: String((evaluation as { personalityType?: unknown }).personalityType || ""),
+    description: String((evaluation as { description?: unknown }).description || ""),
+    dimensions: (evaluation as { dimensions?: unknown }).dimensions as Parameters<
+      typeof buildCareerCompassReportData
+    >[0]["dimensions"],
+  });
+
+  const buffer = await generateCareerCompassReportPdf(reportData);
+  return { buffer, studentName };
+};
+
+const sendCareerCompassReportPdf = (res: Response, buffer: Buffer, studentName: string) => {
+  const safeName = studentName.replace(/\s+/g, "_");
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="Career_Compass_Report_${safeName}.pdf"`,
+    "Content-Length": buffer.length,
+  });
+  res.send(buffer);
+};
+
+export const downloadStudentCareerCompassReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const { buffer, studentName } = await buildCareerCompassPdfBufferForAttempt(attempt);
+    sendCareerCompassReportPdf(res, buffer, studentName);
+  } catch (error) {
+    console.error("downloadStudentCareerCompassReport error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate Career Compass report";
+    res.status(503).json({ message });
+  }
+};
+
+export const downloadAdminCareerCompassReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  try {
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
+
+    const { buffer, studentName } = await buildCareerCompassPdfBufferForAttempt(resolved.attempt);
+    sendCareerCompassReportPdf(res, buffer, studentName);
+  } catch (error) {
+    console.error("downloadAdminCareerCompassReport error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate Career Compass report";
+    res.status(503).json({ message });
   }
 };

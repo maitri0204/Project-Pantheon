@@ -499,15 +499,10 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "CAREER_COMPASS") {
-    const blob = await generateCareerCompassReport({
-          studentName: reportStudentName,
-      submittedAt: submittedLabel,
-          personalityType: String(evaluation.personalityType || "UNKNOWN"),
-          classGrade,
-          schoolName,
-          organizationBranding: reportBranding,
-    }, { returnBlob: true }) as Blob;
-    return { blob, fileName: `Career_Compass_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Career Compass report");
+    }
+    return generateCareerCompassReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "METACOGNITION_TEST") {
