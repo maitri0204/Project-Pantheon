@@ -138,9 +138,9 @@ export function StatCard({
 }) {
   return (
     <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 ${className}`}>
-      <p className="text-sm text-black">{label}</p>
+      <p className="text-sm font-semibold text-black">{label}</p>
       <p className="text-2xl font-bold text-black mt-1">{value}</p>
-      {sub && <p className="text-xs text-black mt-1">{sub}</p>}
+      {sub && <p className="text-sm font-medium text-black mt-1">{sub}</p>}
     </div>
   );
 }
