@@ -7,12 +7,12 @@ import { ArrowLeft, CalendarClock, Mail, Phone, School, ShieldCheck } from "luci
 import { apiRequest, getStoredAuth } from "@/lib/api";
 
 type ParentResultItem = {
-  id: string;
+  attemptId: string;
   assessmentCode: string;
   assessmentName: string;
   answeredCount: number;
   totalQuestions: number;
-  completedAt?: string;
+  submittedAt?: string;
   createdAt?: string;
 };
 
@@ -147,7 +147,7 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
         ) : (
           <div className="grid gap-4 p-4">
             {attempts.map((result) => (
-              <div key={result.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+              <div key={String(result.attemptId)} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-600">{normalizeDisplayCode(result.assessmentCode)}</p>
@@ -155,11 +155,11 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
                     <p className="mt-1 text-sm text-black">{result.answeredCount}/{result.totalQuestions} answered</p>
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs text-black border border-slate-200">
                       <CalendarClock className="h-3.5 w-3.5" />
-                      Completed {formatDateTime(result.completedAt)}
+                      Completed {formatDateTime(result.submittedAt)}
                     </div>
                   </div>
                   <button
-                    onClick={() => router.push(`${basePath}/${parentId}/reports/${result.id}`)}
+                    onClick={() => router.push(`${basePath}/${parentId}/reports/${result.attemptId}`)}
                     className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
                   >
                     View Report

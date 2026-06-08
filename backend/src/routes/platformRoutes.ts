@@ -11,6 +11,8 @@ import {
   getStudentMetacognitionReportHtml,
   getAdminClearReportHtml,
   getStudentClearReportHtml,
+  downloadAdminLitmusReport,
+  downloadStudentLitmusReport,
   getStudentDetailsForAdmin,
   listStudentAssessmentAttemptsForAdmin,
   getOrganizationCouponSummary,
@@ -88,8 +90,15 @@ router.get(
   listStudentAssessmentAttemptsForAdmin,
 );
 router.get("/students/:studentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
+router.get("/parents/:parentId/attempts/:attemptId/report", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getStudentAttemptReportForAdmin);
 router.get(
   "/students/:studentId/attempts/:attemptId/career-dna-report",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminCareerDnaReport,
+);
+router.get(
+  "/parents/:parentId/attempts/:attemptId/career-dna-report",
   requireAuth,
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
   downloadAdminCareerDnaReport,
@@ -101,7 +110,19 @@ router.get(
   getAdminCareerDnaReportHtml,
 );
 router.get(
+  "/parents/:parentId/attempts/:attemptId/career-dna-report-html",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdminCareerDnaReportHtml,
+);
+router.get(
   "/students/:studentId/attempts/:attemptId/metacognition-report-html",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdminMetacognitionReportHtml,
+);
+router.get(
+  "/parents/:parentId/attempts/:attemptId/metacognition-report-html",
   requireAuth,
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
   getAdminMetacognitionReportHtml,
@@ -111,6 +132,24 @@ router.get(
   requireAuth,
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
   getAdminClearReportHtml,
+);
+router.get(
+  "/parents/:parentId/attempts/:attemptId/clear-report-html",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  getAdminClearReportHtml,
+);
+router.get(
+  "/students/:studentId/attempts/:attemptId/litmus-report",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminLitmusReport,
+);
+router.get(
+  "/parents/:parentId/attempts/:attemptId/litmus-report",
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminLitmusReport,
 );
 router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
 router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);
@@ -155,6 +194,12 @@ router.get(
   requireAuth,
   requireRoles("STUDENT", "PARENT"),
   getStudentClearReportHtml,
+);
+router.get(
+  "/student/attempts/:attemptId/litmus-report",
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  downloadStudentLitmusReport,
 );
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);

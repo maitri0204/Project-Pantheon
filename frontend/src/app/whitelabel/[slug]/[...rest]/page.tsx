@@ -131,6 +131,25 @@ function resolveCatchAllContent(rest: string[], slug: string): CatchAllContent |
     };
   }
 
+  if (rest.length === 5 && rest[1] === "parents" && rest[3] === "reports" && rest[2] && rest[4]) {
+    const parentsBasePath = `/whitelabel/${slug}/dashboard/parents`;
+    const parentId = rest[2];
+    const attemptId = rest[4];
+    return {
+      type: "dashboard-shell",
+      element: (
+        <AssessmentReportView
+          fetchPath={`/platform/parents/${parentId}/attempts/${attemptId}/report`}
+          loginHref={`/whitelabel/${slug}/login`}
+          topBackHref={`${parentsBasePath}/${parentId}`}
+          topBackLabel="Back to Parent Details"
+          bottomBackHref={`${parentsBasePath}/${parentId}`}
+          bottomBackLabel="Back to Parent Details"
+        />
+      ),
+    };
+  }
+
   if (
     rest.length === 6 &&
     rest[1] === "users" &&

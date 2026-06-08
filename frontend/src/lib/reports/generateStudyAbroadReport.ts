@@ -115,8 +115,9 @@ async function captureStudyAbroadReportPdf(context: StudyAbroadPrintContext): Pr
 export async function generateStudyAbroadReportForEmail(
   token: string,
   attemptId: string,
+  reportFetchPath?: string,
 ): Promise<{ blob: Blob; fileName: string }> {
-  const context = await fetchStudyAbroadPrintContext(token, attemptId);
+  const context = await fetchStudyAbroadPrintContext(token, attemptId, reportFetchPath);
   const blob = await captureStudyAbroadReportPdf(context);
   const fileName = `Study-Abroad-Report-${context.studentName.replace(/\s+/g, "-")}.pdf`;
   return { blob, fileName };

@@ -518,19 +518,10 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "LITMUS_TEST") {
-        const styleScores = (evaluation.styleScores || {}) as Record<string, number>;
-    const blob = await generateLitmusReport({
-          studentName: reportStudentName,
-          styleScores: {
-            K: toNumber(styleScores.K),
-            S: toNumber(styleScores.S),
-            E: toNumber(styleScores.E),
-            P: toNumber(styleScores.P),
-            J: toNumber(styleScores.J),
-          },
-          organizationBranding: reportBranding,
-    }, { returnBlob: true }) as Blob;
-    return { blob, fileName: `Litmus_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf` };
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Litmus report");
+    }
+    return generateLitmusReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "CAREER_DNA") {
@@ -544,7 +535,11 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     if (!authToken) {
       throw new Error("Sign in is required to download the Study Abroad report");
     }
-    const { blob, fileName } = await generateStudyAbroadReportForEmail(authToken, report.attemptId);
+    const { blob, fileName } = await generateStudyAbroadReportForEmail(
+      authToken,
+      report.attemptId,
+      fetchPath,
+    );
     return { blob, fileName };
       }
 
@@ -605,6 +600,7 @@ export default function AssessmentReportView({
   const [report, setReport] = useState<ReportResponse["report"] | null>(null);
   const [rqAttempts, setRQAttempts] = useState<RQAttemptItem[] | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [emailing, setEmailing] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
 
@@ -700,6 +696,7 @@ export default function AssessmentReportView({
   const downloadDetailedReport = async () => {
     const currentAuth = getStoredAuth();
     setDownloading(true);
+    setDownloadError(null);
     try {
       const { blob, fileName } = await buildDetailedReportPdf({
         ...pdfContext,
@@ -707,7 +704,7 @@ export default function AssessmentReportView({
       });
       triggerPdfDownload(blob, fileName);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to generate report PDF");
+      setDownloadError(e instanceof Error ? e.message : "Failed to generate report PDF");
     } finally {
       setDownloading(false);
     }
@@ -1009,14 +1006,21 @@ export default function AssessmentReportView({
       )}
 
       {normalizedCode !== "CAREER_DNA" && (
-        <div className="flex flex-wrap justify-end gap-3">
-          <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
-            {downloading ? "Generating Report..." : "Download Detailed Report"}
-          </button>
-          {isStudentReportView && (
-            <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-              {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+        <div className="space-y-3">
+          <div className="flex flex-wrap justify-end gap-3">
+            <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+              {downloading ? "Generating Report..." : "Download Detailed Report"}
             </button>
+            {isStudentReportView && (
+              <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+                {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+              </button>
+            )}
+          </div>
+          {downloadError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {downloadError}
+            </div>
           )}
         </div>
       )}

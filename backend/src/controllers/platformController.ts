@@ -32,6 +32,8 @@ import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCa
 import { generateCareerDnaExecutivePdf } from "../services/careerDnaReport/generateCareerDnaExecutivePdf";
 import { buildMetacognitionReportHtml } from "../services/metacognitionReport/buildMetacognitionReportHtml";
 import { buildClearReportHtml } from "../services/clearReport/buildClearReportHtml";
+import { buildLitmusReportData } from "../services/litmusReport/buildLitmusReportData";
+import { generateLitmusReportPdf } from "../services/litmusReport/generateLitmusReport";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -61,6 +63,10 @@ function pickAttemptHistoryEvaluation(
   if (evaluation.overallPercentage != null) picked.overallPercentage = evaluation.overallPercentage;
   if (evaluation.aqLevel != null) picked.aqLevel = evaluation.aqLevel;
   if (evaluation.band != null) picked.band = evaluation.band;
+  if (evaluation.topicScores != null) picked.topicScores = evaluation.topicScores;
+  if (evaluation.topicAnswered != null) picked.topicAnswered = evaluation.topicAnswered;
+  if (evaluation.answeredCount != null) picked.answeredCount = evaluation.answeredCount;
+  if (evaluation.totalQuestions != null) picked.totalQuestions = evaluation.totalQuestions;
   return Object.keys(picked).length ? picked : undefined;
 }
 
@@ -757,28 +763,77 @@ export const listStudents = async (req: AuthRequest, res: Response): Promise<voi
 };
 
 const getScopedStudentRecord = async (req: AuthRequest, studentId: string) => {
+  const learner = await getScopedLearnerRecord(req, studentId);
+  if (!learner || learner.role !== "STUDENT") {
+    return null;
+  }
+  return learner;
+};
+
+const getScopedLearnerRecord = async (req: AuthRequest, learnerId: string) => {
   if (!req.user) {
     return null;
   }
 
-  const student = await User.findById(studentId).populate("organization", "name slug");
-  if (!student || student.role !== "STUDENT") {
+  const learner = await User.findById(learnerId).populate("organization", "name slug");
+  if (!learner || (learner.role !== "STUDENT" && learner.role !== "PARENT")) {
     return null;
   }
 
-  const studentOrgId = student.organization && typeof student.organization === "object"
-    ? String((student.organization as { _id?: { toString(): string } })._id || "")
-    : String(student.organization || "");
+  const learnerOrgId = learner.organization && typeof learner.organization === "object"
+    ? String((learner.organization as { _id?: { toString(): string } })._id || "")
+    : String(learner.organization || "");
 
   const requesterOrgId = req.user.organization && typeof req.user.organization === "object"
     ? String((req.user.organization as { _id?: { toString(): string } })._id || "")
     : String(req.user.organization || "");
 
-  if (req.user.role !== "SUPERADMIN" && studentOrgId !== requesterOrgId) {
+  if (req.user.role !== "SUPERADMIN" && learnerOrgId !== requesterOrgId) {
     return null;
   }
 
-  return student;
+  return learner;
+};
+
+const parseAdminLearnerId = (req: AuthRequest): string => {
+  const studentIdParam = req.params.studentId;
+  const parentIdParam = req.params.parentId;
+  const learnerId = typeof studentIdParam === "string"
+    ? studentIdParam.trim()
+    : typeof parentIdParam === "string"
+      ? parentIdParam.trim()
+      : "";
+  return learnerId;
+};
+
+const findAdminCompletedAttempt = async (req: AuthRequest, res: Response) => {
+  const learnerId = parseAdminLearnerId(req);
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!learnerId || !attemptId) {
+    res.status(400).json({ message: "User ID and attempt ID are required" });
+    return null;
+  }
+
+  const learner = await getScopedLearnerRecord(req, learnerId);
+  if (!learner) {
+    res.status(404).json({ message: "User not found" });
+    return null;
+  }
+
+  const attempt = await StudentAssessmentAttempt.findOne({
+    _id: attemptId,
+    user: learner._id,
+    organization: learner.organization,
+    status: "COMPLETED",
+  });
+
+  if (!attempt) {
+    res.status(404).json({ message: "Completed attempt not found" });
+    return null;
+  }
+
+  return { learner, attempt };
 };
 
 const buildAttemptReportPayload = async (
@@ -981,26 +1036,25 @@ export const getStudentAttemptReportForAdmin = async (req: AuthRequest, res: Res
     return;
   }
 
-  const studentIdParam = req.params.studentId;
-  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
+  const learnerId = parseAdminLearnerId(req);
   const attemptIdParam = req.params.attemptId;
   const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
 
-  if (!studentId || !attemptId) {
-    res.status(400).json({ message: "Student ID and attempt ID are required" });
+  if (!learnerId || !attemptId) {
+    res.status(400).json({ message: "User ID and attempt ID are required" });
     return;
   }
 
-  const student = await getScopedStudentRecord(req, studentId);
-  if (!student) {
-    res.status(404).json({ message: "Student not found" });
+  const learner = await getScopedLearnerRecord(req, learnerId);
+  if (!learner) {
+    res.status(404).json({ message: "User not found" });
     return;
   }
 
   const attempt = await StudentAssessmentAttempt.findOne({
     _id: attemptId,
-    user: student._id,
-    organization: student.organization,
+    user: learner._id,
+    organization: learner.organization,
   });
 
   if (!attempt) {
@@ -1014,7 +1068,7 @@ export const getStudentAttemptReportForAdmin = async (req: AuthRequest, res: Res
   }
 
   res.json({
-    report: await buildAttemptReportPayload(attempt, String(student._id)),
+    report: await buildAttemptReportPayload(attempt, String(learner._id)),
   });
 };
 
@@ -3397,35 +3451,11 @@ export const getAdminCareerDnaReportHtml = async (req: AuthRequest, res: Respons
     return;
   }
 
-  const studentIdParam = req.params.studentId;
-  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
-  const attemptIdParam = req.params.attemptId;
-  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
-  if (!studentId || !attemptId) {
-    res.status(400).json({ message: "Student ID and attempt ID are required" });
-    return;
-  }
-
-  const student = await getScopedStudentRecord(req, studentId);
-  if (!student) {
-    res.status(404).json({ message: "Student not found" });
-    return;
-  }
-
   try {
-    const attempt = await StudentAssessmentAttempt.findOne({
-      _id: attemptId,
-      user: student._id,
-      organization: student.organization,
-      status: "COMPLETED",
-    });
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
 
-    if (!attempt) {
-      res.status(404).json({ message: "Completed attempt not found" });
-      return;
-    }
-
-    const html = await buildCareerDnaHtmlForAttempt(attempt);
+    const html = await buildCareerDnaHtmlForAttempt(resolved.attempt);
     res.json({ html });
   } catch (error) {
     console.error("getAdminCareerDnaReportHtml error:", error);
@@ -3483,37 +3513,13 @@ export const downloadAdminCareerDnaReport = async (req: AuthRequest, res: Respon
     return;
   }
 
-  const studentIdParam = req.params.studentId;
-  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
-  const attemptIdParam = req.params.attemptId;
-  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
-  if (!studentId || !attemptId) {
-    res.status(400).json({ message: "Student ID and attempt ID are required" });
-    return;
-  }
-
-  const student = await getScopedStudentRecord(req, studentId);
-  if (!student) {
-    res.status(404).json({ message: "Student not found" });
-    return;
-  }
-
   try {
-    const attempt = await StudentAssessmentAttempt.findOne({
-      _id: attemptId,
-      user: student._id,
-      organization: student.organization,
-      status: "COMPLETED",
-    });
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
 
-    if (!attempt) {
-      res.status(404).json({ message: "Completed attempt not found" });
-      return;
-    }
-
-    const studentName = `${student.firstName || ""} ${student.lastName || ""}`.trim() || "Student";
-    const buffer = await buildCareerDnaPdfBufferForAttempt(attempt);
-    sendCareerDnaExecutivePdf(res, buffer, studentName);
+    const learnerName = `${resolved.learner.firstName || ""} ${resolved.learner.lastName || ""}`.trim() || "Student";
+    const buffer = await buildCareerDnaPdfBufferForAttempt(resolved.attempt);
+    sendCareerDnaExecutivePdf(res, buffer, learnerName);
   } catch (error) {
     console.error("downloadAdminCareerDnaReport error:", error);
     const message = error instanceof Error ? error.message : "Failed to generate Career DNA report";
@@ -3616,35 +3622,11 @@ export const getAdminMetacognitionReportHtml = async (req: AuthRequest, res: Res
     return;
   }
 
-  const studentIdParam = req.params.studentId;
-  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
-  const attemptIdParam = req.params.attemptId;
-  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
-  if (!studentId || !attemptId) {
-    res.status(400).json({ message: "Student ID and attempt ID are required" });
-    return;
-  }
-
-  const student = await getScopedStudentRecord(req, studentId);
-  if (!student) {
-    res.status(404).json({ message: "Student not found" });
-    return;
-  }
-
   try {
-    const attempt = await StudentAssessmentAttempt.findOne({
-      _id: attemptId,
-      user: student._id,
-      organization: student.organization,
-      status: "COMPLETED",
-    });
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
 
-    if (!attempt) {
-      res.status(404).json({ message: "Completed attempt not found" });
-      return;
-    }
-
-    const html = await buildMetacognitionHtmlForAttempt(attempt);
+    const html = await buildMetacognitionHtmlForAttempt(resolved.attempt);
     res.json({ html });
   } catch (error) {
     console.error("getAdminMetacognitionReportHtml error:", error);
@@ -3746,26 +3728,70 @@ export const getAdminClearReportHtml = async (req: AuthRequest, res: Response): 
     return;
   }
 
-  const studentIdParam = req.params.studentId;
-  const studentId = typeof studentIdParam === "string" ? studentIdParam.trim() : "";
-  const attemptIdParam = req.params.attemptId;
-  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
-  if (!studentId || !attemptId) {
-    res.status(400).json({ message: "Student ID and attempt ID are required" });
+  try {
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
+
+    const html = await buildClearHtmlForAttempt(resolved.attempt);
+    res.json({ html });
+  } catch (error) {
+    console.error("getAdminClearReportHtml error:", error);
+    res.status(500).json({ message: "Failed to build CLEAR report HTML" });
+  }
+};
+
+const buildLitmusPdfBufferForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<{ buffer: Buffer; parentName: string }> => {
+  if (!isLitmusAssessmentCode(attempt.assessmentCode)) {
+    throw new Error("Litmus report is only available for Litmus assessment attempts");
+  }
+
+  const evaluation = attempt.evaluation ?? await evaluateAssessmentAttempt(attempt);
+  const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
+  const parentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Parent";
+  const styleScores = (evaluation as { styleScores?: Record<string, unknown> }).styleScores;
+
+  const reportData = buildLitmusReportData({
+    parentName,
+    submittedAt: attempt.completedAt || attempt.updatedAt,
+    styleScores,
+    totalScore: (evaluation as { totalScore?: unknown }).totalScore,
+    dominantStyle: String((evaluation as { dominantStyle?: unknown }).dominantStyle || ""),
+  });
+
+  const buffer = await generateLitmusReportPdf(reportData);
+  return { buffer, parentName };
+};
+
+const sendLitmusReportPdf = (res: Response, buffer: Buffer, parentName: string) => {
+  const safeName = parentName.replace(/\s+/g, "_");
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="Litmus_Report_${safeName}.pdf"`,
+    "Content-Length": buffer.length,
+  });
+  res.send(buffer);
+};
+
+export const downloadStudentLitmusReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
     return;
   }
 
-  const student = await getScopedStudentRecord(req, studentId);
-  if (!student) {
-    res.status(404).json({ message: "Student not found" });
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
     return;
   }
 
   try {
     const attempt = await StudentAssessmentAttempt.findOne({
       _id: attemptId,
-      user: student._id,
-      organization: student.organization,
+      user: req.user!._id,
+      organization: req.user!.organization,
       status: "COMPLETED",
     });
 
@@ -3774,10 +3800,35 @@ export const getAdminClearReportHtml = async (req: AuthRequest, res: Response): 
       return;
     }
 
-    const html = await buildClearHtmlForAttempt(attempt);
-    res.json({ html });
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const parentName = `${req.user!.firstName || ""} ${req.user!.lastName || ""}`.trim() || "Parent";
+    const { buffer } = await buildLitmusPdfBufferForAttempt(attempt);
+    sendLitmusReportPdf(res, buffer, parentName);
   } catch (error) {
-    console.error("getAdminClearReportHtml error:", error);
-    res.status(500).json({ message: "Failed to build CLEAR report HTML" });
+    console.error("downloadStudentLitmusReport error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate Litmus report";
+    res.status(500).json({ message });
+  }
+};
+
+export const downloadAdminLitmusReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  try {
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
+
+    const { buffer, parentName } = await buildLitmusPdfBufferForAttempt(resolved.attempt);
+    sendLitmusReportPdf(res, buffer, parentName);
+  } catch (error) {
+    console.error("downloadAdminLitmusReport error:", error);
+    const message = error instanceof Error ? error.message : "Failed to generate Litmus report";
+    res.status(500).json({ message });
   }
 };

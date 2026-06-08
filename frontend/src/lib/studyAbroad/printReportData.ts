@@ -54,13 +54,58 @@ export type StudyAbroadPrintContext = {
   } | null;
 };
 
+export function resolveStudyAbroadApiPaths(reportFetchPath: string): {
+  reportPath: string;
+  attemptsPath: string;
+} {
+  const studentAdminMatch = reportFetchPath.match(
+    /^\/platform\/students\/([^/]+)\/attempts\/[^/]+\/report$/,
+  );
+  if (studentAdminMatch) {
+    const studentId = studentAdminMatch[1];
+    return {
+      reportPath: reportFetchPath,
+      attemptsPath: `/platform/students/${studentId}/assessments/STUDY_ABROAD/attempts`,
+    };
+  }
+
+  const parentAdminMatch = reportFetchPath.match(
+    /^\/platform\/parents\/([^/]+)\/attempts\/[^/]+\/report$/,
+  );
+  if (parentAdminMatch) {
+    const parentId = parentAdminMatch[1];
+    return {
+      reportPath: reportFetchPath,
+      attemptsPath: `/platform/parents/${parentId}/assessments/STUDY_ABROAD/attempts`,
+    };
+  }
+
+  const studentMatch = reportFetchPath.match(/^\/platform\/student\/attempts\/([^/]+)\/report$/);
+  if (studentMatch) {
+    return {
+      reportPath: reportFetchPath,
+      attemptsPath: "/platform/student/assessments/STUDY_ABROAD/attempts",
+    };
+  }
+
+  return {
+    reportPath: reportFetchPath,
+    attemptsPath: "/platform/student/assessments/STUDY_ABROAD/attempts",
+  };
+}
+
 export async function fetchStudyAbroadPrintContext(
   token: string,
   attemptId: string,
+  reportFetchPath?: string,
 ): Promise<StudyAbroadPrintContext> {
+  const { reportPath, attemptsPath } = resolveStudyAbroadApiPaths(
+    reportFetchPath || `/platform/student/attempts/${attemptId}/report`,
+  );
+
   const [reportRes, attemptsRes] = await Promise.all([
-    apiRequest<ReportResponse>(`/platform/student/attempts/${attemptId}/report`, {}, token),
-    apiRequest<AttemptListResponse>("/platform/student/assessments/STUDY_ABROAD/attempts", {}, token),
+    apiRequest<ReportResponse>(reportPath, {}, token),
+    apiRequest<AttemptListResponse>(attemptsPath, {}, token).catch(() => ({ attempts: [] })),
   ]);
 
   const report = reportRes.report;
@@ -88,7 +133,7 @@ export async function fetchStudyAbroadPrintContext(
 
   return {
     result,
-    history,
+    history: history.length > 0 ? history : [result],
     studentName,
     profile: student
       ? {
