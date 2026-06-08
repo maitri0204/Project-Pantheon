@@ -86,7 +86,7 @@ function calcPrice(base: number, coupon: Coupon | null, gst: boolean, gstRatePer
 export default function CouponsPage() {
   const router = useRouter();
   const auth = useMemo(() => getStoredAuth(), []);
-  const [mode, setMode] = useState<RoleMode>("SUPERADMIN");
+  const [mode, setMode] = useState<RoleMode>("ORG_ADMIN");
   const [orgSummary, setOrgSummary] = useState<OrganizationCouponSummaryItem[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -132,34 +132,12 @@ export default function CouponsPage() {
       return;
     }
 
-    if (auth.user.role !== "SUPERADMIN") {
-      router.replace("/dashboard/users");
+    if (auth.user.role === "SUPERADMIN") {
+      router.replace("/dashboard/organizations");
       return;
     }
 
-    setMode("SUPERADMIN");
-
-    const [asmRes, cpRes] = await Promise.all([
-      apiRequest<{ assessments: Assessment[] }>("/superadmin/dashboard", {}, auth.token),
-      apiRequest<{ coupons: Coupon[] }>("/superadmin/coupons", {}, auth.token),
-    ]);
-    setAssessments(asmRes.assessments ?? []);
-    setCoupons(cpRes.coupons ?? []);
-    const pm: PricingMap = {}; const gm: GstMap = {}; const pd: PricingMap = {}; const gr: GstRateMap = {};
-    (asmRes.assessments ?? []).forEach((a) => {
-      pm[a.code] = a.basePrice;
-      pd[a.code] = a.basePrice;
-      gm[a.code] = a.gstEnabled ?? false;
-      gr[a.code] = Number(a.gstPercentage ?? 18);
-    });
-    if ((asmRes.assessments ?? []).length > 0) {
-      const available = new Set((asmRes.assessments ?? []).map((a) => a.code));
-      setForm((f) => ({
-        ...f,
-        assessmentCode: available.has(f.assessmentCode) ? f.assessmentCode : (asmRes.assessments?.[0]?.code ?? "CAREER_COMPASS"),
-      }));
-    }
-    setPricing(pm); setPriceDrafts(pd); setGst(gm); setGstRates(gr); setLoading(false);
+    router.replace("/dashboard/users");
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

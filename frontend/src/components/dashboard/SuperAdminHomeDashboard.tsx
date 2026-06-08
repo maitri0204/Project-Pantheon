@@ -9,7 +9,6 @@ import {
   FileText,
   Layers3,
   Sparkles,
-  Ticket,
   Users,
   Wallet,
 } from "lucide-react";
@@ -68,14 +67,6 @@ const QUICK_ACTIONS = [
     icon: Layers3,
     gradient: "from-violet-500 to-purple-600",
     ring: "ring-violet-100",
-  },
-  {
-    label: "Coupons & Pricing",
-    desc: "Discounts, GST, and base prices",
-    href: "/dashboard/coupons",
-    icon: Ticket,
-    gradient: "from-amber-500 to-orange-500",
-    ring: "ring-amber-100",
   },
   {
     label: "Organizations",
@@ -218,15 +209,6 @@ export default function SuperAdminHomeDashboard({
       iconBg: "bg-emerald-50 text-emerald-600",
     },
     {
-      label: "Coupons",
-      value: stats?.coupons ?? 0,
-      sub: "Active discount codes",
-      icon: Ticket,
-      href: resolveDashboardHref("/dashboard/coupons"),
-      accent: "from-amber-500 to-orange-400",
-      iconBg: "bg-amber-50 text-amber-600",
-    },
-    {
       label: "Invoices",
       value: stats?.invoices ?? 0,
       sub: "Recent transactions",
@@ -276,7 +258,7 @@ export default function SuperAdminHomeDashboard({
       </section>
 
       {/* KPI row */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((item) => {
           const Icon = item.icon;
           return (

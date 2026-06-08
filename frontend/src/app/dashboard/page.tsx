@@ -110,7 +110,6 @@ const statConfig = [
   { key: "assessments", label: "Assessments",  color: "blue",   href: "/dashboard/assessments" },
   { key: "organizations", label: "Organizations", color: "purple", href: "/dashboard/organizations" },
   { key: "students",     label: "Students",      color: "green",  href: "/dashboard/users" },
-  { key: "coupons",      label: "Coupons",       color: "yellow", href: "/dashboard/coupons" },
   { key: "invoices",     label: "Invoices",      color: "indigo", href: "/dashboard/ledger" },
 ] as const;
 
@@ -126,7 +125,6 @@ const quickLinks = [
   { label: "Manage Assessments", desc: "Update pricing and details",          href: "/dashboard/assessments", superadminOnly: false },
   { label: "Question Banks",     desc: "Add & edit questions per assessment",  href: "/dashboard/questions",    superadminOnly: true },
   { label: "Organizations",      desc: "Create and manage whitelabel orgs",    href: "/dashboard/organizations", superadminOnly: true },
-  { label: "Coupons & Pricing",  desc: "Generate discount coupons with GST",  href: "/dashboard/coupons",       superadminOnly: true },
   { label: "Payment Ledger",     desc: "View all transactions and invoices",   href: "/dashboard/ledger",        superadminOnly: true },
   { label: "Students",           desc: "Manage all students in your portal",   href: "/dashboard/users",         superadminOnly: false },
 ];
