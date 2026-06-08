@@ -90,15 +90,17 @@ function splitRadarLabel(label: string): string[] {
 }
 
 type PolarTickProps = {
-  x?: number;
-  y?: number;
+  x?: string | number;
+  y?: string | number;
   payload?: { value: string };
   textAnchor?: string;
   isWide: boolean;
 };
 
 function RadarPolarAngleTick({ x, y, payload, textAnchor, isWide }: PolarTickProps) {
-  if (typeof x !== "number" || typeof y !== "number" || !payload?.value) return null;
+  const tickX = typeof x === "number" ? x : Number(x);
+  const tickY = typeof y === "number" ? y : Number(y);
+  if (!Number.isFinite(tickX) || !Number.isFinite(tickY) || !payload?.value) return null;
 
   const lines = isWide ? [payload.value] : splitRadarLabel(payload.value);
   const fontSize = isWide ? 12 : 10;
@@ -106,15 +108,15 @@ function RadarPolarAngleTick({ x, y, payload, textAnchor, isWide }: PolarTickPro
 
   return (
     <text
-      x={x}
-      y={y}
+      x={tickX}
+      y={tickY}
       fill="#000000"
       fontSize={fontSize}
       fontWeight={600}
       textAnchor={textAnchor as "start" | "middle" | "end" | "inherit" | undefined}
     >
       {lines.map((line, index) => (
-        <tspan key={`${payload.value}-${index}`} x={x} dy={index === 0 ? 0 : lineHeight}>
+        <tspan key={`${payload.value}-${index}`} x={tickX} dy={index === 0 ? 0 : lineHeight}>
           {line}
         </tspan>
       ))}
@@ -123,29 +125,36 @@ function RadarPolarAngleTick({ x, y, payload, textAnchor, isWide }: PolarTickPro
 }
 
 type CategoryTickProps = {
-  x?: number;
-  y?: number;
+  x?: string | number;
+  y?: string | number;
   payload?: { value: string };
   isWide: boolean;
-  axisWidth: number;
 };
 
-function DomainCategoryTick({ x, y, payload, isWide, axisWidth }: CategoryTickProps) {
-  if (typeof y !== "number" || !payload?.value) return null;
+function DomainCategoryTick({ x, y, payload, isWide }: CategoryTickProps) {
+  const tickY = typeof y === "number" ? y : Number(y);
+  if (!Number.isFinite(tickY) || !payload?.value) return null;
 
-  const labelX = Math.max((x ?? axisWidth) - axisWidth + 4, 0);
+  const lines = isWide ? [payload.value] : splitRadarLabel(payload.value);
+  const fontSize = isWide ? 10 : 9;
+  const lineHeight = fontSize + 3;
+  const labelX = (typeof x === "number" ? x : Number(x)) - 4;
 
   return (
-    <foreignObject x={labelX} y={y - 14} width={axisWidth - 8} height={36}>
-      <div
-        xmlns="http://www.w3.org/1999/xhtml"
-        className={`text-[10px] leading-snug text-black text-right pr-1 ${
-          isWide ? "whitespace-nowrap" : "whitespace-normal break-words line-clamp-2"
-        }`}
-      >
-        {payload.value}
-      </div>
-    </foreignObject>
+    <text
+      x={labelX}
+      y={tickY}
+      fill="#000000"
+      fontSize={fontSize}
+      fontWeight={500}
+      textAnchor="end"
+    >
+      {lines.map((line, index) => (
+        <tspan key={`${payload.value}-${index}`} x={labelX} dy={index === 0 ? 0 : lineHeight}>
+          {line}
+        </tspan>
+      ))}
+    </text>
   );
 }
 
@@ -422,9 +431,7 @@ export default function AcademicCareerOrgDashboard({
                 width={domainAxisWidth}
                 axisLine={false}
                 tickLine={false}
-                tick={(props) => (
-                  <DomainCategoryTick {...props} isWide={isDomainChartWide} axisWidth={domainAxisWidth} />
-                )}
+                tick={(props) => <DomainCategoryTick {...props} isWide={isDomainChartWide} />}
               />
               <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e2e8f0" }} />
               <Bar dataKey="count" fill="url(#domainGrad)" radius={[0, 8, 8, 0]}>
