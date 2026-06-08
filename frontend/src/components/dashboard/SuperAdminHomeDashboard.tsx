@@ -246,15 +246,11 @@ export default function SuperAdminHomeDashboard({
         <div className="pointer-events-none absolute right-1/3 top-1/2 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-100">
-              <Sparkles className="h-3.5 w-3.5" />
-              Platform Command Center
-            </div>
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
               Welcome back, {firstName}
             </h1>
             <p className="mt-2 max-w-2xl text-base text-indigo-100/90">
-              Operate the full assessment network — organizations, question banks, pricing, and per-test analytics from one place.
+              Operate the full assessment network - organizations, question banks, pricing, and per-test analytics from one place.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
@@ -268,14 +264,14 @@ export default function SuperAdminHomeDashboard({
               </span>
             </div>
           </div>
-          <Link
+          {/* <Link
             href={resolveDashboardHref("/dashboard/assessments")}
             className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-white px-5 py-3 text-sm font-bold text-indigo-900 shadow-lg transition hover:bg-indigo-50"
           >
             <ClipboardList className="h-4 w-4" />
             Manage catalog
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </Link> */}
         </div>
       </section>
 

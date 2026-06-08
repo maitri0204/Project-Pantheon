@@ -317,9 +317,20 @@ export default function DashboardShell({
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  const isSuperAdmin = userRole === "SUPERADMIN";
+  const headerHeightClass = isSuperAdmin ? "h-[80px] sm:h-[100px]" : "h-[72px] sm:h-[88px]";
+  const headerOffsetClass = isSuperAdmin ? "top-[80px] sm:top-[100px]" : "top-[72px] sm:top-[88px]";
+  const contentOffsetClass = isSuperAdmin ? "pt-[80px] sm:pt-[100px]" : "pt-[72px] sm:pt-[88px]";
+  const sidebarHeightClass = isSuperAdmin
+    ? "h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)]"
+    : "h-[calc(100vh-72px)] sm:h-[calc(100vh-88px)]";
+  const logoSizeClass = isSuperAdmin
+    ? "w-[200px] h-[64px] sm:w-[300px] sm:h-[88px] md:w-[340px] md:h-[96px]"
+    : "w-[110px] h-[42px] sm:w-[160px] sm:h-[64px] md:w-[200px] md:h-[76px]";
+
   return (
     <div className="min-h-screen app-surface">
-      <header className="fixed top-0 left-0 right-0 z-50 h-[72px] sm:h-[88px] bg-white/95 backdrop-blur border-b border-gray-200 flex items-center pl-3 pr-3 sm:pl-5 sm:pr-4 md:pl-8 gap-2 sm:gap-4 shadow-sm">
+      <header className={`fixed top-0 left-0 right-0 z-50 ${headerHeightClass} bg-white/95 backdrop-blur border-b border-gray-200 flex items-center pl-3 pr-3 sm:pl-5 sm:pr-4 md:pl-8 gap-2 sm:gap-4 shadow-sm`}>
         <button
           onClick={() => setSidebarOpen(true)}
           className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-black"
@@ -330,7 +341,7 @@ export default function DashboardShell({
         </button>
 
         <div className="flex items-center gap-2 sm:gap-3 md:ml-1 min-w-0 max-w-[45vw] sm:max-w-none">
-          <div className={`${userRole === "SUPERADMIN" ? "w-[160px] h-[64px] sm:w-[220px] sm:h-[84px] md:w-[260px] md:h-[96px]" : "w-[110px] h-[42px] sm:w-[160px] sm:h-[64px] md:w-[200px] md:h-[76px]"} flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl flex-shrink-0`}>
+          <div className={`${logoSizeClass} flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl flex-shrink-0`}>
             {userRole === "ORG_ADMIN" && orgLogoUrl ? (
               <img
                 src={orgLogoUrl}
@@ -360,7 +371,7 @@ export default function DashboardShell({
       )}
 
       <aside
-        className={`fixed top-[72px] sm:top-[88px] left-0 z-40 h-[calc(100vh-72px)] sm:h-[calc(100vh-88px)] w-[min(18rem,85vw)] bg-white/95 backdrop-blur border-r border-gray-200 flex flex-col shadow-sm transition-transform duration-300 ${
+        className={`fixed ${headerOffsetClass} left-0 z-40 ${sidebarHeightClass} w-[min(18rem,85vw)] bg-white/95 backdrop-blur border-r border-gray-200 flex flex-col shadow-sm transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
@@ -412,7 +423,7 @@ export default function DashboardShell({
         </div>
       </aside>
 
-      <div className="md:ml-72 pt-[72px] sm:pt-[88px] min-h-screen overflow-x-hidden">
+      <div className={`md:ml-72 ${contentOffsetClass} min-h-screen overflow-x-hidden`}>
         <main className="p-2 sm:p-4 md:p-6">
           <div className="content-wrap app-panel w-full max-w-full overflow-x-hidden p-3 sm:p-5 md:p-6">{children}</div>
         </main>
