@@ -82,10 +82,35 @@ function pickAttemptHistoryEvaluation(
   if (evaluation.overallPercentage != null) picked.overallPercentage = evaluation.overallPercentage;
   if (evaluation.aqLevel != null) picked.aqLevel = evaluation.aqLevel;
   if (evaluation.band != null) picked.band = evaluation.band;
+  if (evaluation.personalityType != null) picked.personalityType = evaluation.personalityType;
+  if (evaluation.solicitsFeedbackScore != null) picked.solicitsFeedbackScore = evaluation.solicitsFeedbackScore;
+  if (evaluation.selfDisclosureScore != null) picked.selfDisclosureScore = evaluation.selfDisclosureScore;
+  if (evaluation.dominantQuadrant != null) picked.dominantQuadrant = evaluation.dominantQuadrant;
+  if (evaluation.dominantStyle != null) picked.dominantStyle = evaluation.dominantStyle;
+  if (evaluation.dominantCode != null) picked.dominantCode = evaluation.dominantCode;
+  if (Array.isArray(evaluation.topInterests) && evaluation.topInterests.length) {
+    picked.topInterests = evaluation.topInterests;
+  }
+  const streamAnalysis = evaluation.streamAnalysis as { recommendedStream?: unknown } | undefined;
+  if (streamAnalysis?.recommendedStream != null) {
+    picked.recommendedStream = streamAnalysis.recommendedStream;
+  }
   if (evaluation.topicScores != null) picked.topicScores = evaluation.topicScores;
   if (evaluation.topicAnswered != null) picked.topicAnswered = evaluation.topicAnswered;
   if (evaluation.answeredCount != null) picked.answeredCount = evaluation.answeredCount;
   if (evaluation.totalQuestions != null) picked.totalQuestions = evaluation.totalQuestions;
+
+  const sections = evaluation.sections as Record<string, { personalityType?: unknown; dominantCode?: unknown }> | undefined;
+  if (sections && typeof sections === "object") {
+    const personalitySection = sections.PERSONALITY;
+    if (personalitySection?.personalityType != null && picked.personalityType == null) {
+      picked.personalityType = personalitySection.personalityType;
+    }
+    if (personalitySection?.dominantCode != null && picked.dominantCode == null) {
+      picked.dominantCode = personalitySection.dominantCode;
+    }
+  }
+
   return Object.keys(picked).length ? picked : undefined;
 }
 

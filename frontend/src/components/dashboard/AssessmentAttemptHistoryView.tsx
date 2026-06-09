@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import AttemptHistoryResultSummary from "@/components/assessment/AttemptHistoryResultSummary";
 import {
-  formatAttemptHistoryScore,
+  formatAttemptHistoryResult,
   type AttemptHistoryEvaluation,
 } from "@/lib/assessmentAccess";
 
@@ -121,7 +122,7 @@ export default function AssessmentAttemptHistoryView({
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {attempts.map((attempt) => {
-              const scoreLabel = formatAttemptHistoryScore(assessmentCode, attempt.evaluation);
+              const resultDisplay = formatAttemptHistoryResult(assessmentCode, attempt.evaluation);
 
               return (
                 <button
@@ -148,9 +149,8 @@ export default function AssessmentAttemptHistoryView({
                       <ArrowRight className="h-3 w-3" />
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-black">
-                    <span className="text-black">Score</span>
-                    <span className="break-words text-right font-semibold text-black">{scoreLabel}</span>
+                  <div className="mt-4">
+                    <AttemptHistoryResultSummary result={resultDisplay} />
                   </div>
                 </button>
               );

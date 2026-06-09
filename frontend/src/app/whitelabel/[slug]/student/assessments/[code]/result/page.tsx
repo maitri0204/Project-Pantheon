@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
+import AttemptHistoryResultSummary from "@/components/assessment/AttemptHistoryResultSummary";
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import {
   allowsMultipleAttempts,
   buildStudentResultPath,
   buildStudentRetakePath,
-  formatAttemptHistoryScore,
+  formatAttemptHistoryResult,
   getAssessmentDisplayName,
   normalizeAssessmentCode,
   type AttemptHistoryEvaluation,
@@ -105,7 +106,7 @@ function AssessmentAttemptHistory(props: {
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {attempts.map((attempt) => {
-              const scoreLabel = formatAttemptHistoryScore(assessmentCode, attempt.evaluation);
+              const resultDisplay = formatAttemptHistoryResult(assessmentCode, attempt.evaluation);
 
               return (
                 <button
@@ -122,11 +123,12 @@ function AssessmentAttemptHistory(props: {
                       View report
                     </div>
                   </div>
-                  <div className="mt-4 grid gap-2 text-sm text-slate-700">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Score</span>
-                      <span className="font-semibold text-slate-900">{scoreLabel}</span>
-                    </div>
+                  <div className="mt-4">
+                    <AttemptHistoryResultSummary
+                      result={resultDisplay}
+                      labelClassName="text-slate-500"
+                      valueClassName="font-semibold text-slate-900"
+                    />
                   </div>
                 </button>
               );

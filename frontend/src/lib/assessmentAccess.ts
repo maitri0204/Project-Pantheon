@@ -1,3 +1,8 @@
+import {
+  formatCareerDnaResultLabel,
+  formatPersonalityType,
+  isPersonalityTypeCode,
+} from "@/lib/dashboard/displayLabels";
 import { MAX_ASSESSMENT_SCORE } from "@/lib/studyAbroad/assessmentData";
 
 export const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST" as const;
@@ -21,6 +26,22 @@ export type AttemptHistoryEvaluation = {
   overallPercentage?: number;
   aqLevel?: string;
   band?: string;
+  personalityType?: string;
+  solicitsFeedbackScore?: number;
+  selfDisclosureScore?: number;
+  dominantQuadrant?: string;
+  dominantStyle?: string;
+  dominantCode?: string;
+  topInterests?: string[];
+  recommendedStream?: string;
+};
+
+const LITMUS_STYLE_LABELS: Record<string, string> = {
+  K: "King",
+  S: "Servant",
+  E: "Elder",
+  P: "Prophet",
+  J: "Judge",
 };
 
 export function isResilienceAssessment(code: string): boolean {
@@ -47,13 +68,10 @@ export function getAssessmentDisplayName(code: string, fallback?: string): strin
   return fallback?.trim() || code;
 }
 
-/** Display label for score on the multi-attempt history list. */
-export function formatAttemptHistoryScore(
+function formatAttemptHistoryScoreValue(
   assessmentCode: string,
-  evaluation?: AttemptHistoryEvaluation | null,
-): string {
-  if (!evaluation) return "—";
-
+  evaluation: AttemptHistoryEvaluation,
+): string | null {
   const code = normalizeAssessmentCode(assessmentCode);
 
   if (code === "STUDY_ABROAD") {
@@ -63,7 +81,7 @@ export function formatAttemptHistoryScore(
     }
     const pct = Number(evaluation.overallPercentage);
     if (Number.isFinite(pct)) return `${Math.round(pct)}%`;
-    return "—";
+    return null;
   }
 
   if (isResilienceAssessment(code)) {
@@ -71,11 +89,139 @@ export function formatAttemptHistoryScore(
     if (Number.isFinite(totalScore)) {
       return evaluation.aqLevel ? `${totalScore} (${evaluation.aqLevel})` : String(totalScore);
     }
-    return "—";
+    if (evaluation.aqLevel) return evaluation.aqLevel;
+    return null;
+  }
+
+  if (code === "JOHARI_WINDOW") {
+    const feedback = Number(evaluation.solicitsFeedbackScore);
+    const disclosure = Number(evaluation.selfDisclosureScore);
+    const hasFeedback = Number.isFinite(feedback);
+    const hasDisclosure = Number.isFinite(disclosure);
+    if (hasFeedback && hasDisclosure) {
+      return `${feedback} · ${disclosure}`;
+    }
+    if (hasFeedback) return String(feedback);
+    if (hasDisclosure) return String(disclosure);
+    return null;
+  }
+
+  if (code === "CAREER_COMPASS" || code === "ACADEMIC_CAREER") {
+    return null;
   }
 
   const totalScore = Number(evaluation.totalScore);
-  return Number.isFinite(totalScore) ? String(totalScore) : "—";
+  return Number.isFinite(totalScore) ? String(totalScore) : null;
+}
+
+function formatAttemptHistoryTraitValue(
+  assessmentCode: string,
+  evaluation: AttemptHistoryEvaluation,
+): string | null {
+  const code = normalizeAssessmentCode(assessmentCode);
+
+  if (evaluation.personalityType) {
+    const raw = String(evaluation.personalityType).trim();
+    if (code === "CAREER_COMPASS" || isPersonalityTypeCode(raw)) {
+      return formatPersonalityType(raw);
+    }
+    return formatCareerDnaResultLabel(raw);
+  }
+
+  if (evaluation.dominantQuadrant && code !== "JOHARI_WINDOW") {
+    return String(evaluation.dominantQuadrant);
+  }
+
+  if (evaluation.dominantStyle) {
+    const style = String(evaluation.dominantStyle).toUpperCase();
+    const label = LITMUS_STYLE_LABELS[style];
+    return label ? `${style} (${label})` : style;
+  }
+
+  if (evaluation.recommendedStream) {
+    return String(evaluation.recommendedStream);
+  }
+
+  if (Array.isArray(evaluation.topInterests) && evaluation.topInterests.length > 0) {
+    return evaluation.topInterests.slice(0, 3).join(", ");
+  }
+
+  if (evaluation.dominantCode) {
+    return formatCareerDnaResultLabel(String(evaluation.dominantCode));
+  }
+
+  if (code === "STUDY_ABROAD" && evaluation.band) {
+    return String(evaluation.band);
+  }
+
+  if (isResilienceAssessment(code) && evaluation.aqLevel) {
+    return evaluation.aqLevel;
+  }
+
+  return null;
+}
+
+export type AttemptHistoryScoreLine = {
+  label: string;
+  value: string;
+};
+
+export type AttemptHistoryResultDisplay = {
+  label: "Score" | "Trait" | "Scores";
+  value: string;
+  scoreLines?: AttemptHistoryScoreLine[];
+};
+
+/** Display score or trait on the multi-attempt history list. */
+export function formatAttemptHistoryResult(
+  assessmentCode: string,
+  evaluation?: AttemptHistoryEvaluation | null,
+): AttemptHistoryResultDisplay {
+  if (!evaluation) {
+    return { label: "Score", value: "—" };
+  }
+
+  const code = normalizeAssessmentCode(assessmentCode);
+  if (code === "JOHARI_WINDOW") {
+    const feedback = Number(evaluation.solicitsFeedbackScore);
+    const disclosure = Number(evaluation.selfDisclosureScore);
+    const hasFeedback = Number.isFinite(feedback);
+    const hasDisclosure = Number.isFinite(disclosure);
+    if (hasFeedback || hasDisclosure) {
+      const scoreLines: AttemptHistoryScoreLine[] = [];
+      if (hasFeedback) {
+        scoreLines.push({ label: "Solicits Feedback", value: String(feedback) });
+      }
+      if (hasDisclosure) {
+        scoreLines.push({ label: "Self Disclosure", value: String(disclosure) });
+      }
+      return {
+        label: "Scores",
+        value: scoreLines.map((line) => line.value).join(" · "),
+        scoreLines,
+      };
+    }
+  }
+
+  const scoreValue = formatAttemptHistoryScoreValue(assessmentCode, evaluation);
+  if (scoreValue) {
+    return { label: "Score", value: scoreValue };
+  }
+
+  const traitValue = formatAttemptHistoryTraitValue(assessmentCode, evaluation);
+  if (traitValue) {
+    return { label: "Trait", value: traitValue };
+  }
+
+  return { label: "Score", value: "—" };
+}
+
+/** @deprecated Use formatAttemptHistoryResult for trait-aware attempt lists. */
+export function formatAttemptHistoryScore(
+  assessmentCode: string,
+  evaluation?: AttemptHistoryEvaluation | null,
+): string {
+  return formatAttemptHistoryResult(assessmentCode, evaluation).value;
 }
 
 export function normalizeAssessmentCode(code: string): string {
