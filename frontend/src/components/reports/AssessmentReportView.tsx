@@ -598,6 +598,7 @@ export default function AssessmentReportView({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [emailing, setEmailing] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth?.token) {
@@ -710,8 +711,15 @@ export default function AssessmentReportView({
     if (!report || !currentAuth?.token) return;
     setEmailing(true);
     setEmailSuccess(false);
+    setEmailError(null);
     try {
-      const serverGeneratedEmailCodes = new Set(["CAREER_COMPASS", "LITMUS_TEST", "CAREER_DNA"]);
+      const serverGeneratedEmailCodes = new Set([
+        "CAREER_COMPASS",
+        "LITMUS_TEST",
+        "CAREER_DNA",
+        "METACOGNITION_TEST",
+        "JOHARI_WINDOW",
+      ]);
       if (serverGeneratedEmailCodes.has(normalizedCode)) {
         await apiRequest(
           `/platform/student/attempts/${report.attemptId}/email-report`,
@@ -719,7 +727,10 @@ export default function AssessmentReportView({
           currentAuth.token,
         );
       } else {
-        const { blob, fileName } = await buildDetailedReportPdf(pdfContext);
+        const { blob, fileName } = await buildDetailedReportPdf({
+          ...pdfContext,
+          authToken: currentAuth.token,
+        });
         const base64 = await blobToBase64(blob);
 
         await apiRequest(
@@ -731,7 +742,7 @@ export default function AssessmentReportView({
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to send report email");
+      setEmailError(e instanceof Error ? e.message : "Failed to send report email");
     } finally {
       setEmailing(false);
     }
@@ -814,6 +825,7 @@ export default function AssessmentReportView({
             downloading,
             emailing,
             emailSuccess,
+            emailError,
             showEmail: isStudentReportView,
           }}
         />
@@ -1024,6 +1036,11 @@ export default function AssessmentReportView({
           {downloadError && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {downloadError}
+            </div>
+          )}
+          {emailError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {emailError}
             </div>
           )}
         </div>

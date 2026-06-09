@@ -36,6 +36,7 @@ import { buildLitmusReportData } from "../services/litmusReport/buildLitmusRepor
 import { generateLitmusReportPdf } from "../services/litmusReport/generateLitmusReport";
 import { buildCareerCompassReportData } from "../services/careerCompassReport/buildCareerCompassReportData";
 import { generateCareerCompassReportPdf } from "../services/careerCompassReport/generateCareerCompassReport";
+import { renderHtmlReportPdf } from "../services/reportPdf/renderHtmlReportPdf";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -3078,7 +3079,11 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
 
 const supportsServerEmailReportPdf = (assessmentCode: string): boolean => {
   const code = normalizeAssessmentCode(assessmentCode);
-  return isCareerCompassAssessmentCode(code) || isLitmusAssessmentCode(code) || code === "CAREER_DNA";
+  return isCareerCompassAssessmentCode(code)
+    || isLitmusAssessmentCode(code)
+    || code === "CAREER_DNA"
+    || isMetacognitionAssessmentCode(code)
+    || isClearAssessmentCode(code);
 };
 
 const buildAttemptEmailReportPdf = async (
@@ -3109,6 +3114,28 @@ const buildAttemptEmailReportPdf = async (
     return {
       buffer,
       fileName: `Career_DNA_Executive_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  if (isMetacognitionAssessmentCode(code)) {
+    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
+    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+    const html = await buildMetacognitionHtmlForAttempt(attempt);
+    const buffer = await renderHtmlReportPdf(html);
+    return {
+      buffer,
+      fileName: `Thinking_Expression_Intelligence_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  if (isClearAssessmentCode(code)) {
+    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
+    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+    const html = await buildClearHtmlForAttempt(attempt);
+    const buffer = await renderHtmlReportPdf(html);
+    return {
+      buffer,
+      fileName: `CLEAR_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
     };
   }
 

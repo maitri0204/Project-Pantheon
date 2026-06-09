@@ -332,6 +332,7 @@ type CareerDnaReportActions = {
   downloading: boolean;
   emailing: boolean;
   emailSuccess: boolean;
+  emailError?: string | null;
   showEmail?: boolean;
 };
 
@@ -441,24 +442,31 @@ export default function CareerDnaReport({
       </div>
 
       {actions && (
-        <div className="flex flex-wrap justify-end gap-3">
-          <button
-            type="button"
-            onClick={actions.onDownload}
-            disabled={actions.downloading}
-            className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {actions.downloading ? "Generating Report..." : "Download Detailed Report"}
-          </button>
-          {actions.showEmail && actions.onEmail && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap justify-end gap-3">
             <button
               type="button"
-              onClick={actions.onEmail}
-              disabled={actions.emailing}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={actions.onDownload}
+              disabled={actions.downloading}
+              className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {actions.emailing ? "Sending..." : actions.emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+              {actions.downloading ? "Generating Report..." : "Download Detailed Report"}
             </button>
+            {actions.showEmail && actions.onEmail && (
+              <button
+                type="button"
+                onClick={actions.onEmail}
+                disabled={actions.emailing}
+                className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {actions.emailing ? "Sending..." : actions.emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+              </button>
+            )}
+          </div>
+          {actions.emailError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {actions.emailError}
+            </div>
           )}
         </div>
       )}
