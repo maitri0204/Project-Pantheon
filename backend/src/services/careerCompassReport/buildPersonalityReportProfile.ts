@@ -30,7 +30,7 @@ const PERSONALITY_CLUSTERS: Record<string, string> = {
 
 const INDUSTRY_BY_CLUSTER: Record<string, { name: string; desc: string; action: string }[]> = {
   "Management & Corporate Leadership": [
-    { name: "Corporate Management", desc: "Large organizations where structure, accountability, and results drive success — a natural fit for decisive leaders.", action: "Shadow a manager for a day" },
+    { name: "Corporate Management", desc: "Large organizations where structure, accountability, and results drive success — a natural fit for decisive leaders.", action: "Shadow a manager for a week" },
     { name: "Finance & Banking", desc: "Banks and financial firms that reward discipline, analysis, and clear decision-making.", action: "Join a finance or investment club" },
     { name: "Government & Public Service", desc: "Institutions that need organized leaders to implement policy and manage operations.", action: "Volunteer for a community governance project" },
     { name: "Operations & Logistics", desc: "Teams that optimize systems, supply chains, and processes for efficiency.", action: "Map a process improvement for a school event" },
@@ -116,7 +116,7 @@ function buildStreamCards(suggestedStream: string, subjects: string[], careers: 
       name: "Science",
       why: "Builds analytical depth and opens technology and research pathways",
       advantages: "Strong foundation for STEM and applied science careers",
-      risks: "Demanding curriculum — balance with your strongest interests",
+      risks: "Demanding curriculum - balance with your strongest interests",
       outcomes: "Engineering, research, healthcare, data science",
     },
     {

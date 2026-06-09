@@ -156,7 +156,7 @@ export const DEFAULT_ASSESSMENTS: AssessmentSeedDefinition[] = [
     slug: "study-abroad-readiness",
     name: "Study Abroad Readiness Assessment",
     category: "study-abroad",
-    summary: "Measure readiness across 12 dimensions for studying abroad — language, academics, finances, visa, culture, and more.",
+    summary: "Measure readiness across 12 dimensions for studying abroad - language, academics, finances, visa, culture, and more.",
     sourceProject: "Study-Abroad",
     sourceDbName: "study_abroad",
     seedCommands: ["npm run seed:study-abroad"],

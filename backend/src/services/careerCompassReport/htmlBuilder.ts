@@ -1,6 +1,6 @@
-import { buildPersonalityReportProfile } from "./buildPersonalityReportProfile.js";
-import type { CareerCompassAssessmentData } from "./types.js";
-import { reportStyles } from "./styles.js";
+import { buildPersonalityReportProfile } from "./buildPersonalityReportProfile";
+import type { CareerCompassAssessmentData } from "./types";
+import { reportStyles } from "./styles";
 
 function footer(page: number, total: number, student: string): string {
   return `
@@ -279,7 +279,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page">
       <div class="page-inner">
-        ${pageHeader("Type Analysis", `Personality Type Deep Dive — ${profile.personalityName}`)}
+        ${pageHeader("Type Analysis", `Personality Type Deep Dive - ${profile.personalityName}`)}
         <div class="dive-row-top">
           ${bulletCard("Strengths", profile.deepDive.strengths, "card-strength")}
           ${bulletCard("Motivators", profile.deepDive.motivators, "card-motivator")}
@@ -298,9 +298,9 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page">
       <div class="page-inner">
-        ${pageHeader("Learning Profile", "Academic Profile")}
+        ${pageHeader("Learning Profile", "Preferred Academic Profile")}
         <div class="academic-grid">
-          ${bulletCard("Preferred Learning Style", profile.deepDive.learningStyle.slice(0, 8), "card-style")}
+          ${bulletCard("Learning Style", profile.deepDive.learningStyle.slice(0, 8), "card-style")}
           ${bulletCard("Study Habits to Build", [
             "Use Pomodoro for focused deep-work blocks",
             "Create mind maps for big-picture subjects",
@@ -323,7 +323,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
           ], "card-style")}
           ${bulletCard("Memory Pattern", [
             "Remembers concepts and frameworks well",
-            "May forget details — use flashcards",
+            "May forget details - use flashcards",
             "Associative memory: link facts to stories",
             "Review notes within 24 hours of class",
             "Teach a topic to lock it into long-term memory",
@@ -333,7 +333,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
           ], "card-style")}
           <div class="academic-span">
             ${bulletCard("Exam Strategy", [
-              "Start preparation 3 weeks before — avoid last-minute cramming",
+              "Start preparation 3 weeks before - avoid last-minute cramming",
               "Practice case-study format questions for Commerce subjects",
               "Use past papers to identify high-weightage topics",
               "Form study groups for Economics and Computer Science",
@@ -454,11 +454,11 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page page-skills">
       <div class="page-inner">
-        ${pageHeader("Skills Forecast", "Future Skills Report — 2030 Ready (Suggested)")}
+        ${pageHeader("Skills Forecast", "Future Skills Report - 2030 Ready (Suggested)")}
         <div class="skills-layout">
           <div class="skills-grid">
             ${skillCard("Critical Thinking", [
-              "Your strength — sharpen with case studies",
+              "Your strength - sharpen with case studies",
               "Practice structured problem frameworks",
               "Join debate and MUN competitions",
               "Question assumptions before accepting conclusions",
@@ -476,10 +476,10 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
               "Volunteer for club president roles",
               "Practice delegating, not just ideating",
               "Set clear goals and track team progress weekly",
-              "Take ownership when plans fail — lead recovery",
+              "Take ownership when plans fail - lead recovery",
             ])}
             ${skillCard("Communication", [
-              "Your superpower — refine public speaking",
+              "Your superpower - refine public speaking",
               "Practice pitching ideas in 60 seconds",
               "Write clearly: emails, reports, and presentations",
               "Listen actively before responding in debates",
@@ -500,7 +500,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
               "Build a habit of spotting problems worth solving",
             ])}
           </div>
-          ${bulletCard("Adaptability — Your Growth Edge", [
+          ${bulletCard("Adaptability - Your Growth Edge", [
             "Learn one new skill every quarter",
             "Follow industry trends via podcasts and newsletters",
             "Develop structured planning to complement flexibility",
@@ -576,7 +576,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page">
       <div class="page-inner">
-        ${pageHeader("Awareness", "Career Risks & Blind Spots")}
+        ${pageHeader("Awareness", "Potential Career Risks & Blind Spots")}
         <div class="page-dense">
           <div class="page-dense-grid page-dense-vertical">
             ${bulletCard("Personality-Related Challenges", [
@@ -629,7 +629,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page page-plan-30">
       <div class="page-inner">
-        ${pageHeader("Action Plan", "30-Day Career Exploration Plan")}
+        ${pageHeader("Suggested Action Plan", "30-Day Career Exploration Plan")}
         <div class="plan-progress">
           <div class="plan-step done"><div class="plan-step-dot"></div><div class="plan-step-label">Week 1</div></div>
           <div class="plan-step done"><div class="plan-step-dot"></div><div class="plan-step-label">Week 2</div></div>
@@ -670,7 +670,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page">
       <div class="page-inner">
-        ${pageHeader("Action Plan", "60-Day Career Discovery Plan")}
+        ${pageHeader("Suggested Action Plan", "60-Day Career Discovery Plan")}
         <div class="plan-60-layout">
           <div class="plan-header-strip">Days 31 – 60 &nbsp;|&nbsp; Discovery Phase</div>
           <div class="plan-60-grid">
@@ -726,7 +726,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
   pages.push(`
     <div class="page">
       <div class="page-inner">
-        ${pageHeader("Action Plan", "90-Day Career Acceleration Plan")}
+        ${pageHeader("Suggested Action Plan", "90-Day Career Acceleration Plan")}
         <div class="plan-90-layout">
           <div class="plan-header-strip">Days 61 – 90 &nbsp;|&nbsp; Acceleration Phase</div>
           <div class="plan-90-grid">
