@@ -205,6 +205,11 @@ export const bootstrapPlatform = async (): Promise<void> => {
   );
 
   for (const assessment of DEFAULT_ASSESSMENTS) {
+    const setOnInsert: Record<string, unknown> = {};
+    if (assessment.code === "CAREER_COMPASS") {
+      setOnInsert.releaseDate = new Date("2026-07-02T00:00:00+05:30");
+    }
+
     await Assessment.findOneAndUpdate(
       { code: assessment.code },
       {
@@ -213,6 +218,7 @@ export const bootstrapPlatform = async (): Promise<void> => {
           active: true,
           currency: "INR",
         },
+        ...(Object.keys(setOnInsert).length ? { $setOnInsert: setOnInsert } : {}),
       },
       { upsert: true, returnDocument: "after" }
     );

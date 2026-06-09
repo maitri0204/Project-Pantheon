@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
+import AssessmentComingSoonCard from "@/components/assessment/AssessmentComingSoonCard";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import { allowsMultipleAttempts, buildStudentResultPath, normalizeAssessmentCode } from "@/lib/assessmentAccess";
+import { isAssessmentLocked } from "@/lib/assessmentRelease";
 
 type StudentAssessmentsResponse = {
   assessments: Array<{
@@ -17,6 +19,9 @@ type StudentAssessmentsResponse = {
     questionCount: number;
     sourceProject: string;
     active: boolean;
+    isReleased?: boolean;
+    releaseDate?: string | null;
+    releaseLabel?: string | null;
     attempt: null | {
       id: string;
       status: "IN_PROGRESS" | "COMPLETED";
@@ -71,6 +76,115 @@ const normalizeAssessmentCategoryForDisplay = (category: string, code: string) =
   return category;
 };
 
+type AssessmentTheme = {
+  emoji: string;
+  accentClass: string;       // gradient top bar
+  iconBg: string;            // icon circle bg
+  iconText: string;          // icon circle text color
+  cardHoverShadow: string;   // inline style shadow on hover
+  cardHoverBorder: string;   // border color class on hover
+  glowClass: string;         // bg glow blob color
+};
+
+const ASSESSMENT_THEMES: Record<string, AssessmentTheme> = {
+  CAREER_COMPASS: {
+    emoji: "🧭",
+    accentClass: "from-blue-400 via-indigo-500 to-violet-500",
+    iconBg: "bg-blue-50",
+    iconText: "text-blue-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(99,102,241,0.30)",
+    cardHoverBorder: "hover:border-indigo-200",
+    glowClass: "bg-indigo-400",
+  },
+  LITMUS_TEST: {
+    emoji: "⚗️",
+    accentClass: "from-violet-400 via-purple-500 to-fuchsia-500",
+    iconBg: "bg-violet-50",
+    iconText: "text-violet-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(139,92,246,0.30)",
+    cardHoverBorder: "hover:border-violet-200",
+    glowClass: "bg-violet-400",
+  },
+  CAREER_DNA: {
+    emoji: "🧬",
+    accentClass: "from-teal-400 via-cyan-500 to-sky-500",
+    iconBg: "bg-teal-50",
+    iconText: "text-teal-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(20,184,166,0.28)",
+    cardHoverBorder: "hover:border-teal-200",
+    glowClass: "bg-teal-400",
+  },
+  METACOGNITION_TEST: {
+    emoji: "🧠",
+    accentClass: "from-amber-400 via-orange-400 to-rose-400",
+    iconBg: "bg-amber-50",
+    iconText: "text-amber-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(251,191,36,0.28)",
+    cardHoverBorder: "hover:border-amber-200",
+    glowClass: "bg-amber-400",
+  },
+  JOHARI_WINDOW: {
+    emoji: "🪟",
+    accentClass: "from-rose-400 via-pink-500 to-fuchsia-400",
+    iconBg: "bg-rose-50",
+    iconText: "text-rose-500",
+    cardHoverShadow: "0 20px 48px -16px rgba(244,63,94,0.25)",
+    cardHoverBorder: "hover:border-rose-200",
+    glowClass: "bg-rose-400",
+  },
+  RESILIENCE_TEST: {
+    emoji: "💪",
+    accentClass: "from-emerald-400 via-green-500 to-teal-500",
+    iconBg: "bg-emerald-50",
+    iconText: "text-emerald-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(16,185,129,0.28)",
+    cardHoverBorder: "hover:border-emerald-200",
+    glowClass: "bg-emerald-400",
+  },
+  ACADEMIC_CAREER: {
+    emoji: "🎓",
+    accentClass: "from-sky-400 via-blue-500 to-cyan-500",
+    iconBg: "bg-sky-50",
+    iconText: "text-sky-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(14,165,233,0.28)",
+    cardHoverBorder: "hover:border-sky-200",
+    glowClass: "bg-sky-400",
+  },
+  STUDY_ABROAD: {
+    emoji: "✈️",
+    accentClass: "from-indigo-400 via-blue-500 to-sky-400",
+    iconBg: "bg-indigo-50",
+    iconText: "text-indigo-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(99,102,241,0.28)",
+    cardHoverBorder: "hover:border-indigo-200",
+    glowClass: "bg-indigo-400",
+  },
+};
+
+const DEFAULT_THEME: AssessmentTheme = {
+  emoji: "📋",
+  accentClass: "from-slate-400 via-slate-500 to-slate-600",
+  iconBg: "bg-slate-50",
+  iconText: "text-slate-600",
+  cardHoverShadow: "0 20px 48px -16px rgba(100,116,139,0.25)",
+  cardHoverBorder: "hover:border-slate-300",
+  glowClass: "bg-slate-400",
+};
+
+function getAssessmentTheme(code: string): AssessmentTheme {
+  const normalized = String(code || "").toUpperCase().trim();
+  const aliasMap: Record<string, string> = {
+    METACOGNITION: "METACOGNITION_TEST",
+    JOHARI: "JOHARI_WINDOW",
+    CLEAR: "JOHARI_WINDOW",
+    LITMUS: "LITMUS_TEST",
+    ADVERSITY_TEST: "RESILIENCE_TEST",
+    RQ_TEST: "RESILIENCE_TEST",
+  };
+  const key = aliasMap[normalized] || normalized;
+  return ASSESSMENT_THEMES[key] || DEFAULT_THEME;
+}
+
 export default function StudentAssessmentsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -123,7 +237,7 @@ export default function StudentAssessmentsPage() {
     const assessment = data.assessments.find(
       (item) => normalizeAssessmentCode(item.code) === retakeCode,
     );
-    if (!assessment) return;
+    if (!assessment || isAssessmentLocked(assessment)) return;
 
     retakeHandledRef.current = true;
     void openCheckout(assessment.code);
@@ -310,71 +424,151 @@ export default function StudentAssessmentsPage() {
         {data.assessments.map((assessment) => {
           const completed = assessment.attempt?.status === "COMPLETED";
           const inProgress = assessment.attempt?.status === "IN_PROGRESS";
+          const locked = isAssessmentLocked(assessment);
+
+          if (locked && assessment.releaseDate) {
+            return (
+              <AssessmentComingSoonCard
+                key={assessment._id}
+                name={assessment.name}
+                categoryLabel={normalizeAssessmentCategoryForDisplay(assessment.category, assessment.code)}
+                releaseDate={assessment.releaseDate}
+              />
+            );
+          }
+
+          const theme = getAssessmentTheme(assessment.code);
+          const qCount = assessment.questionCount || assessment.attempt?.totalQuestions;
 
           return (
-            <div key={assessment._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{normalizeAssessmentCategoryForDisplay(assessment.category, assessment.code)}</p>
-                  <h3 className="text-xl font-bold text-slate-900">{assessment.name}</h3>
-                  <p className="mt-1 text-xs font-mono text-slate-500">{normalizeAssessmentCodeForDisplay(assessment.code)}</p>
+            <div
+              key={assessment._id}
+              style={
+                startingCode !== assessment.code
+                  ? { "--card-hover-shadow": theme.cardHoverShadow } as React.CSSProperties
+                  : undefined
+              }
+              className={`group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 ${theme.cardHoverBorder} hover:-translate-y-0.5 hover:shadow-[var(--card-hover-shadow)]`}
+            >
+              {/* Coloured top accent bar */}
+              <div className={`h-1 w-full bg-gradient-to-r ${theme.accentClass}`} />
+
+              {/* Faint decorative blob top-right */}
+              <div className={`pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full ${theme.glowClass} opacity-[0.07] blur-2xl transition-opacity duration-500 group-hover:opacity-[0.13]`} />
+              {/* Second blob bottom-left */}
+              <div className={`pointer-events-none absolute -bottom-6 -left-6 h-28 w-28 rounded-full ${theme.glowClass} opacity-[0.05] blur-2xl transition-opacity duration-500 group-hover:opacity-[0.10]`} />
+
+              {/* Large faded emoji watermark */}
+              <div className="pointer-events-none absolute right-4 top-8 select-none text-[4.5rem] opacity-[0.06] transition-transform duration-500 group-hover:scale-110 group-hover:opacity-[0.10]">
+                {theme.emoji}
+              </div>
+
+              <div className="relative flex flex-1 flex-col p-5">
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {/* Icon circle */}
+                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${theme.iconBg} text-xl shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>
+                      {theme.emoji}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        {normalizeAssessmentCategoryForDisplay(assessment.category, assessment.code)}
+                      </p>
+                      <p className={`text-[10px] font-mono font-semibold ${theme.iconText}`}>
+                        {normalizeAssessmentCodeForDisplay(assessment.code)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status badge */}
+                  <span className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                    completed
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                      : inProgress
+                        ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                        : "bg-blue-50 text-blue-700 ring-1 ring-blue-200"
+                  }`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${
+                      completed ? "bg-emerald-500" : inProgress ? "bg-amber-500 animate-pulse" : "bg-blue-500 animate-pulse"
+                    }`} />
+                    {completed ? "Completed" : inProgress ? "In Progress" : "Available"}
+                  </span>
                 </div>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${completed ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"}`}>
-                  {completed ? "Completed" : "Available"}
-                </span>
-              </div>
 
-              <p className="mt-3 min-h-[42px] text-sm text-slate-600">{assessment.summary}</p>
+                {/* Name */}
+                <h3 className="mt-4 text-[1.125rem] font-black leading-snug text-slate-900 transition-colors duration-200 group-hover:text-slate-800">
+                  {assessment.name}
+                </h3>
 
-              <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
-                <span>Questions</span>
-                <span className="font-bold text-slate-900">{assessment.questionCount || assessment.attempt?.totalQuestions || "—"}</span>
-              </div>
+                {/* Summary */}
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-500">{assessment.summary}</p>
 
-              <div className="mt-4 flex gap-3">
-                {completed ? (
-                  <>
+                {/* Divider */}
+                <div className="my-4 h-px bg-slate-100" />
+
+                {/* Meta row */}
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-base">📋</span>
+                    <span><strong className="font-bold text-slate-700">{qCount || "—"}</strong> Questions</span>
+                  </span>
+                  {completed && assessment.attempt?.completedAt && (
+                    <span className="text-[10px] text-slate-400">
+                      Done {new Date(assessment.attempt.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                    </span>
+                  )}
+                  {inProgress && assessment.attempt && (
+                    <span className="text-[10px] font-semibold text-amber-600">
+                      {assessment.attempt.answeredCount}/{assessment.attempt.totalQuestions} answered
+                    </span>
+                  )}
+                </div>
+
+                {/* Buttons */}
+                <div className="mt-4 flex gap-2.5">
+                  {completed ? (
+                    <>
+                      <button
+                        onClick={() => openReport(assessment.code, assessment.attempt?.id)}
+                        className={`flex-1 rounded-xl bg-gradient-to-br ${theme.accentClass} px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:brightness-110 hover:shadow-md active:scale-95`}
+                      >
+                        View Report
+                      </button>
+                      <button
+                        onClick={() => void openCheckout(assessment.code)}
+                        disabled={startingCode === assessment.code}
+                        className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55"
+                      >
+                        {startingCode === assessment.code ? "Starting…" : "Retake Test"}
+                      </button>
+                    </>
+                  ) : (
                     <button
-                      onClick={() => openReport(assessment.code, assessment.attempt?.id)}
-                      className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800"
-                    >
-                      View Report
-                    </button>
-                    <button
-                      onClick={() => void openCheckout(assessment.code)}
+                      onClick={() => {
+                        if (inProgress) { void startTestWithPayment(assessment.code); return; }
+                        void openCheckout(assessment.code);
+                      }}
                       disabled={startingCode === assessment.code}
-                      className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55"
+                      className="flex-1 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:from-blue-600 hover:to-blue-800 hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-55"
                     >
-                      {startingCode === assessment.code ? "Starting…" : "Retake Test"}
+                      {inProgress ? "▶ Resume Test" : startingCode === assessment.code ? "Starting…" : "▶ Take Test"}
                     </button>
-                  </>
-                ) : (
+                  )}
+
                   <button
                     onClick={() => {
-                      if (inProgress) {
-                        void startTestWithPayment(assessment.code);
-                        return;
+                      if (typeof window !== "undefined") {
+                        const infoCode = normalizeAssessmentCodeForDisplay(assessment.code);
+                        window.open(`/whitelabel/${slug}/student/assessments/${infoCode}/info`, "_blank", "noopener,noreferrer");
                       }
-                      void openCheckout(assessment.code);
                     }}
-                    disabled={startingCode === assessment.code}
-                    className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
+                    className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-95"
+                    title="Learn more"
                   >
-                    {inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
+                    Info ↗
                   </button>
-                )}
-
-                <button
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      const infoCode = normalizeAssessmentCodeForDisplay(assessment.code);
-                      window.open(`/whitelabel/${slug}/student/assessments/${infoCode}/info`, "_blank", "noopener,noreferrer");
-                    }
-                  }}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                >
-                  Know More
-                </button>
+                </div>
               </div>
             </div>
           );

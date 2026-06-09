@@ -25,6 +25,11 @@ import {
   buildStudyAbroadQuestionSetForAttempt,
   mapStudyAbroadAttemptQuestions,
 } from "../services/studyAbroadQuestionSelection.service";
+import {
+  buildAssessmentReleaseMeta,
+  formatAssessmentReleaseLabel,
+  isAssessmentReleased,
+} from "../services/assessmentRelease";
 import { refreshOrganizationCorsOrigins } from "../services/corsOrigins";
 import { sendAssessmentReportToStudent } from "../services/email";
 import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCareerDnaReportData";
@@ -389,6 +394,7 @@ type AssessmentAdminListItem = AssessmentCatalogItem & {
   gstPercentage?: number;
   currency?: string;
   questionBankStatus?: IAssessment["questionBankStatus"];
+  releaseDate?: Date | null;
 };
 
 export const getPlatformOverview = async (_req: AuthRequest, res: Response): Promise<void> => {
@@ -423,6 +429,7 @@ export const listAssessments = async (_req: AuthRequest, res: Response): Promise
         assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
         isActive: true,
       });
+      const release = buildAssessmentReleaseMeta(assessment.releaseDate);
       return {
         _id: assessment._id,
         code: assessment.code,
@@ -435,6 +442,7 @@ export const listAssessments = async (_req: AuthRequest, res: Response): Promise
         questionBankStatus: assessment.questionBankStatus,
         active: assessment.active,
         questionCount: count,
+        ...release,
       };
     })
   );
@@ -1615,6 +1623,14 @@ const computeAssessmentPricing = async (args: {
     throw new Error("Assessment not found");
   }
 
+  if (!isAssessmentReleased(assessment.releaseDate)) {
+    throw new Error(
+      assessment.releaseDate
+        ? formatAssessmentReleaseLabel(assessment.releaseDate)
+        : "This assessment is not available yet",
+    );
+  }
+
   const basePrice = Math.max(0, Number(assessment.basePrice || 0));
   const couponInput = String(args.couponCode || "").trim().toUpperCase();
   let couponCode: string | undefined;
@@ -2197,6 +2213,9 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
     res.json({
       assessments: assessmentsWithCounts.map((assessment) => {
         const attempt = attemptsByCode.get(assessment.code);
+        const release = buildAssessmentReleaseMeta(
+          (assessment as { releaseDate?: Date | null }).releaseDate,
+        );
         return {
           _id: assessment._id,
           code: assessment.code,
@@ -2207,6 +2226,7 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
           questionCount: assessment.questionCount,
           sourceProject: assessment.sourceProject,
           active: assessment.active,
+          ...release,
           attempt: attempt
             ? {
               id: attempt._id,
@@ -2635,6 +2655,15 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
 
   if (!assessment) {
     res.status(404).json({ message: "Assessment not found" });
+    return;
+  }
+
+  if (!inProgressAttempt && !isAssessmentReleased(assessment.releaseDate)) {
+    res.status(403).json({
+      message: assessment.releaseDate
+        ? formatAssessmentReleaseLabel(assessment.releaseDate)
+        : "This assessment is not available yet",
+    });
     return;
   }
 

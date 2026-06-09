@@ -13,6 +13,7 @@ import {
   listCoupons,
   listQuestions,
   updateAssessmentPricing,
+  updateAssessmentReleaseDate,
   updateCoupon,
   updateOrganizationCouponConfig,
   updateQuestion,
@@ -32,6 +33,7 @@ router.post("/coupons", createCoupon);
 router.patch("/coupons/:id", updateCoupon);
 router.delete("/coupons/:id", deleteCoupon);
 router.patch("/assessments/:code/pricing", updateAssessmentPricing);
+router.patch("/assessments/:code/release-date", updateAssessmentReleaseDate);
 
 router.get("/ledger", getLedger);
 

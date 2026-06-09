@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { formatReleaseDateForInput } from "@/lib/assessmentRelease";
 
 type Assessment = {
   _id: string;
@@ -20,6 +21,9 @@ type Assessment = {
   sourceProject: string;
   active: boolean;
   tags: string[];
+  releaseDate?: string | null;
+  isReleased?: boolean;
+  releaseLabel?: string | null;
 };
 
 type SuperadminResponse = {
@@ -48,6 +52,7 @@ export default function AssessmentsPage() {
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [gstEnabledDrafts, setGstEnabledDrafts] = useState<Record<string, boolean>>({});
   const [gstRateDrafts, setGstRateDrafts] = useState<Record<string, string>>({});
+  const [releaseDateDrafts, setReleaseDateDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -87,6 +92,9 @@ export default function AssessmentsPage() {
       setPriceDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.basePrice)])));
       setGstEnabledDrafts(Object.fromEntries(list.map((a) => [a.code, Boolean(a.gstEnabled)])));
       setGstRateDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.gstPercentage ?? 18)])));
+      setReleaseDateDrafts(Object.fromEntries(
+        list.map((a) => [a.code, formatReleaseDateForInput(a.releaseDate)]),
+      ));
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn("AssessmentsPage: failed to load assessments", err);
@@ -103,6 +111,29 @@ export default function AssessmentsPage() {
     const timer = setTimeout(() => setMessage(null), 3000);
     return () => clearTimeout(timer);
   }, [message]);
+
+  const updateReleaseDate = async (code: string, releaseDate: string | null) => {
+    if (!auth) return;
+    setSaving(code);
+    setMessage(null);
+    setError(null);
+    try {
+      await apiRequest(`/superadmin/assessments/${code}/release-date`, {
+        method: "PATCH",
+        body: JSON.stringify({ releaseDate }),
+      }, auth.token);
+      setMessage(
+        releaseDate
+          ? `Release date updated for ${normalizeAssessmentCodeForDisplay(code)}.`
+          : `${normalizeAssessmentCodeForDisplay(code)} is available to students now.`,
+      );
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update release date");
+    } finally {
+      setSaving(null);
+    }
+  };
 
   const updatePrice = async (code: string) => {
     if (!auth) return;
@@ -141,7 +172,7 @@ export default function AssessmentsPage() {
         <p className="text-black mt-1 text-base">
           {isOrgAdmin === true
             ? "View all available assessments. Pricing and configuration are read-only for organization users."
-            : "View all assessments and update their pricing."}
+            : "View all assessments, manage release dates, and update pricing."}
         </p>
       </div>
 
@@ -198,6 +229,56 @@ export default function AssessmentsPage() {
                   <dd className={`font-semibold ${a.active ? "text-green-700" : "text-black"}`}>{a.active ? "Active" : "Inactive"}</dd>
                 </div>
               </dl>
+
+              {/* Release date */}
+              {isOrgAdmin === false && (
+              <div className="pt-3 border-t border-gray-200">
+                <label className="text-sm text-black font-semibold mb-2 block">Student Release Date</label>
+                <p className="mb-3 text-sm text-black/80 leading-relaxed">
+                  Until this date (IST), students see a &quot;Releasing on …&quot; stamp and cannot start the test.
+                  On the release date, the stamp is removed automatically.
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="date"
+                    value={releaseDateDrafts[a.code] ?? ""}
+                    onChange={(e) =>
+                      setReleaseDateDrafts((prev) => ({ ...prev, [a.code]: e.target.value }))
+                    }
+                    className="min-w-0 flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  <button
+                    onClick={() => void updateReleaseDate(a.code, releaseDateDrafts[a.code] || null)}
+                    disabled={saving === a.code}
+                    className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition disabled:opacity-50"
+                  >
+                    {saving === a.code ? "..." : "Save Date"}
+                  </button>
+                  <button
+                    onClick={() => void updateReleaseDate(a.code, null)}
+                    disabled={saving === a.code}
+                    className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-black hover:bg-gray-50 transition disabled:opacity-50"
+                  >
+                    Available Now
+                  </button>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-black">
+                  {a.isReleased === false && a.releaseLabel
+                    ? `Students currently see: ${a.releaseLabel}`
+                    : "Students can take this assessment now."}
+                </p>
+              </div>
+              )}
+              {isOrgAdmin === true && (
+              <div className="pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-black font-semibold">Release status</span>
+                  <span className="text-sm font-semibold text-black">
+                    {a.isReleased === false && a.releaseLabel ? a.releaseLabel : "Available now"}
+                  </span>
+                </div>
+              </div>
+              )}
 
               {/* Pricing */}
               {isOrgAdmin === false && (

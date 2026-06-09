@@ -21,6 +21,8 @@ export interface IAssessment extends Document {
   questionBankStatus: "linked" | "pending-import" | "imported";
   questionCount: number;
   tags: string[];
+  /** When set, the assessment unlocks at the start of this date (IST). */
+  releaseDate?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +49,7 @@ const assessmentSchema = new Schema<IAssessment>(
     questionBankStatus: { type: String, enum: ["linked", "pending-import", "imported"], default: "linked" },
     questionCount: { type: Number, default: 0 },
     tags: { type: [String], default: [] },
+    releaseDate: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 
 import Assessment from "../models/Assessment";
+import {
+  buildAssessmentReleaseMeta,
+  formatReleaseDateInputValue,
+  parseReleaseDateInput,
+} from "../services/assessmentRelease";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
 import Organization from "../models/Organization";
@@ -184,7 +189,10 @@ export const getSuperadminDashboard = async (_req: AuthRequest, res: Response): 
         assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
         isActive: true,
       });
-      return { ...assessment, questionCount: count };
+      const release = buildAssessmentReleaseMeta(
+        (assessment as { releaseDate?: Date | null }).releaseDate,
+      );
+      return { ...assessment, questionCount: count, ...release };
     })
   );
 
@@ -438,6 +446,46 @@ export const updateOrganizationCouponConfig = async (req: AuthRequest, res: Resp
   } catch (error) {
     console.error("Update organization coupon config error:", error);
     res.status(500).json({ message: "Failed to update organization coupon configuration" });
+  }
+};
+
+export const updateAssessmentReleaseDate = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const code = String(req.params.code || "").trim().toUpperCase();
+    const { releaseDate } = req.body as { releaseDate?: string | null };
+
+    if (!code) {
+      res.status(400).json({ message: "Assessment code is required" });
+      return;
+    }
+
+    let update: Record<string, unknown>;
+    if (releaseDate === null || releaseDate === "") {
+      update = { $unset: { releaseDate: "" } };
+    } else if (typeof releaseDate === "string") {
+      update = { $set: { releaseDate: parseReleaseDateInput(releaseDate) } };
+    } else {
+      res.status(400).json({ message: "releaseDate must be a YYYY-MM-DD string or null" });
+      return;
+    }
+
+    const assessment = await Assessment.findOneAndUpdate({ code }, update, { new: true });
+    if (!assessment) {
+      res.status(404).json({ message: "Assessment not found" });
+      return;
+    }
+
+    res.json({
+      assessment: {
+        code: assessment.code,
+        releaseDate: assessment.releaseDate ? formatReleaseDateInputValue(assessment.releaseDate) : null,
+      },
+    });
+  } catch (error) {
+    console.error("Update assessment release date error:", error);
+    res.status(400).json({
+      message: error instanceof Error ? error.message : "Failed to update assessment release date",
+    });
   }
 };
 

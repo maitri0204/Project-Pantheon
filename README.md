@@ -404,6 +404,9 @@ Assessment Center currently registers these assessment sources without modifying
 - Career DNA Profiler
 - TEST
 - CLEAR
+- AIM
+- Study Abroad Readiness
+- Resilience Quotient
 
 The platform seed stores the source project names, seed commands, and reference locations for evaluation/report/invoice parity.
 
