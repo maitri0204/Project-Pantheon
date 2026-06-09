@@ -325,29 +325,29 @@ const getStudyAbroadUsedQuestionNumbers = async (
   return [...used];
 };
 
-const getAcademicCareerGradeCategory = (grade?: string): string | null => {
+const getAcademicCareerGradeCategory = (grade?: string): string => {
   const normalizedGrade = String(grade || "").toLowerCase().trim();
   const match = normalizedGrade.match(/\d+/);
   const numericGrade = match ? Number(match[0]) : Number.NaN;
-  if (![8, 9, 10].includes(numericGrade)) {
-    return null;
+
+  if (Number.isFinite(numericGrade)) {
+    if (numericGrade <= 8) return "Grade-8";
+    if (numericGrade === 9) return "Grade-9";
+    return "Grade-10";
   }
 
-  return `Grade-${numericGrade}`;
+  // Default when grade is missing or not parseable (e.g. custom "Other" text).
+  return "Grade-8";
 };
 
 const isAssessmentAccessibleForLearner = (
   learnerRole: LearnerRole,
   assessmentCode: string,
-  learnerGrade?: string
+  _learnerGrade?: string
 ): boolean => {
   const isLitmus = isLitmusAssessmentCode(assessmentCode);
   if (learnerRole === "PARENT") {
     return isLitmus;
-  }
-
-  if (isAcademicCareerAssessmentCode(assessmentCode)) {
-    return Boolean(getAcademicCareerGradeCategory(learnerGrade));
   }
 
   return !isLitmus;
@@ -362,11 +362,6 @@ const requireLearnerAssessmentAccess = (
   if (!isAssessmentAccessibleForLearner(learnerRole, assessmentCode, learnerGrade)) {
     if (learnerRole === "PARENT") {
       res.status(403).json({ message: "Parents can access only Litmus assessment." });
-      return false;
-    }
-
-    if (isAcademicCareerAssessmentCode(assessmentCode)) {
-      res.status(403).json({ message: "Academic Career & Interest Test is available only for grades 8, 9, and 10." });
       return false;
     }
 
@@ -2199,7 +2194,7 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
         const questionCount = await Question.countDocuments({
           assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
           ...(isAcademicCareerAssessmentCode(assessment.code)
-            ? { category: getAcademicCareerGradeCategory(req.user?.grade) || "__NO_MATCH__" }
+            ? { category: getAcademicCareerGradeCategory(req.user?.grade) }
             : {}),
           isActive: true,
         });
@@ -2757,7 +2752,7 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
   const questions = await Question.find({
     assessmentCode: { $in: codeAliases },
     ...(isAcademicCareerAssessmentCode(canonicalCode)
-      ? { category: academicCareerCategory || "__NO_MATCH__" }
+      ? { category: academicCareerCategory }
       : {}),
     isActive: true,
   })
