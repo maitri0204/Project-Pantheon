@@ -27,7 +27,7 @@ export default function StudyAbroadOrgDashboard({ data, studentsPath }: OrgDashb
   const gaps = [...dimensionAverages].sort((a, b) => a.value - b.value).slice(0, 3);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
         title="Study Abroad Readiness — Organization Overview"
         subtitle="Track 12-dimension readiness across your cohort: language, academics, finances, visa, culture, and more."
@@ -36,7 +36,7 @@ export default function StudyAbroadOrgDashboard({ data, studentsPath }: OrgDashb
         accentClass="from-sky-600 to-indigo-600"
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Avg Readiness Score" value={summary.metricValue ?? "—"} sub={summary.metricSub} />
         <StatCard label="Avg Readiness %" value={`${avgPct}%`} sub={band} />
         <StatCard label="Students Assessed" value={summary.uniqueStudents} sub="Unique learners" />

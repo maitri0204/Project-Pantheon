@@ -300,7 +300,7 @@ export default function CouponsPage() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 mb-5">
+                  <div className="mb-5 grid grid-cols-1 gap-3 min-[360px]:grid-cols-3">
                     <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
                       <p className={`text-2xl font-bold ${colors.text}`}>{item.totalCoupons}</p>
                       <p className="text-xs text-black font-medium mt-0.5">Total</p>
@@ -371,11 +371,11 @@ export default function CouponsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {msg && (
-        <div className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${msg.type === "ok" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}>{msg.text}</div>
+        <div className={`fixed left-4 right-4 top-20 z-50 max-w-sm rounded-xl px-4 py-3 text-sm font-medium shadow-lg sm:left-auto sm:right-4 ${msg.type === "ok" ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}>{msg.text}</div>
       )}
 
       <div>
-        <h1 className="text-3xl font-bold text-black">Coupons &amp; Pricing</h1>
+        <h1 className="text-2xl font-bold text-black sm:text-3xl">Coupons &amp; Pricing</h1>
         <p className="text-base text-black mt-1">Manage assessment prices, GST settings, and discount coupons.</p>
       </div>
 
@@ -406,7 +406,7 @@ export default function CouponsPage() {
                   </div>
                 </div>
                 {isEditing ? (
-                  <div className="flex items-center gap-2 mt-3">
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <span className="text-base text-black">&#8377;</span>
                     <input
                       type="number"
@@ -420,11 +420,11 @@ export default function CouponsPage() {
                     <button onClick={() => setEditingPrice(null)} className="text-sm text-black hover:text-black">Cancel</button>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between mt-3">
-                    <div>
-                      <span className="text-3xl font-bold text-black">&#8377;{price}</span>
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <span className="text-2xl font-bold text-black sm:text-3xl">&#8377;{price}</span>
                       {isGst && (
-                        <span className="ml-2 text-sm text-black">
+                        <span className="mt-1 block text-sm text-black sm:ml-2 sm:mt-0 sm:inline">
                           + &#8377;{Math.round(price * ((gstRates[code] ?? 18) / 100))} GST = &#8377;{Math.round(price * (1 + ((gstRates[code] ?? 18) / 100)))}
                         </span>
                       )}
@@ -537,8 +537,16 @@ export default function CouponsPage() {
         {coupons.length === 0 ? (
           <p className="px-5 py-10 text-sm text-black text-center">No coupons yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div>
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[14%]" />
+                <col className="w-[12%]" />
+                <col className="w-[30%]" />
+                <col className="w-[16%]" />
+                <col className="w-[10%]" />
+                <col className="w-[18%]" />
+              </colgroup>
               <thead>
                 <tr className="bg-gray-50 text-xs font-medium text-black uppercase tracking-wide">
                   <th className="px-5 py-3 text-left">Code</th>
@@ -554,7 +562,9 @@ export default function CouponsPage() {
                   const expired = isExpired(c);
                   return (
                     <tr key={c._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3 font-mono font-bold text-black tracking-wider">{c.code}</td>
+                      <td className="px-3 py-3">
+                        <span className="block truncate font-mono font-bold tracking-wider text-black" title={c.code}>{c.code}</span>
+                      </td>
                       <td className="px-5 py-3 text-black">{c.discountType === "PERCENT" ? `${c.value}%` : `\u20b9${c.value}`}</td>
                       <td className="px-5 py-3">
                         {c.applicableAssessmentCodes.length === 0 ? (
@@ -572,7 +582,7 @@ export default function CouponsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-black text-xs whitespace-nowrap">
+                      <td className="px-3 py-3 text-xs text-black">
                         {c.expiresAt ? new Date(c.expiresAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "No expiry"}
                       </td>
                       <td className="px-5 py-3">
@@ -625,7 +635,7 @@ export default function CouponsPage() {
                   value={editForm.value} onChange={(e) => setEditForm((f) => ({ ...f, value: e.target.value }))}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-black mb-1">Expiry Date</label>
                   <input type="date" value={editForm.expiryDate} onChange={(e) => setEditForm((f) => ({ ...f, expiryDate: e.target.value }))}

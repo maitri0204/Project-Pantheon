@@ -17,7 +17,7 @@ export default function CareerDnaOrgDashboard({ data, studentsPath }: OrgDashboa
   const topSection = [...dimensionAverages].sort((a, b) => b.value - a.value)[0];
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
         title="Career DNA Profiler — Multi-Section Overview"
         subtitle="Section-by-section completion and strength across personality, interests, aptitude, EQ, learning style, and more."
@@ -26,7 +26,7 @@ export default function CareerDnaOrgDashboard({ data, studentsPath }: OrgDashboa
         accentClass="from-fuchsia-600 to-violet-600"
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Top Profile Signal" value={summary.metricValue ?? "—"} sub={summary.metricSub} />
         <StatCard label="Sections Measured" value={dimensionAverages.length} />
         <StatCard label="Students" value={summary.uniqueStudents} />

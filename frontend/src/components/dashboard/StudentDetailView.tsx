@@ -173,20 +173,22 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
   const { multiAttemptGroups, singleResults } = groupStudentResults(results);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="mx-auto max-w-6xl space-y-6 min-w-0">
       <button onClick={() => router.replace(basePath)} className="inline-flex items-center gap-2 text-sm text-black hover:text-black">
         <ArrowLeft className="h-4 w-4" /> Back to Students
       </button>
 
       <div className="rounded-3xl border border-blue-200/70 bg-gradient-to-br from-blue-600 via-cyan-600 to-indigo-700 p-6 text-white shadow-[0_28px_70px_-30px_rgba(37,99,235,0.75)]">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-100">Student Profile</p>
-            <h1 className="mt-1 text-3xl font-black tracking-tight">{student.firstName} {student.lastName}</h1>
-            <p className="mt-2 flex items-center gap-2 text-sm text-blue-100"><Mail className="h-4 w-4" /> {student.email}</p>
-            <p className="mt-1 flex items-center gap-2 text-sm text-blue-100"><Phone className="h-4 w-4" /> {`${student.phoneCode || ""}${student.phone || ""}`.trim() || "—"}</p>
+            <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{student.firstName} {student.lastName}</h1>
+            <p className="mt-2 flex flex-col gap-1 text-sm text-blue-100 sm:flex-row sm:items-center sm:gap-2">
+              <span className="inline-flex min-w-0 items-center gap-2 break-all"><Mail className="h-4 w-4 shrink-0" /> {student.email}</span>
+            </p>
+            <p className="mt-1 flex items-center gap-2 text-sm text-blue-100"><Phone className="h-4 w-4 shrink-0" /> {`${student.phoneCode || ""}${student.phone || ""}`.trim() || "—"}</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 md:min-w-[280px]">
+          <div className="grid w-full grid-cols-2 gap-3 sm:max-w-sm md:w-auto md:max-w-none">
             <div className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md">
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-100">Tests Taken</p>
               <p className="mt-2 text-2xl font-black">{student.testsTaken ?? results.length}</p>
@@ -202,7 +204,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Organization</span></div>
-          <p className="mt-2 text-base font-semibold text-black">{student.organization?.name || "—"}</p>
+          <p className="mt-2 break-words text-base font-semibold text-black">{student.organization?.name || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><GraduationCap className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Grade</span></div>
@@ -214,7 +216,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Institute</span></div>
-          <p className="mt-2 text-base font-semibold text-black">{student.institutionName || "—"}</p>
+          <p className="mt-2 break-words text-base font-semibold text-black">{student.institutionName || "—"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><ShieldCheck className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Joined</span></div>
@@ -253,7 +255,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
                   <button
                     type="button"
                     onClick={() => router.push(buildOrgAttemptListPath(basePath, studentId, group.assessmentCode))}
-                    className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
+                    className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600 sm:w-auto"
                   >
                     View Reports
                   </button>
@@ -283,7 +285,7 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
                       }
                       router.push(`${basePath}/${studentId}/reports/${result.id}`);
                     }}
-                    className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
+                    className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600 sm:w-auto"
                   >
                     {allowsMultipleAttempts(result.assessmentCode) ? "View Reports" : "View Report"}
                   </button>

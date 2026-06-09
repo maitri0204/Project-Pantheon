@@ -186,9 +186,9 @@ export default function OrganizationDetailsPage() {
   if (!organization) return null;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 min-w-0">
       {/* Back + Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <Link
           href="/dashboard/organizations"
           className="flex items-center gap-1.5 text-sm text-black hover:text-black font-medium"
@@ -199,12 +199,12 @@ export default function OrganizationDetailsPage() {
           Organizations
         </Link>
         <span className="text-black">/</span>
-        <span className="text-sm font-semibold text-black">{organization.name}</span>
+        <span className="min-w-0 truncate text-sm font-semibold text-black">{organization.name}</span>
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold text-black">{organization.name}</h1>
+          <h1 className="break-words text-2xl font-bold text-black sm:text-3xl">{organization.name}</h1>
           <p className="text-black mt-1 text-base">Organization details and coupon configuration.</p>
         </div>
         <span className={`mt-1 text-sm px-3 py-1 rounded-full font-semibold ${organization.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"}`}>
@@ -310,7 +310,7 @@ export default function OrganizationDetailsPage() {
             return (
               <div
                 key={item.assessmentCode}
-                className={`bg-gradient-to-br ${colors.bg} rounded-3xl border-2 ${colors.ring} shadow-lg hover:shadow-2xl transition-all duration-300 p-6 backdrop-blur-sm`}
+                className={`bg-gradient-to-br ${colors.bg} rounded-3xl border-2 ${colors.ring} p-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-2xl sm:p-6`}
               >
                 {/* Header with badge */}
                 <div className="flex items-start justify-between mb-4">
@@ -337,7 +337,7 @@ export default function OrganizationDetailsPage() {
                 </div>
 
                 {/* Stats cards in row */}
-                <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="mb-5 grid grid-cols-1 gap-3 min-[360px]:grid-cols-3">
                   <div className="bg-white/70 backdrop-blur rounded-2xl p-3 text-center shadow-md border border-white/50">
                     <p className={`text-2xl font-bold ${colors.text}`}>{item.totalCoupons}</p>
                     <p className="text-xs text-black font-medium mt-0.5">Total</p>

@@ -325,8 +325,8 @@ export default function DashboardShell({
     ? "h-[calc(100vh-80px)] sm:h-[calc(100vh-100px)]"
     : "h-[calc(100vh-72px)] sm:h-[calc(100vh-88px)]";
   const logoSizeClass = isSuperAdmin
-    ? "w-[200px] h-[64px] sm:w-[300px] sm:h-[88px] md:w-[340px] md:h-[96px]"
-    : "w-[110px] h-[42px] sm:w-[160px] sm:h-[64px] md:w-[200px] md:h-[76px]";
+    ? "w-[120px] h-[40px] sm:w-[200px] sm:h-[64px] md:w-[300px] md:h-[88px] lg:w-[340px] lg:h-[96px]"
+    : "w-[96px] h-[36px] sm:w-[160px] sm:h-[64px] md:w-[200px] md:h-[76px]";
 
   return (
     <div className="min-h-screen app-surface">
@@ -423,9 +423,9 @@ export default function DashboardShell({
         </div>
       </aside>
 
-      <div className={`md:ml-72 ${contentOffsetClass} min-h-screen overflow-x-hidden`}>
-        <main className="p-2 sm:p-4 md:p-6">
-          <div className="content-wrap app-panel w-full max-w-full overflow-x-hidden p-3 sm:p-5 md:p-6">{children}</div>
+      <div className={`md:ml-72 ${contentOffsetClass} min-h-screen min-w-0 overflow-x-hidden`}>
+        <main className="min-w-0 p-2 sm:p-4 md:p-6">
+          <div className="content-wrap app-panel w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-5 md:p-6">{children}</div>
         </main>
       </div>
     </div>

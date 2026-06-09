@@ -165,10 +165,10 @@ export default function AssessmentsPage() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
+    <div className="mx-auto max-w-7xl space-y-5 min-w-0">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-black">Assessments</h1>
+        <h1 className="text-2xl font-bold text-black sm:text-3xl">Assessments</h1>
         <p className="text-black mt-1 text-base">
           {isOrgAdmin === true
             ? "View all available assessments. Pricing and configuration are read-only for organization users."
@@ -209,13 +209,13 @@ export default function AssessmentsPage() {
             >
               <div className="min-w-0 space-y-1">
                 <p className="text-sm text-black uppercase tracking-wide">{normalizeAssessmentCategoryForDisplay(a.category, a.code)}</p>
-                <h3 className="text-2xl font-bold text-black leading-tight">{a.name}</h3>
+                <h3 className="break-words text-xl font-bold leading-tight text-black sm:text-2xl">{a.name}</h3>
                 <p className="text-sm text-black font-mono">{normalizeAssessmentCodeForDisplay(a.code)}</p>
               </div>
 
               <p className="text-base text-black min-h-[3.5rem] leading-relaxed">{a.summary}</p>
 
-              <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-sm">
+              <dl className="grid grid-cols-1 gap-x-5 gap-y-2 text-sm min-[400px]:grid-cols-2">
                 <div className="space-y-0.5">
                   <dt className="text-black">Questions</dt>
                   <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "—"}</dd>

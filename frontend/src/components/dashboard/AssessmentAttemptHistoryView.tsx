@@ -82,7 +82,7 @@ export default function AssessmentAttemptHistoryView({
   }, [auth?.token, fetchPath]);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <button
         type="button"
         onClick={() => router.replace(topBackHref)}
@@ -92,7 +92,7 @@ export default function AssessmentAttemptHistoryView({
       </button>
 
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-black">{assessmentName}</h1>
+        <h1 className="break-words text-xl font-bold text-black sm:text-2xl">{assessmentName}</h1>
         <p className="mt-2 text-sm text-black">
           Select a past attempt to view the full report for this student.
         </p>
@@ -130,7 +130,7 @@ export default function AssessmentAttemptHistoryView({
                   onClick={() => router.push(buildReportHref(attempt.attemptId))}
                   className="w-full rounded-3xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-white"
                 >
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-black">Attempt {attempt.attemptNumber}</p>
                       <p className="mt-1 text-xs text-black">
@@ -148,9 +148,9 @@ export default function AssessmentAttemptHistoryView({
                       <ArrowRight className="h-3 w-3" />
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between text-sm text-black">
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-black">
                     <span className="text-black">Score</span>
-                    <span className="font-semibold text-black">{scoreLabel}</span>
+                    <span className="break-words text-right font-semibold text-black">{scoreLabel}</span>
                   </div>
                 </button>
               );

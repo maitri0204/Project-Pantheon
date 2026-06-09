@@ -677,12 +677,12 @@ export default function AssessmentReportView({
   };
   const pdfContext: DetailedReportPdfContext = {
     normalizedCode,
-    report,
+          report,
     evaluation,
-    reportStudentName,
-    reportEmail,
-    classGrade,
-    schoolName,
+          reportStudentName,
+          reportEmail,
+          classGrade,
+          schoolName,
     reportBranding,
     profileFromAuth,
     authEmail: (auth?.user as { email?: string })?.email,
@@ -735,11 +735,11 @@ export default function AssessmentReportView({
         });
         const base64 = await blobToBase64(blob);
 
-        await apiRequest(
-          `/platform/student/attempts/${report.attemptId}/email-report`,
+      await apiRequest(
+        `/platform/student/attempts/${report.attemptId}/email-report`,
           { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName }) },
           currentAuth.token,
-        );
+      );
       }
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
@@ -861,7 +861,7 @@ export default function AssessmentReportView({
               <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Personality Profile</h2>
               <p className="text-lg font-bold text-gray-600 mt-2">{PERSONALITY_NAMES[personalityType] || personalityType}</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
               {dimensions.map((dim, index) => {
                 const pair = String(dim.pair || "");
                 const letterA = String(dim.letterA || "A");
@@ -1007,40 +1007,40 @@ export default function AssessmentReportView({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <button onClick={() => router.replace(topBackHref)} className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900">
         <ArrowLeft className="h-4 w-4" /> {topBackLabel}
       </button>
 
       {normalizedCode !== "CAREER_DNA" && (
-        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{reportTitle}</h1>
-              <p className="mt-1 text-blue-100 text-sm">Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered</p>
-              <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
-            </div>
+      <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-lg">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+              <h1 className="break-words text-xl font-bold sm:text-2xl">{reportTitle}</h1>
+            <p className="mt-1 text-blue-100 text-sm">Code: {normalizeDisplayCode(report.assessmentCode)} • {report.answeredCount}/{report.totalQuestions} answered</p>
+            <p className="mt-1 text-blue-100 text-xs">Submitted: {formatDateTime(report.submittedAt)}</p>
+          </div>
           </div>
         </div>
       )}
 
       {normalizedCode !== "CAREER_DNA" && (
         <div className="space-y-3">
-          <div className="flex flex-wrap justify-end gap-3">
-            <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
-              {downloading ? "Generating Report..." : "Download Detailed Report"}
-            </button>
+      <div className="flex flex-wrap justify-end gap-3">
+        <button onClick={downloadDetailedReport} disabled={downloading} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+          {downloading ? "Generating Report..." : "Download Detailed Report"}
+        </button>
             {isStudentReportView && (
-              <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-                {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
-              </button>
+        <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+          {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+        </button>
             )}
             {isStudentReportView && retakeHref && (
               <button onClick={() => router.push(retakeHref)} className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 Retake Test
               </button>
             )}
-          </div>
+      </div>
           {downloadError && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {downloadError}

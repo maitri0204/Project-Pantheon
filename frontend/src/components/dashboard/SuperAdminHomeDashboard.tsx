@@ -214,7 +214,7 @@ export default function SuperAdminHomeDashboard({
   ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-8 min-w-0">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-7 text-white shadow-[0_24px_60px_-24px_rgba(30,27,75,0.65)] md:p-9">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-indigo-400/20 blur-3xl" />
@@ -361,7 +361,7 @@ export default function SuperAdminHomeDashboard({
                 >
                   <div className={`h-2 bg-gradient-to-r ${meta?.gradient ?? "from-slate-400 to-slate-500"}`} />
                   <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <span
                         className={`rounded-lg border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
                           meta?.accent ?? "bg-slate-50 text-black border-slate-100"
@@ -377,7 +377,7 @@ export default function SuperAdminHomeDashboard({
                         {enabled ? "Live" : "Soon"}
                       </span>
                     </div>
-                    <h3 className="mt-3 text-base font-bold text-black transition-colors group-hover:text-indigo-700">
+                    <h3 className="mt-3 break-words text-base font-bold text-black transition-colors group-hover:text-indigo-700">
                       {meta?.title ?? assessment.name}
                     </h3>
                     <p className="mt-1.5 text-sm leading-relaxed text-black">
@@ -432,7 +432,7 @@ export default function SuperAdminHomeDashboard({
           </div>
           <div className="divide-y divide-slate-50">
             {assessments.slice(0, 6).map((a) => (
-              <div key={a._id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+              <div key={a._id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3.5">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-black">{a.name}</p>
                   <p className="text-xs text-black">{a.category}</p>
@@ -458,7 +458,7 @@ export default function SuperAdminHomeDashboard({
                 <Link
                   key={org._id}
                   href={resolveDashboardHref(`/dashboard/organizations/${org._id}`)}
-                  className="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50"
+                  className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3.5 transition hover:bg-slate-50"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-black">{org.name}</p>

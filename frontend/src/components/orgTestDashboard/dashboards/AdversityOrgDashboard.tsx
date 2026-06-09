@@ -89,7 +89,7 @@ export default function AdversityOrgDashboard({
   const hasStudents = studentsFull.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-black">Resilience Quotient Dashboard</h1>
@@ -108,7 +108,7 @@ export default function AdversityOrgDashboard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Unique Students"
           value={overview.overview.uniqueStudentCount}

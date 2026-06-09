@@ -101,9 +101,9 @@ export default function UsersPage() {
   const detailsBasePath = pathname || "/dashboard/users";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5">
+    <div className="mx-auto max-w-6xl space-y-5 min-w-0">
       <div>
-        <h1 className="text-3xl font-bold text-black">Students</h1>
+        <h1 className="text-2xl font-bold text-black sm:text-3xl">Students</h1>
         <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Students from your organization." : "Students registered across the platform."}</p>
       </div>
 
@@ -180,7 +180,7 @@ export default function UsersPage() {
             <p className="text-center text-black text-base py-16">No students found.</p>
           ) : (
             <>
-              <div className="grid gap-4 p-4 lg:hidden">
+              <div className="grid gap-4 p-4 xl:hidden">
                 {filtered.map((user) => (
                   <div key={user._id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -198,7 +198,7 @@ export default function UsersPage() {
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Organization</p>
-                        <p className="mt-1 text-black">{user.organization ? user.organization.name : "—"}</p>
+                        <p className="mt-1 break-words text-black">{user.organization ? user.organization.name : "—"}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Grade</p>
@@ -226,51 +226,69 @@ export default function UsersPage() {
                 ))}
               </div>
 
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full min-w-[980px] text-base">
+              <div className="hidden xl:block">
+                <table className="w-full table-fixed text-sm">
+                  <colgroup>
+                    <col className="w-[14%]" />
+                    <col className="w-[17%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[9%]" />
+                    <col className="w-[9%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[13%]" />
+                  </colgroup>
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Name</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Email</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Organization</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Grade</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Division</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Tests Completed</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Tests Pending</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Added On</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Action</th>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Email</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Organization</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Grade</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Division</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Completed</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Pending</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Added On</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {filtered.map((user) => (
-                      <tr key={user._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                    {filtered.map((user) => {
+                      const fullName = `${user.firstName} ${user.lastName}`;
+                      const orgName = user.organization?.name || "—";
+
+                      return (
+                        <tr key={user._id} className="transition-colors hover:bg-gray-50">
+                          <td className="px-3 py-3">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
+                                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                              </div>
+                              <span className="truncate font-medium text-black" title={fullName}>{fullName}</span>
                             </div>
-                            <span className="font-medium text-black">{user.firstName} {user.lastName}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3.5 text-black">{user.email}</td>
-                        <td className="px-5 py-3.5 text-black text-sm">
-                          {user.organization ? user.organization.name : "—"}
-                        </td>
-                        <td className="px-5 py-3.5 text-black">{user.grade || "—"}</td>
-                        <td className="px-5 py-3.5 text-black">{user.division || "—"}</td>
-                        <td className="px-5 py-3.5 text-black">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
-                        <td className="px-5 py-3.5 text-black">{user.testsPending ?? 0}</td>
-                        <td className="px-5 py-3.5 text-black text-sm">{formatDate(user.createdAt)}</td>
-                        <td className="px-5 py-3.5">
-                          <button
-                            onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
-                            className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
-                          >
-                            View Detail
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="block truncate text-black" title={user.email}>{user.email}</span>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="block truncate text-black" title={orgName}>{orgName}</span>
+                          </td>
+                          <td className="px-3 py-3 text-black">{user.grade || "—"}</td>
+                          <td className="px-3 py-3 text-black">{user.division || "—"}</td>
+                          <td className="px-3 py-3 text-black">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
+                          <td className="px-3 py-3 text-black">{user.testsPending ?? 0}</td>
+                          <td className="px-3 py-3 text-black">{formatDate(user.createdAt)}</td>
+                          <td className="px-3 py-3">
+                            <button
+                              onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
+                              className="whitespace-nowrap rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                            >
+                              View Detail
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

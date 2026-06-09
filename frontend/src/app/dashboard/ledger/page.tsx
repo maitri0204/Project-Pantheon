@@ -172,13 +172,13 @@ export default function LedgerPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-black sm:text-3xl">Payment Ledger</h1>
         <p className="mt-1 text-sm text-black">All transactions across every assessment on this platform.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {[
           { label: "Total Transactions", value: String(summary?.total ?? 0), colorCls: "text-blue-700" },
           { label: "Gross Revenue", value: fmt(summary?.totalGross ?? 0), colorCls: "text-green-700" },
@@ -276,7 +276,7 @@ export default function LedgerPage() {
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-3 lg:hidden">
+          <div className="flex flex-col gap-3 xl:hidden">
             {filteredWithBalance.map((inv) => {
               const meta = ASSESSMENT_META[inv.assessmentCode];
               const userName = inv.user ? `${inv.user.firstName} ${inv.user.lastName}` : "Unknown";
@@ -313,10 +313,10 @@ export default function LedgerPage() {
 
                   <div>
                     <p className="text-xs font-medium text-black">{userName}</p>
-                    <p className="text-[11px] text-black">{inv.user?.email ?? ""}</p>
+                    <p className="break-all text-[11px] text-black">{inv.user?.email ?? ""}</p>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 border-t border-gray-50 pt-2">
+                  <div className="grid grid-cols-2 gap-2 border-t border-gray-50 pt-2 sm:grid-cols-3">
                     <div>
                       <p className="text-[10px] uppercase text-black">Gross</p>
                       <p className="mt-0.5 text-xs font-medium text-black">{fmt(inv.amount)}</p>
@@ -338,7 +338,7 @@ export default function LedgerPage() {
               );
             })}
 
-            <div className="grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-4 sm:grid-cols-3">
               <div>
                 <p className="mb-0.5 text-[10px] uppercase text-black">Gross</p>
                 <p className="text-xs font-bold text-black">{fmt(filteredSummary.gross)}</p>
@@ -356,22 +356,35 @@ export default function LedgerPage() {
             </div>
           </div>
 
-          <div className="hidden overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm lg:block">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+          <div className="hidden overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm xl:block">
+            <div>
+              <table className="w-full table-fixed text-xs">
+                <colgroup>
+                  <col className="w-[4%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[8%]" />
+                </colgroup>
                 <thead>
                   <tr className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-black">
-                    <th className="px-4 py-3 text-left">#</th>
-                    <th className="px-4 py-3 text-left">Invoice</th>
-                    <th className="px-4 py-3 text-left">Date &amp; Time</th>
-                    <th className="px-4 py-3 text-left">Assessment</th>
-                    <th className="px-4 py-3 text-left">User</th>
-                    <th className="px-4 py-3 text-right">Gross</th>
-                    <th className="px-4 py-3 text-right">Discount</th>
-                    <th className="px-4 py-3 text-right">Net</th>
-                    <th className="px-4 py-3 text-right">Running</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Coupon</th>
+                    <th className="px-3 py-3 text-left">#</th>
+                    <th className="px-3 py-3 text-left">Invoice</th>
+                    <th className="px-3 py-3 text-left">Date &amp; Time</th>
+                    <th className="px-3 py-3 text-left">Assessment</th>
+                    <th className="px-3 py-3 text-left">User</th>
+                    <th className="px-3 py-3 text-right">Gross</th>
+                    <th className="px-3 py-3 text-right">Discount</th>
+                    <th className="px-3 py-3 text-right">Net</th>
+                    <th className="px-3 py-3 text-right">Running</th>
+                    <th className="px-3 py-3 text-left">Status</th>
+                    <th className="px-3 py-3 text-left">Coupon</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -391,43 +404,50 @@ export default function LedgerPage() {
 
                     return (
                       <tr key={inv._id} className="transition-colors hover:bg-gray-50">
-                        <td className="px-4 py-3 text-xs text-black">{idx + 1}</td>
-                        <td className="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-black">
-                          {inv.invoiceNumber}
+                        <td className="px-3 py-3 text-black">{idx + 1}</td>
+                        <td className="px-3 py-3">
+                          <span className="block truncate font-mono font-semibold text-black" title={inv.invoiceNumber}>
+                            {inv.invoiceNumber}
+                          </span>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-black">
+                        <td className="px-3 py-3 text-black">
                           <span className="block">{dateStr}</span>
-                          <span className="text-black">{timeStr}</span>
+                          <span>{timeStr}</span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-black"}`}
+                            className={`inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium ${meta ? `${meta.bg} ${meta.color}` : "bg-gray-100 text-black"}`}
+                            title={meta?.name ?? inv.assessmentCode}
                           >
                             {meta?.name ?? inv.assessmentCode}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
-                          <p className="whitespace-nowrap text-xs font-medium text-black">{userName}</p>
-                          <p className="text-[11px] text-black">{userEmail}</p>
+                        <td className="px-3 py-3">
+                          <p className="truncate text-xs font-medium text-black" title={userName}>{userName}</p>
+                          <p className="truncate text-[11px] text-black" title={userEmail}>{userEmail}</p>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-black">{fmt(inv.amount)}</td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-green-700">
+                        <td className="px-3 py-3 text-right text-black">{fmt(inv.amount)}</td>
+                        <td className="px-3 py-3 text-right text-green-700">
                           {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-black">
+                        <td className="px-3 py-3 text-right font-semibold text-black">
                           {fmt(inv.finalAmount)}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-medium text-indigo-700">
+                        <td className="px-3 py-3 text-right font-medium text-indigo-700">
                           {fmt(inv.runningBalance)}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-black"}`}
+                            className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-black"}`}
                           >
                             {inv.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-black">{inv.couponCode ?? "—"}</td>
+                        <td className="px-3 py-3">
+                          <span className="block truncate font-mono text-black" title={inv.couponCode ?? "—"}>
+                            {inv.couponCode ?? "—"}
+                          </span>
+                        </td>
                       </tr>
                     );
                   })}

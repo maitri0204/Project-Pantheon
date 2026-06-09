@@ -64,11 +64,11 @@ export default function OrganizationsPage() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-5">
+    <div className="mx-auto max-w-6xl space-y-5 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-black">Organizations</h1>
+          <h1 className="text-2xl font-bold text-black sm:text-3xl">Organizations</h1>
           <p className="text-black mt-1 text-base">Manage whitelabel organizations that can host the Pantheon platform.</p>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function OrganizationsPage() {
           ) : (
             <>
               {/* Mobile cards */}
-              <div className="grid gap-4 p-4 md:hidden">
+              <div className="grid gap-4 p-4 xl:hidden">
                 {filtered.map((org) => (
                   <div key={org._id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -157,49 +157,62 @@ export default function OrganizationsPage() {
               </div>
 
               {/* Desktop table */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full min-w-[760px] text-base">
+              <div className="hidden xl:block">
+                <table className="w-full table-fixed text-sm">
+                  <colgroup>
+                    <col className="w-[20%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[20%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[14%]" />
+                  </colgroup>
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Name</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Slug</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Type</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Contact</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Added On</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Status</th>
-                      <th className="text-left px-5 py-3 text-sm font-semibold text-black uppercase tracking-wide">Actions</th>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Slug</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Type</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Contact</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Added On</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Status</th>
+                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filtered.map((org) => (
-                      <tr key={org._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm flex-shrink-0">
+                      <tr key={org._id} className="transition-colors hover:bg-gray-50">
+                        <td className="px-3 py-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-sm font-bold text-purple-600">
                               {org.name.charAt(0).toUpperCase()}
                             </div>
-                            <span className="font-medium text-black">{org.name}</span>
+                            <span className="truncate font-medium text-black" title={org.name}>{org.name}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-3.5 text-black font-mono text-sm">{org.slug}</td>
-                        <td className="px-5 py-3.5">
-                          <span className="bg-purple-50 text-purple-700 text-xs rounded-full px-2.5 py-0.5 font-medium">
+                        <td className="px-3 py-3">
+                          <span className="block truncate font-mono text-black" title={org.slug}>{org.slug}</span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className="inline-flex rounded-full bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
                             {org.type}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5 text-black">{org.contactEmail || "—"}</td>
-                        <td className="px-5 py-3.5 text-black text-sm">{formatDate(org.createdAt)}</td>
-                        <td className="px-5 py-3.5">
-                          <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium ${
+                        <td className="px-3 py-3">
+                          <span className="block truncate text-black" title={org.contactEmail || "—"}>{org.contactEmail || "—"}</span>
+                        </td>
+                        <td className="px-3 py-3 text-black">{formatDate(org.createdAt)}</td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
                             org.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"
                           }`}>
                             {org.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
-                        <td className="px-5 py-3.5">
+                        <td className="px-3 py-3">
                           <button
                             onClick={() => router.push(`/dashboard/organizations/${org._id}`)}
-                            className="px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 text-xs font-semibold"
+                            className="whitespace-nowrap rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
                           >
                             View Details
                           </button>

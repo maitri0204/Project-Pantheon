@@ -27,7 +27,7 @@ export default function MetacognitionOrgDashboard({ data, studentsPath }: OrgDas
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
         title="Thinking & Expression Skills — Domain Analytics"
         subtitle="Track thinking, learning, and expression domain scores across completed metacognition assessments."
@@ -36,7 +36,7 @@ export default function MetacognitionOrgDashboard({ data, studentsPath }: OrgDas
         accentClass="from-cyan-600 to-blue-600"
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Avg Total Score" value={summary.metricValue ?? avgTotal} sub="Across all domains" />
         <StatCard label="Domains Tracked" value={dimensionAverages.length} />
         <StatCard label="Students" value={summary.uniqueStudents} />

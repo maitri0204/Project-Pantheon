@@ -144,15 +144,15 @@ export default function OrganizationProfilePage() {
   if (!organization) {
     if (isSuperAdmin && user) {
       return (
-        <div className="min-h-screen bg-slate-50 px-4 py-8">
+        <div className="min-w-0 px-1 py-2 sm:px-4 sm:py-8">
           <div className="mx-auto max-w-2xl">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-black">Superadmin Profile</h1>
+              <h1 className="text-2xl font-bold text-black sm:text-3xl">Superadmin Profile</h1>
               <p className="mt-2 text-black">Your platform account details</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-2xl font-bold text-white shadow-sm">
                   {user.firstName?.charAt(0)?.toUpperCase() || "A"}
                 </div>

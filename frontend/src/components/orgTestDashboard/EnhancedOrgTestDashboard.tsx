@@ -630,10 +630,10 @@ export default function EnhancedOrgTestDashboard({
   const statCards = config.buildStatCards(data);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-black">{config.title}</h1>
+          <h1 className="break-words text-xl font-bold text-black sm:text-2xl">{config.title}</h1>
           <p className="text-sm text-black mt-1">{config.subtitle}</p>
         </div>
         <Link href={studentsPath} className="text-sm font-medium text-blue-600 hover:underline">
@@ -643,7 +643,7 @@ export default function EnhancedOrgTestDashboard({
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <StatCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
         ))}

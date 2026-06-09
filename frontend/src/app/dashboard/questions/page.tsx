@@ -426,7 +426,7 @@ export default function QuestionsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5">
+    <div className="mx-auto max-w-7xl space-y-5 min-w-0">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-black">Question Banks</h1>
@@ -527,7 +527,7 @@ export default function QuestionsPage() {
               {filteredQuestions.map((question, index) => (
                 <div key={question._id}>
                   <div
-                    className={`flex items-start gap-3 p-4 rounded-xl border transition group ${
+                    className={`flex flex-col gap-3 p-4 rounded-xl border transition group sm:flex-row sm:items-start ${
                       editQuestion?._id === question._id
                         ? "bg-blue-50 border-blue-200"
                         : "bg-gray-50 border-gray-100 hover:border-gray-200"
@@ -566,7 +566,7 @@ export default function QuestionsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <div className="flex shrink-0 items-center gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
                       <button
                         onClick={() => openEdit(question)}
                         className={`p-1.5 rounded-lg transition ${
@@ -608,7 +608,7 @@ export default function QuestionsPage() {
                       ref={(el) => { if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }}
                       className="mt-1 border border-blue-200 rounded-xl bg-white shadow-sm p-5"
                     >
-                      <div className="flex items-center gap-3 mb-4">
+                      <div className="mb-4 flex flex-wrap items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
                           {editQuestion.questionNumber}
                         </div>
@@ -627,7 +627,7 @@ export default function QuestionsPage() {
                       </div>
 
                       <form onSubmit={handleEdit} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           <div>
                             <label className="block text-sm font-semibold text-black mb-1.5">Category Key</label>
                             <input
@@ -803,7 +803,7 @@ export default function QuestionsPage() {
             </div>
 
             <form onSubmit={handleAdd} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-1.5">Category Key *</label>
                   <input
