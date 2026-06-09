@@ -44,6 +44,37 @@ export function formatReleaseDateForInput(releaseDate?: string | null): string {
   }).format(date);
 }
 
+export function compareAssessmentsByAvailability(
+  a: AssessmentReleaseMeta,
+  b: AssessmentReleaseMeta,
+): number {
+  const aLocked = isAssessmentLocked(a);
+  const bLocked = isAssessmentLocked(b);
+
+  if (aLocked !== bLocked) {
+    return aLocked ? 1 : -1;
+  }
+
+  const aRelease = a.releaseDate ? new Date(a.releaseDate).getTime() : Number.NaN;
+  const bRelease = b.releaseDate ? new Date(b.releaseDate).getTime() : Number.NaN;
+
+  if (!aLocked && !bLocked) {
+    const aSort = Number.isFinite(aRelease) ? aRelease : 0;
+    const bSort = Number.isFinite(bRelease) ? bRelease : 0;
+    return aSort - bSort;
+  }
+
+  const aSort = Number.isFinite(aRelease) ? aRelease : Number.MAX_SAFE_INTEGER;
+  const bSort = Number.isFinite(bRelease) ? bRelease : Number.MAX_SAFE_INTEGER;
+  return aSort - bSort;
+}
+
+export function sortAssessmentsByAvailability<T extends AssessmentReleaseMeta>(
+  assessments: T[],
+): T[] {
+  return [...assessments].sort(compareAssessmentsByAvailability);
+}
+
 export function formatReleaseStampParts(releaseDate: string): {
   day: string;
   monthYear: string;

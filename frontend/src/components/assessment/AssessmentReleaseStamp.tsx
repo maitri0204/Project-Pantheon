@@ -50,14 +50,14 @@ export default function AssessmentReleaseStamp({ releaseDate, size = 160 }: Asse
         </defs>
 
         {/* Top arc label */}
-        <text fill={BLUE} fontSize="10.5" fontWeight="700" fontFamily="Arial,sans-serif" letterSpacing="2.6">
+        <text fill={BLUE} fontSize="13.5" fontWeight="700" fontFamily="Arial,sans-serif" letterSpacing="2.8">
           <textPath href="#sa-top" startOffset="50%" textAnchor="middle">
             ✦ RELEASING ON ✦
           </textPath>
         </text>
 
         {/* Bottom arc label */}
-        <text fill={BLUE} fontSize="10.5" fontWeight="700" fontFamily="Arial,sans-serif" letterSpacing="2.2">
+        <text fill={BLUE} fontSize="13.5" fontWeight="700" fontFamily="Arial,sans-serif" letterSpacing="2.4">
           <textPath href="#sa-bot" startOffset="50%" textAnchor="middle">
             ✦ SAVE THE DATE ✦
           </textPath>
@@ -69,10 +69,10 @@ export default function AssessmentReleaseStamp({ releaseDate, size = 160 }: Asse
 
         {/* Day number */}
         <text
-          x={cx} y="125"
+          x={cx} y="126"
           textAnchor="middle"
           fill={BLUE}
-          fontSize="36"
+          fontSize="46"
           fontWeight="900"
           fontFamily="Arial,sans-serif"
           letterSpacing="-1"
@@ -82,13 +82,13 @@ export default function AssessmentReleaseStamp({ releaseDate, size = 160 }: Asse
 
         {/* Month label */}
         <text
-          x={cx} y="148"
+          x={cx} y="151"
           textAnchor="middle"
           fill={GRAY}
-          fontSize="10"
+          fontSize="13"
           fontWeight="700"
           fontFamily="Arial,sans-serif"
-          letterSpacing="2.5"
+          letterSpacing="2.8"
         >
           {monthYear}
         </text>

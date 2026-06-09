@@ -6,7 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import AssessmentComingSoonCard from "@/components/assessment/AssessmentComingSoonCard";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import { allowsMultipleAttempts, buildStudentResultPath, normalizeAssessmentCode } from "@/lib/assessmentAccess";
-import { isAssessmentLocked } from "@/lib/assessmentRelease";
+import { isAssessmentLocked, sortAssessmentsByAvailability } from "@/lib/assessmentRelease";
 
 type StudentAssessmentsResponse = {
   assessments: Array<{
@@ -202,6 +202,11 @@ export default function StudentAssessmentsPage() {
   const [pricing, setPricing] = useState<AssessmentPricingResponse | null>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const sortedAssessments = useMemo(
+    () => sortAssessmentsByAvailability(data.assessments),
+    [data.assessments],
+  );
 
   const load = () => {
     if (!auth?.token) {
@@ -421,7 +426,7 @@ export default function StudentAssessmentsPage() {
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        {data.assessments.map((assessment) => {
+        {sortedAssessments.map((assessment) => {
           const completed = assessment.attempt?.status === "COMPLETED";
           const inProgress = assessment.attempt?.status === "IN_PROGRESS";
           const locked = isAssessmentLocked(assessment);

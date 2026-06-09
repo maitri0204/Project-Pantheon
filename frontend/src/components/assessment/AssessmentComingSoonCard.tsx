@@ -51,7 +51,7 @@ export default function AssessmentComingSoonCard({
       </div>
 
       <div className="absolute right-4 top-1/2 z-10 -translate-y-1/2 opacity-95 drop-shadow-xl">
-        <AssessmentReleaseStamp releaseDate={releaseDate} size={148} />
+        <AssessmentReleaseStamp releaseDate={releaseDate} size={172} />
       </div>
     </div>
   );
