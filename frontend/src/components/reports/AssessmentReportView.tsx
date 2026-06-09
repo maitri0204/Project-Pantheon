@@ -64,6 +64,7 @@ type AssessmentReportViewProps = {
   topBackLabel: string;
   bottomBackHref: string;
   bottomBackLabel: string;
+  retakeHref?: string;
 };
 
 const normalizeDisplayCode = (code: string) => {
@@ -586,6 +587,7 @@ export default function AssessmentReportView({
   topBackLabel,
   bottomBackHref,
   bottomBackLabel,
+  retakeHref,
 }: AssessmentReportViewProps) {
   const router = useRouter();
   const auth = getStoredAuth();
@@ -827,6 +829,7 @@ export default function AssessmentReportView({
             emailSuccess,
             emailError,
             showEmail: isStudentReportView,
+            onRetake: isStudentReportView && retakeHref ? () => router.push(retakeHref) : undefined,
           }}
         />
       );
@@ -1030,6 +1033,11 @@ export default function AssessmentReportView({
             {isStudentReportView && (
               <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
                 {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+              </button>
+            )}
+            {isStudentReportView && retakeHref && (
+              <button onClick={() => router.push(retakeHref)} className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                Retake Test
               </button>
             )}
           </div>

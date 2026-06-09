@@ -3,6 +3,18 @@ import { MAX_ASSESSMENT_SCORE } from "@/lib/studyAbroad/assessmentData";
 export const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST" as const;
 const LEGACY_RESILIENCE_CODES = new Set(["ADVERSITY_TEST", "RQ_TEST", "RESILIENCE"]);
 
+/** Platform assessments that support scored retakes. */
+export const RETAKABLE_ASSESSMENT_CODES = new Set([
+  "CAREER_COMPASS",
+  "LITMUS_TEST",
+  "CAREER_DNA",
+  "METACOGNITION_TEST",
+  "JOHARI_WINDOW",
+  RESILIENCE_ASSESSMENT_CODE,
+  "ACADEMIC_CAREER",
+  "STUDY_ABROAD",
+]);
+
 export type AttemptHistoryEvaluation = {
   totalScore?: number;
   overallScore?: number;
@@ -75,10 +87,15 @@ export function normalizeAssessmentCode(code: string): string {
   return normalized;
 }
 
-/** Assessments where students may complete more than one scored attempt. */
+/** Assessments where learners may complete more than one scored attempt. */
 export function allowsMultipleAttempts(assessmentCode: string): boolean {
   const code = normalizeAssessmentCode(assessmentCode);
-  return isResilienceAssessment(code) || code === "STUDY_ABROAD";
+  return RETAKABLE_ASSESSMENT_CODES.has(code);
+}
+
+export function buildStudentRetakePath(slug: string, assessmentCode: string): string {
+  const code = normalizeAssessmentCode(assessmentCode);
+  return `/whitelabel/${slug}/student/assessments?retake=${encodeURIComponent(code)}`;
 }
 
 /** Multi-attempt assessments always use a dedicated attempt list before opening a report. */

@@ -51,9 +51,20 @@ const normalizeAssessmentCode = (code: string): string => {
   return normalized;
 };
 
+const RETAKABLE_ASSESSMENT_CODES = new Set([
+  "CAREER_COMPASS",
+  "LITMUS_TEST",
+  "CAREER_DNA",
+  "METACOGNITION_TEST",
+  "JOHARI_WINDOW",
+  RESILIENCE_ASSESSMENT_CODE,
+  "ACADEMIC_CAREER",
+  "STUDY_ABROAD",
+]);
+
 const allowsMultipleAttempts = (code: string): boolean => {
   const normalized = normalizeAssessmentCode(code);
-  return normalized === RESILIENCE_ASSESSMENT_CODE || normalized === "STUDY_ABROAD";
+  return RETAKABLE_ASSESSMENT_CODES.has(normalized);
 };
 
 function pickAttemptHistoryEvaluation(
@@ -2710,15 +2721,6 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
         totalQuestions: inProgressAttempt.totalQuestions,
       },
     });
-    return;
-  }
-
-  if (
-    latestExistingAttempt?.status === "COMPLETED"
-    && !isAdversityAssessmentCode(canonicalCode)
-    && !isStudyAbroadAssessmentCode(canonicalCode)
-  ) {
-    res.status(409).json({ message: "You have already completed this assessment." });
     return;
   }
 

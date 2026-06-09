@@ -334,6 +334,7 @@ type CareerDnaReportActions = {
   emailSuccess: boolean;
   emailError?: string | null;
   showEmail?: boolean;
+  onRetake?: () => void;
 };
 
 export default function CareerDnaReport({
@@ -460,6 +461,15 @@ export default function CareerDnaReport({
                 className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {actions.emailing ? "Sending..." : actions.emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+              </button>
+            )}
+            {actions.onRetake && (
+              <button
+                type="button"
+                onClick={actions.onRetake}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Retake Test
               </button>
             )}
           </div>

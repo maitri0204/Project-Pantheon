@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { allowsMultipleAttempts, buildStudentResultPath, isResilienceAssessment } from "@/lib/assessmentAccess";
+import { allowsMultipleAttempts, buildStudentResultPath, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 
 type StudentAssessmentsResponse = {
   assessments: Array<{
@@ -73,9 +73,11 @@ const normalizeAssessmentCategoryForDisplay = (category: string, code: string) =
 
 export default function StudentAssessmentsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const params = useParams<{ slug: string }>();
   const slug = params?.slug || "";
   const auth = useMemo(() => getStoredAuth(), []);
+  const retakeHandledRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [startingCode, setStartingCode] = useState<string | null>(null);
@@ -111,6 +113,23 @@ export default function StudentAssessmentsPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth?.token, slug]);
+
+  useEffect(() => {
+    if (loading || retakeHandledRef.current) return;
+
+    const retakeCode = normalizeAssessmentCode(String(searchParams?.get("retake") || ""));
+    if (!retakeCode || !allowsMultipleAttempts(retakeCode)) return;
+
+    const assessment = data.assessments.find(
+      (item) => normalizeAssessmentCode(item.code) === retakeCode,
+    );
+    if (!assessment) return;
+
+    retakeHandledRef.current = true;
+    void openCheckout(assessment.code);
+    router.replace(`/whitelabel/${slug}/student/assessments`, { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, data.assessments, searchParams, slug]);
 
   const loadRazorpayScript = async () => {
     if (typeof window === "undefined") return false;
@@ -291,7 +310,6 @@ export default function StudentAssessmentsPage() {
         {data.assessments.map((assessment) => {
           const completed = assessment.attempt?.status === "COMPLETED";
           const inProgress = assessment.attempt?.status === "IN_PROGRESS";
-          const canViewReport = completed;
 
           return (
             <div key={assessment._id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -314,7 +332,7 @@ export default function StudentAssessmentsPage() {
               </div>
 
               <div className="mt-4 flex gap-3">
-                {(isResilienceAssessment(assessment.code) || assessment.code === "STUDY_ABROAD") && completed ? (
+                {completed ? (
                   <>
                     <button
                       onClick={() => openReport(assessment.code, assessment.attempt?.id)}
@@ -325,7 +343,7 @@ export default function StudentAssessmentsPage() {
                     <button
                       onClick={() => void openCheckout(assessment.code)}
                       disabled={startingCode === assessment.code}
-                      className="flex-1 rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55"
+                      className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-55"
                     >
                       {startingCode === assessment.code ? "Starting…" : "Retake Test"}
                     </button>
@@ -333,20 +351,16 @@ export default function StudentAssessmentsPage() {
                 ) : (
                   <button
                     onClick={() => {
-                      if (canViewReport) {
-                        openReport(assessment.code, assessment.attempt?.id);
-                        return;
-                      }
                       if (inProgress) {
                         void startTestWithPayment(assessment.code);
                         return;
                       }
                       void openCheckout(assessment.code);
                     }}
-                    disabled={(!canViewReport && completed) || startingCode === assessment.code}
+                    disabled={startingCode === assessment.code}
                     className="flex-1 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] transition hover:from-blue-700 hover:to-blue-800 disabled:cursor-not-allowed disabled:opacity-55"
                   >
-                    {canViewReport ? "View Report" : completed ? "Already Completed" : inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
+                    {inProgress ? "Resume Test" : startingCode === assessment.code ? "Starting…" : "Take Test"}
                   </button>
                 )}
 

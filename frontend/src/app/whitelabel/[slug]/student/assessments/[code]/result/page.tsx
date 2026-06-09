@@ -8,6 +8,7 @@ import { apiRequest, getStoredAuth } from "@/lib/api";
 import {
   allowsMultipleAttempts,
   buildStudentResultPath,
+  buildStudentRetakePath,
   formatAttemptHistoryScore,
   getAssessmentDisplayName,
   normalizeAssessmentCode,
@@ -140,6 +141,12 @@ function AssessmentAttemptHistory(props: {
           className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           {bottomBackLabel}
+        </button>
+        <button
+          onClick={() => router.push(buildStudentRetakePath(slug, assessmentCode))}
+          className="inline-flex items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+        >
+          Retake Test
         </button>
       </div>
     </div>
@@ -287,6 +294,7 @@ export default function StudentAssessmentResultPage() {
         topBackLabel={isMultiAttemptAssessment ? "Back to Attempts" : "Back to Results"}
         bottomBackHref={`/whitelabel/${slug}/student/assessments`}
         bottomBackLabel="Back to Assessments"
+        retakeHref={buildStudentRetakePath(slug, code)}
       />
     );
   }

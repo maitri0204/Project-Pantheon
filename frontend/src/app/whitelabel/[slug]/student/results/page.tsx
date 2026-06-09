@@ -8,6 +8,7 @@ import { apiRequest, getStoredAuth } from "@/lib/api";
 import {
   allowsMultipleAttempts,
   buildStudentResultPath,
+  buildStudentRetakePath,
   getAssessmentDisplayName,
   normalizeAssessmentCode,
 } from "@/lib/assessmentAccess";
@@ -148,20 +149,30 @@ export default function StudentResultsPage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      if (!canViewReport) return;
-                      router.push(
-                        allowsMultipleAttempts(result.assessmentCode)
-                          ? buildStudentResultPath(slug, result.assessmentCode)
-                          : buildStudentResultPath(slug, result.assessmentCode, { attemptId: result.id })
-                      );
-                    }}
-                    disabled={!canViewReport}
-                    className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.9)] hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {canViewReport ? "View Report" : "Report Not Available"}
-                  </button>
+                  <div className="flex flex-col gap-2 sm:items-end">
+                    <button
+                      onClick={() => {
+                        if (!canViewReport) return;
+                        router.push(
+                          allowsMultipleAttempts(result.assessmentCode)
+                            ? buildStudentResultPath(slug, result.assessmentCode)
+                            : buildStudentResultPath(slug, result.assessmentCode, { attemptId: result.id })
+                        );
+                      }}
+                      disabled={!canViewReport}
+                      className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.9)] hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {canViewReport ? "View Report" : "Report Not Available"}
+                    </button>
+                    {allowsMultipleAttempts(result.assessmentCode) && (
+                      <button
+                        onClick={() => router.push(buildStudentRetakePath(slug, result.assessmentCode))}
+                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Retake Test
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
