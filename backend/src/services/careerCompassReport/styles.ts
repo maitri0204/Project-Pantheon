@@ -578,7 +578,7 @@ export const reportStyles = `
     border-color: var(--navy);
   }
   .dna-card.accent h3 { color: var(--gold-light); }
-  .dna-card.accent ul li { color: rgba(255,255,255,0.78); }
+  .dna-card.accent ul li { color: #ffffff; }
   .dna-card.accent ul li::before { background: var(--gold); }
   .dna-card.accent::before { color: var(--gold); opacity: 0.85; }
 
@@ -756,8 +756,8 @@ export const reportStyles = `
   }
 
   .dive-row-bottom .card h3 {
-    font-size: 11px;
-    margin-bottom: 5px;
+    font-size: 13.5px;
+    margin-bottom: 6px;
   }
 
   .dive-row-bottom .card ul {
@@ -770,9 +770,9 @@ export const reportStyles = `
   }
 
   .dive-row-bottom .card ul li {
-    font-size: 9px;
-    line-height: 1.32;
-    padding: 1.5px 0 1.5px 11px;
+    font-size: 11px;
+    line-height: 1.45;
+    padding: 2px 0 2px 11px;
   }
 
   /* ── ACADEMIC ── */
@@ -818,7 +818,14 @@ export const reportStyles = `
 
   .stream-card.secondary-card {
     background: var(--surface);
-    border-style: dashed;
+    border: 1px dashed var(--border);
+    box-shadow: none;
+  }
+
+  .stream-card.emerging-card {
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    box-shadow: 0 1px 6px rgba(30, 64, 175, 0.08);
   }
 
   .stream-card h4 {
@@ -1110,6 +1117,32 @@ export const reportStyles = `
     font-size: 8px;
   }
 
+  .page-roles .role-card {
+    padding: 9px 12px;
+  }
+
+  .page-roles .role-card h3 {
+    font-size: 12.5px;
+    margin-bottom: 5px;
+    padding-bottom: 4px;
+  }
+
+  .page-roles .role-summary {
+    font-size: 10.5px;
+    line-height: 1.45;
+    margin-bottom: 5px;
+  }
+
+  .page-roles .role-card ul li {
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 2px 0 2px 10px;
+  }
+
+  .page-roles .role-card ul li::before {
+    font-size: 10px;
+  }
+
   /* ── INDUSTRY ── */
   .industry-grid {
     display: grid;
@@ -1260,6 +1293,42 @@ export const reportStyles = `
     letter-spacing: 1px;
     color: var(--gold);
     margin-bottom: 2px;
+  }
+
+  .page-industry .industry-intro {
+    font-size: 12px;
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+
+  .page-industry .industry-list {
+    gap: 8px;
+  }
+
+  .page-industry .industry-item {
+    padding: 10px 14px;
+  }
+
+  .page-industry .industry-item-name {
+    font-size: 13px;
+    margin-bottom: 3px;
+  }
+
+  .page-industry .industry-item-desc {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .page-industry .industry-item-action {
+    flex: 0 0 140px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    padding-left: 14px;
+  }
+
+  .page-industry .industry-item-action-label {
+    font-size: 8px;
+    margin-bottom: 3px;
   }
 
   .industry-card ul li:last-child {

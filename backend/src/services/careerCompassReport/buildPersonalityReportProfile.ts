@@ -1,3 +1,4 @@
+import { getCareerDescription } from "./careerDescriptions";
 import { PERSONALITY_CONTENT, type PersonalityProfile } from "./personalityContent";
 import {
   PERSONALITY_CAREERS,
@@ -72,11 +73,11 @@ function dominantTraitLine(slice: CareerCompassAssessmentData["dimensions"]["ene
   return `${dominant} (${pct}%)`;
 }
 
-function buildCareerMatches(careers: string[], personalityName: string) {
+function buildCareerMatches(careers: string[]) {
   return careers.slice(0, 10).map((name, index) => ({
     name,
     pct: CAREER_MATCH_PCTS[index] ?? 75,
-    desc: `A strong career match for your ${personalityName} profile — building on your natural strengths and decision style.`,
+    desc: getCareerDescription(name),
   }));
 }
 
@@ -278,7 +279,7 @@ export function buildPersonalityReportProfile(data: CareerCompassAssessmentData)
         "Sets direction and expects follow-through",
       ]).slice(0, 10),
     },
-    careerMatches: buildCareerMatches(careers, short),
+    careerMatches: buildCareerMatches(careers),
     roleCards: buildRoleCards(careers),
     streams: buildStreamCards(stream, subjects, careers),
     subjects: buildSubjectCards(subjects, careers),

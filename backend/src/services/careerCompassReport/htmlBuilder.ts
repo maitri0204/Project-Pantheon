@@ -170,7 +170,11 @@ function streamCardHtml(stream: {
     : stream.name === "Interdisciplinary"
       ? '<span class="tag tag-blue">Emerging</span>'
       : '<span class="tag tag-gray">Secondary</span>';
-  const cardClass = stream.recommended ? "stream-card recommended" : "stream-card secondary-card";
+  const cardClass = stream.recommended
+    ? "stream-card recommended"
+    : stream.name === "Interdisciplinary"
+      ? "stream-card secondary-card"
+      : "stream-card emerging-card";
 
   return `
           <div class="${cardClass}">
@@ -416,7 +420,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
 
   // PAGE 10 — JOB ROLE EXPLORER (was page 11)
   pages.push(`
-    <div class="page">
+    <div class="page page-roles">
       <div class="page-inner">
         ${pageHeader("Role Pathways", "Job Role Explorer")}
         <div class="roles-grid">
@@ -428,7 +432,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
 
   // PAGE 11 — INDUSTRY EXPLORATION (was page 12)
   pages.push(`
-    <div class="page">
+    <div class="page page-industry">
       <div class="page-inner">
         ${pageHeader("Industry Fit", "Industry Exploration Report")}
         <p class="industry-intro">${profile.industryIntro}</p>
