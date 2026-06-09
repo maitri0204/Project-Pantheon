@@ -168,13 +168,9 @@ function streamCardHtml(stream: {
   const tag = stream.recommended
     ? '<span class="tag tag-gold">Recommended</span>'
     : stream.name === "Interdisciplinary"
-      ? '<span class="tag tag-blue">Emerging</span>'
-      : '<span class="tag tag-gray">Secondary</span>';
-  const cardClass = stream.recommended
-    ? "stream-card recommended"
-    : stream.name === "Interdisciplinary"
-      ? "stream-card secondary-card"
-      : "stream-card emerging-card";
+      ? '<span class="tag tag-gray">Emerging</span>'
+      : '<span class="tag tag-blue">Secondary</span>';
+  const cardClass = stream.recommended ? "stream-card recommended" : "stream-card secondary-card";
 
   return `
           <div class="${cardClass}">
@@ -204,8 +200,6 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
         <div class="cover-header-row">
           <div class="cover-left">
             <div class="cover-badge">Intelligence Report</div>
-            <h1>Career Compass<br>Intelligence Report</h1>
-            <p class="cover-sub">Personalized career guidance powered by psychometric assessment</p>
           </div>
           <div class="cover-hero">
             <div class="personality-hero">
@@ -214,10 +208,14 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
             </div>
           </div>
         </div>
-        <div class="cover-mid">
-          <div class="cover-meta-item"><div class="cover-meta-label">Student Name</div><div class="cover-meta-value">${s.name}</div></div>
-          <div class="cover-meta-item"><div class="cover-meta-label">Assessment Date</div><div class="cover-meta-value">${s.assessmentDate}</div></div>
-          <div class="cover-meta-item"><div class="cover-meta-label">Grade</div><div class="cover-meta-value">Class ${s.grade}</div></div>
+        <div class="cover-lower">
+          <h1>Career Compass<br>Intelligence Report</h1>
+          <p class="cover-sub">Personalized career guidance powered by psychometric assessment</p>
+          <div class="cover-mid">
+            <div class="cover-meta-item"><div class="cover-meta-label">Student Name</div><div class="cover-meta-value">${s.name}</div></div>
+            <div class="cover-meta-item"><div class="cover-meta-label">Assessment Date</div><div class="cover-meta-value">${s.assessmentDate}</div></div>
+            <div class="cover-meta-item"><div class="cover-meta-label">Grade</div><div class="cover-meta-value">Class ${s.grade}</div></div>
+          </div>
         </div>
         <div class="exec-statement">
           ${profile.coverStatement}
