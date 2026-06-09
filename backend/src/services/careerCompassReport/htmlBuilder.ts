@@ -157,6 +157,14 @@ function buildDimensionOverview(d: CareerCompassAssessmentData): string {
     </div>`;
 }
 
+function timelineWeek(marker: string, title: string, items: string[]): string {
+  return `
+          <div class="timeline-item">
+            <div class="timeline-marker">${marker}</div>
+            <div class="timeline-content"><h4>${title}</h4><ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul></div>
+          </div>`;
+}
+
 function streamCardHtml(stream: {
   name: string;
   why: string;
@@ -639,30 +647,12 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
           <div class="plan-step active"><div class="plan-step-dot"></div><div class="plan-step-label">Week 4</div></div>
         </div>
         <div class="timeline-layout">
-          <div class="timeline-item"><div class="timeline-marker">Week<br>1</div><div class="timeline-content"><h4>Discover & Research</h4><ul><li>Read about 3 target careers in depth</li><li>Watch 5 career journey videos on YouTube</li><li>Take a free online Python or business course</li><li>Write a 1-page career interest statement</li></ul></div></div>
-          <div class="timeline-item"><div class="timeline-marker">Week<br>2</div><div class="timeline-content"><h4>Connect & Learn</h4><ul><li>Interview 2 professionals in target fields</li><li>Join an entrepreneurship or debate club</li><li>Start following 10 industry leaders on LinkedIn</li><li>Attend a webinar or career talk</li></ul></div></div>
-          <div class="timeline-item"><div class="timeline-marker">Week<br>3</div><div class="timeline-content"><h4>Build & Experiment</h4><ul><li>Launch a small project (blog, app idea, business plan)</li><li>Enter a school-level competition</li><li>Practice a 3-minute career pitch</li><li>Map subject choices to career goals</li></ul></div></div>
-          <div class="timeline-item"><div class="timeline-marker">Week<br>4</div><div class="timeline-content"><h4>Reflect & Plan</h4><ul><li>Review what excited you most this month</li><li>Shortlist top 3 careers for deeper exploration</li><li>Create a 60-day plan with specific goals</li><li>Share findings with counselor and parents</li></ul></div></div>
+          ${profile.actionPlans.plan30.weeks.map((week) => timelineWeek(week.marker, week.title, week.items)).join("")}
           <div class="plan-extra-row">
-            ${bulletCard("Clear Goals & Tasks", [
-              "Define one primary career question to answer this month",
-              "Complete 3 small research tasks each week",
-              "Track daily progress in a simple journal",
-              "Target: 3 careers explored in depth",
-            ], "card-insight", "card-compact")}
-            ${bulletCard("Guidance & Mentorship", [
-              "Identify 2 mentors — a teacher and an industry person",
-              "Schedule a weekly 15-minute counselor check-in",
-              "Ask each mentor one focused question per meeting",
-              "Join a peer group for accountability",
-            ], "card-style", "card-compact")}
+            ${bulletCard("Clear Goals & Tasks", profile.actionPlans.plan30.clearGoals, "card-insight", "card-compact")}
+            ${bulletCard("Guidance & Mentorship", profile.actionPlans.plan30.mentorship, "card-style", "card-compact")}
           </div>
-          ${bulletCard("Expected Outcomes", [
-            "Clear shortlist of 3 career directions",
-            "One completed mini-project or competition entry",
-            "Professional network of 2+ mentors",
-            "Written career exploration journal",
-          ], "card-snapshot", "card-compact")}
+          ${bulletCard("Expected Outcomes", profile.actionPlans.plan30.outcomes, "card-snapshot", "card-compact")}
         </div>
       </div>
       ${footer(15, total, s.name)}
@@ -674,51 +664,11 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       <div class="page-inner">
         ${pageHeader("Suggested Action Plan", "60-Day Career Discovery Plan")}
         <div class="plan-60-layout">
-          <div class="plan-header-strip">Days 31 – 60 &nbsp;|&nbsp; Discovery Phase</div>
+          <div class="plan-header-strip">${profile.actionPlans.plan60.phaseLabel}</div>
           <div class="plan-60-grid">
-            ${bulletCard("Clear Goals & Tasks", [
-              "Convert research into one concrete project plan",
-              "Break the project into weekly milestones",
-              "Allocate 5 focused hours per week to building",
-              "Review and adjust goals every two weeks",
-            ], "card-style")}
-            ${bulletCard("Goals (Days 31–60)", [
-              "Deep-dive into top 3 career paths",
-              "Build first portfolio piece",
-              "Develop one technical or business skill",
-              "Establish mentor relationship",
-            ], "card-style")}
-            ${bulletCard("Projects", [
-              "Complete a business plan or product mockup",
-              "Build a simple website or app prototype",
-              "Write 3 industry analysis articles",
-              "Create a personal portfolio page",
-            ], "card-style")}
-            ${bulletCard("Skill Building", [
-              "Complete an online course (Coursera/Udemy)",
-              "Practice public speaking weekly",
-              "Learn Excel/Google Sheets for analysis",
-              "Study one entrepreneurship case per week",
-            ], "card-style")}
-            ${bulletCard("Networking", [
-              "Attend 2 industry events or meetups",
-              "Connect with 5 alumni from target colleges",
-              "Join online communities (IndieHackers, etc.)",
-              "Schedule monthly counselor check-ins",
-            ], "card-style")}
-            ${bulletCard("Guidance & Mentorship", [
-              "Request feedback on your project from a mentor",
-              "Shadow or interview one working professional",
-              "Connect with 5 alumni in target fields",
-              "Document mentor advice in your career journal",
-            ], "card-style")}
+            ${profile.actionPlans.plan60.sections.map((section) => bulletCard(section.title, section.items, "card-style")).join("")}
           </div>
-          ${bulletCard("Expected Outcomes", [
-            "Portfolio with 2+ tangible projects",
-            "Confirmed stream and subject selection",
-            "Skill certification or competition result",
-            "5+ professional connections",
-          ], "card-snapshot", "card-compact")}
+          ${bulletCard("Expected Outcomes", profile.actionPlans.plan60.outcomes, "card-snapshot", "card-compact")}
         </div>
       </div>
       ${footer(16, total, s.name)}
@@ -730,51 +680,11 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       <div class="page-inner">
         ${pageHeader("Suggested Action Plan", "90-Day Career Acceleration Plan")}
         <div class="plan-90-layout">
-          <div class="plan-header-strip">Days 61 – 90 &nbsp;|&nbsp; Acceleration Phase</div>
+          <div class="plan-header-strip">${profile.actionPlans.plan90.phaseLabel}</div>
           <div class="plan-90-grid">
-            ${bulletCard("Clear Goals & Tasks", [
-              "Set a flagship outcome to complete by Day 90",
-              "Define success metrics for your portfolio piece",
-              "Schedule weekly build-and-review sprints",
-              "Prepare a final progress presentation",
-            ], "card-style")}
-            ${bulletCard("Goals (Days 61–90)", [
-              "Finalize stream and subject choices",
-              "Complete a flagship portfolio project",
-              "Apply to 2 competitions or programs",
-              "Create a 1-year academic roadmap",
-            ], "card-style")}
-            ${bulletCard("Portfolio", [
-              "Publish your best project publicly",
-              "Document learnings in a career journal",
-              "Get feedback from 3 professionals",
-              "Update LinkedIn with achievements",
-            ], "card-style")}
-            ${bulletCard("Career Exploration", [
-              "Shadow a professional for a day",
-              "Visit a startup or corporate office",
-              "Attend a career fair or expo",
-              "Complete a virtual internship module",
-            ], "card-style")}
-            ${bulletCard("Industry Exposure", [
-              "Subscribe to 3 industry newsletters",
-              "Analyze 5 company business models",
-              "Present findings to class or club",
-              "Identify summer program opportunities",
-            ], "card-style")}
-            ${bulletCard("Guidance & Mentorship", [
-              "Get your portfolio reviewed by 3 professionals",
-              "Find a long-term mentor in your top career",
-              "Build a personal advisory circle of 3-4 people",
-              "Plan next year's goals with your counselor",
-            ], "card-style")}
+            ${profile.actionPlans.plan90.sections.map((section) => bulletCard(section.title, section.items, "card-style")).join("")}
           </div>
-          ${bulletCard("Expected Outcomes", [
-            "Definitive career direction with evidence",
-            "Published portfolio showcasing abilities",
-            "Competition entry or program application",
-            "Ready for next academic year with clear plan",
-          ], "card-snapshot", "card-compact")}
+          ${bulletCard("Expected Outcomes", profile.actionPlans.plan90.outcomes, "card-snapshot", "card-compact")}
         </div>
       </div>
       ${footer(17, total, s.name)}
@@ -907,7 +817,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
             <div class="blueprint-item"><div class="bi-label">Ideal Subjects</div><div class="bi-value">${data.suggestedSubjects.join(", ")}</div></div>
             <div class="blueprint-item"><div class="bi-label">Ideal Careers</div><div class="bi-value">${data.recommendedCareers.slice(0, 3).join(", ")}</div></div>
             <div class="blueprint-item"><div class="bi-label">Key Skills</div><div class="bi-value">${profile.blueprintSkills}</div></div>
-            <div class="blueprint-item"><div class="bi-label">90-Day Goal</div><div class="bi-value">Launch portfolio project + finalize stream</div></div>
+            <div class="blueprint-item"><div class="bi-label">90-Day Goal</div><div class="bi-value">${profile.blueprint90DayGoal}</div></div>
           </div>
           <div class="conclusion-box">
             <p><b>Professional Conclusion:</b> ${profile.conclusionParagraph(s.name, s.counselor, s.institute)}</p>
