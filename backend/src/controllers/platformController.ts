@@ -3076,6 +3076,45 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
   });
 };
 
+const supportsServerEmailReportPdf = (assessmentCode: string): boolean => {
+  const code = normalizeAssessmentCode(assessmentCode);
+  return isCareerCompassAssessmentCode(code) || isLitmusAssessmentCode(code) || code === "CAREER_DNA";
+};
+
+const buildAttemptEmailReportPdf = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<{ buffer: Buffer; fileName: string }> => {
+  const code = normalizeAssessmentCode(attempt.assessmentCode);
+
+  if (isCareerCompassAssessmentCode(code)) {
+    const { buffer, studentName } = await buildCareerCompassPdfBufferForAttempt(attempt);
+    return {
+      buffer,
+      fileName: `Career_Compass_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  if (isLitmusAssessmentCode(code)) {
+    const { buffer, parentName } = await buildLitmusPdfBufferForAttempt(attempt);
+    return {
+      buffer,
+      fileName: `Litmus_Report_${parentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  if (code === "CAREER_DNA") {
+    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
+    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+    const buffer = await buildCareerDnaPdfBufferForAttempt(attempt);
+    return {
+      buffer,
+      fileName: `Career_DNA_Executive_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  throw new Error("Server-side report generation is not available for this assessment");
+};
+
 export const emailStudentAttemptReport = async (req: AuthRequest, res: Response): Promise<void> => {
   if (!requireStudentUser(req, res)) {
     return;
@@ -3090,11 +3129,11 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     return;
   }
 
-  const { pdfBase64, fileName } = req.body as { pdfBase64?: string; fileName?: string };
-  if (!pdfBase64) {
-    res.status(400).json({ message: "pdfBase64 is required" });
-    return;
-  }
+  const { pdfBase64, fileName, serverGenerate } = req.body as {
+    pdfBase64?: string;
+    fileName?: string;
+    serverGenerate?: boolean;
+  };
 
   const attempt = await StudentAssessmentAttempt.findOne({
     _id: attemptId,
@@ -3117,14 +3156,45 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     return;
   }
 
-  const pdfBuffer = Buffer.from(pdfBase64, "base64");
-  const maxEmailPdfBytes = 12 * 1024 * 1024;
+  const shouldGenerateOnServer = Boolean(
+    serverGenerate || (!pdfBase64 && supportsServerEmailReportPdf(attempt.assessmentCode)),
+  );
+
+  if (!shouldGenerateOnServer && !pdfBase64) {
+    res.status(400).json({ message: "pdfBase64 is required" });
+    return;
+  }
+
+  const maxEmailPdfBytes = 15 * 1024 * 1024;
+  const safeName = `${attempt.assessmentCode}_Report_${String(student.firstName || "Student").replace(/\s+/g, "_")}.pdf`;
+  let pdfBuffer: Buffer;
+  let resolvedFileName = fileName || safeName;
+
+  try {
+    if (shouldGenerateOnServer) {
+      const built = await buildAttemptEmailReportPdf(attempt);
+      pdfBuffer = built.buffer;
+      resolvedFileName = fileName || built.fileName;
+    } else {
+      pdfBuffer = Buffer.from(String(pdfBase64), "base64");
+    }
+  } catch (error) {
+    console.error("emailStudentAttemptReport pdf build error:", error);
+    res.status(503).json({
+      message: error instanceof Error ? error.message : "Failed to generate report PDF for email",
+    });
+    return;
+  }
+
+  if (!pdfBuffer.length) {
+    res.status(503).json({ message: "Report PDF was empty" });
+    return;
+  }
+
   if (pdfBuffer.length > maxEmailPdfBytes) {
     res.status(413).json({ message: "Report file is too large to email" });
     return;
   }
-
-  const safeName = `${attempt.assessmentCode}_Report_${String(student.firstName || "Student").replace(/\s+/g, "_")}.pdf`;
 
   try {
     await sendAssessmentReportToStudent({
@@ -3132,7 +3202,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
       firstName: student.firstName || "Student",
       assessmentName: attempt.assessmentName || attempt.assessmentCode,
       pdfBuffer,
-      fileName: fileName || safeName,
+      fileName: resolvedFileName,
     });
   } catch (error) {
     console.error("emailStudentAttemptReport error:", error);

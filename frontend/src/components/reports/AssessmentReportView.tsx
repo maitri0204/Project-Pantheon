@@ -711,14 +711,23 @@ export default function AssessmentReportView({
     setEmailing(true);
     setEmailSuccess(false);
     try {
-      const { blob, fileName } = await buildDetailedReportPdf(pdfContext);
-      const base64 = await blobToBase64(blob);
+      const serverGeneratedEmailCodes = new Set(["CAREER_COMPASS", "LITMUS_TEST", "CAREER_DNA"]);
+      if (serverGeneratedEmailCodes.has(normalizedCode)) {
+        await apiRequest(
+          `/platform/student/attempts/${report.attemptId}/email-report`,
+          { method: "POST", body: JSON.stringify({ serverGenerate: true }) },
+          currentAuth.token,
+        );
+      } else {
+        const { blob, fileName } = await buildDetailedReportPdf(pdfContext);
+        const base64 = await blobToBase64(blob);
 
-      await apiRequest(
-        `/platform/student/attempts/${report.attemptId}/email-report`,
-        { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName }) },
-        currentAuth.token,
-      );
+        await apiRequest(
+          `/platform/student/attempts/${report.attemptId}/email-report`,
+          { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName }) },
+          currentAuth.token,
+        );
+      }
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
     } catch (e) {

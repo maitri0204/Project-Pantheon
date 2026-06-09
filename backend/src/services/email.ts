@@ -14,6 +14,9 @@ const getTransporter = () => {
     port: Number(process.env.SMTP_PORT) || 587,
     secure: false,
     auth: { user, pass },
+    connectionTimeout: 120_000,
+    greetingTimeout: 60_000,
+    socketTimeout: 300_000,
   });
 };
 

@@ -1022,12 +1022,12 @@ export default function StudentTakeAssessmentPage() {
                   <span>
                     {assessmentVariant === "johari"
                       ? <>For each question, <strong>distribute 5 points</strong> between options A and B.</>
-                      : <>For each question, choose the option that <strong>best describes you</strong> — answer honestly.</>}
+                      : <>For each question, choose the option that <strong>best describes you</strong> - answer honestly.</>}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-                  <span>There are <strong>no right or wrong answers</strong> — every response is valid.</span>
+                  <span>There are <strong>no right or wrong answers</strong> - every response is valid.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
@@ -1035,7 +1035,7 @@ export default function StudentTakeAssessmentPage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</span>
-                  <span>There is <strong>no time limit</strong> — take your time and answer thoughtfully.</span>
+                  <span>There is <strong>no time limit</strong> - take your time and answer thoughtfully.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">5</span>
