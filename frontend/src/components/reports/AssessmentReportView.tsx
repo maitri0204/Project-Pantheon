@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
-import { apiRequest, getStoredAuth, uploadEmailReportPdf } from "../../lib/api";
+import { apiRequest, getStoredAuth } from "../../lib/api";
 import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 import { generateCareerCompassReport } from "../../lib/reports/generateCareerCompassReport";
 import { generateClearReport } from "../../lib/reports/generateClearReport";
@@ -693,34 +693,24 @@ export default function AssessmentReportView({
     setEmailSuccess(false);
     setEmailError(null);
     try {
-      // RQ, Study Abroad, and Academic Career must use the same client PDF pipeline as download
-      // (premium React-PDF / print-capture templates). Server HTML summaries are not equivalent.
       const serverGeneratedEmailCodes = new Set([
         "CAREER_COMPASS",
         "LITMUS_TEST",
         "CAREER_DNA",
         "METACOGNITION_TEST",
         "JOHARI_WINDOW",
+        "RESILIENCE_TEST",
+        "ACADEMIC_CAREER",
+        "STUDY_ABROAD",
       ]);
-      if (serverGeneratedEmailCodes.has(normalizedCode)) {
-        await apiRequest(
-          `/platform/student/attempts/${report.attemptId}/email-report`,
-          { method: "POST", body: JSON.stringify({ serverGenerate: true }) },
-          currentAuth.token,
-        );
-      } else {
-        const { blob, fileName } = await buildDetailedReportPdf({
-          ...pdfContext,
-          authToken: currentAuth.token,
-        });
-
-        await uploadEmailReportPdf(
-          `/platform/student/attempts/${report.attemptId}/email-report`,
-          blob,
-          fileName,
-          currentAuth.token,
-        );
+      if (!serverGeneratedEmailCodes.has(normalizedCode)) {
+        throw new Error("Email report is not available for this assessment.");
       }
+      await apiRequest(
+        `/platform/student/attempts/${report.attemptId}/email-report`,
+        { method: "POST", body: JSON.stringify({ serverGenerate: true }) },
+        currentAuth.token,
+      );
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
     } catch (e) {
@@ -1012,7 +1002,7 @@ export default function AssessmentReportView({
         </button>
             {isStudentReportView && (
         <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-          {emailing ? "Generating & sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+          {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
         </button>
             )}
             {isStudentReportView && retakeHref && (
