@@ -722,6 +722,8 @@ export default function AssessmentReportView({
         "METACOGNITION_TEST",
         "JOHARI_WINDOW",
         "RESILIENCE_TEST",
+        "ACADEMIC_CAREER",
+        "STUDY_ABROAD",
       ]);
       if (serverGeneratedEmailCodes.has(normalizedCode)) {
         await apiRequest(
@@ -736,11 +738,11 @@ export default function AssessmentReportView({
         });
         const base64 = await blobToBase64(blob);
 
-      await apiRequest(
-        `/platform/student/attempts/${report.attemptId}/email-report`,
+        await apiRequest(
+          `/platform/student/attempts/${report.attemptId}/email-report`,
           { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName }) },
           currentAuth.token,
-      );
+        );
       }
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
