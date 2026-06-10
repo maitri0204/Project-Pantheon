@@ -14,6 +14,10 @@ export default function MainSiteVisitTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (!pathname) {
+      return;
+    }
+
     const page = TRACKED_PATHS[pathname];
     if (page) {
       trackMainSiteVisit(page);
