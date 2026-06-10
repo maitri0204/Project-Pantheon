@@ -20,6 +20,7 @@ import {
   getOrganizationCouponSummary,
   getStudentDashboard,
   getDashboard,
+  recordSiteVisit,
   getAssessmentAdminDashboard,
   getAcademicCareerAdminOverview,
   getAdversityAdminOverview,
@@ -55,6 +56,7 @@ import { optionalAuth, requireAuth, requireRoles } from "../middleware/auth";
 const router = Router();
 
 router.get("/overview", getPlatformOverview);
+router.post("/site-visits", recordSiteVisit);
 router.get("/assessments", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listAssessments);
 router.get("/whitelabel/:slug", optionalAuth, getWhitelabelPortal);
 router.get("/whitelabel-by-host", optionalAuth, getWhitelabelPortalByHost);

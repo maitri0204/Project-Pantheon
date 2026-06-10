@@ -70,6 +70,9 @@ type Stats = {
   students: number;
   coupons: number;
   invoices: number;
+  siteVisits: number;
+  homePageVisits: number;
+  loginPageVisits: number;
 };
 
 type AssessmentCard = {
@@ -174,6 +177,21 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!auth || role !== "SUPERADMIN") {
+      return;
+    }
+
+    const refreshStats = () => {
+      apiRequest<DashboardResponse>("/platform/dashboard", {}, auth.token)
+        .then((res) => setStats(res.stats))
+        .catch(() => {});
+    };
+
+    const intervalId = window.setInterval(refreshStats, 30000);
+    return () => window.clearInterval(intervalId);
+  }, [auth, role]);
 
   if (loading) {
     return (

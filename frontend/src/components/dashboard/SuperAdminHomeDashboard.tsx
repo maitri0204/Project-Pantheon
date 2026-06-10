@@ -7,7 +7,9 @@ import {
   Building2,
   ClipboardList,
   FileText,
+  Home,
   Layers3,
+  LogIn,
   Sparkles,
   Users,
   Wallet,
@@ -22,6 +24,9 @@ type Stats = {
   students: number;
   coupons: number;
   invoices: number;
+  siteVisits: number;
+  homePageVisits: number;
+  loginPageVisits: number;
 };
 
 type AssessmentCard = {
@@ -211,6 +216,24 @@ export default function SuperAdminHomeDashboard({
       accent: "from-indigo-500 to-blue-400",
       iconBg: "bg-indigo-50 text-indigo-600",
     },
+    {
+      label: "Home page",
+      value: stats?.homePageVisits ?? 0,
+      sub: "Main site landings",
+      icon: Home,
+      href: "/",
+      accent: "from-amber-500 to-orange-400",
+      iconBg: "bg-amber-50 text-amber-600",
+    },
+    {
+      label: "Login page",
+      value: stats?.loginPageVisits ?? 0,
+      sub: "Main site sign-in landings",
+      icon: LogIn,
+      href: "/login",
+      accent: "from-sky-500 to-cyan-400",
+      iconBg: "bg-sky-50 text-sky-600",
+    },
   ];
 
   return (
@@ -238,6 +261,12 @@ export default function SuperAdminHomeDashboard({
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
                 {stats?.students ?? 0} students platform-wide
               </span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                {stats?.homePageVisits ?? 0} home page landings
+              </span>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                {stats?.loginPageVisits ?? 0} login page landings
+              </span>
             </div>
           </div>
           {/* <Link
@@ -252,7 +281,7 @@ export default function SuperAdminHomeDashboard({
       </section>
 
       {/* KPI row */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map((item) => {
           const Icon = item.icon;
           return (

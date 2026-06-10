@@ -10,6 +10,7 @@ import InvoiceCounter from "../models/InvoiceCounter";
 import AssessmentPaymentSession from "../models/AssessmentPaymentSession";
 import ReviewerPayment from "../models/ReviewerPayment";
 import Organization from "../models/Organization";
+import PlatformAnalytics from "../models/PlatformAnalytics";
 import OrganizationRegistration from "../models/OrganizationRegistration";
 import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
 import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
@@ -568,26 +569,86 @@ export const getWhitelabelPortalByHost = async (req: AuthRequest, res: Response)
   res.json(await buildWhitelabelPortalPayload(req, organization));
 };
 
+type SiteVisitStats = {
+  homePageVisits: number;
+  loginPageVisits: number;
+  siteVisits: number;
+};
+
+const getSiteVisitStats = async (): Promise<SiteVisitStats> => {
+  const analytics = await PlatformAnalytics.findOne({ key: "default" })
+    .select({ homePageVisits: 1, loginPageVisits: 1 })
+    .lean();
+
+  const homePageVisits = analytics?.homePageVisits ?? 0;
+  const loginPageVisits = analytics?.loginPageVisits ?? 0;
+
+  return {
+    homePageVisits,
+    loginPageVisits,
+    siteVisits: homePageVisits + loginPageVisits,
+  };
+};
+
+export const recordSiteVisit = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const page = typeof req.body?.page === "string" ? req.body.page.trim().toLowerCase() : "";
+    const incrementField = page === "home"
+      ? "homePageVisits"
+      : page === "login"
+        ? "loginPageVisits"
+        : null;
+
+    if (!incrementField) {
+      res.status(400).json({ message: 'page must be "home" or "login"' });
+      return;
+    }
+
+    const analytics = await PlatformAnalytics.findOneAndUpdate(
+      { key: "default" },
+      { $inc: { [incrementField]: 1 } },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    const homePageVisits = analytics.homePageVisits;
+    const loginPageVisits = analytics.loginPageVisits;
+
+    res.json({
+      homePageVisits,
+      loginPageVisits,
+      siteVisits: homePageVisits + loginPageVisits,
+    });
+  } catch (error) {
+    console.error("recordSiteVisit error:", error);
+    res.status(500).json({ message: "Failed to record site visit" });
+  }
+};
+
 export const getDashboard = async (req: AuthRequest, res: Response): Promise<void> => {
   if (!req.user) {
     res.status(401).json({ message: "Authentication required" });
     return;
   }
 
-  const [assessments, organizations, coupons, invoices, students] = await Promise.all([
+  const isSuperadmin = req.user.role === "SUPERADMIN";
+
+  const [assessments, organizations, coupons, invoices, students, siteVisitStats] = await Promise.all([
     Assessment.find({ active: true }).sort({ name: 1 }),
-    req.user.role === "SUPERADMIN"
+    isSuperadmin
         ? Organization.find().limit(100).sort({ createdAt: -1 })
       : Organization.find({ _id: req.user.organization }).sort({ createdAt: -1 }),
-    req.user.role === "SUPERADMIN"
+    isSuperadmin
         ? Coupon.find().limit(50).sort({ createdAt: -1 })
         : Coupon.find().sort({ createdAt: -1 }).limit(10),
-    req.user.role === "SUPERADMIN"
+    isSuperadmin
       ? Invoice.find().sort({ createdAt: -1 }).limit(10)
       : Invoice.find({ organization: req.user.organization }).sort({ createdAt: -1 }).limit(10),
-    req.user.role === "SUPERADMIN"
+    isSuperadmin
       ? User.countDocuments({ role: "STUDENT" })
       : User.countDocuments({ role: "STUDENT", organization: req.user.organization }),
+    isSuperadmin
+      ? getSiteVisitStats()
+      : Promise.resolve({ homePageVisits: 0, loginPageVisits: 0, siteVisits: 0 }),
   ]);
 
   res.json({
@@ -598,6 +659,7 @@ export const getDashboard = async (req: AuthRequest, res: Response): Promise<voi
       students,
       coupons: coupons.length,
       invoices: invoices.length,
+      ...siteVisitStats,
     },
     assessments,
     organizations,
