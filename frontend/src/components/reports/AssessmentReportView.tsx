@@ -715,15 +715,14 @@ export default function AssessmentReportView({
     setEmailSuccess(false);
     setEmailError(null);
     try {
+      // RQ, Study Abroad, and Academic Career must use the same client PDF pipeline as download
+      // (premium React-PDF / print-capture templates). Server HTML summaries are not equivalent.
       const serverGeneratedEmailCodes = new Set([
         "CAREER_COMPASS",
         "LITMUS_TEST",
         "CAREER_DNA",
         "METACOGNITION_TEST",
         "JOHARI_WINDOW",
-        "RESILIENCE_TEST",
-        "ACADEMIC_CAREER",
-        "STUDY_ABROAD",
       ]);
       if (serverGeneratedEmailCodes.has(normalizedCode)) {
         await apiRequest(

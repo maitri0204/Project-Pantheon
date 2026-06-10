@@ -44,11 +44,6 @@ import { buildLitmusReportData } from "../services/litmusReport/buildLitmusRepor
 import { generateLitmusReportPdf } from "../services/litmusReport/generateLitmusReport";
 import { buildCareerCompassReportData } from "../services/careerCompassReport/buildCareerCompassReportData";
 import { generateCareerCompassReportPdf } from "../services/careerCompassReport/generateCareerCompassReport";
-import { formatAQReportAsHTML, generateAQReportData } from "../lib/generateAQReport";
-import { buildAcademicCareerReportHtml } from "../services/academicCareerReport/buildAcademicCareerReportHtml";
-import type { AcademicCareerEvaluation } from "../services/academicCareerScoring.service";
-import { buildStudyAbroadReportHtml } from "../services/studyAbroadReport/buildStudyAbroadReportHtml";
-import type { StudyAbroadEvaluationResult } from "../services/studyAbroadScoring.service";
 import { renderHtmlReportPdf } from "../services/reportPdf/renderHtmlReportPdf";
 import { AuthRequest } from "../types/auth";
 
@@ -3438,10 +3433,7 @@ const supportsServerEmailReportPdf = (assessmentCode: string): boolean => {
     || isLitmusAssessmentCode(code)
     || code === "CAREER_DNA"
     || isMetacognitionAssessmentCode(code)
-    || isClearAssessmentCode(code)
-    || code === RESILIENCE_ASSESSMENT_CODE
-    || isAcademicCareerAssessmentCode(code)
-    || isStudyAbroadAssessmentCode(code);
+    || isClearAssessmentCode(code);
 };
 
 const buildAttemptEmailReportPdf = async (
@@ -3497,44 +3489,6 @@ const buildAttemptEmailReportPdf = async (
     };
   }
 
-  if (code === RESILIENCE_ASSESSMENT_CODE) {
-    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
-    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
-    const reportData = await generateAQReportData(
-      attempt,
-      user?.firstName || "Student",
-      user?.lastName || "",
-    );
-    const html = formatAQReportAsHTML(reportData);
-    const buffer = await renderHtmlReportPdf(html);
-    return {
-      buffer,
-      fileName: `RQ_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
-    };
-  }
-
-  if (isAcademicCareerAssessmentCode(code)) {
-    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
-    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
-    const html = await buildAcademicCareerHtmlForAttempt(attempt);
-    const buffer = await renderHtmlReportPdf(html);
-    return {
-      buffer,
-      fileName: `Academic_Career_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
-    };
-  }
-
-  if (isStudyAbroadAssessmentCode(code)) {
-    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
-    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
-    const html = await buildStudyAbroadHtmlForAttempt(attempt);
-    const buffer = await renderHtmlReportPdf(html);
-    return {
-      buffer,
-      fileName: `Study_Abroad_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
-    };
-  }
-
   throw new Error("Server-side report generation is not available for this assessment");
 };
 
@@ -3579,12 +3533,17 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     return;
   }
 
+  const canGenerateOnServer = supportsServerEmailReportPdf(attempt.assessmentCode);
   const shouldGenerateOnServer = Boolean(
-    serverGenerate || (!pdfBase64 && supportsServerEmailReportPdf(attempt.assessmentCode)),
+    canGenerateOnServer && (serverGenerate || !pdfBase64),
   );
 
   if (!shouldGenerateOnServer && !pdfBase64) {
-    res.status(400).json({ message: "pdfBase64 is required" });
+    res.status(400).json({
+      message: canGenerateOnServer
+        ? "pdfBase64 is required"
+        : "A client-generated report PDF is required for this assessment",
+    });
     return;
   }
 
@@ -4288,48 +4247,6 @@ export const getAdminMetacognitionReportHtml = async (req: AuthRequest, res: Res
 const isClearAssessmentCode = (code: string) => {
   const normalized = normalizeAssessmentCode(code);
   return normalized === "JOHARI_WINDOW";
-};
-
-const buildAcademicCareerHtmlForAttempt = async (
-  attempt: InstanceType<typeof StudentAssessmentAttempt>,
-) => {
-  if (!isAcademicCareerAssessmentCode(attempt.assessmentCode)) {
-    throw new Error("Academic Career report is only available for ACADEMIC_CAREER attempts");
-  }
-
-  const evaluation = (attempt.evaluation ?? await evaluateAssessmentAttempt(attempt)) as AcademicCareerEvaluation;
-  const [student, organization] = await Promise.all([
-    User.findById(attempt.user).select({ firstName: 1, lastName: 1, grade: 1, institutionName: 1 }).lean(),
-    Organization.findById(attempt.organization).select({ name: 1 }).lean(),
-  ]);
-
-  const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
-
-  return buildAcademicCareerReportHtml({
-    studentName,
-    grade: student?.grade,
-    school: student?.institutionName || organization?.name,
-    submittedAt: attempt.completedAt || attempt.updatedAt,
-    evaluation,
-  });
-};
-
-const buildStudyAbroadHtmlForAttempt = async (
-  attempt: InstanceType<typeof StudentAssessmentAttempt>,
-) => {
-  if (!isStudyAbroadAssessmentCode(attempt.assessmentCode)) {
-    throw new Error("Study Abroad report is only available for STUDY_ABROAD attempts");
-  }
-
-  const evaluation = (attempt.evaluation ?? await evaluateAssessmentAttempt(attempt)) as StudyAbroadEvaluationResult;
-  const student = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
-  const studentName = `${student?.firstName || ""} ${student?.lastName || ""}`.trim() || "Student";
-
-  return buildStudyAbroadReportHtml({
-    studentName,
-    submittedAt: attempt.completedAt || attempt.updatedAt,
-    evaluation,
-  });
 };
 
 const buildClearHtmlForAttempt = async (
