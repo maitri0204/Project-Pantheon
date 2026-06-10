@@ -3506,11 +3506,17 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     return;
   }
 
-  const { pdfBase64, fileName, serverGenerate } = req.body as {
+  const uploadedPdf = (req as AuthRequest & { file?: Express.Multer.File }).file;
+  const body = req.body as {
     pdfBase64?: string;
     fileName?: string;
-    serverGenerate?: boolean;
+    serverGenerate?: boolean | string;
   };
+  const pdfBase64 = typeof body.pdfBase64 === "string" ? body.pdfBase64.trim() : "";
+  const fileName = typeof body.fileName === "string" ? body.fileName.trim() : "";
+  const serverGenerate = body.serverGenerate === true || body.serverGenerate === "true";
+  const uploadedPdfBuffer = uploadedPdf?.buffer?.length ? uploadedPdf.buffer : null;
+  const hasClientPdf = Boolean(uploadedPdfBuffer?.length) || Boolean(pdfBase64);
 
   const attempt = await StudentAssessmentAttempt.findOne({
     _id: attemptId,
@@ -3535,14 +3541,14 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
 
   const canGenerateOnServer = supportsServerEmailReportPdf(attempt.assessmentCode);
   const shouldGenerateOnServer = Boolean(
-    canGenerateOnServer && (serverGenerate || !pdfBase64),
+    canGenerateOnServer && (serverGenerate || !hasClientPdf),
   );
 
-  if (!shouldGenerateOnServer && !pdfBase64) {
+  if (!shouldGenerateOnServer && !hasClientPdf) {
     res.status(400).json({
       message: canGenerateOnServer
-        ? "pdfBase64 is required"
-        : "A client-generated report PDF is required for this assessment",
+        ? "A report PDF upload is required"
+        : "Failed to receive the generated report PDF. Please try again after the report finishes generating.",
     });
     return;
   }
@@ -3550,15 +3556,17 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
   const maxEmailPdfBytes = 15 * 1024 * 1024;
   const safeName = `${attempt.assessmentCode}_Report_${String(student.firstName || "Student").replace(/\s+/g, "_")}.pdf`;
   let pdfBuffer: Buffer;
-  let resolvedFileName = fileName || safeName;
+  let resolvedFileName = fileName || uploadedPdf?.originalname || safeName;
 
   try {
     if (shouldGenerateOnServer) {
       const built = await buildAttemptEmailReportPdf(attempt);
       pdfBuffer = built.buffer;
       resolvedFileName = fileName || built.fileName;
+    } else if (uploadedPdfBuffer) {
+      pdfBuffer = uploadedPdfBuffer;
     } else {
-      pdfBuffer = Buffer.from(String(pdfBase64), "base64");
+      pdfBuffer = Buffer.from(pdfBase64, "base64");
     }
   } catch (error) {
     console.error("emailStudentAttemptReport pdf build error:", error);

@@ -133,3 +133,56 @@ export const apiRequest = async <T>(
 
   return data as T;
 };
+
+/** Upload a generated report PDF for email delivery (multipart; avoids large JSON base64 payloads). */
+export const uploadEmailReportPdf = async <T = { message: string }>(
+  path: string,
+  pdfBlob: Blob,
+  fileName: string,
+  token?: string,
+): Promise<T> => {
+  if (isTokenTooLarge(token)) {
+    clearStoredAuth();
+    throw new Error("Authentication token is invalid or too large. Please log in again.");
+  }
+
+  if (!pdfBlob.size) {
+    throw new Error("Report PDF was empty. Please try downloading the report first.");
+  }
+
+  const formData = new FormData();
+  formData.append("pdf", pdfBlob, fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`);
+  formData.append("fileName", fileName);
+
+  const response = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+    cache: "no-store",
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const rawText = await response.text();
+  const isJsonLike = contentType.includes("application/json")
+    || rawText.trim().startsWith("{")
+    || rawText.trim().startsWith("[");
+
+  let data: { message?: string } = {};
+  if (isJsonLike && rawText) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = { message: "Invalid JSON response from server" };
+    }
+  } else if (rawText) {
+    data = { message: rawText };
+  }
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to email report");
+  }
+
+  return data as T;
+};

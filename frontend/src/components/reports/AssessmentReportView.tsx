@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
-import { apiRequest, getStoredAuth } from "../../lib/api";
+import { apiRequest, getStoredAuth, uploadEmailReportPdf } from "../../lib/api";
 import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 import { generateCareerCompassReport } from "../../lib/reports/generateCareerCompassReport";
 import { generateClearReport } from "../../lib/reports/generateClearReport";
@@ -330,28 +330,6 @@ async function generateRQReportBlob(
 
   return pdf(element).toBlob();
 }
-
-const blobToBase64 = async (blob: Blob): Promise<string> => {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Unable to convert report to base64"));
-      }
-    };
-    reader.onerror = () => reject(new Error("Unable to convert report to base64"));
-    reader.readAsDataURL(blob);
-  });
-
-  const base64 = dataUrl.split(",")[1];
-  if (!base64) {
-    throw new Error("Unable to encode report PDF");
-  }
-
-  return base64;
-};
 
 const toNumber = (value: unknown, fallback = 0): number => {
   const parsed = Number(value);
@@ -735,11 +713,11 @@ export default function AssessmentReportView({
           ...pdfContext,
           authToken: currentAuth.token,
         });
-        const base64 = await blobToBase64(blob);
 
-        await apiRequest(
+        await uploadEmailReportPdf(
           `/platform/student/attempts/${report.attemptId}/email-report`,
-          { method: "POST", body: JSON.stringify({ pdfBase64: base64, fileName }) },
+          blob,
+          fileName,
           currentAuth.token,
         );
       }
@@ -1034,7 +1012,7 @@ export default function AssessmentReportView({
         </button>
             {isStudentReportView && (
         <button onClick={emailDetailedReport} disabled={emailing} className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
-          {emailing ? "Sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
+          {emailing ? "Generating & sending..." : emailSuccess ? "✓ Report Sent!" : "Email Report to Me"}
         </button>
             )}
             {isStudentReportView && retakeHref && (

@@ -1,6 +1,8 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 
+import { emailReportUpload } from "../middleware/emailReportUpload";
+
 import {
   getStudentAttempt,
   getStudentAttemptReportForAdmin,
@@ -235,6 +237,12 @@ router.get(
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);
 router.post("/student/attempts/:attemptId/anti-cheat-event", requireAuth, requireRoles("STUDENT", "PARENT"), logAntiCheatEvent);
-router.post("/student/attempts/:attemptId/email-report", requireAuth, requireRoles("STUDENT", "PARENT"), emailStudentAttemptReport);
+router.post(
+  "/student/attempts/:attemptId/email-report",
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  emailReportUpload.single("pdf"),
+  emailStudentAttemptReport,
+);
 
 export default router;

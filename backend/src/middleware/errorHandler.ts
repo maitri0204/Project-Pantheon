@@ -11,6 +11,16 @@ export const errorHandler = (
     return;
   }
 
+  if (
+    error
+    && typeof error === "object"
+    && "code" in error
+    && (error as { code?: string }).code === "LIMIT_FILE_SIZE"
+  ) {
+    res.status(413).json({ message: "Report file is too large to email" });
+    return;
+  }
+
   const message = error instanceof Error ? error.message : "Internal server error";
   const status = message === "Not allowed by CORS" ? 403 : 500;
 
