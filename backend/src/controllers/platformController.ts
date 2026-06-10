@@ -14,6 +14,7 @@ import PlatformAnalytics from "../models/PlatformAnalytics";
 import OrganizationRegistration from "../models/OrganizationRegistration";
 import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
 import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
+import GlobalCouponUsage from "../models/GlobalCouponUsage";
 import Question from "../models/Question";
 import StudentAssessmentAttempt, { IAttemptQuestion } from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
@@ -32,6 +33,7 @@ import {
   isAssessmentReleased,
 } from "../services/assessmentRelease";
 import { refreshOrganizationCorsOrigins } from "../services/corsOrigins";
+import { isAllowedOrganizationWebsite } from "../services/websiteValidation";
 import { sendAssessmentReportToStudent } from "../services/email";
 import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCareerDnaReportData";
 import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCareerDnaExecutiveHtml";
@@ -42,6 +44,7 @@ import { buildLitmusReportData } from "../services/litmusReport/buildLitmusRepor
 import { generateLitmusReportPdf } from "../services/litmusReport/generateLitmusReport";
 import { buildCareerCompassReportData } from "../services/careerCompassReport/buildCareerCompassReportData";
 import { generateCareerCompassReportPdf } from "../services/careerCompassReport/generateCareerCompassReport";
+import { formatAQReportAsHTML, generateAQReportData } from "../lib/generateAQReport";
 import { renderHtmlReportPdf } from "../services/reportPdf/renderHtmlReportPdf";
 import { AuthRequest } from "../types/auth";
 
@@ -122,6 +125,39 @@ const getAssessmentCodeAliases = (code: string): string[] => {
   if (normalized === "LITMUS_TEST") return ["LITMUS_TEST", "LITMUS"];
   if (normalized === RESILIENCE_ASSESSMENT_CODE) return [RESILIENCE_ASSESSMENT_CODE, "ADVERSITY_TEST"];
   return [normalized];
+};
+
+const aggregateQuestionCounts = async (
+  assessments: Array<{ code: string }>,
+): Promise<Map<string, number>> => {
+  const aliasToCanonical = new Map<string, string>();
+  for (const assessment of assessments) {
+    const canonical = normalizeAssessmentCode(assessment.code);
+    for (const alias of getAssessmentCodeAliases(assessment.code)) {
+      aliasToCanonical.set(alias, canonical);
+    }
+  }
+
+  const grouped = await Question.aggregate<{ _id: string; count: number }>([
+    {
+      $match: {
+        assessmentCode: { $in: [...aliasToCanonical.keys()] },
+        isActive: true,
+      },
+    },
+    { $group: { _id: "$assessmentCode", count: { $sum: 1 } } },
+  ]);
+
+  const counts = new Map<string, number>();
+  for (const row of grouped) {
+    const canonical = aliasToCanonical.get(row._id);
+    if (!canonical) {
+      continue;
+    }
+    counts.set(canonical, (counts.get(canonical) || 0) + row.count);
+  }
+
+  return counts;
 };
 
 const CAREER_DNA_TEST_ORDER = [
@@ -444,29 +480,24 @@ export const listAssessments = async (_req: AuthRequest, res: Response): Promise
     assessments.map((assessment) => assessment.toObject() as unknown as AssessmentAdminListItem)
   );
 
-  const assessmentsWithCounts = await Promise.all(
-    dedupedAssessments.map(async (assessment) => {
-      const count = await Question.countDocuments({
-        assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
-        isActive: true,
-      });
-      const release = buildAssessmentReleaseMeta(assessment.releaseDate);
-      return {
-        _id: assessment._id,
-        code: assessment.code,
-        name: assessment.name,
-        category: assessment.category,
-        basePrice: assessment.basePrice,
-        gstEnabled: assessment.gstEnabled,
-        gstPercentage: assessment.gstPercentage,
-        currency: assessment.currency,
-        questionBankStatus: assessment.questionBankStatus,
-        active: assessment.active,
-        questionCount: count,
-        ...release,
-      };
-    })
-  );
+  const questionCounts = await aggregateQuestionCounts(dedupedAssessments);
+  const assessmentsWithCounts = dedupedAssessments.map((assessment) => {
+    const release = buildAssessmentReleaseMeta(assessment.releaseDate);
+    return {
+      _id: assessment._id,
+      code: assessment.code,
+      name: assessment.name,
+      category: assessment.category,
+      basePrice: assessment.basePrice,
+      gstEnabled: assessment.gstEnabled,
+      gstPercentage: assessment.gstPercentage,
+      currency: assessment.currency,
+      questionBankStatus: assessment.questionBankStatus,
+      active: assessment.active,
+      questionCount: questionCounts.get(normalizeAssessmentCode(assessment.code)) || 0,
+      ...release,
+    };
+  });
 
   res.json({ assessments: assessmentsWithCounts });
 };
@@ -553,13 +584,14 @@ export const getWhitelabelPortalByHost = async (req: AuthRequest, res: Response)
     return;
   }
 
-  const organizations = await Organization.find({
+  const escapedHost = normalizedHost.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const organization = await Organization.findOne({
     isActive: true,
     type: "WHITELABEL",
-    website: { $exists: true, $ne: null },
+    website: {
+      $regex: new RegExp(`^(https?://)?(www\\.)?${escapedHost}(/|$)`, "i"),
+    },
   });
-
-  const organization = organizations.find((item) => normalizeHostName(item.website) === normalizedHost);
 
   if (!organization) {
     res.status(404).json({ message: "Whitelabel organization not found for this host" });
@@ -1558,6 +1590,88 @@ const getRazorpayClient = () => {
   return new Razorpay({ key_id: keyId, key_secret: keySecret });
 };
 
+const verifyRazorpaySignature = (expected: string, actual: string): boolean => {
+  const expectedBuffer = Buffer.from(expected);
+  const actualBuffer = Buffer.from(actual);
+  if (expectedBuffer.length !== actualBuffer.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+};
+
+const reserveCouponsForPaymentOrder = async (args: {
+  pricing: AssessmentPricing;
+  organizationId: mongoose.Types.ObjectId | string;
+  userId: mongoose.Types.ObjectId | string;
+  paymentSessionId: mongoose.Types.ObjectId | string;
+}): Promise<void> => {
+  const { pricing, organizationId, userId, paymentSessionId } = args;
+  const organizationScope = getReferenceId(organizationId);
+  const userScope = getReferenceId(userId);
+  const couponCode = String(pricing.couponCode || "").trim().toUpperCase();
+
+  if (!couponCode || !organizationScope || !userScope) {
+    return;
+  }
+
+  const canonicalCode = pricing.assessment.code;
+  const config = await OrganizationCouponConfig.findOne({
+    organization: organizationScope,
+    assessmentCode: canonicalCode,
+    isActive: true,
+  });
+
+  const orgCoupon = config ? parseOrgSequentialCoupon(couponCode, config) : null;
+  if (orgCoupon && config) {
+    const conflict = await OrganizationCouponUsage.findOne({
+      organization: organizationScope,
+      assessmentCode: canonicalCode,
+      couponCode,
+    });
+
+    if (conflict && String(conflict.user) !== userScope) {
+      throw new Error("This coupon has already been used.");
+    }
+
+    if (!conflict) {
+      await OrganizationCouponUsage.create({
+        config: config._id,
+        organization: organizationScope,
+        user: userScope,
+        assessmentCode: canonicalCode,
+        couponCode,
+        sequence: orgCoupon.sequence,
+        usedAt: new Date(),
+      });
+    }
+    return;
+  }
+
+  const coupon = await Coupon.findOne({ code: couponCode, isActive: true });
+  if (!coupon) {
+    return;
+  }
+
+  const existingUsage = await GlobalCouponUsage.findOne({
+    couponCode,
+    user: userScope,
+    assessmentCode: canonicalCode,
+  });
+
+  if (existingUsage) {
+    throw new Error("You have already used this coupon for this assessment.");
+  }
+
+  await GlobalCouponUsage.create({
+    coupon: coupon._id,
+    couponCode,
+    user: userScope,
+    organization: organizationScope,
+    assessmentCode: canonicalCode,
+    paymentSession: paymentSessionId,
+  });
+};
+
 const REVIEWER_PAYMENT_AMOUNT = Math.max(1, Number(process.env.REVIEWER_PAYMENT_AMOUNT_INR || 1));
 const REVIEWER_PAYMENT_CURRENCY = (process.env.REVIEWER_PAYMENT_CURRENCY || "INR").toUpperCase();
 
@@ -1643,7 +1757,7 @@ export const verifyReviewerPayment = async (req: AuthRequest, res: Response): Pr
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
-    if (expected !== razorpay_signature) {
+    if (!verifyRazorpaySignature(expected, razorpay_signature)) {
       await ReviewerPayment.findOneAndUpdate(
         { razorpayOrderId: razorpay_order_id, user: req.user._id },
         { status: "FAILED" },
@@ -1729,6 +1843,17 @@ const computeAssessmentPricing = async (args: {
         throw new Error("Coupon has expired");
       }
 
+      if (organizationId && userId) {
+        const priorUsage = await GlobalCouponUsage.findOne({
+          couponCode: couponInput,
+          user: userId,
+          assessmentCode: canonicalCode,
+        });
+        if (priorUsage) {
+          throw new Error("You have already used this coupon for this assessment.");
+        }
+      }
+
       const applicableSet = new Set((coupon.applicableAssessmentCodes || []).map((code) => normalizeAssessmentCode(code)));
       const isApplicable = applicableSet.has(canonicalCode) || aliases.some((alias) => applicableSet.has(alias));
       if (!isApplicable) {
@@ -1794,9 +1919,9 @@ const computeAssessmentPricing = async (args: {
   }
 
   const gstPercentage = Math.max(0, Math.min(100, Number(assessment.gstPercentage ?? 18)));
-  const gstAmount = assessment.gstEnabled ? basePrice * (gstPercentage / 100) : 0;
-  const priceWithGst = basePrice + gstAmount;
-  const rawFinalAmount = Math.max(priceWithGst - discountAmount, 0);
+  const discountedBase = Math.max(basePrice - discountAmount, 0);
+  const gstAmount = assessment.gstEnabled ? discountedBase * (gstPercentage / 100) : 0;
+  const rawFinalAmount = discountedBase + gstAmount;
   const finalAmount = Math.round(rawFinalAmount);
 
   return {
@@ -2276,20 +2401,21 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
       }
     }
 
+    const questionCounts = await aggregateQuestionCounts(dedupedAssessments);
     const assessmentsWithCounts = await Promise.all(
       dedupedAssessments.map(async (assessment) => {
-        const questionCount = await Question.countDocuments({
-          assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
-          ...(isAcademicCareerAssessmentCode(assessment.code)
-            ? { category: getAcademicCareerGradeCategory(req.user?.grade) }
-            : {}),
-          isActive: true,
-        });
+        const questionCount = isAcademicCareerAssessmentCode(assessment.code)
+          ? await Question.countDocuments({
+            assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
+            category: getAcademicCareerGradeCategory(req.user?.grade),
+            isActive: true,
+          })
+          : questionCounts.get(normalizeAssessmentCode(assessment.code)) || 0;
         return {
           ...assessment,
           questionCount,
         };
-      })
+      }),
     );
 
     res.json({
@@ -2506,6 +2632,18 @@ export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res:
       expiresAt: new Date(Date.now() + 30 * 60 * 1000),
     });
 
+    try {
+      await reserveCouponsForPaymentOrder({
+        pricing,
+        organizationId,
+        userId,
+        paymentSessionId: paymentSession._id,
+      });
+    } catch (reserveError) {
+      await AssessmentPaymentSession.deleteOne({ _id: paymentSession._id });
+      throw reserveError;
+    }
+
     if (pricing.finalAmount <= 0) {
       const invoice = await Invoice.create({
         invoiceNumber: await generateInvoiceNumber(organizationId),
@@ -2641,11 +2779,38 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
     .digest("hex");
 
-  if (expected !== razorpay_signature || razorpay_order_id !== session.razorpayOrderId) {
+  if (
+    !verifyRazorpaySignature(expected, razorpay_signature)
+    || razorpay_order_id !== session.razorpayOrderId
+  ) {
     session.status = "FAILED";
     await session.save();
     res.status(400).json({ message: "Payment verification failed" });
     return;
+  }
+
+  const razorpay = getRazorpayClient();
+  if (razorpay) {
+    try {
+      const payment = await razorpay.payments.fetch(razorpay_payment_id);
+      const expectedAmount = Math.round(Number(session.finalAmount || 0) * 100);
+      const paidAmount = Number(payment.amount || 0);
+      const paymentStatus = String(payment.status || "").toLowerCase();
+      if (
+        String(payment.order_id || "") !== session.razorpayOrderId
+        || paidAmount !== expectedAmount
+        || (paymentStatus !== "captured" && paymentStatus !== "authorized")
+      ) {
+        session.status = "FAILED";
+        await session.save();
+        res.status(400).json({ message: "Payment amount or status verification failed" });
+        return;
+      }
+    } catch (paymentFetchError) {
+      console.error("verifyStudentAssessmentPayment: Razorpay fetch failed", paymentFetchError);
+      res.status(502).json({ message: "Unable to verify payment with Razorpay" });
+      return;
+    }
   }
 
   const claimedSession = await AssessmentPaymentSession.findOneAndUpdate(
@@ -2669,24 +2834,37 @@ export const verifyStudentAssessmentPayment = async (req: AuthRequest, res: Resp
     return;
   }
 
-  const invoice = await Invoice.create({
-    invoiceNumber: await generateInvoiceNumber(req.user!.organization as mongoose.Types.ObjectId | string),
-    user: req.user!._id,
-    organization: req.user!.organization,
-    assessmentCode: claimedSession.assessmentCode,
-    amount: claimedSession.amount,
-    discountAmount: claimedSession.discountAmount,
-    gstAmount: claimedSession.gstAmount,
-    finalAmount: claimedSession.finalAmount,
-    currency: claimedSession.currency,
-    couponCode: claimedSession.couponCode,
-    paymentMethod: "RAZORPAY",
-    paymentReference: razorpay_payment_id,
-    status: "PAID",
-  });
+  try {
+    const invoice = await Invoice.create({
+      invoiceNumber: await generateInvoiceNumber(req.user!.organization as mongoose.Types.ObjectId | string),
+      user: req.user!._id,
+      organization: req.user!.organization,
+      assessmentCode: claimedSession.assessmentCode,
+      amount: claimedSession.amount,
+      discountAmount: claimedSession.discountAmount,
+      gstAmount: claimedSession.gstAmount,
+      finalAmount: claimedSession.finalAmount,
+      currency: claimedSession.currency,
+      couponCode: claimedSession.couponCode,
+      paymentMethod: "RAZORPAY",
+      paymentReference: razorpay_payment_id,
+      status: "PAID",
+    });
 
-  claimedSession.invoice = invoice._id;
-  await claimedSession.save();
+    claimedSession.invoice = invoice._id;
+    await claimedSession.save();
+  } catch (invoiceError) {
+    await AssessmentPaymentSession.updateOne(
+      { _id: claimedSession._id, status: "PAID" },
+      {
+        $set: { status: "CREATED" },
+        $unset: { razorpayPaymentId: "", razorpaySignature: "" },
+      },
+    );
+    console.error("verifyStudentAssessmentPayment: invoice creation failed", invoiceError);
+    res.status(500).json({ message: "Payment verified but invoice creation failed. Please contact support." });
+    return;
+  }
 
   res.json({ message: "Payment verified", paymentSessionId: String(claimedSession._id) });
 };
@@ -2776,13 +2954,20 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
           return acc;
         }, new Map<string, number>());
 
+        const hasSavedAnswers = inProgressAttempt.questions.some(
+          (question) => question.answer !== undefined && question.answer !== "",
+        );
         const hasDistributionMismatch =
           expectedCategoryCounts.size !== currentCategoryCounts.size
           || Array.from(expectedCategoryCounts.entries()).some(([category, count]) => (
             (currentCategoryCounts.get(category) || 0) !== count
           ));
 
-        if (inProgressAttempt.totalQuestions !== expectedCareerDnaQuestionCount || hasDistributionMismatch) {
+        if (
+          !hasSavedAnswers
+          && inProgressAttempt.answeredCount === 0
+          && (inProgressAttempt.totalQuestions !== expectedCareerDnaQuestionCount || hasDistributionMismatch)
+        ) {
           orderedQuestions = sampledCareerDnaQuestions;
         }
       }
@@ -2861,14 +3046,19 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     ? buildCareerDnaQuestionSetForAttempt(attemptQuestions)
     : attemptQuestions;
 
-  const paidSession = await AssessmentPaymentSession.findOne({
-    _id: paymentSessionId,
-    user: userId,
-    organization: organizationId,
-    assessmentCode: canonicalCode,
-    status: "PAID",
-    expiresAt: { $gte: new Date() },
-  });
+  const paidSession = await AssessmentPaymentSession.findOneAndUpdate(
+    {
+      _id: paymentSessionId,
+      user: userId,
+      organization: organizationId,
+      assessmentCode: canonicalCode,
+      status: "PAID",
+      expiresAt: { $gte: new Date() },
+      $or: [{ attempt: { $exists: false } }, { attempt: null }],
+    },
+    { $set: { status: "CONSUMING" } },
+    { new: true },
+  );
 
   if (!paidSession) {
     res.status(402).json({
@@ -2890,23 +3080,36 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     allocatedCouponCode = allocation.couponCode;
     allocatedConfigId = allocation.configId;
   } catch (error) {
+    await AssessmentPaymentSession.updateOne(
+      { _id: paidSession._id, status: "CONSUMING" },
+      { $set: { status: "PAID" } },
+    );
     res.status(409).json({
       message: error instanceof Error ? error.message : "Unable to allocate coupon",
     });
     return;
   }
 
-  const createdAttempt = await StudentAssessmentAttempt.create({
-    user: userId,
-    organization: organizationId,
-    assessmentCode: canonicalCode,
-    assessmentName: getAssessmentDisplayName(canonicalCode, assessment.name),
-    status: "IN_PROGRESS",
-    questions: selectedAttemptQuestions,
-    answeredCount: 0,
-    totalQuestions: selectedAttemptQuestions.length,
-    startedAt: new Date(),
-  });
+  let createdAttempt: InstanceType<typeof StudentAssessmentAttempt>;
+  try {
+    createdAttempt = await StudentAssessmentAttempt.create({
+      user: userId,
+      organization: organizationId,
+      assessmentCode: canonicalCode,
+      assessmentName: getAssessmentDisplayName(canonicalCode, assessment.name),
+      status: "IN_PROGRESS",
+      questions: selectedAttemptQuestions,
+      answeredCount: 0,
+      totalQuestions: selectedAttemptQuestions.length,
+      startedAt: new Date(),
+    });
+  } catch (attemptError) {
+    await AssessmentPaymentSession.updateOne(
+      { _id: paidSession._id, status: "CONSUMING" },
+      { $set: { status: "PAID" } },
+    );
+    throw attemptError;
+  }
 
   if (allocatedCouponCode && allocatedConfigId) {
     await OrganizationCouponUsage.updateOne(
@@ -2916,13 +3119,21 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
         assessmentCode: canonicalCode,
         couponCode: allocatedCouponCode,
       },
-      { $set: { attempt: createdAttempt._id } }
+      { $set: { attempt: createdAttempt._id } },
     );
   }
 
-  paidSession.status = "CONSUMED";
-  paidSession.attempt = createdAttempt._id;
-  await paidSession.save();
+  const consumedSession = await AssessmentPaymentSession.findOneAndUpdate(
+    { _id: paidSession._id, status: "CONSUMING" },
+    { $set: { status: "CONSUMED", attempt: createdAttempt._id } },
+    { new: true },
+  );
+
+  if (!consumedSession) {
+    await StudentAssessmentAttempt.deleteOne({ _id: createdAttempt._id });
+    res.status(409).json({ message: "Payment session was already used to start this assessment." });
+    return;
+  }
 
   res.status(201).json({
     attempt: {
@@ -2973,30 +3184,23 @@ export const getStudentAttempt = async (req: AuthRequest, res: Response): Promis
     ? hydratedQuestions
     : await orderQuestionsByDatabaseInsertion(hydratedQuestions);
 
-  const questionsReordered = orderedQuestions.some((question, index) => (
-    String(question.questionId) !== String(attempt.questions[index]?.questionId)
-  ));
-
-  const shouldNormalizeAttemptMetadata =
-    attempt.assessmentCode !== canonicalCode
-    || attempt.assessmentName !== getAssessmentDisplayName(canonicalCode, attempt.assessmentName);
+  const displayName = getAssessmentDisplayName(canonicalCode, attempt.assessmentName);
 
   if (
-    hydratedQuestions.some((question, index) => question.options !== attempt.questions[index].options)
-    || questionsReordered
-    || shouldNormalizeAttemptMetadata
+    attempt.assessmentCode !== canonicalCode
+    || attempt.assessmentName !== displayName
   ) {
-    attempt.questions = orderedQuestions as typeof attempt.questions;
-    attempt.assessmentCode = canonicalCode;
-    attempt.assessmentName = getAssessmentDisplayName(canonicalCode, attempt.assessmentName);
-    await attempt.save();
+    await StudentAssessmentAttempt.updateOne(
+      { _id: attempt._id },
+      { $set: { assessmentCode: canonicalCode, assessmentName: displayName } },
+    );
   }
 
   res.json({
     attempt: {
       id: attempt._id,
       assessmentCode: canonicalCode,
-      assessmentName: getAssessmentDisplayName(canonicalCode, attempt.assessmentName),
+      assessmentName: displayName,
       status: attempt.status,
       questions: orderedQuestions,
       answeredCount: attempt.answeredCount,
@@ -3045,14 +3249,29 @@ export const saveStudentAttemptAnswers = async (req: AuthRequest, res: Response)
     return;
   }
 
+  const validQuestionIds = new Set(attempt.questions.map((question) => String(question.questionId)));
   const answerMap = new Map<string, string>();
+  const invalidQuestionIds: string[] = [];
+
   for (const item of answers) {
     const questionId = item.questionId?.trim();
     const answerValue = item.answer !== undefined && item.answer !== null ? String(item.answer).trim() : "";
     if (!questionId || !answerValue) {
       continue;
     }
+    if (!validQuestionIds.has(questionId)) {
+      invalidQuestionIds.push(questionId);
+      continue;
+    }
     answerMap.set(questionId, answerValue);
+  }
+
+  if (invalidQuestionIds.length > 0) {
+    res.status(400).json({
+      message: "One or more answers reference invalid questions for this attempt.",
+      invalidQuestionIds,
+    });
+    return;
   }
 
   attempt.questions = attempt.questions.map((question) => {
@@ -3196,7 +3415,8 @@ const supportsServerEmailReportPdf = (assessmentCode: string): boolean => {
     || isLitmusAssessmentCode(code)
     || code === "CAREER_DNA"
     || isMetacognitionAssessmentCode(code)
-    || isClearAssessmentCode(code);
+    || isClearAssessmentCode(code)
+    || code === RESILIENCE_ASSESSMENT_CODE;
 };
 
 const buildAttemptEmailReportPdf = async (
@@ -3249,6 +3469,22 @@ const buildAttemptEmailReportPdf = async (
     return {
       buffer,
       fileName: `CLEAR_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  if (code === RESILIENCE_ASSESSMENT_CODE) {
+    const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
+    const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+    const reportData = await generateAQReportData(
+      attempt,
+      user?.firstName || "Student",
+      user?.lastName || "",
+    );
+    const html = formatAQReportAsHTML(reportData);
+    const buffer = await renderHtmlReportPdf(html);
+    return {
+      buffer,
+      fileName: `RQ_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
     };
   }
 
@@ -3440,7 +3676,14 @@ export const updateOrganizationProfile = async (req: AuthRequest, res: Response)
     }
 
     if (profile.website !== undefined) {
-      updateData.website = profile.website?.trim() || undefined;
+      const nextWebsite = profile.website?.trim() || "";
+      if (nextWebsite && !isAllowedOrganizationWebsite(nextWebsite)) {
+        res.status(400).json({
+          message: "Website must be a valid subdomain of the platform domain or localhost for testing.",
+        });
+        return;
+      }
+      updateData.website = nextWebsite || undefined;
     }
 
     if (profile.contactEmail !== undefined) {

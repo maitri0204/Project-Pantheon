@@ -35,7 +35,11 @@ export default function WhitelabelPortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PortalResponse | null>(null);
-  const auth = getStoredAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const resolvedSlug = params?.slug;
@@ -79,6 +83,7 @@ export default function WhitelabelPortalPage() {
   }
 
   const { organization, assessments, canAccessAssessments, message } = data;
+  const auth = mounted ? getStoredAuth() : null;
   const isOrgAdminForPortal = auth?.user.role === "ORG_ADMIN" && auth.orgSlug === organization.slug;
   const isLearnerForPortal =
     (auth?.user.role === "STUDENT" || auth?.user.role === "PARENT") &&

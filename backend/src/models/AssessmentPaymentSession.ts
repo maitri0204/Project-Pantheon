@@ -10,7 +10,7 @@ export interface IAssessmentPaymentSession extends Document {
   finalAmount: number;
   gstAmount: number;
   currency: string;
-  status: "CREATED" | "PAID" | "CONSUMED" | "FAILED";
+  status: "CREATED" | "PAID" | "CONSUMING" | "CONSUMED" | "FAILED";
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   razorpaySignature?: string;
@@ -32,7 +32,7 @@ const assessmentPaymentSessionSchema = new Schema<IAssessmentPaymentSession>(
     finalAmount: { type: Number, required: true, min: 0 },
     gstAmount: { type: Number, required: true, min: 0, default: 0 },
     currency: { type: String, default: "INR" },
-    status: { type: String, enum: ["CREATED", "PAID", "CONSUMED", "FAILED"], default: "CREATED", index: true },
+    status: { type: String, enum: ["CREATED", "PAID", "CONSUMING", "CONSUMED", "FAILED"], default: "CREATED", index: true },
     razorpayOrderId: { type: String, default: undefined, index: true },
     razorpayPaymentId: { type: String, default: undefined },
     razorpaySignature: { type: String, default: undefined },

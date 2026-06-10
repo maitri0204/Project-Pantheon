@@ -26,6 +26,7 @@ import StudentDetailView from "@/components/dashboard/StudentDetailView";
 import ParentDetailView from "@/components/dashboard/ParentDetailView";
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
 import AssessmentAttemptHistoryView from "@/components/dashboard/AssessmentAttemptHistoryView";
+import LoginPageContent from "@/components/auth/LoginPageContent";
 import { buildOrgReportPath, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 
 type CatchAllContent = {
@@ -198,11 +199,7 @@ export default function WhitelabelCatchAllPage() {
   }
 
   if (rest[0] === "login") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-      </div>
-    );
+    return <LoginPageContent forcedOrganizationSlug={slug} />;
   }
 
   if (!content) {

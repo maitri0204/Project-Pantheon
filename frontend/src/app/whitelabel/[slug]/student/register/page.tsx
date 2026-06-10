@@ -84,6 +84,9 @@ export default function StudentRegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
+  const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
 
   const [form, setForm] = useState<FormState>({
     firstName:"", middleName:"", lastName:"", role:"STUDENT", gender:"", email:"",
@@ -97,12 +100,24 @@ export default function StudentRegisterPage() {
   const states = form.country ? State.getStatesOfCountry(form.country) : [];
   const cities = form.country && form.state ? City.getCitiesOfState(form.country, form.state) : [];
 
+  const loadCaptcha = async () => {
+    try {
+      const response = await apiRequest<{ data: { token: string; question: string } }>("/auth/captcha");
+      setCaptchaQuestion(response.data.question);
+      setCaptchaToken(response.data.token);
+      setCaptchaAnswer("");
+    } catch {
+      setError("Unable to load security check. Please refresh and try again.");
+    }
+  };
+
   useEffect(() => {
     if (!slug) return;
     apiRequest<PortalPublic>(`/platform/whitelabel/${slug}`)
       .then((res) => { setPortal(res); })
       .catch(() => {})
       .finally(() => setPortalLoading(false));
+    void loadCaptcha();
   }, [slug]);
 
   useEffect(() => {
@@ -145,6 +160,8 @@ export default function StudentRegisterPage() {
         ...form,
         grade: isParentRegistration ? undefined : resolvedGrade || undefined,
         division: isParentRegistration ? undefined : form.division || undefined,
+        captchaToken,
+        captchaAnswer,
       };
 
       await apiRequest("/auth/student-register", {
@@ -152,7 +169,10 @@ export default function StudentRegisterPage() {
         body: JSON.stringify(payload),
       });
       setRegisteredEmail(form.email); setStep("otp");
-    } catch (err) { setError(err instanceof Error ? err.message : "Registration failed"); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+      void loadCaptcha();
+    }
     finally { setSubmitting(false); }
   };
 
@@ -426,7 +446,19 @@ export default function StudentRegisterPage() {
                   </FieldWrap>
                 </div>
 
-                <button type="submit" disabled={submitting} className="mt-2 w-full rounded-2xl py-4 text-base font-black text-white shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl disabled:opacity-60" style={{ background: `linear-gradient(135deg,${primary},${accent})` }}>
+                <FieldWrap label={`Security check: ${captchaQuestion || "Loading..."}`} required>
+                  <input
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value)}
+                    required
+                    inputMode="numeric"
+                    placeholder="Answer"
+                    className={inputCls}
+                    style={ringStyle}
+                  />
+                </FieldWrap>
+
+                <button type="submit" disabled={submitting || !captchaToken} className="mt-2 w-full rounded-2xl py-4 text-base font-black text-white shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-2xl disabled:opacity-60" style={{ background: `linear-gradient(135deg,${primary},${accent})` }}>
                   {submitting ? "Submitting…" : "Register & Get OTP →"}
                 </button>
 

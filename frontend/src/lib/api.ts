@@ -1,5 +1,5 @@
 const normalizeApiUrl = (value?: string): string => {
-  const fallback = "http://localhost:5000/api";
+  const fallback = "http://localhost:5014/api";
   const raw = (value || fallback).trim();
 
   if (!raw) {
@@ -116,11 +116,15 @@ export const apiRequest = async <T>(
   }
 
   if (!response.ok) {
+    const authFailureMessage = typeof data.message === "string" ? data.message : "";
     const shouldClearAuth =
       response.status === 401 &&
       typeof window !== "undefined" &&
       Boolean(token) &&
-      !path.includes("/email-report");
+      !path.includes("/email-report") &&
+      (authFailureMessage === "Invalid or expired token"
+        || authFailureMessage === "Invalid session"
+        || authFailureMessage === "Authentication required");
     if (shouldClearAuth) {
       clearStoredAuth();
     }

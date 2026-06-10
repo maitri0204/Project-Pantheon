@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 
 import {
   getStudentAttempt,
@@ -55,12 +56,20 @@ import { optionalAuth, requireAuth, requireRoles } from "../middleware/auth";
 
 const router = Router();
 
+const siteVisitLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many site visit events." },
+});
+
 router.get("/overview", getPlatformOverview);
-router.post("/site-visits", recordSiteVisit);
+router.post("/site-visits", siteVisitLimit, recordSiteVisit);
 router.get("/assessments", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listAssessments);
 router.get("/whitelabel/:slug", optionalAuth, getWhitelabelPortal);
 router.get("/whitelabel-by-host", optionalAuth, getWhitelabelPortalByHost);
-router.get("/dashboard", requireAuth, getDashboard);
+router.get("/dashboard", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getDashboard);
 router.get(
   "/assessments/:code/admin-dashboard",
   requireAuth,

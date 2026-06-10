@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 type User = {
   _id: string;
@@ -48,7 +49,7 @@ export default function ParentsPage() {
   const auth = useMemo(() => getStoredAuth(), []);
 
   useEffect(() => {
-    if (!auth) { router.replace("/login"); return; }
+    if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
     apiRequest<ParentsResponse>("/platform/parents", {}, auth.token)
       .then((res) => {
@@ -58,7 +59,7 @@ export default function ParentsPage() {
       .catch((err) => {
         const errorMsg = err instanceof Error ? err.message : "Failed to load parents";
         if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
-          router.replace("/login");
+          router.replace(getDashboardLoginPath());
         } else {
           setError(errorMsg);
         }

@@ -7,6 +7,7 @@ import User, { IUser } from "../models/User";
 import { PLATFORM_ORG_SLUG, REVIEWER_EMAIL, REVIEWER_NAME } from "../constants/platform";
 import { generateCaptcha, verifyCaptcha } from "../services/captcha";
 import { sendOtpEmail, sendRegistrationConfirmationEmail } from "../services/email";
+import { isAllowedOrganizationWebsite } from "../services/websiteValidation";
 import { compareOtp, generateOtp, getOtpExpiry, hashOtp, isOtpExpired } from "../services/otp";
 import { signToken } from "../services/token";
 import { AuthRequest } from "../types/auth";
@@ -30,7 +31,7 @@ const formatUser = (user: IUser) => ({
   phoneCode: user.phoneCode,
 });
 
-const validateCaptchaPayload = (captchaToken?: string, captchaAnswer?: string): boolean => {
+const validateCaptchaPayload = async (captchaToken?: string, captchaAnswer?: string): Promise<boolean> => {
   if (!captchaToken || typeof captchaAnswer !== "string") {
     return false;
   }
@@ -43,8 +44,10 @@ const validateCaptchaPayload = (captchaToken?: string, captchaAnswer?: string): 
   return verifyCaptcha(captchaToken, numericAnswer);
 };
 
-export const getCaptchaChallenge = (_req: Request, res: Response): void => {
-  res.json({ data: generateCaptcha() });
+const MAX_LOGIN_OTP_ATTEMPTS = 5;
+
+export const getCaptchaChallenge = async (_req: Request, res: Response): Promise<void> => {
+  res.json({ data: await generateCaptcha() });
 };
 
 const slugify = (input: string): string =>
@@ -349,6 +352,11 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       return;
     }
 
+    if (registration.status === "COMPLETED") {
+      res.status(409).json({ message: "Organization registration is already complete. Please log in." });
+      return;
+    }
+
     if (await User.findOne({ email: normalizedEmail })) {
       res.status(409).json({ message: "Email already exists" });
       return;
@@ -401,6 +409,14 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
 
     if (!body.signatureUrl?.trim()) {
       res.status(400).json({ message: "Signature is required" });
+      return;
+    }
+
+    const websiteValue = body.website?.trim() || "";
+    if (websiteValue && !isAllowedOrganizationWebsite(websiteValue)) {
+      res.status(400).json({
+        message: "Website must be a valid subdomain of the platform domain or localhost for testing.",
+      });
       return;
     }
 
@@ -545,7 +561,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (!validateCaptchaPayload(captchaToken, captchaAnswer)) {
+    if (!(await validateCaptchaPayload(captchaToken, captchaAnswer))) {
       res.status(400).json({ message: "Invalid captcha" });
       return;
     }
@@ -668,7 +684,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (!validateCaptchaPayload(captchaToken, captchaAnswer)) {
+    if (!(await validateCaptchaPayload(captchaToken, captchaAnswer))) {
       res.status(400).json({ message: "Invalid captcha" });
       return;
     }
@@ -684,8 +700,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const isReviewerLogin = user.email === REVIEWER_EMAIL;
-
     if (!user.isVerified) {
       res.status(400).json({ message: "Account is not verified yet" });
       return;
@@ -699,18 +713,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
     if (!contextValidation.allowed) {
       res.status(contextValidation.status).json({ message: contextValidation.message });
-      return;
-    }
-
-    if (isReviewerLogin) {
-      user.firstName = user.firstName || REVIEWER_NAME;
-      user.otpHash = hashOtp("123456");
-      user.otpExpiresAt = getOtpExpiry(60 * 24);
-      user.otpPurpose = "LOGIN";
-      user.otpAttempts = 0;
-      await user.save();
-
-      res.json({ message: "Reviewer OTP fixed to 123456. Use it to continue.", email: user.email });
       return;
     }
 
@@ -759,31 +761,9 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const isReviewerLogin = user.email === REVIEWER_EMAIL;
-
     const contextValidation = validateWhitelabelLoginContext({ user, organizationSlug });
     if (!contextValidation.allowed) {
       res.status(contextValidation.status).json({ message: contextValidation.message });
-      return;
-    }
-
-    if (isReviewerLogin) {
-      if (otp.trim() !== "123456") {
-        res.status(400).json({ message: "Invalid OTP" });
-        return;
-      }
-
-      user.otpHash = undefined;
-      user.otpExpiresAt = undefined;
-      user.otpPurpose = null;
-      user.otpAttempts = 0;
-      user.lastLoginAt = new Date();
-      await user.save();
-
-      res.json({
-        token: signToken(user),
-        user: formatUser(user),
-      });
       return;
     }
 
@@ -794,6 +774,16 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
 
     if (!compareOtp(otp.trim(), user.otpHash)) {
       user.otpAttempts += 1;
+
+      if (user.otpAttempts >= MAX_LOGIN_OTP_ATTEMPTS) {
+        user.otpHash = undefined;
+        user.otpExpiresAt = undefined;
+        user.otpPurpose = null;
+        await user.save();
+        res.status(429).json({ message: "Too many invalid OTP attempts. Please request a new one." });
+        return;
+      }
+
       await user.save();
       res.status(400).json({ message: "Invalid OTP" });
       return;
@@ -858,7 +848,14 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
       state?: string;
       city?: string;
       role?: "STUDENT" | "PARENT";
+      captchaToken?: string;
+      captchaAnswer?: string;
     };
+
+    if (!(await validateCaptchaPayload(body.captchaToken, body.captchaAnswer))) {
+      res.status(400).json({ message: "Invalid captcha" });
+      return;
+    }
 
     const requestedRole = typeof body.role === "string" ? body.role.toUpperCase().trim() : "STUDENT";
     if (requestedRole !== "STUDENT" && requestedRole !== "PARENT") {

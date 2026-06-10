@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 type User = {
   _id: string;
@@ -51,11 +52,11 @@ export default function UsersPage() {
   const auth = useMemo(() => getStoredAuth(), []);
 
   useEffect(() => {
-    if (!auth) { router.replace("/login"); return; }
+    if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
     apiRequest<StudentsResponse>("/platform/students", {}, auth.token)
       .then((res) => setUsers(res.students))
-      .catch(() => router.replace("/login"))
+      .catch(() => router.replace(getDashboardLoginPath()))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -87,7 +88,7 @@ export default function UsersPage() {
   );
 
   const stats = useMemo(() => {
-    return filtered.reduce(
+    return users.reduce(
       (acc, user) => {
         acc.studentCount += 1;
         acc.testsCompleted += user.testsCompleted ?? user.testsTaken ?? 0;
@@ -96,7 +97,7 @@ export default function UsersPage() {
       },
       { studentCount: 0, testsCompleted: 0, testsPending: 0 }
     );
-  }, [filtered]);
+  }, [users]);
 
   const detailsBasePath = pathname || "/dashboard/users";
 

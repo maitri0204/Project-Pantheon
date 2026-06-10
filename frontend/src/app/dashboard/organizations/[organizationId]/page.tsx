@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 type Organization = {
   _id: string;
@@ -90,7 +91,7 @@ export default function OrganizationDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const load = async () => {
-    if (!auth) { router.replace("/login"); return; }
+    if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setLoading(true);
     try {
       const res = await apiRequest<OrganizationCouponDetailsResponse>(

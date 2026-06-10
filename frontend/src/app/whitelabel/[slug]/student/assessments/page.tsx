@@ -202,6 +202,7 @@ export default function StudentAssessmentsPage() {
   const [pricing, setPricing] = useState<AssessmentPricingResponse | null>(null);
   const [pricingLoading, setPricingLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [pricingError, setPricingError] = useState<string | null>(null);
 
   const sortedAssessments = useMemo(
     () => sortAssessmentsByAvailability(data.assessments),
@@ -267,6 +268,7 @@ export default function StudentAssessmentsPage() {
   const fetchPricing = async (code: string, enteredCoupon?: string) => {
     if (!auth?.token) return;
     setPricingLoading(true);
+    setPricingError(null);
     try {
       const query = enteredCoupon?.trim() ? `?couponCode=${encodeURIComponent(enteredCoupon.trim())}` : "";
       const response = await apiRequest<AssessmentPricingResponse>(
@@ -276,7 +278,8 @@ export default function StudentAssessmentsPage() {
       );
       setPricing(response);
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Unable to calculate price");
+      setPricing(null);
+      setPricingError(error instanceof Error ? error.message : "Unable to calculate price");
     } finally {
       setPricingLoading(false);
     }
@@ -286,6 +289,7 @@ export default function StudentAssessmentsPage() {
     setCheckoutAssessmentCode(code);
     setCouponCode("");
     setPricing(null);
+    setPricingError(null);
     await fetchPricing(code);
   };
 
@@ -607,6 +611,12 @@ export default function StudentAssessmentsPage() {
                 {pricingLoading ? "Applying..." : "Apply"}
               </button>
             </div>
+
+            {pricingError ? (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {pricingError}
+              </div>
+            ) : null}
 
             <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-slate-600">Base amount</span><span className="font-semibold">₹{(pricing?.assessment.basePrice ?? 0).toFixed(2)}</span></div>

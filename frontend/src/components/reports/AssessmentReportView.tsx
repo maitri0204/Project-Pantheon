@@ -721,6 +721,7 @@ export default function AssessmentReportView({
         "CAREER_DNA",
         "METACOGNITION_TEST",
         "JOHARI_WINDOW",
+        "RESILIENCE_TEST",
       ]);
       if (serverGeneratedEmailCodes.has(normalizedCode)) {
         await apiRequest(

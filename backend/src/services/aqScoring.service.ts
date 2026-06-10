@@ -100,7 +100,10 @@ export async function evaluateAQAnswers(attempt: IStudentAssessmentAttempt): Pro
 
     const qIdStr = q.questionId.toString();
     const dimension = dimensionMap[qIdStr];
-    const optionScore = scoringMap[qIdStr]?.[q.answer] ?? 1;
+    const optionScore = scoringMap[qIdStr]?.[q.answer];
+    if (optionScore === undefined) {
+      continue;
+    }
 
     if (dimension) {
       dimensionTotals[dimension] += optionScore;

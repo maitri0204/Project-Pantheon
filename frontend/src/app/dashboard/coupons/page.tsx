@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 const ASSESSMENTS = [
   { code: "CAREER_COMPASS", name: "Career Compass", color: "emerald" },
@@ -116,7 +117,7 @@ export default function CouponsPage() {
 
   async function load() {
     if (!auth) {
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
       return;
     }
 

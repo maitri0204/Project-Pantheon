@@ -302,7 +302,7 @@ export default function DashboardShell({
 
   const handleLogout = () => {
     clearStoredAuth();
-    router.replace("/");
+    router.replace(loginPath);
   };
 
   const isActive = (href: string, exact: boolean) => {

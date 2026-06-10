@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 type Organization = {
   _id: string;
@@ -42,7 +43,7 @@ export default function OrganizationsPage() {
   const auth = useMemo(() => getStoredAuth(), []);
 
   const load = async () => {
-    if (!auth) { router.replace("/login"); return; }
+    if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setLoading(true);
     try {
       const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
@@ -50,7 +51,7 @@ export default function OrganizationsPage() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn("OrganizationsPage: failed to load organizations", err);
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
     } finally {
       setLoading(false);
     }

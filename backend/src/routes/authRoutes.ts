@@ -37,7 +37,7 @@ const otpRequestLimit = rateLimit({
 router.get("/captcha", getCaptchaChallenge);
 router.post("/register/request-otp", otpRequestLimit, requestRegistrationOtp);
 router.post("/register/verify-otp", authAttemptLimit, verifyRegistrationOtp);
-router.post("/register/complete", completeOrganizationRegistration);
+router.post("/register/complete", authAttemptLimit, completeOrganizationRegistration);
 router.post("/signup", otpRequestLimit, signup);
 router.post("/signup/verify-otp", authAttemptLimit, verifySignupOtp);
 router.post("/login", authAttemptLimit, login);

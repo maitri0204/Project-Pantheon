@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Upload, Loader2 } from "lucide-react";
 import { apiRequest, getStoredAuth, setStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 type OrgProfile = {
   _id: string;
@@ -59,7 +60,7 @@ export default function OrganizationProfilePage() {
 
   useEffect(() => {
     if (!auth?.token || !user) {
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
       return;
     }
 

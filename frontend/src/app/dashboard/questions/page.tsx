@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 type Assessment = {
   _id: string;
@@ -201,7 +202,7 @@ export default function QuestionsPage() {
 
   useEffect(() => {
     if (!auth) {
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
       return;
     }
 
@@ -215,7 +216,7 @@ export default function QuestionsPage() {
       .catch((err) => {
         // eslint-disable-next-line no-console
         console.warn("QuestionsPage: failed to load assessments", err);
-        router.replace("/login");
+        router.replace(getDashboardLoginPath());
       })
       .finally(() => setLoadingAssessments(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps

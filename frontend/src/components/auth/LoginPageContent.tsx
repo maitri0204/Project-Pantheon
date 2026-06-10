@@ -108,7 +108,13 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         return;
       }
 
-      router.replace("/dashboard");
+      if (auth.user.role === "SUPERADMIN") {
+        router.replace("/dashboard");
+        return;
+      }
+
+      clearStoredAuth();
+      setError("Please sign in through your organization's portal link.");
     };
 
     void validateAndRedirect();
@@ -344,6 +350,11 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         router.push(`/whitelabel/${resolvedOrgSlug}/student/dashboard`);
         return;
       }
+      if (response.user.role === "SUPERADMIN") {
+        router.push("/dashboard");
+        return;
+      }
+
       if (portalOrganizationSlug) {
         router.push(
           response.user.role === "ORG_ADMIN"
@@ -352,9 +363,11 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
               ? `/whitelabel/${portalOrganizationSlug}/student/dashboard`
               : `/whitelabel/${portalOrganizationSlug}`
         );
-      } else {
-        router.push("/dashboard");
+        return;
       }
+
+      clearStoredAuth();
+      setError("Your account is not linked to a portal. Please use your organization's login link.");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Unable to verify OTP");
     } finally {

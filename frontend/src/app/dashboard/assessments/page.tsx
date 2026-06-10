@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 import { formatReleaseDateForInput } from "@/lib/assessmentRelease";
 
 type Assessment = {
@@ -63,7 +64,7 @@ export default function AssessmentsPage() {
   useEffect(() => {
     const a = getStoredAuth();
     if (!a) {
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
       return;
     }
 
@@ -73,7 +74,7 @@ export default function AssessmentsPage() {
   const load = async () => {
     const currentAuth = getStoredAuth();
     if (!currentAuth) {
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
       return;
     }
 
@@ -98,7 +99,7 @@ export default function AssessmentsPage() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn("AssessmentsPage: failed to load assessments", err);
-      router.replace("/login");
+      router.replace(getDashboardLoginPath());
     } finally {
       setLoading(false);
     }

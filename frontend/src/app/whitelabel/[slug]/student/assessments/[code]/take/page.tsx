@@ -33,16 +33,22 @@ type AttemptQuestion = {
   answer?: string;
 };
 
+type AttemptPayload = {
+  id: string;
+  assessmentCode: string;
+  assessmentName: string;
+  status: "IN_PROGRESS" | "COMPLETED";
+  questions: AttemptQuestion[];
+  answeredCount: number;
+  totalQuestions: number;
+};
+
 type StartAttemptResponse = {
-  attempt: {
-    id: string;
-    assessmentCode: string;
-    assessmentName: string;
-    status: "IN_PROGRESS" | "COMPLETED";
-    questions: AttemptQuestion[];
-    answeredCount: number;
-    totalQuestions: number;
-  };
+  attempt: AttemptPayload;
+};
+
+type GetAttemptResponse = {
+  attempt: AttemptPayload;
 };
 
 const CAREER_DNA_SECTION_META = [
@@ -164,6 +170,7 @@ export default function StudentTakeAssessmentPage() {
   const fallbackCodeFromPath = routeParts[5] || "";
   const code = normalizeAssessmentCode(params?.code || fallbackCodeFromRest || fallbackCodeFromPath || "");
   const paymentSessionId = searchParams?.get("paymentSessionId") || undefined;
+  const existingAttemptId = searchParams?.get("attemptId")?.trim() || "";
   const auth = useMemo(() => getStoredAuth(), []);
 
   const [loading, setLoading] = useState(true);
@@ -186,11 +193,19 @@ export default function StudentTakeAssessmentPage() {
       return;
     }
 
-    apiRequest<StartAttemptResponse>(
-      `/platform/student/assessments/${code}/start`,
-      { method: "POST", body: JSON.stringify({ paymentSessionId }) },
-      auth.token
-    )
+    const loadAttempt = existingAttemptId
+      ? apiRequest<GetAttemptResponse>(
+        `/platform/student/attempts/${existingAttemptId}`,
+        {},
+        auth.token,
+      )
+      : apiRequest<StartAttemptResponse>(
+        `/platform/student/assessments/${code}/start`,
+        { method: "POST", body: JSON.stringify({ paymentSessionId }) },
+        auth.token,
+      );
+
+    loadAttempt
       .then((response) => {
         const attempt = response.attempt;
         if (attempt.status === "COMPLETED") {
@@ -215,7 +230,7 @@ export default function StudentTakeAssessmentPage() {
         router.replace(`/whitelabel/${slug}/student/assessments`);
       })
       .finally(() => setLoading(false));
-  }, [auth?.token, code, paymentSessionId, router, slug]);
+  }, [auth?.token, code, existingAttemptId, paymentSessionId, router, slug]);
 
   // ── Fullscreen management ──────────────────────────────────────────────────
   const enterFullscreen = useCallback(async () => {
@@ -395,20 +410,14 @@ export default function StudentTakeAssessmentPage() {
         ]);
       }
 
-      if (code === "CAREER_DNA") {
-        router.replace(`/whitelabel/${slug}/student/dashboard`);
-        return;
-      }
-
       const submittedAttemptId = response?.attemptId || attemptId;
       router.replace(`/whitelabel/${slug}/student/assessments/${code}/result?attemptId=${submittedAttemptId}`);
     } catch (error) {
-      // On error, keep isSubmittingRef true to prevent retry attempts
       console.warn("handleSubmit: submission failed", error);
+      isSubmittingRef.current = false;
       alert(error instanceof Error ? error.message : "Submission failed");
     } finally {
       setSubmitting(false);
-      // Note: isSubmittingRef stays true to prevent double submissions even after error
     }
   };
 

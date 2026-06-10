@@ -1,23 +1,25 @@
 import crypto from "crypto";
 
+import CaptchaChallenge from "../models/CaptchaChallenge";
+
 type Challenge = {
   question: string;
   answer: number;
   expiresAt: number;
 };
 
-const store = new Map<string, Challenge>();
+const fallbackStore = new Map<string, Challenge>();
 
 setInterval(() => {
   const now = Date.now();
-  for (const [token, challenge] of store.entries()) {
+  for (const [token, challenge] of fallbackStore.entries()) {
     if (challenge.expiresAt <= now) {
-      store.delete(token);
+      fallbackStore.delete(token);
     }
   }
 }, 5 * 60 * 1000);
 
-export const generateCaptcha = (): { token: string; question: string } => {
+const buildChallenge = (): { question: string; answer: number } => {
   const operators = ["+", "-", "×"] as const;
   const operator = operators[Math.floor(Math.random() * operators.length)];
 
@@ -39,26 +41,48 @@ export const generateCaptcha = (): { token: string; question: string } => {
     answer = left * right;
   }
 
-  const token = crypto.randomBytes(16).toString("hex");
-  store.set(token, {
+  return {
     question: `${left} ${operator} ${right} = ?`,
     answer,
-    expiresAt: Date.now() + 5 * 60 * 1000,
-  });
-
-  return { token, question: `${left} ${operator} ${right} = ?` };
+  };
 };
 
-export const verifyCaptcha = (token: string, answer: number): boolean => {
-  const challenge = store.get(token);
-  if (!challenge) {
+export const generateCaptcha = async (): Promise<{ token: string; question: string }> => {
+  const { question, answer } = buildChallenge();
+  const token = crypto.randomBytes(16).toString("hex");
+
+  try {
+    await CaptchaChallenge.create({ token, answer });
+    return { token, question };
+  } catch {
+    fallbackStore.set(token, {
+      question,
+      answer,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    });
+    return { token, question };
+  }
+};
+
+export const verifyCaptcha = async (token: string, answer: number): Promise<boolean> => {
+  try {
+    const challenge = await CaptchaChallenge.findOneAndDelete({ token });
+    if (challenge) {
+      return challenge.answer === answer;
+    }
+  } catch {
+    // fall through to in-memory store
+  }
+
+  const fallback = fallbackStore.get(token);
+  if (!fallback) {
     return false;
   }
 
-  store.delete(token);
-  if (challenge.expiresAt <= Date.now()) {
+  fallbackStore.delete(token);
+  if (fallback.expiresAt <= Date.now()) {
     return false;
   }
 
-  return challenge.answer === answer;
+  return fallback.answer === answer;
 };

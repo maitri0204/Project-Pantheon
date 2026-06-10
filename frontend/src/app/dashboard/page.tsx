@@ -62,6 +62,7 @@ function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
 import OrgAdminHomeDashboard from "@/components/dashboard/OrgAdminHomeDashboard";
 import SuperAdminHomeDashboard from "@/components/dashboard/SuperAdminHomeDashboard";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 import { getTestDashboardBasePath, getTestDashboardMeta } from "@/lib/dashboard/testDashboard";
 
 type Stats = {
@@ -158,7 +159,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!auth) { router.replace("/login"); return; }
+    if (!auth) { router.replace(getDashboardLoginPath()); return; }
     if (auth.user.role === "ORG_ADMIN" && auth.orgSlug) {
       setOrgSlug(auth.orgSlug);
     }
@@ -169,11 +170,13 @@ export default function DashboardPage() {
         setAssessments(res.assessments);
         setOrganizations(res.organizations);
         setInvoices(res.invoices ?? []);
-        if (res.organizations?.length > 0) {
+        if (res.role === "ORG_ADMIN" && auth.orgSlug) {
+          setOrgSlug(auth.orgSlug);
+        } else if (res.role === "SUPERADMIN" && res.organizations?.length > 0) {
           setOrgSlug(res.organizations[0].slug);
         }
       })
-      .catch(() => router.replace("/login"))
+      .catch(() => router.replace(getDashboardLoginPath()))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

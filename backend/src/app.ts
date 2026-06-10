@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 import apiRoutes from "./routes";
+import { errorHandler } from "./middleware/errorHandler";
 import { isOrganizationWebsiteHostname } from "./services/corsOrigins";
 
 const app = express();
@@ -78,5 +79,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api", apiRoutes);
+app.use(errorHandler);
 
 export default app;

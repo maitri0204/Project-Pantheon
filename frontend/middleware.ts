@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const normalizeApiUrl = (value?: string): string => {
-  const fallback = "http://localhost:5000/api";
+  const fallback = "http://localhost:5014/api";
   const raw = (value || fallback).trim();
   if (!raw) return fallback;
   let normalized = raw.replace(/\/+$/, "");
@@ -12,11 +12,6 @@ const normalizeApiUrl = (value?: string): string => {
 };
 
 async function resolveWhitelabelSlug(hostname: string): Promise<string | null> {
-  const parts = hostname.split(".");
-  if (parts.length > 1 && parts[0] !== "www") {
-    return parts[0];
-  }
-
   const apiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
   try {
     const response = await fetch(
@@ -38,11 +33,8 @@ export async function middleware(request: NextRequest) {
   const hostname = host.split(":")[0];
   const pathname = request.nextUrl.pathname;
 
-  const corePaths = ["/login", "/register", "/dashboard", "/api"];
-  for (const p of corePaths) {
-    if (pathname === p || pathname.startsWith(p + "/")) {
-      return NextResponse.next();
-    }
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+    return NextResponse.next();
   }
 
   const exactMainHosts = ["localhost", "127.0.0.1", process.env.NEXT_PUBLIC_APP_HOST, "assessments.admitra.io"]
@@ -59,11 +51,14 @@ export async function middleware(request: NextRequest) {
     hostname === `www.${mainDomain}` ||
     hostname.endsWith(`.${mainDomain}`);
 
-  if (!isMainDomain) {
-    const slug = await resolveWhitelabelSlug(hostname);
-    if (slug) {
-      return NextResponse.rewrite(new URL(`/whitelabel/${slug}${pathname}`, request.url));
-    }
+  if (isMainDomain) {
+    return NextResponse.next();
+  }
+
+  const slug = await resolveWhitelabelSlug(hostname);
+  if (slug) {
+    const rewritePath = pathname === "/" ? "" : pathname;
+    return NextResponse.rewrite(new URL(`/whitelabel/${slug}${rewritePath}`, request.url));
   }
 
   return NextResponse.next();

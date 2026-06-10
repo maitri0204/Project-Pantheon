@@ -630,35 +630,9 @@ export default function AdversityQuotientAssessment() {
   const router = useRouter();
 
   useEffect(() => {
-    const initializeAssessment = async () => {
-      try {
-        const auth = getStoredAuth();
-        if (!auth) {
-          router.push("/login");
-          return;
-        }
-
-        const response = await apiRequest<{ attempt: AQAttempt }>(
-          "/platform/student/assessments/ADVERSITY_TEST/start",
-          {
-            method: "POST",
-            body: JSON.stringify({
-              assessmentCode: "ADVERSITY_TEST",
-            }),
-          },
-          auth.token
-        );
-
-        setAttempt(response.attempt);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to initialize assessment");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeAssessment();
-  }, [router]);
+    setLoading(false);
+    setError("This legacy assessment component has been retired. Please take the Resilience Quotient (RQ) assessment from your student portal.");
+  }, []);
 
   if (loading) {
     return (

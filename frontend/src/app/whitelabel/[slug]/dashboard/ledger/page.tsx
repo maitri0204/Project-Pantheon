@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { getDashboardLoginPath } from "@/lib/dashboardAuth";
 
 const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string }> = {
   CAREER_COMPASS: { name: "Career Compass", color: "text-emerald-700", bg: "bg-emerald-50" },
@@ -10,6 +12,9 @@ const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string 
   LITMUS_TEST: { name: "Litmus Test", color: "text-blue-700", bg: "bg-blue-50" },
   METACOGNITION: { name: "TEST", color: "text-rose-700", bg: "bg-rose-50" },
   METACOGNITION_TEST: { name: "TEST", color: "text-rose-700", bg: "bg-rose-50" },
+  RESILIENCE_TEST: { name: "RQ", color: "text-orange-700", bg: "bg-orange-50" },
+  STUDY_ABROAD: { name: "Study Abroad", color: "text-indigo-700", bg: "bg-indigo-50" },
+  ACADEMIC_CAREER: { name: "Academic Career", color: "text-teal-700", bg: "bg-teal-50" },
 };
 
 type InvoiceItem = {
@@ -69,6 +74,7 @@ function fmt(n: number) {
 }
 
 export default function OrgLedgerPage() {
+  const router = useRouter();
   const auth = useMemo(() => getStoredAuth(), []);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +82,11 @@ export default function OrgLedgerPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      router.replace(getDashboardLoginPath());
+      setLoading(false);
+      return;
+    }
 
     apiRequest<{ invoices: InvoiceItem[]; summary: Summary }>("/platform/organization/invoices", {}, auth.token)
       .then((res) => setInvoices(res.invoices))
