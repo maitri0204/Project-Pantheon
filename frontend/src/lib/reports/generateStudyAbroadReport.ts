@@ -14,6 +14,55 @@ import {
   type StudyAbroadPrintContext,
 } from "@/lib/studyAbroad/printReportData";
 
+const SA_COVER_IMAGE = "/study-abroad/cover.jpg";
+const SA_BACK_COVER_IMAGE = "/study-abroad/back-cover.jpg";
+
+async function waitForStudyAbroadReportPages(
+  mount: HTMLElement,
+  timeoutMs: number,
+): Promise<HTMLElement[]> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const pages = Array.from(mount.querySelectorAll<HTMLElement>("[data-report-page]")).sort(
+      (a, b) =>
+        Number(a.getAttribute("data-report-page") ?? 0) -
+        Number(b.getAttribute("data-report-page") ?? 0),
+    );
+
+    if (pages.length >= 3) {
+      return pages;
+    }
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+  }
+
+  throw new Error("Study Abroad report pages failed to render");
+}
+
+async function loadPublicImageDataUrl(path: string): Promise<string> {
+  const url = path.startsWith("http") ? path : `${window.location.origin}${path}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load report image: ${path}`);
+  }
+  const blob = await response.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error(`Failed to encode report image: ${path}`));
+    };
+    reader.onerror = () => reject(new Error(`Failed to read report image: ${path}`));
+    reader.readAsDataURL(blob);
+  });
+}
+
 function createCaptureIframe(): {
   mount: HTMLElement;
   root: Root;
@@ -65,33 +114,28 @@ function createCaptureIframe(): {
 }
 
 async function captureStudyAbroadReportPdf(context: StudyAbroadPrintContext): Promise<Blob> {
+  const [coverImageSrc, backCoverImageSrc] = await Promise.all([
+    loadPublicImageDataUrl(SA_COVER_IMAGE),
+    loadPublicImageDataUrl(SA_BACK_COVER_IMAGE),
+  ]);
+
   const { mount, root, cleanup } = createCaptureIframe();
 
   try {
-    await new Promise<void>((resolve) => {
-      root.render(
-        createElement(StudyAbroadPremiumPrintReport, {
-          result: context.result,
-          history: context.history,
-          studentName: context.studentName,
-          profile: context.profile,
-          showToolbar: false,
-        }),
-      );
-      void waitForReportRender(mount).then(resolve).catch(resolve);
-    });
-
-    const pages = Array.from(
-      mount.querySelectorAll<HTMLElement>("[data-report-page]"),
-    ).sort(
-      (a, b) =>
-        Number(a.getAttribute("data-report-page") ?? 0) -
-        Number(b.getAttribute("data-report-page") ?? 0),
+    root.render(
+      createElement(StudyAbroadPremiumPrintReport, {
+        result: context.result,
+        history: context.history,
+        studentName: context.studentName,
+        profile: context.profile,
+        showToolbar: false,
+        coverImageSrc,
+        backCoverImageSrc,
+      }),
     );
 
-    if (pages.length === 0) {
-      throw new Error("Study Abroad report pages failed to render");
-    }
+    const pages = await waitForStudyAbroadReportPages(mount, 15000);
+    await waitForReportRender(mount, 8000);
 
     const pdf = new jsPDF({
       unit: "mm",
@@ -101,11 +145,22 @@ async function captureStudyAbroadReportPdf(context: StudyAbroadPrintContext): Pr
     });
 
     for (let i = 0; i < pages.length; i += 1) {
+      if (i > 0) {
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+        });
+      }
       const canvas = await captureElementToCanvas(pages[i]);
       addCanvasToPdfPage(pdf, canvas, i);
+      canvas.width = 0;
+      canvas.height = 0;
     }
 
-    return pdf.output("blob");
+    const blob = pdf.output("blob");
+    if (!blob.size) {
+      throw new Error("Study Abroad report PDF was empty");
+    }
+    return blob;
   } finally {
     cleanup();
   }

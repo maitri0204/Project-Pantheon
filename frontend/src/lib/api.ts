@@ -150,6 +150,11 @@ export const uploadEmailReportPdf = async <T = { message: string }>(
     throw new Error("Report PDF was empty. Please try downloading the report first.");
   }
 
+  const maxEmailPdfBytes = 25 * 1024 * 1024;
+  if (pdfBlob.size > maxEmailPdfBytes) {
+    throw new Error("Report file is too large to email. Please download the report instead.");
+  }
+
   const formData = new FormData();
   formData.append("pdf", pdfBlob, fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`);
   formData.append("fileName", fileName);
@@ -181,6 +186,9 @@ export const uploadEmailReportPdf = async <T = { message: string }>(
   }
 
   if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error("Report file is too large to email. Try downloading the report instead.");
+    }
     throw new Error(data.message || "Failed to email report");
   }
 

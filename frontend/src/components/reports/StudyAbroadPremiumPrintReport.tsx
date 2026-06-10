@@ -517,6 +517,9 @@ export type StudyAbroadPremiumPrintReportProps = {
   showToolbar?: boolean;
   backHref?: string;
   autoPrint?: boolean;
+  /** Preloaded data URL for reliable PDF capture (email/download in iframe). */
+  coverImageSrc?: string;
+  backCoverImageSrc?: string;
 };
 
 export default function StudyAbroadPremiumPrintReport({
@@ -527,7 +530,11 @@ export default function StudyAbroadPremiumPrintReport({
   showToolbar = true,
   backHref,
   autoPrint = false,
+  coverImageSrc,
+  backCoverImageSrc,
 }: StudyAbroadPremiumPrintReportProps) {
+  const resolvedCoverImage = coverImageSrc || SA_COVER_IMAGE;
+  const resolvedBackCoverImage = backCoverImageSrc || SA_BACK_COVER_IMAGE;
   useEffect(() => {
     if (!autoPrint) return;
     const timer = window.setTimeout(() => window.print(), 600);
@@ -669,7 +676,7 @@ export default function StudyAbroadPremiumPrintReport({
           }}
         >
           <img
-            src={SA_COVER_IMAGE}
+            src={resolvedCoverImage}
             alt=""
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           />
@@ -1068,7 +1075,7 @@ export default function StudyAbroadPremiumPrintReport({
           }}
         >
           <img
-            src={SA_BACK_COVER_IMAGE}
+            src={resolvedBackCoverImage}
             alt=""
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           />

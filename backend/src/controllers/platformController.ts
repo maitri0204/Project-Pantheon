@@ -3561,7 +3561,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     return;
   }
 
-  const maxEmailPdfBytes = 15 * 1024 * 1024;
+  const maxEmailPdfBytes = 25 * 1024 * 1024;
   const safeName = `${attempt.assessmentCode}_Report_${String(student.firstName || "Student").replace(/\s+/g, "_")}.pdf`;
   let pdfBuffer: Buffer;
   let resolvedFileName = fileName || uploadedPdf?.originalname || safeName;

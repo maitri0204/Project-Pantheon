@@ -8,7 +8,9 @@ export const STUDY_ABROAD_A4 = {
   heightMm: 297,
 } as const;
 
-const CAPTURE_SCALE = 2;
+/** 1.5 keeps text sharp on A4 while cutting capture time and PDF size vs scale 2. */
+const CAPTURE_SCALE = 1.5;
+const JPEG_QUALITY = 0.85;
 
 /** Wait for fonts, images, and layout before PDF capture (replaces fixed timeouts). */
 export async function waitForReportRender(root: HTMLElement, timeoutMs = 5000): Promise<void> {
@@ -50,7 +52,9 @@ export async function waitForReportRender(root: HTMLElement, timeoutMs = 5000): 
 /** Replace SVGs with PNG snapshots so html2canvas preserves radar labels and proportions. */
 export async function rasterizeSvgsInElement(root: HTMLElement): Promise<void> {
   const svgs = Array.from(root.querySelectorAll("svg"));
-  await Promise.all(svgs.map((svg) => rasterizeSvgElement(svg)));
+  await Promise.all(
+    svgs.map((svg) => rasterizeSvgElement(svg).catch(() => undefined)),
+  );
 }
 
 function rasterizeSvgElement(svg: SVGSVGElement): Promise<void> {
@@ -150,10 +154,10 @@ export function addCanvasToPdfPage(
     pdf.addPage();
   }
 
-  const imgData = canvas.toDataURL("image/png");
+  const imgData = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
   pdf.addImage(
     imgData,
-    "PNG",
+    "JPEG",
     0,
     0,
     STUDY_ABROAD_A4.widthMm,
