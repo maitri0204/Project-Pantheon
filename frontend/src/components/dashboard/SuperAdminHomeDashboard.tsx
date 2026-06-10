@@ -221,7 +221,6 @@ export default function SuperAdminHomeDashboard({
       value: stats?.homePageVisits ?? 0,
       sub: "Main site landings",
       icon: Home,
-      href: "/",
       accent: "from-amber-500 to-orange-400",
       iconBg: "bg-amber-50 text-amber-600",
     },
@@ -230,7 +229,6 @@ export default function SuperAdminHomeDashboard({
       value: stats?.loginPageVisits ?? 0,
       sub: "Main site sign-in landings",
       icon: LogIn,
-      href: "/login",
       accent: "from-sky-500 to-cyan-400",
       iconBg: "bg-sky-50 text-sky-600",
     },
@@ -284,12 +282,8 @@ export default function SuperAdminHomeDashboard({
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map((item) => {
           const Icon = item.icon;
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
+          const cardContent = (
+            <>
               <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent}`} />
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -301,7 +295,28 @@ export default function SuperAdminHomeDashboard({
                   <Icon className="h-5 w-5" />
                 </div>
               </div>
-            </Link>
+            </>
+          );
+
+          if ("href" in item && item.href) {
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="group relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                {cardContent}
+              </Link>
+            );
+          }
+
+          return (
+            <div
+              key={item.label}
+              className="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+            >
+              {cardContent}
+            </div>
           );
         })}
       </section>
