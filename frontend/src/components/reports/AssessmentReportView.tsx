@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
 import { apiRequest, getStoredAuth } from "../../lib/api";
+import { sendAttemptReportEmail } from "@/lib/reports/sendAttemptReportEmail";
 import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 import { generateCareerCompassReport } from "../../lib/reports/generateCareerCompassReport";
 import { generateClearReport } from "../../lib/reports/generateClearReport";
@@ -693,24 +694,15 @@ export default function AssessmentReportView({
     setEmailSuccess(false);
     setEmailError(null);
     try {
-      const serverGeneratedEmailCodes = new Set([
-        "CAREER_COMPASS",
-        "LITMUS_TEST",
-        "CAREER_DNA",
-        "METACOGNITION_TEST",
-        "JOHARI_WINDOW",
-        "RESILIENCE_TEST",
-        "ACADEMIC_CAREER",
-        "STUDY_ABROAD",
-      ]);
-      if (!serverGeneratedEmailCodes.has(normalizedCode)) {
-        throw new Error("Email report is not available for this assessment.");
-      }
-      await apiRequest(
-        `/platform/student/attempts/${report.attemptId}/email-report`,
-        { method: "POST", body: JSON.stringify({ serverGenerate: true }) },
-        currentAuth.token,
-      );
+      await sendAttemptReportEmail({
+        normalizedCode,
+        attemptId: report.attemptId,
+        token: currentAuth.token,
+        buildDetailedReportPdf: () => buildDetailedReportPdf({
+          ...pdfContext,
+          authToken: currentAuth.token,
+        }),
+      });
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);
     } catch (e) {
