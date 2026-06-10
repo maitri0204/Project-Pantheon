@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ArrowUpRight, BadgeInfo, Clock3, MapPin, PhoneCall, ShieldCheck } from "lucide-react";
 
+import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
+
 const quickLinks = [
   { href: "/", label: "Home" },
   { href: "/login", label: "Login" },
-  { href: "/whitelabel/kareer-studio/student/register", label: "Register" },
+  { href: STUDENT_REGISTER_URL, label: "Register", external: true },
 ];
 
 const legalLinks = [
@@ -72,11 +74,19 @@ export default function Footer() {
             <ul className="mt-5 space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="group inline-flex items-center gap-2 transition hover:text-white">
-                    <span className="h-0.5 w-4 bg-cyan-400/70 transition-all group-hover:w-6" />
-                    {link.label}
-                    <ArrowUpRight className="h-3.5 w-3.5 opacity-60 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
-                  </Link>
+                  {link.external ? (
+                    <a href={link.href} className="group inline-flex items-center gap-2 transition hover:text-white">
+                      <span className="h-0.5 w-4 bg-cyan-400/70 transition-all group-hover:w-6" />
+                      {link.label}
+                      <ArrowUpRight className="h-3.5 w-3.5 opacity-60 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
+                    </a>
+                  ) : (
+                    <Link href={link.href} className="group inline-flex items-center gap-2 transition hover:text-white">
+                      <span className="h-0.5 w-4 bg-cyan-400/70 transition-all group-hover:w-6" />
+                      {link.label}
+                      <ArrowUpRight className="h-3.5 w-3.5 opacity-60 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

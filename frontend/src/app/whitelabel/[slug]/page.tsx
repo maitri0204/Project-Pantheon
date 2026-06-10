@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiRequest, getStoredAuth } from "@/lib/api";
+import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 type PortalResponse = {
   organization: {
@@ -145,12 +146,12 @@ export default function WhitelabelPortalPage() {
               >
                 {isOrgAdminForPortal ? "Open Dashboard" : "Login to Portal"}
               </Link>
-              <Link
-                href={`/whitelabel/${organization.slug}/student/register`}
+              <a
+                href={STUDENT_REGISTER_URL}
                 className="inline-flex justify-center rounded-xl border border-blue-300 bg-white px-6 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
               >
                 Register as Parent/Student
-              </Link>
+              </a>
             </div>
           </div>
         ) : (

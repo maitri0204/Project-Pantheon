@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 import {
   ArrowRight,
   BarChart3,
@@ -108,14 +109,15 @@ function StudentRegistrationPanel({ orgSlug }: { orgSlug: string }) {
           </div>
         </div>
         {orgSlug && (
-          <Link
-            href={`/whitelabel/${orgSlug}/student/register`}
+          <a
+            href={STUDENT_REGISTER_URL}
             target="_blank"
+            rel="noreferrer"
             className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
             Preview page
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </a>
         )}
       </div>
       <div className="relative mt-4 flex items-center gap-2">

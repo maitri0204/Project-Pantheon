@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
   const [copied, setCopied] = useState(false);
@@ -46,13 +47,14 @@ function StudentRegistrationLinkCard({ orgSlug }: { orgSlug: string }) {
           </ul>
         </div>
         {orgSlug && (
-          <Link
-            href={`/whitelabel/${orgSlug}/student/register`}
+          <a
+            href={STUDENT_REGISTER_URL}
             target="_blank"
+            rel="noreferrer"
             className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium"
           >
             Preview registration page →
-          </Link>
+          </a>
         )}
       </div>
     </div>

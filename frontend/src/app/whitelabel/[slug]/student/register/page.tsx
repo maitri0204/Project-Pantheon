@@ -150,7 +150,7 @@ export default function StudentRegisterPage() {
       const isParentRegistration = form.role === "PARENT";
       const resolvedGrade = form.grade === OTHER_GRADE_VALUE ? otherGrade.trim() : form.grade;
       if (form.grade === OTHER_GRADE_VALUE && !resolvedGrade) {
-        setError("Please enter your grade.");
+        setError("Please enter your grade / level.");
         setSubmitting(false);
         return;
       }
@@ -376,7 +376,7 @@ export default function StudentRegisterPage() {
                   </FieldWrap>
 
                   {!isParent && (
-                    <FieldWrap label="Grade / Level">
+                    <FieldWrap label="Grade / Level" required={form.grade === OTHER_GRADE_VALUE}>
                       <select
                         value={form.grade}
                         onChange={(e) => {
@@ -388,10 +388,22 @@ export default function StudentRegisterPage() {
                         }}
                         className={selectCls}
                         style={ringStyle}
+                        required={form.grade !== OTHER_GRADE_VALUE}
                       >
-                        <option value="">Select grade</option>
+                        <option value="">Select grade / level</option>
                         {GRADE_OPTIONS.map((g)=><option key={g} value={g}>{g}</option>)}
                       </select>
+                      {form.grade === OTHER_GRADE_VALUE && (
+                        <input
+                          type="text"
+                          value={otherGrade}
+                          onChange={(e) => setOtherGrade(e.target.value)}
+                          className={`${inputCls} mt-2`}
+                          style={ringStyle}
+                          placeholder="e.g. B.Tech, B.Com 1st year"
+                          required
+                        />
+                      )}
                     </FieldWrap>
                   )}
 
@@ -404,20 +416,6 @@ export default function StudentRegisterPage() {
                         className={inputCls}
                         style={ringStyle}
                         placeholder="A"
-                      />
-                    </FieldWrap>
-                  )}
-
-                  {!isParent && form.grade === OTHER_GRADE_VALUE && (
-                    <FieldWrap label="Enter Grade" required>
-                      <input
-                        type="text"
-                        value={otherGrade}
-                        onChange={(e) => setOtherGrade(e.target.value)}
-                        className={inputCls}
-                        style={ringStyle}
-                        placeholder="Type your grade"
-                        required
                       />
                     </FieldWrap>
                   )}

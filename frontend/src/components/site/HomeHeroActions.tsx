@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getStoredAuth } from "@/lib/api";
+import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 export default function HomeHeroActions() {
   const [mounted, setMounted] = useState(false);
@@ -25,7 +26,7 @@ export default function HomeHeroActions() {
         Login
       </a>
       <a
-        href="/whitelabel/kareer-studio/student/register"
+        href={STUDENT_REGISTER_URL}
         className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
       >
         Register
