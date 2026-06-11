@@ -2122,7 +2122,7 @@ const resolveOrganizationCouponAfterPayment = async (args: {
     ? parseOrgSequentialCoupon(normalizedPaymentCoupon, config)
     : null;
 
-  // Paid in full via Razorpay without an org coupon — payment itself grants access.
+  // Paid in full via Razorpay without an org coupon - payment itself grants access.
   if (paidFinalAmount > 0 && !orgCoupon) {
     return {};
   }
@@ -2252,7 +2252,7 @@ export const getOrganizationCouponSummary = async (req: AuthRequest, res: Respon
     return {
       assessmentCode: assessment.code,
       assessmentName: assessment.name,
-      prefix: config?.prefix || "—",
+      prefix: config?.prefix || "-",
       totalCoupons,
       usedCoupons,
       remainingCoupons: Math.max(totalCoupons - usedCoupons, 0),

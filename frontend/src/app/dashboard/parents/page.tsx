@@ -28,7 +28,7 @@ type ParentsResponse = {
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "—";
+  if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -178,7 +178,7 @@ export default function ParentsPage() {
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Organization</p>
-                        <p className="mt-1 break-words text-black">{user.organization ? user.organization.name : "—"}</p>
+                        <p className="mt-1 break-words text-black">{user.organization ? user.organization.name : "-"}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Tests</p>
@@ -223,7 +223,7 @@ export default function ParentsPage() {
                   <tbody className="divide-y divide-gray-50">
                     {filtered.map((user) => {
                       const fullName = `${user.firstName} ${user.lastName}`;
-                      const orgName = user.organization?.name || "—";
+                      const orgName = user.organization?.name || "-";
 
                       return (
                         <tr key={user._id} className="transition-colors hover:bg-gray-50">

@@ -52,7 +52,7 @@ export default function AdversityOrgDashboard({
   if (!overview || overview.overview.totalAttempts === 0) {
     return (
       <OrgDashboardEmpty
-        title="Resilience Quotient (RQ) — Command Centre"
+        title="Resilience Quotient (RQ) - Command Centre"
         subtitle="CORE dimension analytics appear after students complete the RQ assessment."
         assessmentName="Resilience Quotient Assessment"
         studentsPath={studentsPath}
@@ -94,7 +94,7 @@ export default function AdversityOrgDashboard({
         <div>
           <h1 className="text-2xl font-bold text-black">Resilience Quotient Dashboard</h1>
           <p className="text-sm text-black mt-1">
-            Good morning, {adminFirstName} — live RQ assessment activity for your organization.
+            Good morning, {adminFirstName} - live RQ assessment activity for your organization.
           </p>
         </div>
         <div className="hidden sm:flex">

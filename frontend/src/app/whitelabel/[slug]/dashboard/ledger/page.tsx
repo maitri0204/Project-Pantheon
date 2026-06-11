@@ -197,7 +197,7 @@ export default function OrgLedgerPage() {
                     <div>
                       <p className="text-[10px] uppercase text-black">Discount</p>
                       <p className="mt-0.5 text-xs font-medium text-green-700">
-                        {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
+                        {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "-"}
                       </p>
                     </div>
                     <div>
@@ -219,7 +219,7 @@ export default function OrgLedgerPage() {
               <div>
                 <p className="mb-0.5 text-[10px] uppercase text-black">Discount</p>
                 <p className="text-xs font-bold text-green-700">
-                  {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "—"}
+                  {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "-"}
                 </p>
               </div>
               <div>
@@ -276,12 +276,12 @@ export default function OrgLedgerPage() {
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-black">{fmt(inv.amount)}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-green-700">
-                          {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
+                          {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "-"}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-black">
                           {fmt(inv.finalAmount)}
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-black">{inv.couponCode ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-black">{inv.couponCode ?? "-"}</td>
                       </tr>
                     );
                   })}
@@ -293,7 +293,7 @@ export default function OrgLedgerPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-black">{fmt(summary.gross)}</td>
                     <td className="px-4 py-3 text-right text-green-700">
-                      {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "—"}
+                      {summary.discount > 0 ? `- ${fmt(summary.discount)}` : "-"}
                     </td>
                     <td className="px-4 py-3 text-right text-black">{fmt(summary.net)}</td>
                     <td colSpan={1} />

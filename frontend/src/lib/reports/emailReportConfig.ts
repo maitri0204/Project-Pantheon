@@ -1,6 +1,6 @@
 /**
  * Assessments whose downloadable report is built only in the browser
- * (premium React-PDF / print-capture). Email must upload that same PDF —
+ * (premium React-PDF / print-capture). Email must upload that same PDF -
  * the server cannot reproduce these templates from simplified HTML.
  */
 export const PREMIUM_CLIENT_PDF_EMAIL_CODES = new Set([

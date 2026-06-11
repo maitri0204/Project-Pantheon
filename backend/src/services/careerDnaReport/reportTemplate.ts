@@ -5,7 +5,7 @@ import { normalizeReportHtml } from "./reportHtmlNormalize";
 
 type ReportData = typeof RD;
 
-/** Cover overlay positions — RQ layout scaled to 794×1123 capture canvas. */
+/** Cover overlay positions - RQ layout scaled to 794×1123 capture canvas. */
 const COVER_SCALE_X = 794 / 595;
 const COVER_SCALE_Y = 1123 / 841;
 const COVER_IMAGE = "/career-dna/cover.jpg";

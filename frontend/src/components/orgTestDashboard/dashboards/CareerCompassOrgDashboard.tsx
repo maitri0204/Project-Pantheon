@@ -36,15 +36,15 @@ export default function CareerCompassOrgDashboard({ data, studentsPath }: OrgDas
   return (
     <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
-        title="Career Compass — Personality Type Analytics"
+        title="Career Compass - Personality Type Analytics"
         subtitle="MBTI-style personality distribution and dimension tendencies across your student cohort."
-        summaryLine={`${summary.uniqueStudents} students · Most common type: ${summary.metricValue ?? "—"}`}
+        summaryLine={`${summary.uniqueStudents} students · Most common type: ${summary.metricValue ?? "-"}`}
         studentsPath={studentsPath}
         accentClass="from-emerald-600 to-teal-600"
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Most Common Type" value={summary.metricValue ?? "—"} sub={summary.metricSub} />
+        <StatCard label="Most Common Type" value={summary.metricValue ?? "-"} sub={summary.metricSub} />
         <StatCard label="Unique Types" value={distributions.length} sub="Observed in org" />
         <StatCard label="Students" value={summary.uniqueStudents} />
         <StatCard label="Assessments" value={summary.totalAttempts} />

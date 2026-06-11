@@ -29,15 +29,15 @@ export default function StudyAbroadOrgDashboard({ data, studentsPath }: OrgDashb
   return (
     <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
-        title="Study Abroad Readiness — Organization Overview"
+        title="Study Abroad Readiness - Organization Overview"
         subtitle="Track 12-dimension readiness across your cohort: language, academics, finances, visa, culture, and more."
-        summaryLine={`${summary.uniqueStudents} students · ${summary.totalAttempts} completed attempts · Org avg ${summary.metricValue ?? "—"}`}
+        summaryLine={`${summary.uniqueStudents} students · ${summary.totalAttempts} completed attempts · Org avg ${summary.metricValue ?? "-"}`}
         studentsPath={studentsPath}
         accentClass="from-sky-600 to-indigo-600"
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Avg Readiness Score" value={summary.metricValue ?? "—"} sub={summary.metricSub} />
+        <StatCard label="Avg Readiness Score" value={summary.metricValue ?? "-"} sub={summary.metricSub} />
         <StatCard label="Avg Readiness %" value={`${avgPct}%`} sub={band} />
         <StatCard label="Students Assessed" value={summary.uniqueStudents} sub="Unique learners" />
         <StatCard label="Total Attempts" value={summary.totalAttempts} sub="Completed assessments" />

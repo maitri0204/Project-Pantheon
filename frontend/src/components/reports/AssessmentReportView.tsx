@@ -103,9 +103,9 @@ function dataX(v: number) { return G_LEFT + v * SCALE; }
 function dataY(v: number) { return G_TOP + v * SCALE; }
 
 const formatDateTime = (value?: string) => {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("en-IN");
 };
 
@@ -167,7 +167,7 @@ const RQ_LEVEL_DESCRIPTIONS: Record<string, string> = {
   Moderate:
     "Your RQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
   Developing:
-    "Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside.",
+    "Your resilience capacity is in an early stage of development - this is not a limitation, it is a starting point with tremendous upside.",
 };
 
 const RQ_DIMENSION_INSIGHTS: Record<string, { high: string; low: string }> = {
@@ -450,7 +450,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
 
   const submittedLabel = report.submittedAt
     ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
-    : "—";
+    : "-";
 
   if (normalizedCode === "RESILIENCE_TEST") {
     const rqEvaluation = parseRqEvaluation(evaluation);
@@ -757,7 +757,7 @@ export default function AssessmentReportView({
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Key Insights</h3>
                 <ul className="space-y-3 text-slate-700">
                   <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Your RQ score indicates your overall capacity to handle adversity and change.</span></li>
-                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>The four dimensions — Control, Ownership, Reach, and Endurance — show different aspects of resilience.</span></li>
+                  <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>The four dimensions - Control, Ownership, Reach, and Endurance - show different aspects of resilience.</span></li>
                   <li className="flex items-start"><span className="text-blue-600 mr-3 mt-0.5">•</span><span>Focus on dimensions with lower scores to strengthen your overall resilience.</span></li>
                 </ul>
               </div>
@@ -798,11 +798,11 @@ export default function AssessmentReportView({
     }
 
     if (normalizedCode === "CAREER_COMPASS") {
-      const personalityType = String(evaluation.personalityType || "—");
+      const personalityType = String(evaluation.personalityType || "-");
       const description = String(evaluation.description || "");
       const dimensions = Array.isArray(evaluation.dimensions) ? evaluation.dimensions as Array<Record<string, unknown>> : [];
       const careers = PERSONALITY_CAREERS[personalityType] || [];
-      const stream = PERSONALITY_STREAMS[personalityType] || "—";
+      const stream = PERSONALITY_STREAMS[personalityType] || "-";
       const subjects = PERSONALITY_SUBJECTS[personalityType] || [];
       return (
         <div className="max-w-5xl mx-auto space-y-8">

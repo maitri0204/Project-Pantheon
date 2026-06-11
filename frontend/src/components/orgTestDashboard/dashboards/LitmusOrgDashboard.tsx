@@ -42,15 +42,15 @@ export default function LitmusOrgDashboard({ data, studentsPath }: OrgDashboardP
   return (
     <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
-        title="Litmus Test — Parenting Style Profile"
+        title="Litmus Test - Parenting Style Profile"
         subtitle="Understand the dominant parenting styles (K/S/E/P/J) among parents in your organization."
-        summaryLine={`${summary.uniqueStudents} parent respondents · Leading style: ${summary.metricValue ?? "—"}`}
+        summaryLine={`${summary.uniqueStudents} parent respondents · Leading style: ${summary.metricValue ?? "-"}`}
         studentsPath={studentsPath}
         accentClass="from-rose-600 to-pink-600"
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Dominant Style" value={summary.metricValue ?? "—"} />
+        <StatCard label="Dominant Style" value={summary.metricValue ?? "-"} />
         <StatCard label="Parents Assessed" value={summary.uniqueStudents} />
         <StatCard label="Completed Tests" value={summary.totalAttempts} />
         <StatCard label="Style Variants" value={distributions.length} sub="Observed in cohort" />

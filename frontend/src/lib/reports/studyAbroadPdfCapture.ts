@@ -1,6 +1,6 @@
 import type { jsPDF } from "jspdf";
 
-/** A4 at 96 CSS dpi — stable pixel size for html2canvas (avoids mm/svg scaling bugs). */
+/** A4 at 96 CSS dpi - stable pixel size for html2canvas (avoids mm/svg scaling bugs). */
 export const STUDY_ABROAD_A4 = {
   widthPx: 794,
   heightPx: 1123,

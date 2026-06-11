@@ -1,6 +1,6 @@
 import type { AssessmentData } from "./types";
 
-/** Cover overlay positions — same RQ/DNA layout scaled to 794×1123 capture canvas. */
+/** Cover overlay positions - same RQ/DNA layout scaled to 794×1123 capture canvas. */
 const COVER_SCALE_X = 794 / 595;
 const COVER_SCALE_Y = 1123 / 841;
 const COVER_IMAGE = "/metacognition-test/cover.jpg";

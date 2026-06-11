@@ -200,7 +200,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
 
   const pages: string[] = [];
 
-  // PAGE 1 — COVER
+  // PAGE 1 - COVER
   pages.push(`
     <div class="page cover">
       <div class="cover-top-bar"></div>
@@ -232,7 +232,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(1, total, s.name)}
     </div>`);
 
-  // PAGE 2 — EXECUTIVE SUMMARY
+  // PAGE 2 - EXECUTIVE SUMMARY
   pages.push(`
     <div class="page page-exec">
       <div class="page-inner">
@@ -259,7 +259,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(2, total, s.name)}
     </div>`);
 
-  // PAGE 3 — CAREER DNA
+  // PAGE 3 - CAREER DNA
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -275,7 +275,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(3, total, s.name)}
     </div>`);
 
-  // PAGE 4 — PERSONALITY ARCHITECTURE (Dimension Overview, 2x2 wheels)
+  // PAGE 4 - PERSONALITY ARCHITECTURE (Dimension Overview, 2x2 wheels)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -285,7 +285,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(4, total, s.name)}
     </div>`);
 
-  // PAGE 5 — PERSONALITY DEEP DIVE
+  // PAGE 5 - PERSONALITY DEEP DIVE
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -304,7 +304,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(5, total, s.name)}
     </div>`);
 
-  // PAGE 6 — ACADEMIC PROFILE
+  // PAGE 6 - ACADEMIC PROFILE
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -319,7 +319,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
             "Reward completed milestones to stay consistent",
             "Block calendar time for hardest subjects first",
             "Summarize each chapter in your own words within 24 hours",
-            "Track progress weekly — what worked and what did not",
+            "Track progress weekly - what worked and what did not",
           ], "card-style")}
           ${bulletCard("Attention Pattern", [
             "High focus on interesting, novel topics",
@@ -355,7 +355,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(6, total, s.name)}
     </div>`);
 
-  // PAGE 7 — STREAM RECOMMENDATION
+  // PAGE 7 - STREAM RECOMMENDATION
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -367,7 +367,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(7, total, s.name)}
     </div>`);
 
-  // PAGE 8 — SUBJECT FIT
+  // PAGE 8 - SUBJECT FIT
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -401,7 +401,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(8, total, s.name)}
     </div>`);
 
-  // PAGE 9 — TOP 10 CAREERS (was page 10)
+  // PAGE 9 - TOP 10 CAREERS (was page 10)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -424,7 +424,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(9, total, s.name)}
     </div>`);
 
-  // PAGE 10 — JOB ROLE EXPLORER (was page 11)
+  // PAGE 10 - JOB ROLE EXPLORER (was page 11)
   pages.push(`
     <div class="page page-roles">
       <div class="page-inner">
@@ -436,7 +436,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(10, total, s.name)}
     </div>`);
 
-  // PAGE 11 — INDUSTRY EXPLORATION (was page 12)
+  // PAGE 11 - INDUSTRY EXPLORATION (was page 12)
   pages.push(`
     <div class="page page-industry">
       <div class="page-inner">
@@ -460,7 +460,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(11, total, s.name)}
     </div>`);
 
-  // PAGE 12 — FUTURE SKILLS (was page 13)
+  // PAGE 12 - FUTURE SKILLS (was page 13)
   pages.push(`
     <div class="page page-skills">
       <div class="page-inner">
@@ -521,7 +521,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
             "Read one article weekly outside your comfort zone",
             "Volunteer for roles that stretch your abilities",
             "Reflect monthly on lessons from unexpected changes",
-            "Stay calm when plans change — focus on what you control",
+            "Stay calm when plans change - focus on what you control",
             "Keep a skills log of what you learn each month",
           ], "card-snapshot", "skills-adapt-card")}
         </div>
@@ -529,7 +529,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(12, total, s.name)}
     </div>`);
 
-  // PAGE 13 — PROJECT ROADMAP (was page 15)
+  // PAGE 13 - PROJECT ROADMAP (was page 15)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -554,7 +554,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
               "National-level case study challenges",
               "Inter-school debate and MUN tournaments",
               "Innovation challenges hosted by local incubators",
-              "Apply early — note deadlines and eligibility criteria",
+              "Apply early - note deadlines and eligibility criteria",
             ])}
             ${portfolioCard("Business Challenges", [
               "Stock market simulation leagues",
@@ -582,7 +582,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(13, total, s.name)}
     </div>`);
 
-  // PAGE 14 — RISKS & BLIND SPOTS (was page 16)
+  // PAGE 14 - RISKS & BLIND SPOTS (was page 16)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -635,7 +635,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(14, total, s.name)}
     </div>`);
 
-  // PAGE 15 — 30-DAY PLAN (was page 17)
+  // PAGE 15 - 30-DAY PLAN (was page 17)
   pages.push(`
     <div class="page page-plan-30">
       <div class="page-inner">
@@ -658,7 +658,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(15, total, s.name)}
     </div>`);
 
-  // PAGE 16 — 60-DAY PLAN (was page 18)
+  // PAGE 16 - 60-DAY PLAN (was page 18)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -674,7 +674,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(16, total, s.name)}
     </div>`);
 
-  // PAGE 17 — 90-DAY PLAN (was page 19)
+  // PAGE 17 - 90-DAY PLAN (was page 19)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -690,7 +690,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(17, total, s.name)}
     </div>`);
 
-  // PAGE 18 — PARENT GUIDANCE (was page 20)
+  // PAGE 18 - PARENT GUIDANCE (was page 20)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -711,10 +711,10 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
               "Ask 'What problem would you solve?' not 'What job?'",
               "Discuss current events and business trends",
               "Share stories of people in diverse careers",
-              "Avoid comparing with peers — focus on unique strengths",
+              "Avoid comparing with peers - focus on unique strengths",
               "Listen more than you advise during these talks",
               "Use open questions: 'What excited you this week?'",
-              "Revisit career talks monthly — interests evolve at this age",
+              "Revisit career talks monthly - interests evolve at this age",
               "Connect classroom subjects to real-world career examples",
             ], "card-style")}
             ${bulletCard("Decision Support", [
@@ -735,14 +735,14 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
               "Keep expectations realistic and encouraging",
               "Separate effort from outcome in how you give feedback",
               "Watch for burnout when your child takes on too many ideas",
-              "Model healthy work habits and rest — not constant hustle",
+              "Model healthy work habits and rest - not constant hustle",
             ], "card-style")}
             ${bulletCard("Growth Support", [
               "Enroll in structured programs (entrepreneurship camps)",
               "Invest in communication and leadership workshops",
               "Create a home environment that welcomes debate and ideas",
               "Review this report together and set family goals",
-              "Celebrate completed milestones — pitches, projects, competitions",
+              "Celebrate completed milestones - pitches, projects, competitions",
               "Schedule a quarterly family check-in on career exploration progress",
             ], "card-snapshot")}
           </div>
@@ -751,7 +751,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(18, total, s.name)}
     </div>`);
 
-  // PAGE 19 — FUTURE OUTLOOK (was page 21)
+  // PAGE 19 - FUTURE OUTLOOK (was page 21)
   pages.push(`
     <div class="page">
       <div class="page-inner">
@@ -801,7 +801,7 @@ export function buildReportHtml(data: CareerCompassAssessmentData): string {
       ${footer(19, total, s.name)}
     </div>`);
 
-  // PAGE 20 — FINAL CAREER BLUEPRINT (was page 22)
+  // PAGE 20 - FINAL CAREER BLUEPRINT (was page 22)
   pages.push(`
     <div class="page page-blueprint">
       <div class="page-inner">

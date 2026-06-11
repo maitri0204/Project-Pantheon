@@ -172,7 +172,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right column — hero image */}
+            {/* Right column - hero image */}
             <div className="reveal-up relative mx-auto w-full max-w-lg pt-6 lg:max-w-none" style={{ animationDelay: "0.25s" }}>
               <div className="absolute inset-6 rounded-[2.5rem] bg-gradient-to-br from-blue-300/35 via-sky-300/25 to-cyan-300/35 blur-3xl" />
               <div className="shape-ring spin-slower -right-8 -top-2 hidden h-28 w-28 opacity-50 lg:block" style={{ "--ring-w": "12px" } as CSSProperties} />
@@ -180,7 +180,7 @@ export default function Home() {
               <div className="tilt-card relative overflow-hidden rounded-[2rem] border border-blue-100 bg-white/95 shadow-[0_32px_80px_rgba(37,99,235,0.15)]">
                 <Image
                   src="/image.png"
-                  alt="Assessment Center — career and readiness assessments for students and parents"
+                  alt="Assessment Center - career and readiness assessments for students and parents"
                   width={960}
                   height={720}
                   className="h-auto w-full object-cover"

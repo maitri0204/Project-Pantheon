@@ -58,11 +58,11 @@ export const LANDING_ASSESSMENTS: LandingAssessment[] = [
     duration: "20–25 min",
     highlights: ["Metacognition domains", "Learning strategy insights", "Quadrant-based report"],
     description:
-      "Measure how you think, plan, regulate, and express ideas — essential skills for academic success and confident communication.",
+      "Measure how you think, plan, regulate, and express ideas - essential skills for academic success and confident communication.",
   },
   {
     code: "JOHARI_WINDOW",
-    name: "CLEAR — Cognitive Lens for Emotional Awareness & Reflection",
+    name: "CLEAR - Cognitive Lens for Emotional Awareness & Reflection",
     shortName: "CLEAR",
     emoji: "🪟",
     accentClass: "from-rose-500 via-pink-500 to-fuchsia-500",
@@ -82,7 +82,7 @@ export const LANDING_ASSESSMENTS: LandingAssessment[] = [
     duration: "15–20 min",
     highlights: ["CORE resilience model", "4-dimension scoring", "30-day action plan"],
     description:
-      "Evaluate how you respond to setbacks across Control, Ownership, Reach, and Endurance — with a premium resilience report.",
+      "Evaluate how you respond to setbacks across Control, Ownership, Reach, and Endurance - with a premium resilience report.",
   },
   {
     code: "ACADEMIC_CAREER",
@@ -94,7 +94,7 @@ export const LANDING_ASSESSMENTS: LandingAssessment[] = [
     duration: "25–35 min",
     highlights: ["10 interest codes", "Stream recommendations", "Grade-calibrated guidance"],
     description:
-      "Map academic interests and explore career pathways aligned with your strengths — ideal for stream selection and subject planning.",
+      "Map academic interests and explore career pathways aligned with your strengths - ideal for stream selection and subject planning.",
   },
   {
     code: "STUDY_ABROAD",
@@ -106,7 +106,7 @@ export const LANDING_ASSESSMENTS: LandingAssessment[] = [
     duration: "60 min",
     highlights: ["12 readiness dimensions", "Premium multi-page report", "Roadmap & counselor notes"],
     description:
-      "Measure readiness across language, academics, finances, visa, culture, and more — with a comprehensive study-abroad action plan.",
+      "Measure readiness across language, academics, finances, visa, culture, and more - with a comprehensive study-abroad action plan.",
   },
 ];
 

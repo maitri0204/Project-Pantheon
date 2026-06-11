@@ -28,7 +28,7 @@ function dataX(sf: number) {
   return G_LEFT + (Math.min(50, Math.max(0, sf)) / 50) * G_SIZE;
 }
 
-/** Self-disclosure increases downward (0 at top, 50 at bottom) — matches CLEAR report Johari layout. */
+/** Self-disclosure increases downward (0 at top, 50 at bottom) - matches CLEAR report Johari layout. */
 function dataY(sd: number) {
   return G_TOP + (Math.min(50, Math.max(0, sd)) / 50) * G_SIZE;
 }

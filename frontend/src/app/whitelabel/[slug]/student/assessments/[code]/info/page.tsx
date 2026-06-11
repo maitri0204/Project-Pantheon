@@ -534,7 +534,7 @@ const content: Record<string, AssessmentPageContent> = {
         hero: {
           title: "Measure Your Readiness to Study Abroad",
           subtitle:
-            "A structured assessment across 12 dimensions — language, academics, finances, visa, culture, resilience, and decision-making.",
+            "A structured assessment across 12 dimensions - language, academics, finances, visa, culture, resilience, and decision-making.",
           supportingLine:
             "Each session draws 50 questions from a 150-question bank. Answer honestly for an accurate readiness profile and actionable report.",
           sidePoints: ["50 questions per session", "60-minute timed test", "12-dimension radar report"],
@@ -869,7 +869,7 @@ const content: Record<string, AssessmentPageContent> = {
           : normalizedCode === "STUDY_ABROAD"
           ? [
               { title: "Timed session", desc: "60 minutes, 50 questions", icon: "⏱️" },
-              { title: "Honest scoring", desc: "No right/wrong — best-fit options", icon: "✅" },
+              { title: "Honest scoring", desc: "No right/wrong - best-fit options", icon: "✅" },
               { title: "Retake friendly", desc: "New question mix on retakes", icon: "🔁" },
             ]
           : [

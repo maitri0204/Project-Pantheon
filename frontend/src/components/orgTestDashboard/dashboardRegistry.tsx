@@ -20,37 +20,37 @@ export type OrgDashboardConfig = {
 export const ORG_DASHBOARD_REGISTRY: Record<string, OrgDashboardConfig> = {
   STUDY_ABROAD: {
     component: StudyAbroadOrgDashboard,
-    emptyTitle: "Study Abroad Readiness — Organization Overview",
+    emptyTitle: "Study Abroad Readiness - Organization Overview",
     emptySubtitle: "Track 12-dimension readiness when students complete the assessment.",
     accentClass: "from-sky-600 to-indigo-600",
   },
   CAREER_COMPASS: {
     component: CareerCompassOrgDashboard,
-    emptyTitle: "Career Compass — Personality Type Analytics",
+    emptyTitle: "Career Compass - Personality Type Analytics",
     emptySubtitle: "MBTI-style type distribution will appear when students complete Career Compass.",
     accentClass: "from-emerald-600 to-teal-600",
   },
   JOHARI_WINDOW: {
     component: JohariOrgDashboard,
-    emptyTitle: "CLEAR — Johari Window Self-Awareness Map",
+    emptyTitle: "CLEAR - Johari Window Self-Awareness Map",
     emptySubtitle: "Quadrant analytics appear after students complete the CLEAR assessment.",
     accentClass: "from-indigo-600 to-blue-600",
   },
   LITMUS_TEST: {
     component: LitmusOrgDashboard,
-    emptyTitle: "Litmus Test — Parenting Style Profile",
+    emptyTitle: "Litmus Test - Parenting Style Profile",
     emptySubtitle: "Parenting style analytics appear when parents complete Litmus.",
     accentClass: "from-rose-600 to-pink-600",
   },
   METACOGNITION_TEST: {
     component: MetacognitionOrgDashboard,
-    emptyTitle: "Thinking & Expression Skills — Domain Analytics",
+    emptyTitle: "Thinking & Expression Skills - Domain Analytics",
     emptySubtitle: "Domain score patterns appear after students complete the test.",
     accentClass: "from-cyan-600 to-blue-600",
   },
   CAREER_DNA: {
     component: CareerDnaOrgDashboard,
-    emptyTitle: "Career DNA Profiler — Multi-Section Overview",
+    emptyTitle: "Career DNA Profiler - Multi-Section Overview",
     emptySubtitle: "Multi-section profile analytics appear after students complete Career DNA.",
     accentClass: "from-fuchsia-600 to-violet-600",
   },

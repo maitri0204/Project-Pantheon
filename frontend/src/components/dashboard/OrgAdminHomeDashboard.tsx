@@ -178,7 +178,7 @@ export default function OrgAdminHomeDashboard({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-black">Assessment catalog</p>
-              <p className="mt-1 text-4xl font-black text-black">{stats?.assessments ?? "—"}</p>
+              <p className="mt-1 text-4xl font-black text-black">{stats?.assessments ?? "-"}</p>
               <p className="mt-2 text-sm text-black">Published on your portal</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition group-hover:scale-105">
@@ -194,7 +194,7 @@ export default function OrgAdminHomeDashboard({
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-black">Students</p>
-              <p className="mt-1 text-4xl font-black text-black">{stats?.students ?? "—"}</p>
+              <p className="mt-1 text-4xl font-black text-black">{stats?.students ?? "-"}</p>
               <p className="mt-2 text-sm text-black">Profiles, grades, and reports</p>
             </div>
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition group-hover:scale-105">

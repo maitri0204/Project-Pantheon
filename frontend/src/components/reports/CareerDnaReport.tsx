@@ -174,7 +174,7 @@ const SECTION_CONFIG = [
   },
 ] as const;
 
-/** Sections expressed as type/code combinations — not a single aggregate percentage. */
+/** Sections expressed as type/code combinations - not a single aggregate percentage. */
 const COMBINATION_SECTION_KEYS = new Set<string>(["PERSONALITY", "CAREER_INTEREST"]);
 
 function isCombinationSection(key: string): boolean {
@@ -194,7 +194,7 @@ function formatLearningStyleCode(raw: string): string {
     .filter((c, i, arr) => arr.indexOf(c) === i);
   const map: Record<string, string> = { V: "Visual", A: "Auditory", K: "Kinesthetic" };
   const names = unique.map((c) => map[c]).filter(Boolean);
-  return names.length ? names.join(" · ") : "—";
+  return names.length ? names.join(" · ") : "-";
 }
 
 function scoreBand(pct: number) {
@@ -393,7 +393,7 @@ export default function CareerDnaReport({
 
   const submittedLabel = submittedAt
     ? new Date(submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
-    : "—";
+    : "-";
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -528,7 +528,7 @@ export default function CareerDnaReport({
               <p className="mt-3 text-sm font-semibold text-slate-900">{label}</p>
               {combinationSection ? (
                 <p className="mt-1 text-sm font-bold leading-snug text-slate-800" style={{ color: config.color }}>
-                  {combinationLabel || "—"}
+                  {combinationLabel || "-"}
                 </p>
               ) : (
                 <>
@@ -610,7 +610,7 @@ export default function CareerDnaReport({
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-bold text-slate-900">Section Radar</h3>
-          <p className="mb-4 text-xs text-slate-500">Scored dimensions only — personality and interests use profile combinations.</p>
+          <p className="mb-4 text-xs text-slate-500">Scored dimensions only - personality and interests use profile combinations.</p>
           <SectionRadar scores={radarScores} />
         </div>
 
@@ -630,7 +630,7 @@ export default function CareerDnaReport({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-emerald-800/80">Balanced profile — review section details for nuance.</p>
+              <p className="text-sm text-emerald-800/80">Balanced profile - review section details for nuance.</p>
             )}
           </div>
           <div className="rounded-2xl border border-rose-100 bg-rose-50/60 p-5">
@@ -648,7 +648,7 @@ export default function CareerDnaReport({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-rose-800/80">No major gaps flagged — keep building across all areas.</p>
+              <p className="text-sm text-rose-800/80">No major gaps flagged - keep building across all areas.</p>
             )}
           </div>
         </div>
@@ -725,7 +725,7 @@ export default function CareerDnaReport({
                       >
                         <span className="text-sm font-medium text-slate-700">{pairName}</span>
                         <span className="text-sm font-semibold text-slate-900">
-                          {winnerLetter} — {winnerName}
+                          {winnerLetter} - {winnerName}
                         </span>
                       </div>
                     );

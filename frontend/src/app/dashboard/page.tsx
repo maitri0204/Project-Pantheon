@@ -263,7 +263,7 @@ export default function DashboardPage() {
           >
             <div>
               <p className="text-base text-black">{label}</p>
-              <p className="text-3xl font-bold text-black">{stats ? stats[key as keyof Stats] : "—"}</p>
+              <p className="text-3xl font-bold text-black">{stats ? stats[key as keyof Stats] : "-"}</p>
             </div>
           </Link>
         ))}

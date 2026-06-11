@@ -85,7 +85,7 @@ export default function PrivacyPolicyPage() {
             <h3 className="text-lg font-medium text-gray-800 mt-3">b. With Schools or Institutions</h3>
             <p>If the assessment is conducted through a school program.</p>
             <h3 className="text-lg font-medium text-gray-800 mt-3">c. With Service Providers</h3>
-            <p>Trusted technology partners (hosting, analytics, etc.) — only to the extent necessary to run the platform.</p>
+            <p>Trusted technology partners (hosting, analytics, etc.) - only to the extent necessary to run the platform.</p>
             <h3 className="text-lg font-medium text-gray-800 mt-3">d. Legal Requirements</h3>
             <p>If required by law or regulatory authorities.</p>
           </section>

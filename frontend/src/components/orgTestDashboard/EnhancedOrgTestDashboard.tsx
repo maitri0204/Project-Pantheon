@@ -70,7 +70,7 @@ function buildStudentRows(
   return data.students.slice(0, 8).map((row) => ({
     id: row.studentId,
     name: row.studentName,
-    grade: row.grade || row.division || "—",
+    grade: row.grade || row.division || "-",
     result: formatResult ? formatResult(row.resultLabel) : row.resultLabel,
     detail: row.resultDetail,
   }));
@@ -151,7 +151,7 @@ function RecentStudentsSection({
       : [{ header: resultLabel, render: (row: StudentRow) => <span className="font-semibold text-black">{row.result}</span> }]),
     {
       header: "Details",
-      render: (row: StudentRow) => <span className="text-black">{row.detail ?? "—"}</span>,
+      render: (row: StudentRow) => <span className="text-black">{row.detail ?? "-"}</span>,
     },
   ];
 

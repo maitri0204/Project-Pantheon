@@ -46,7 +46,7 @@ export default function OrganizationProfilePage() {
   const [success, setSuccess] = useState("");
   const [organization, setOrganization] = useState<OrgProfile | null>(null);
 
-  const displayCompanyName = organization?.branding.companyName || "—";
+  const displayCompanyName = organization?.branding.companyName || "-";
   const displayWebsite = organization?.website || "";
   const displayContactEmail = organization?.contactEmail || "";
   const rawContactPhone = organization?.contactPhone || organization?.settings?.contactPhone || user?.phone || "";
@@ -169,11 +169,11 @@ export default function OrganizationProfilePage() {
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-black">First Name</p>
-                  <p className="mt-1 text-base font-semibold text-black">{user.firstName || "—"}</p>
+                  <p className="mt-1 text-base font-semibold text-black">{user.firstName || "-"}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-black">Last Name</p>
-                  <p className="mt-1 text-base font-semibold text-black">{user.lastName || "—"}</p>
+                  <p className="mt-1 text-base font-semibold text-black">{user.lastName || "-"}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-black">Email</p>
@@ -286,7 +286,7 @@ export default function OrganizationProfilePage() {
                     {displayWebsite}
                   </a>
                 ) : (
-                  <p className="text-lg font-semibold text-black">—</p>
+                  <p className="text-lg font-semibold text-black">-</p>
                 )}
               </div>
 
@@ -297,7 +297,7 @@ export default function OrganizationProfilePage() {
                     {displayContactEmail}
                   </a>
                 ) : (
-                  <p className="text-lg font-semibold text-black">—</p>
+                  <p className="text-lg font-semibold text-black">-</p>
                 )}
               </div>
 
@@ -308,13 +308,13 @@ export default function OrganizationProfilePage() {
                     {displayContactPhone}
                   </a>
                 ) : (
-                  <p className="text-lg font-semibold text-black">—</p>
+                  <p className="text-lg font-semibold text-black">-</p>
                 )}
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-rose-50 to-slate-50 p-4 border border-rose-100">
                 <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Representative Name</p>
-                <p className="text-lg font-semibold text-black break-words">{displayRepresentativeName || "—"}</p>
+                <p className="text-lg font-semibold text-black break-words">{displayRepresentativeName || "-"}</p>
               </div>
 
               <div className="rounded-lg bg-gradient-to-br from-indigo-50 to-slate-50 p-4 border border-indigo-100">
@@ -328,11 +328,11 @@ export default function OrganizationProfilePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="rounded-lg bg-gradient-to-br from-blue-50 to-slate-50 p-4 border border-blue-100 sm:col-span-2">
                 <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Full Name</p>
-                <p className="text-lg font-semibold text-black break-words">{`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "—"}</p>
+                <p className="text-lg font-semibold text-black break-words">{`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "-"}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-br from-cyan-50 to-slate-50 p-4 border border-cyan-100 sm:col-span-2">
                 <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Email</p>
-                <p className="text-lg font-semibold text-black break-all">{user?.email || "—"}</p>
+                <p className="text-lg font-semibold text-black break-all">{user?.email || "-"}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-br from-purple-50 to-slate-50 p-4 border border-purple-100">
                 <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Role</p>

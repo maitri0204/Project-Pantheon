@@ -45,7 +45,7 @@ body {
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
 }
 
-/* Locked assessment card — inline style is primary; this is a stable fallback */
+/* Locked assessment card - inline style is primary; this is a stable fallback */
 .assessment-coming-soon-card {
   background: linear-gradient(135deg, #0c1a4a 0%, #122a6b 48%, #071336 100%) !important;
   border: 1px solid rgba(30, 64, 175, 0.45) !important;
@@ -161,7 +161,7 @@ body {
   pointer-events: none;
 }
 
-/* 3D ring / torus — conic gradient hollowed out with a radial mask
+/* 3D ring / torus - conic gradient hollowed out with a radial mask
    (the old border-gradient trick rendered as a dark box in some browsers) */
 .shape-ring {
   position: absolute;

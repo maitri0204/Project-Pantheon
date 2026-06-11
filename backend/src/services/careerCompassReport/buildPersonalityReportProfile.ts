@@ -31,7 +31,7 @@ const PERSONALITY_CLUSTERS: Record<string, string> = {
 
 const INDUSTRY_BY_CLUSTER: Record<string, { name: string; desc: string; action: string }[]> = {
   "Management & Corporate Leadership": [
-    { name: "Corporate Management", desc: "Large organizations where structure, accountability, and results drive success — a natural fit for decisive leaders.", action: "Shadow a manager for a week" },
+    { name: "Corporate Management", desc: "Large organizations where structure, accountability, and results drive success - a natural fit for decisive leaders.", action: "Shadow a manager for a week" },
     { name: "Finance & Banking", desc: "Banks and financial firms that reward discipline, analysis, and clear decision-making.", action: "Join a finance or investment club" },
     { name: "Government & Public Service", desc: "Institutions that need organized leaders to implement policy and manage operations.", action: "Volunteer for a community governance project" },
     { name: "Operations & Logistics", desc: "Teams that optimize systems, supply chains, and processes for efficiency.", action: "Map a process improvement for a school event" },
@@ -44,7 +44,7 @@ const INDUSTRY_BY_CLUSTER: Record<string, { name: string; desc: string; action: 
   ],
   "Business & Entrepreneurship": [
     { name: "Technology", desc: "Software, apps, and digital platforms where ideas become products quickly.", action: "Build a small coding side project" },
-    { name: "Finance", desc: "Banks, venture capital, and fintech — analytical and relationship-driven.", action: "Join an investment club" },
+    { name: "Finance", desc: "Banks, venture capital, and fintech - analytical and relationship-driven.", action: "Join an investment club" },
     { name: "Consulting", desc: "Fresh challenges every few weeks for quick-thinking problem-solvers.", action: "Enter a business case competition" },
     { name: "Startups", desc: "Fast-growing companies with high freedom and ownership.", action: "Apply for a startup internship" },
     { name: "Product", desc: "Teams connecting users, designers, and engineers.", action: "Learn a product-management framework" },
@@ -631,7 +631,7 @@ export function buildPersonalityReportProfile(data: CareerCompassAssessmentData)
     industries,
     careerIdentity: `${short} & ${cluster.split(" & ")[0]}`,
     primaryCluster: cluster,
-    industryIntro: `A quick guide to the industries that best match your ${short} profile — what each one is, why it could fit you, and one simple way to start exploring it.`,
+    industryIntro: `A quick guide to the industries that best match your ${short} profile - what each one is, why it could fit you, and one simple way to start exploring it.`,
     blueprintSkills: subjects.slice(0, 2).join(", ") + ", Leadership, Communication",
     actionPlans: buildActionPlans(short, cluster, stream, subjects, careers, industries),
     blueprint90DayGoal: `Complete ${careers[0]} portfolio project + finalize ${stream}`,

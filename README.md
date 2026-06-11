@@ -176,15 +176,15 @@ Invoices & Payments
 
 ## 🧭 Pages & Routes
 
-- `/` — Landing page
-- `/login` — Login (OTP)
-- `/dashboard` — Admin dashboard
-- `/whitelabel/[slug]` — Organization portal
-- `/privacy-policy`, `/terms-and-conditions`, `/disclaimer`, `/refund-policy` — Legal pages
+- `/` - Landing page
+- `/login` - Login (OTP)
+- `/dashboard` - Admin dashboard
+- `/whitelabel/[slug]` - Organization portal
+- `/privacy-policy`, `/terms-and-conditions`, `/disclaimer`, `/refund-policy` - Legal pages
 
 ---
 
-## ⚠️ Troubleshooting — MongoDB index conflict
+## ⚠️ Troubleshooting - MongoDB index conflict
 
 You might encounter an index conflict like:
 
@@ -233,8 +233,8 @@ This README documents repository structure, local setup, build/run commands, rec
 
 ## Repository layout
 
-- `frontend/` — Next.js app (app-router) using TypeScript and Tailwind CSS. Frontend assets, components and app routes live here.
-- `backend/` — Express + TypeScript backend with Mongoose models and index initialization logic.
+- `frontend/` - Next.js app (app-router) using TypeScript and Tailwind CSS. Frontend assets, components and app routes live here.
+- `backend/` - Express + TypeScript backend with Mongoose models and index initialization logic.
 - Documentation files: `ARCHITECTURE.md`, `IMPLEMENTATION_SUMMARY.md`, `README.md` (this file) etc.
 
 Key frontend files edited recently:
@@ -338,7 +338,7 @@ What the repository change does:
 
 Manual fix options (if you prefer to coerce indexes):
 
-- Option A — Drop the conflicting index and let the initializer recreate it (destructive):
+- Option A - Drop the conflicting index and let the initializer recreate it (destructive):
 
 ```bash
 # connect to mongo shell or use mongosh
@@ -347,7 +347,7 @@ db.invoices.dropIndex('invoiceNumber_1')
 # then restart backend so initializer can recreate the index as intended
 ```
 
-- Option B — Inspect existing indexes and adjust initializer to match required options (non-destructive):
+- Option B - Inspect existing indexes and adjust initializer to match required options (non-destructive):
 
 ```js
 // Example: list indexes

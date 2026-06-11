@@ -25,7 +25,7 @@ type SuperadminResponse = {
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "—";
+  if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -138,7 +138,7 @@ export default function OrganizationsPage() {
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Contact</p>
-                        <p className="mt-1 text-black break-all">{org.contactEmail || "—"}</p>
+                        <p className="mt-1 text-black break-all">{org.contactEmail || "-"}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Added On</p>
@@ -200,7 +200,7 @@ export default function OrganizationsPage() {
                           </span>
                         </td>
                         <td className="px-3 py-3">
-                          <span className="block truncate text-black" title={org.contactEmail || "—"}>{org.contactEmail || "—"}</span>
+                          <span className="block truncate text-black" title={org.contactEmail || "-"}>{org.contactEmail || "-"}</span>
                         </td>
                         <td className="px-3 py-3 text-black">{formatDate(org.createdAt)}</td>
                         <td className="px-3 py-3">

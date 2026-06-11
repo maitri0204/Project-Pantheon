@@ -55,11 +55,11 @@ export function buildStudyAbroadReportHtml(input: {
   const focusAreas = [...rankedTopics].reverse().filter((item) => item.score < 45).slice(0, 4);
 
   const strengthList = strengths.length
-    ? strengths.map((item) => `<li>${escapeHtml(item.topic)} — ${item.score}%</li>`).join("")
+    ? strengths.map((item) => `<li>${escapeHtml(item.topic)} - ${item.score}%</li>`).join("")
     : "<li>No topic reached the strong readiness threshold yet.</li>";
 
   const focusList = focusAreas.length
-    ? focusAreas.map((item) => `<li>${escapeHtml(item.topic)} — ${item.score}%</li>`).join("")
+    ? focusAreas.map((item) => `<li>${escapeHtml(item.topic)} - ${item.score}%</li>`).join("")
     : "<li>No major focus areas identified. Continue building balanced readiness.</li>";
 
   return `<!DOCTYPE html>

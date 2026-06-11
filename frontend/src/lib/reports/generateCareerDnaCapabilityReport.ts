@@ -131,7 +131,7 @@ const MBTI_DESCRIPTIONS: Record<string, string> = {
   ISTJ: "You value structure, responsibility, and reliability. You approach tasks methodically and follow through with dedication.",
   ISFJ: "You are warm, considerate, and deeply committed to supporting those around you.",
   INFJ: "You are insightful, principled, and driven by a strong sense of purpose and compassion.",
-  INTJ: "You are strategic, determined, and innovative — always planning several steps ahead.",
+  INTJ: "You are strategic, determined, and innovative - always planning several steps ahead.",
   ISTP: "You are hands-on, analytical, and thrive when solving real-world problems.",
   ISFP: "You are gentle, sensitive, and express yourself through creativity and aesthetics.",
   INFP: "You are idealistic, empathetic, and driven by deeply held personal values.",
@@ -221,8 +221,8 @@ function getLearningStyleRankedNames(data: any): string[] {
 function formatLearningStylePrimarySecondary(data: any): string {
   const ranked = getLearningStyleRankedNames(data);
   if (ranked.length >= 2) return `Primary: ${ranked[0]} | Secondary: ${ranked[1]}`;
-  if (ranked.length === 1) return `Primary: ${ranked[0]} | Secondary: —`;
-  return "Primary: Learning Style | Secondary: —";
+  if (ranked.length === 1) return `Primary: ${ranked[0]} | Secondary: -`;
+  return "Primary: Learning Style | Secondary: -";
 }
 
 const COGNITIVE_CONCEPT_LINES: string[] = [
@@ -424,7 +424,7 @@ async function loadCareerDb(): Promise<CareerDbRow[]> {
 // ─────────────────────────────────────────────────────────────────────────────
 // PDF COLOR HELPERS
 // NOTE: ALWAYS use setTxt() for text color, setFill() for shapes, setDraw() for borders.
-//       Never use setFillColor() to control text — jsPDF uses separate setTextColor().
+//       Never use setFillColor() to control text - jsPDF uses separate setTextColor().
 // ─────────────────────────────────────────────────────────────────────────────
 
 function setFill(pdf: any, r: number, g: number, b: number) { pdf.setFillColor(r, g, b); }
@@ -934,7 +934,7 @@ const tplNormalizeWebsite = (value?: string): string => {
 
 const tplFirstLastName = (value?: string): string => {
   const cleaned = String(value || "").replace(/\s+/g, " ").trim();
-  if (!cleaned) return "—";
+  if (!cleaned) return "-";
   const parts = cleaned.split(" ").filter(Boolean);
   if (parts.length <= 2) return parts.join(" ");
   return `${parts[0]} ${parts[parts.length - 1]}`;
@@ -1248,7 +1248,7 @@ async function tryGenerateCareerDnaFromTemplate(
     const H = (mm: number) => tplMmToPt(mm * sy);
 
     const interpretedBy = tplFirstLastName(args.organizationBranding?.representativeName);
-    const website = tplNormalizeWebsite(args.organizationBranding?.website) || "—";
+    const website = tplNormalizeWebsite(args.organizationBranding?.website) || "-";
     const logoArea = includeFooterContact
       ? { x: 55, top: 150, w: 98, h: 44 }
       : { x: 110, top: 8, w: 80, h: 28 };
@@ -1295,14 +1295,14 @@ async function tryGenerateCareerDnaFromTemplate(
       return;
     }
 
-    page.drawText(`Phone: ${args.organizationBranding?.contactPhone || "—"}`, {
+    page.drawText(`Phone: ${args.organizationBranding?.contactPhone || "-"}`, {
       x: X(30),
       y: Y(271),
       size: 9,
       font: regularFont,
       color: rgb(0.12, 0.16, 0.2),
     });
-    page.drawText(`Email: ${args.organizationBranding?.contactEmail || "—"}`, {
+    page.drawText(`Email: ${args.organizationBranding?.contactEmail || "-"}`, {
       x: X(104),
       y: Y(271),
       size: 9,
@@ -1486,7 +1486,7 @@ async function tryGenerateCareerDnaFromTemplate(
         color: rgb(15 / 255, 23 / 255, 42 / 255),
       });
 
-      const stream = career.proposedStream || career.cluster || "—";
+      const stream = career.proposedStream || career.cluster || "-";
       
       // Stream and Cluster chips: increase box height so content fits comfortably
       const chipLineY = y + cardH - mm(15.0);
@@ -1501,7 +1501,7 @@ async function tryGenerateCareerDnaFromTemplate(
       const clusterX = x + mm(2.8) + chipW + mm(1.2);
       careersPage.drawRectangle({ x: clusterX, y: chipLineY, width: chipW, height: mm(7.0), color: rgb(219 / 255, 234 / 255, 254 / 255), borderColor: rgb(96 / 255, 165 / 255, 250 / 255), borderWidth: 0.7 });
       careersPage.drawText("Cluster", { x: clusterX + mm(0.4), y: chipLineY + mm(4.4), size: 5.2, font: regularFont, color: rgb(30 / 255, 58 / 255, 138 / 255) });
-      careersPage.drawText(career.cluster || "—", { x: clusterX + mm(0.4), y: chipLineY + mm(1.2), size: 7.2, font: regularFont, color: rgb(15 / 255, 76 / 255, 168 / 255) });
+      careersPage.drawText(career.cluster || "-", { x: clusterX + mm(0.4), y: chipLineY + mm(1.2), size: 7.2, font: regularFont, color: rgb(15 / 255, 76 / 255, 168 / 255) });
 
       // Traits progress bar at bottom - closer to chips
       const barY = y + mm(5.0);
@@ -1598,9 +1598,9 @@ export async function generateCareerDnaCapabilityReport(
   pdf.text(studentName || "Student", ML + 3, 51.5);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8.5);
-  pdf.text(`Grade: ${classGrade || "—"}`, ML + 3, 57.5);
-  pdf.text(`School: ${schoolName || "—"}`, ML + 3, 63);
-  pdf.text(`Date: ${submittedAt || "—"}`, ML + 3, 68.5);
+  pdf.text(`Grade: ${classGrade || "-"}`, ML + 3, 57.5);
+  pdf.text(`School: ${schoolName || "-"}`, ML + 3, 63);
+  pdf.text(`Date: ${submittedAt || "-"}`, ML + 3, 68.5);
   pageNum++;
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -1671,7 +1671,7 @@ export async function generateCareerDnaCapabilityReport(
     traitKey?: TraitKey;
   }> = [
     {
-      title: "1. CONCEPT NOTE — CAREER DNA: CAPABILITY PROFILE REPORT",
+      title: "1. CONCEPT NOTE - CAREER DNA: CAPABILITY PROFILE REPORT",
       color: [30, 58, 138],
       resultType: "overall",
       lines: [
@@ -1690,7 +1690,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "2. CONCEPT NOTE — COGNITIVE ABILITY",
+      title: "2. CONCEPT NOTE - COGNITIVE ABILITY",
       color: [59, 130, 246],
       resultType: "cognitive_overview",
       lines: [
@@ -1711,7 +1711,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "3. CONCEPT NOTE — VERBAL REASONING",
+      title: "3. CONCEPT NOTE - VERBAL REASONING",
       color: [30, 58, 138],
       resultType: "trait",
       traitKey: "VR",
@@ -1728,7 +1728,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "4. CONCEPT NOTE — NUMERICAL REASONING",
+      title: "4. CONCEPT NOTE - NUMERICAL REASONING",
       color: [30, 58, 138],
       resultType: "trait",
       traitKey: "NR",
@@ -1744,7 +1744,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "5. CONCEPT NOTE — SPATIAL REASONING",
+      title: "5. CONCEPT NOTE - SPATIAL REASONING",
       color: [30, 58, 138],
       resultType: "trait",
       traitKey: "SR",
@@ -1760,7 +1760,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "6. CONCEPT NOTE — MEMORY & PROCESSING SPEED",
+      title: "6. CONCEPT NOTE - MEMORY & PROCESSING SPEED",
       color: [30, 58, 138],
       resultType: "trait",
       traitKey: "MP",
@@ -1773,7 +1773,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "7. CONCEPT NOTE — APTITUDE PROFILE",
+      title: "7. CONCEPT NOTE - APTITUDE PROFILE",
       color: [8, 145, 178],
       resultType: "aptitude_overview",
       lines: [
@@ -1788,7 +1788,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "8. CONCEPT NOTE — LOGICAL & ANALYTICAL ABILITY",
+      title: "8. CONCEPT NOTE - LOGICAL & ANALYTICAL ABILITY",
       color: [8, 145, 178],
       resultType: "trait",
       traitKey: "LR",
@@ -1803,7 +1803,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "9. CONCEPT NOTE — NUMERICAL APTITUDE",
+      title: "9. CONCEPT NOTE - NUMERICAL APTITUDE",
       color: [8, 145, 178],
       resultType: "trait",
       traitKey: "NA",
@@ -1817,7 +1817,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "10. CONCEPT NOTE — VERBAL APTITUDE",
+      title: "10. CONCEPT NOTE - VERBAL APTITUDE",
       color: [8, 145, 178],
       resultType: "trait",
       traitKey: "VA",
@@ -1832,7 +1832,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "11. CONCEPT NOTE — MECHANICAL APTITUDE",
+      title: "11. CONCEPT NOTE - MECHANICAL APTITUDE",
       color: [8, 145, 178],
       resultType: "trait",
       traitKey: "MA",
@@ -1848,7 +1848,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "12. CONCEPT NOTE — CREATIVITY & INNOVATION",
+      title: "12. CONCEPT NOTE - CREATIVITY & INNOVATION",
       color: [8, 145, 178],
       resultType: "trait",
       traitKey: "CI",
@@ -1863,7 +1863,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "13. CONCEPT NOTE — TOP CAREER MATCHES",
+      title: "13. CONCEPT NOTE - TOP CAREER MATCHES",
       color: [30, 58, 138],
       resultType: "career_matches",
       lines: [
@@ -1877,7 +1877,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "14. CONCEPT NOTE — CAPABILITY BAND",
+      title: "14. CONCEPT NOTE - CAPABILITY BAND",
       color: [30, 58, 138],
       resultType: "capability_band",
       lines: [
@@ -1891,7 +1891,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "15. CONCEPT NOTE — GAP ANALYSIS",
+      title: "15. CONCEPT NOTE - GAP ANALYSIS",
       color: [30, 58, 138],
       resultType: "gap_analysis",
       lines: [
@@ -1905,7 +1905,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "16. CONCEPT NOTE — LEARNING STYLE",
+      title: "16. CONCEPT NOTE - LEARNING STYLE",
       color: [245, 158, 11],
       resultType: "learning_style",
       lines: [
@@ -1920,7 +1920,7 @@ export async function generateCareerDnaCapabilityReport(
       ],
     },
     {
-      title: "17. CONCEPT NOTE — STRESS & RESILIENCE",
+      title: "17. CONCEPT NOTE - STRESS & RESILIENCE",
       color: [239, 68, 68],
       resultType: "stress_resilience",
       lines: [
@@ -2013,7 +2013,7 @@ export async function generateCareerDnaCapabilityReport(
           setTxt(pdf, 30, 41, 59);
           pdf.setFont("helvetica", "bold");
           pdf.setFontSize(7.2);
-          pdf.text((top10[0]?.career || "—").slice(0, 18), centerX, ry + 25, { align: "center" });
+          pdf.text((top10[0]?.career || "-").slice(0, 18), centerX, ry + 25, { align: "center" });
           pdf.setFont("helvetica", "normal");
           pdf.setFontSize(6.8);
           pdf.text(`Top Match ${Math.round(top10[0]?.capabilityScore || 0)}/100`, centerX, ry + 29, { align: "center" });
@@ -2117,8 +2117,8 @@ export async function generateCareerDnaCapabilityReport(
           pdf.setFontSize(7.1);
           pdf.text("Primary / Secondary", centerX, ry + 4.8, { align: "center" });
           pdf.setFontSize(6.8);
-          pdf.text(ranked[0] || "—", centerX, ry + 10, { align: "center" });
-          pdf.text(ranked[1] || "—", centerX, ry + 14.5, { align: "center" });
+          pdf.text(ranked[0] || "-", centerX, ry + 10, { align: "center" });
+          pdf.text(ranked[1] || "-", centerX, ry + 14.5, { align: "center" });
           const parts = Array.isArray(learningSection?.parts) ? learningSection.parts : [];
           let sy = ry + 18;
           parts.slice(0, 3).forEach((part: any) => {
@@ -2153,7 +2153,7 @@ export async function generateCareerDnaCapabilityReport(
           pdf.setFont("helvetica", "normal");
           pdf.setFontSize(6.5);
           pdf.text(`Strengths: ${topStrengths.join(", ")}`, rx + 1.3, ry + 10);
-          const dev = developmentTraits.map((d) => d.key).join(", ") || "—";
+          const dev = developmentTraits.map((d) => d.key).join(", ") || "-";
           pdf.text(`Focus: ${dev}`, rx + 1.3, ry + 14.2);
           pdf.text("Re-evaluate after practice", rx + 1.3, ry + 18.4);
           return;

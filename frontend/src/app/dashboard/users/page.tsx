@@ -30,7 +30,7 @@ type StudentsResponse = {
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "—";
+  if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -199,15 +199,15 @@ export default function UsersPage() {
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Organization</p>
-                        <p className="mt-1 break-words text-black">{user.organization ? user.organization.name : "—"}</p>
+                        <p className="mt-1 break-words text-black">{user.organization ? user.organization.name : "-"}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Grade</p>
-                        <p className="mt-1 text-black">{user.grade || "—"}</p>
+                        <p className="mt-1 text-black">{user.grade || "-"}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Division</p>
-                        <p className="mt-1 text-black">{user.division || "—"}</p>
+                        <p className="mt-1 text-black">{user.division || "-"}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Tests</p>
@@ -256,7 +256,7 @@ export default function UsersPage() {
                   <tbody className="divide-y divide-gray-50">
                     {filtered.map((user) => {
                       const fullName = `${user.firstName} ${user.lastName}`;
-                      const orgName = user.organization?.name || "—";
+                      const orgName = user.organization?.name || "-";
 
                       return (
                         <tr key={user._id} className="transition-colors hover:bg-gray-50">
@@ -274,8 +274,8 @@ export default function UsersPage() {
                           <td className="px-3 py-3">
                             <span className="block truncate text-black" title={orgName}>{orgName}</span>
                           </td>
-                          <td className="px-3 py-3 text-black">{user.grade || "—"}</td>
-                          <td className="px-3 py-3 text-black">{user.division || "—"}</td>
+                          <td className="px-3 py-3 text-black">{user.grade || "-"}</td>
+                          <td className="px-3 py-3 text-black">{user.division || "-"}</td>
                           <td className="px-3 py-3 text-black">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
                           <td className="px-3 py-3 text-black">{user.testsPending ?? 0}</td>
                           <td className="px-3 py-3 text-black">{formatDate(user.createdAt)}</td>

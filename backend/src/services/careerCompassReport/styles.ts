@@ -728,19 +728,19 @@ export const reportStyles = `
   .dimension-bar-labels span:first-child { text-align: left; }
   .dimension-bar-labels span:last-child { text-align: right; }
 
-  /* Energy — purple / green */
+  /* Energy - purple / green */
   .dim-energy .dimension-wheel { border-color: #7C3AED; background: rgba(124,58,237,0.06); }
   .dim-energy .wheel-pct { color: #7C3AED; }
 
-  /* Life — red / teal */
+  /* Life - red / teal */
   .dim-life .dimension-wheel { border-color: #EF4444; background: rgba(239,68,68,0.06); }
   .dim-life .wheel-pct { color: #EF4444; }
 
-  /* Cognitive — blue / orange */
+  /* Cognitive - blue / orange */
   .dim-cognitive .dimension-wheel { border-color: #3B82F6; background: rgba(59,130,246,0.06); }
   .dim-cognitive .wheel-pct { color: #3B82F6; }
 
-  /* Values — gold / pink */
+  /* Values - gold / pink */
   .dim-values .dimension-wheel { border-color: #FBBF24; background: rgba(251,191,36,0.08); }
   .dim-values .wheel-pct { color: #D97706; }
 

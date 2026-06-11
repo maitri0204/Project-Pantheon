@@ -57,7 +57,7 @@ function formatReportDate(value?: string | Date): string {
 
 function mapScoredItems(parts: SectionPart[]) {
   return parts.map((part) => ({
-    label: String(part.partName || "Section").replace(/\s*—\s*/g, " — ").replace(/^\w\s—\s/, (m) => m),
+    label: String(part.partName || "Section").replace(/\s*-\s*/g, " - ").replace(/^\w\s-\s/, (m) => m),
     score: Number(part.score ?? 0),
     max: Number(part.maxScore ?? 0),
     pct: Number(part.percentage ?? 0),
@@ -68,7 +68,7 @@ function mapInterestItems(parts: SectionPart[]) {
   return parts.map((part) => {
     const raw = String(part.partName || "");
     const code = raw.split(" ")[0]?.replace(/[^A-Z]/gi, "") || "";
-    const title = raw.includes("—") ? raw.split("—")[1]?.trim() : raw;
+    const title = raw.includes("-") ? raw.split("-")[1]?.trim() : raw;
     const label = title ? `${title} (${code})` : raw;
     return {
       label,
@@ -91,7 +91,7 @@ function mapPersonality(section?: EvaluationSection) {
     const score = dim
       ? Math.max(Number(dim.percentA ?? 0), Number(dim.percentB ?? 0))
       : Number(part?.percentage ?? 0);
-    const typeName = formatPersonalityTypeName(PERSONALITY_WINNER_NAMES[winner] || winner || "—");
+    const typeName = formatPersonalityTypeName(PERSONALITY_WINNER_NAMES[winner] || winner || "-");
     return {
       label: PERSONALITY_PAIR_LABELS[pair],
       type: typeName,
@@ -125,7 +125,7 @@ function deriveTopStrengths(items: InsightItem[]): string[] {
     .filter((i) => i.pct >= 75)
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 5)
-    .map((i) => `${i.label} (${i.pct}%) — strong performance in ${i.section.toLowerCase()}`);
+    .map((i) => `${i.label} (${i.pct}%) - strong performance in ${i.section.toLowerCase()}`);
 }
 
 function deriveDevelopmentAreas(items: InsightItem[]): string[] {
@@ -133,7 +133,7 @@ function deriveDevelopmentAreas(items: InsightItem[]): string[] {
     .filter((i) => i.pct < 50)
     .sort((a, b) => a.pct - b.pct)
     .slice(0, 4)
-    .map((i) => `${i.label} (${i.pct}%) — focused development recommended`);
+    .map((i) => `${i.label} (${i.pct}%) - focused development recommended`);
 }
 
 function deriveKeyTakeaways(
@@ -156,10 +156,10 @@ function deriveKeyTakeaways(
     takeaways.push(`Strong cognitive (${cognitivePct}%) and aptitude (${aptitudePct}%) scores support analytical career paths.`);
   }
   if (strengths[0]) {
-    takeaways.push(`Primary strength: ${strengths[0].split(" —")[0]}.`);
+    takeaways.push(`Primary strength: ${strengths[0].split(" -")[0]}.`);
   }
   if (gaps[0]) {
-    takeaways.push(`Priority development area: ${gaps[0].split(" —")[0]}.`);
+    takeaways.push(`Priority development area: ${gaps[0].split(" -")[0]}.`);
   }
   if (dominantLearning) {
     takeaways.push(`Learning style code ${dominantLearning} suggests tailoring study methods to preferred modalities.`);

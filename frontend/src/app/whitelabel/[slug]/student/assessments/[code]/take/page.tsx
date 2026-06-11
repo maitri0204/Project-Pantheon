@@ -1100,7 +1100,7 @@ export default function StudentTakeAssessmentPage() {
         <div className="flex items-center gap-4 min-w-0">
           <div className="border-r border-gray-200 pr-4">
             <h1 className="text-base font-bold text-gray-900">{assessmentName || code}</h1>
-            <p className="text-xs text-gray-500">Answer all {questions.length} questions — every question is compulsory</p>
+            <p className="text-xs text-gray-500">Answer all {questions.length} questions - every question is compulsory</p>
           </div>
         </div>
 

@@ -177,7 +177,7 @@ export default function StudentInvoicesPage() {
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs font-semibold text-gray-900">
                           {fmt(inv.finalAmount)}
                         </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "—"}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-gray-500">{inv.couponCode ?? "-"}</td>
                       </tr>
                     );
                   })}

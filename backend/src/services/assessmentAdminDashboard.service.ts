@@ -162,7 +162,7 @@ function parseStudyAbroad(evaluation: Record<string, unknown>): ParsedAttemptMet
 function parseAdversity(evaluation: Record<string, unknown>) {
   const totalScore = Number(evaluation.totalScore);
   if (!Number.isFinite(totalScore)) return null;
-  const level = typeof evaluation.aqLevel === "string" ? evaluation.aqLevel : "—";
+  const level = typeof evaluation.aqLevel === "string" ? evaluation.aqLevel : "-";
   const metrics: Record<string, number> = {};
   const subscales = evaluation.subscales;
   if (Array.isArray(subscales)) {
@@ -218,7 +218,7 @@ function parseAcademicCareer(evaluation: Record<string, unknown>) {
     .map((c) => INTEREST_NAMES[c] || c)
     .join(", ");
   return {
-    resultLabel: stream || topLabel || "—",
+    resultLabel: stream || topLabel || "-",
     resultDetail: topLabel ? `Top: ${topLabel}` : undefined,
     score: topInterests.length ? metrics[topInterests[0]] : undefined,
     percentage: undefined,
@@ -265,7 +265,7 @@ function parseJohari(evaluation: Record<string, unknown>) {
     });
   }
   return {
-    resultLabel: dominant || "—",
+    resultLabel: dominant || "-",
     resultDetail: evaluation.solicitsFeedbackScore != null && evaluation.selfDisclosureScore != null
       ? `Feedback ${evaluation.solicitsFeedbackScore} · Disclosure ${evaluation.selfDisclosureScore}`
       : undefined,
@@ -379,7 +379,7 @@ function parseLitmus(evaluation: Record<string, unknown>) {
     });
   }
   return {
-    resultLabel: LITMUS_STYLE_NAMES[dominant] || dominant || "—",
+    resultLabel: LITMUS_STYLE_NAMES[dominant] || dominant || "-",
     resultDetail: Number.isFinite(totalScore) ? `Score ${totalScore}` : undefined,
     score: Number.isFinite(totalScore) ? totalScore : undefined,
     metrics,
@@ -533,7 +533,7 @@ function buildSummary(
       const scores = rows.map((r) => r.score).filter((s): s is number => Number.isFinite(s));
       const avgScore = avg(scores);
       summary.metricLabel = "Avg Score";
-      summary.metricValue = scores.length ? `${avgScore} / 150` : "—";
+      summary.metricValue = scores.length ? `${avgScore} / 150` : "-";
       summary.metricSub = scores.length ? bandFromStudyAbroadScore(avgScore) : undefined;
       break;
     }
@@ -541,33 +541,33 @@ function buildSummary(
     case "ADVERSITY_TEST": {
       const scores = rows.map((r) => r.score).filter((s): s is number => Number.isFinite(s));
       summary.metricLabel = "Avg RQ Score";
-      summary.metricValue = scores.length ? `${avg(scores)} / 100` : "—";
+      summary.metricValue = scores.length ? `${avg(scores)} / 100` : "-";
       summary.metricSub = distributions[0]?.label;
       break;
     }
     case "ACADEMIC_CAREER":
       summary.metricLabel = "Top Stream (mode)";
-      summary.metricValue = distributions[0]?.label || "—";
+      summary.metricValue = distributions[0]?.label || "-";
       summary.metricSub = distributions[0] ? `${distributions[0].count} students` : undefined;
       break;
     case "CAREER_COMPASS":
     case "CAREER_DNA":
       summary.metricLabel = "Most Common Type";
-      summary.metricValue = distributions[0]?.label || "—";
+      summary.metricValue = distributions[0]?.label || "-";
       summary.metricSub = distributions[0] ? `${distributions[0].count} students` : undefined;
       break;
     case "JOHARI_WINDOW":
       summary.metricLabel = "Dominant Quadrant";
-      summary.metricValue = distributions[0]?.label || "—";
+      summary.metricValue = distributions[0]?.label || "-";
       break;
     case "LITMUS_TEST":
       summary.metricLabel = "Dominant Style";
-      summary.metricValue = distributions[0]?.label || "—";
+      summary.metricValue = distributions[0]?.label || "-";
       break;
     case "METACOGNITION_TEST": {
       const scores = rows.map((r) => r.score).filter((s): s is number => Number.isFinite(s));
       summary.metricLabel = "Avg Total Score";
-      summary.metricValue = scores.length ? String(avg(scores)) : "—";
+      summary.metricValue = scores.length ? String(avg(scores)) : "-";
       break;
     }
     default:

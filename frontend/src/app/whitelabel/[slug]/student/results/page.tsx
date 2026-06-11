@@ -145,7 +145,7 @@ export default function StudentResultsPage() {
                     </div>
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs text-slate-500 border border-slate-100">
                       <CalendarClock className="h-3.5 w-3.5" />
-                      Completed {result.completedAt ? new Date(result.completedAt).toLocaleString("en-IN") : "—"}
+                      Completed {result.completedAt ? new Date(result.completedAt).toLocaleString("en-IN") : "-"}
                     </div>
                   </div>
 

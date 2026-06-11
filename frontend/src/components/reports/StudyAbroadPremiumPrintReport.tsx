@@ -19,7 +19,7 @@ export const SA_PREMIUM_REPORT_ROOT = 'sa-premium-print-report';
 
 const REPORT_PAGE_PADDING = '68px 68px 53px';
 
-/** Cover overlay positions — same coordinates as RQ report, scaled to 794×1123 capture canvas. */
+/** Cover overlay positions - same coordinates as RQ report, scaled to 794×1123 capture canvas. */
 const SA_COVER_SCALE_X = 794 / 595;
 const SA_COVER_SCALE_Y = 1123 / 841;
 const SA_COVER_IMAGE = '/study-abroad/cover.jpg';
@@ -594,7 +594,7 @@ export default function StudyAbroadPremiumPrintReport({
         `Financial Readiness (${result.topicScores['Financial Readiness']}%) and Visa & Compliance (${result.topicScores['Visa & Compliance Readiness']}%) ` +
         (practicalScore >= 60
           ? 'demonstrate strong awareness of international study logistics.'
-          : 'require dedicated attention — financial planning sessions and immigration orientation workshops are recommended.'),
+          : 'require dedicated attention - financial planning sessions and immigration orientation workshops are recommended.'),
     },
   ];
 
@@ -603,10 +603,10 @@ export default function StudyAbroadPremiumPrintReport({
     'Thank you for supporting your child\'s international education aspirations. This report provides a comprehensive snapshot of their current readiness profile.',
     `${displayName} has scored ${pct}% (${result.overallScore}/150), classified as "${bandLabel}". ` +
       (pct >= 76
-        ? 'The results indicate strong preparation — your child is approaching readiness for international study. Continue reinforcing their strengths and addressing the highlighted focus areas.'
+        ? 'The results indicate strong preparation - your child is approaching readiness for international study. Continue reinforcing their strengths and addressing the highlighted focus areas.'
         : pct >= 51
         ? 'Meaningful progress is evident. With structured 3–6 month preparation focusing on the identified weaker areas, significant readiness improvement is achievable.'
-        : 'There is room to grow. Your active involvement — particularly in financial planning, emotional support, and awareness-building — will be critical to their success.'),
+        : 'There is room to grow. Your active involvement - particularly in financial planning, emotional support, and awareness-building - will be critical to their success.'),
   ];
   const parentActionItems = [
     'Discuss realistic financial commitments including tuition, accommodation, insurance, and living costs for your target destination.',
@@ -862,7 +862,7 @@ export default function StudyAbroadPremiumPrintReport({
         </Page>
 
         {/* ═══════════════════════════════════════════════════════════════
-            STRENGTHS & FOCUS — page 1 (whole cards only; overflow continues)
+            STRENGTHS & FOCUS - page 1 (whole cards only; overflow continues)
         ════════════════════════════════════════════════════════════════ */}
         <Page pageIndex={strengthFocusStartIndex}>
           <SH n="03" title="Strengths & Priority Focus Areas" sub="Personalised Intelligence Analysis" />
@@ -901,7 +901,7 @@ export default function StudyAbroadPremiumPrintReport({
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
-            ROADMAP — 2 phases per page (whole boxes; phase 5+ on later pages)
+            ROADMAP - 2 phases per page (whole boxes; phase 5+ on later pages)
         ════════════════════════════════════════════════════════════════ */}
         {roadmapChunks.map((chunk, chunkIdx) => (
           <Page key={`roadmap-${chunkIdx}`} pageIndex={roadmapStartIndex + chunkIdx}>

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import { getTestDashboardMeta } from "@/lib/dashboard/testDashboard";
 
-/** Uses parent whitelabel dashboard layout (DashboardShell) — no alternate shell. */
+/** Uses parent whitelabel dashboard layout (DashboardShell) - no alternate shell. */
 export default function WhitelabelTestDashboardLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const router = useRouter();

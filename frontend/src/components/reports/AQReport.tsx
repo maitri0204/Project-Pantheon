@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * RQReport.tsx — Premium RQ Behavioral Analytics PDF
+ * RQReport.tsx - Premium RQ Behavioral Analytics PDF
  * Rendered with @react-pdf/renderer v4
  *
  * Font system: Inter (jsDelivr @fontsource CDN)
- *   — Eliminates "Could not resolve font for Helvetica-Bold, fontWeight 400, fontStyle italic"
- *   — All text uses fontFamily: 'Inter' + fontWeight: 400 | 600 | 700
- *   — No fontFamily: 'Helvetica-Bold' (root cause of the error)
- *   — No fontStyle: 'italic' (Inter has no italic variant)
+ *   - Eliminates "Could not resolve font for Helvetica-Bold, fontWeight 400, fontStyle italic"
+ *   - All text uses fontFamily: 'Inter' + fontWeight: 400 | 600 | 700
+ *   - No fontFamily: 'Helvetica-Bold' (root cause of the error)
+ *   - No fontStyle: 'italic' (Inter has no italic variant)
  */
 import React from 'react';
 import {
@@ -141,7 +141,7 @@ const LEVEL_TEXT: Record<string, string> = {
 const LEVEL_DESC: Record<string, { title: string; body: string }> = {
   Exceptional: {
     title: 'Exceptional Resilience',
-    body:  'You operate in the highest tier of resilience intelligence. Your CORE profile — Control, Ownership, Reach, Endurance — is firing on all dimensions, enabling you to navigate challenges with agency, accountability, and psychological strength.',
+    body:  'You operate in the highest tier of resilience intelligence. Your CORE profile - Control, Ownership, Reach, Endurance - is firing on all dimensions, enabling you to navigate challenges with agency, accountability, and psychological strength.',
   },
   Strong: {
     title: 'Strong Resilience',
@@ -153,7 +153,7 @@ const LEVEL_DESC: Record<string, { title: string; body: string }> = {
   },
   Developing: {
     title: 'Developing Resilience',
-    body:  'Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside. Many high-RQ individuals began exactly where you are now.',
+    body:  'Your resilience capacity is in an early stage of development - this is not a limitation, it is a starting point with tremendous upside. Many high-RQ individuals began exactly where you are now.',
   },
 };
 
@@ -162,7 +162,7 @@ const DIM_INFO: Record<string, { desc: string; angle: number; high: string; low:
     desc:  'Perceived ability to influence adversity outcomes',
     angle: -Math.PI / 2,
     high:  'You exhibit a strong internal locus of control. You approach adversity believing you can shape outcomes through intentional action, which is a foundational trait of high-RQ individuals.',
-    low:   'You may feel that adversities are largely beyond your control. Practising daily "sphere of influence" exercises — identifying 3 actions within your power — will steadily build this dimension.',
+    low:   'You may feel that adversities are largely beyond your control. Practising daily "sphere of influence" exercises - identifying 3 actions within your power - will steadily build this dimension.',
   },
   Ownership: {
     desc:  'Tendency to take accountability rather than assign blame',
@@ -179,7 +179,7 @@ const DIM_INFO: Record<string, { desc: string; angle: number; high: string; low:
   Endurance: {
     desc:  'Perception of how long adversity will persist',
     angle: Math.PI,
-    high:  'Strong temporal resilience. You naturally view adversities as temporary states — "this too shall pass" — which enables rapid psychological bounce-back and sustained performance.',
+    high:  'Strong temporal resilience. You naturally view adversities as temporary states - "this too shall pass" - which enables rapid psychological bounce-back and sustained performance.',
     low:   'You may perceive adversities as long-lasting or even permanent. Evidence-based journaling about past challenges you have overcome will rewire this temporal narrative.',
   },
 };
@@ -247,7 +247,7 @@ function behaviorPatterns(d: AQHistoryResponse): BehaviorPattern[] {
     {
       title: 'Adversity Compartmentalization',
       body:  reach > 70
-        ? 'High containment: You prevent challenges from bleeding into other life areas — a hallmark of high-performing, high-RQ individuals. This containment is a major performance asset because it protects study quality, sleep, and relationships during difficult periods. Preserve this strength by keeping clear start-stop boundaries between domains.'
+        ? 'High containment: You prevent challenges from bleeding into other life areas - a hallmark of high-performing, high-RQ individuals. This containment is a major performance asset because it protects study quality, sleep, and relationships during difficult periods. Preserve this strength by keeping clear start-stop boundaries between domains.'
         : reach > 50
         ? 'Moderate containment: Some adversities temporarily affect other life domains. Domain-boundary practices will strengthen this. Your profile suggests you can contain challenges, but not always under pressure. Structured transitions between tasks can significantly reduce spillover.'
         : 'Adversity spread: Challenges tend to affect multiple life areas. Clear mental separation and "parking lot" techniques will help. This pattern can make one bad event feel like a bad day overall. The fastest correction is explicit labeling: define which area the issue belongs to and park unrelated worries for scheduled review.',
@@ -292,11 +292,11 @@ function recommendations(d: AQHistoryResponse): Recommendation[] {
   });
   if (reach < 60) recs.push({
     title: 'Practice Adversity Compartmentalization',
-    body:  'Create clear mental and behavioral boundaries between life domains. When facing a work or academic challenge, use a "parking lot" — write worries down to address at a designated later time, keeping other domains protected. This method reduces cognitive spillover and helps preserve focus quality during study and revision blocks.',
+    body:  'Create clear mental and behavioral boundaries between life domains. When facing a work or academic challenge, use a "parking lot" - write worries down to address at a designated later time, keeping other domains protected. This method reduces cognitive spillover and helps preserve focus quality during study and revision blocks.',
   });
   if (end < 60) recs.push({
     title: 'Build Temporal Resilience Narratives',
-    body:  'Develop a personal "evidence log" of adversities you have successfully overcome. Reading this regularly trains your brain to recognize that challenges are temporary, finite states — not permanent conditions. Add dates and outcomes to each entry so your brain sees clear proof that distress phases end.',
+    body:  'Develop a personal "evidence log" of adversities you have successfully overcome. Reading this regularly trains your brain to recognize that challenges are temporary, finite states - not permanent conditions. Add dates and outcomes to each entry so your brain sees clear proof that distress phases end.',
   });
   if (aq < 65) {
     recs.push({
@@ -305,16 +305,16 @@ function recommendations(d: AQHistoryResponse): Recommendation[] {
     });
     recs.push({
       title: 'Pursue Structured Adversity Exposure',
-      body:  'Voluntarily embrace small, controlled discomforts — a difficult conversation, a challenging goal, cold exposure. Controlled adversity trains your nervous system to maintain function under pressure, raising your RQ baseline. Keep exposures brief, intentional, and safe; consistency matters more than intensity.',
+      body:  'Voluntarily embrace small, controlled discomforts - a difficult conversation, a challenging goal, cold exposure. Controlled adversity trains your nervous system to maintain function under pressure, raising your RQ baseline. Keep exposures brief, intentional, and safe; consistency matters more than intensity.',
     });
   }
   if (d.totalAttempts > 1 && (d.bestScore ?? 0) - (d.avgScore ?? 0) > 10) recs.push({
     title: 'Replicate Your Peak Performance State',
-    body:  `Your best score (${d.bestScore}) significantly exceeds your average (${d.avgScore?.toFixed(0)}). Analyze what factors were present in your highest-score attempt — sleep, mindset, time of day — and actively replicate those conditions. Create a short checklist and use it before every important study or assessment session.`,
+    body:  `Your best score (${d.bestScore}) significantly exceeds your average (${d.avgScore?.toFixed(0)}). Analyze what factors were present in your highest-score attempt - sleep, mindset, time of day - and actively replicate those conditions. Create a short checklist and use it before every important study or assessment session.`,
   });
   recs.push({
     title: 'Track Your RQ Journey Consistently',
-    body:  'Re-assess your RQ every 4–6 weeks. Regular measurement creates awareness loops that accelerate behavioral change. Watch your dimension scores over time — targeted practice yields compound improvement. Focus on trend direction across attempts rather than reacting to one isolated score.',
+    body:  'Re-assess your RQ every 4–6 weeks. Regular measurement creates awareness loops that accelerate behavioral change. Watch your dimension scores over time - targeted practice yields compound improvement. Focus on trend direction across attempts rather than reacting to one isolated score.',
   });
   recs.push({
     title: 'Build a Resilience Support System',
@@ -343,7 +343,7 @@ function finalSummary(d: AQHistoryResponse) {
       interpretation: 'Your RQ profile demonstrates strong behavioral resilience. You navigate most adversities effectively with clear, targeted opportunities to reach the Exceptional tier.',
       conclusion:     'You have built a solid resilience foundation. The gap between Strong and Exceptional is intentional practice on your specific lower-scoring dimensions.',
       outlook:        'With focused development on 1–2 dimensions, you have clear potential to reach Exceptional within 60–90 days of consistent practice.',
-      motivation:     'Every adversity you navigate is data for your growth. You are already strong — the extraordinary is within your reach.',
+      motivation:     'Every adversity you navigate is data for your growth. You are already strong - the extraordinary is within your reach.',
     },
     Moderate: {
       interpretation: 'Your RQ profile shows developing resilience patterns. You demonstrate genuine capacity in some dimensions while others present valuable, actionable growth opportunities.',
@@ -352,7 +352,7 @@ function finalSummary(d: AQHistoryResponse) {
       motivation:     'Awareness of where you are is the most powerful first step. You are already ahead of those who have never measured their resilience at all.',
     },
     Developing: {
-      interpretation: 'Your RQ profile indicates that your resilience capacity is still developing. This is not a limitation — it is a starting point with tremendous growth potential.',
+      interpretation: 'Your RQ profile indicates that your resilience capacity is still developing. This is not a limitation - it is a starting point with tremendous growth potential.',
       conclusion:     'Many individuals who begin with developing-level RQ go on to achieve exceptional resilience through intentional, consistent practice. Your commitment to self-assessment already sets you apart.',
       outlook:        'Focus on one dimension at a time, starting with your lowest-scoring area. Small, consistent improvements compound into significant behavioral change over 30–60 days.',
       motivation:     'The willingness to measure and understand your adversity response is itself a sign of high potential. The RQ journey begins with awareness. You have taken that step.',
@@ -365,7 +365,7 @@ function finalSummary(d: AQHistoryResponse) {
 
 /* ─── Internal SVG for the line chart ───────────────────────────────────────
    PL/PR are derived from N so each data-point lands at the horizontal
-   centre of a "cell" of width W/N — making flex:1 X-axis labels align. */
+   centre of a "cell" of width W/N - making flex:1 X-axis labels align. */
 function LineChartSVG({
   trend, W, H, PT, PB,
 }: { trend: AQTrendPoint[]; W: number; H: number; PT: number; PB: number }) {
@@ -411,7 +411,7 @@ function LineChartSVG({
           stroke={LEVEL_COLOR[p.level] ?? C.sky}
           strokeWidth={0.5} strokeDasharray="2,3" strokeOpacity={0.45} />
       ))}
-      {/* Data-point dots — colour = scale (resilience level) */}
+      {/* Data-point dots - colour = scale (resilience level) */}
       {trend.map((p, i) => (
         <Circle key={i}
           cx={xP(i)} cy={yP(p.score)} r={5}
@@ -453,11 +453,11 @@ function LineChartWithAxes({ trend }: { trend: AQTrendPoint[] }) {
           ))}
         </View>
 
-        {/* Chart area — position:relative so score bubbles can be absolutely placed */}
+        {/* Chart area - position:relative so score bubbles can be absolutely placed */}
         <View style={{ width: W, height: H, position: 'relative' } as any}>
           <LineChartSVG trend={trend} W={W} H={H} PT={PT} PB={PB} />
 
-          {/* Score bubble — appears above (or below if too near top) each dot */}
+          {/* Score bubble - appears above (or below if too near top) each dot */}
           {trend.map((p, i) => {
             const cx = xP(i);
             const cy = yP(p.score);
@@ -480,7 +480,7 @@ function LineChartWithAxes({ trend }: { trend: AQTrendPoint[] }) {
         </View>
       </View>
 
-      {/* ── X-axis labels — each cell is exactly CELL_W wide, centred on data point ── */}
+      {/* ── X-axis labels - each cell is exactly CELL_W wide, centred on data point ── */}
       <View style={{ flexDirection: 'row', marginLeft: 26 }}>
         {trend.map((p, i) => (
           <View key={i} style={{ width: CELL_W, alignItems: 'center', paddingTop: 3 }}>
@@ -505,7 +505,7 @@ function LineChartWithAxes({ trend }: { trend: AQTrendPoint[] }) {
   );
 }
 
-/* Scale distribution bar chart — SVG bars aligned to shared 0% baseline */
+/* Scale distribution bar chart - SVG bars aligned to shared 0% baseline */
 function ScaleDistributionChart({ trend }: { trend: AQTrendPoint[] }) {
   const W = 468;
   const H = 78;
@@ -660,22 +660,22 @@ function RadarChartWithLabels({ avgs }: { avgs: SubscaleAverage[] }) {
   return (
     <View style={{ width: W, height: H, position: 'relative' } as any}>
       <RadarChartSVG avgs={avgs} />
-      {/* Control — top */}
+      {/* Control - top */}
       <View style={{ position: 'absolute', top: 2, left: 0, right: 0, alignItems: 'center' } as any}>
         <Text style={{ fontSize: 7, fontWeight: 700, color: dimColors['Control'], fontFamily: 'Inter' }}>Control</Text>
         <Text style={{ fontSize: 6.5, fontWeight: 700, color: LEVEL_COLOR[levelOf(getDim(avgs, 'Control'))] ?? C.sky, fontFamily: 'Inter' }}>{getDim(avgs, 'Control').toFixed(0)}%</Text>
       </View>
-      {/* Ownership — right */}
+      {/* Ownership - right */}
       <View style={{ position: 'absolute', right: 0, top: CY - 14 } as any}>
         <Text style={{ fontSize: 7, fontWeight: 700, color: dimColors['Ownership'], fontFamily: 'Inter' }}>Ownership</Text>
         <Text style={{ fontSize: 6.5, fontWeight: 700, color: LEVEL_COLOR[levelOf(getDim(avgs, 'Ownership'))] ?? C.sky, fontFamily: 'Inter' }}>{getDim(avgs, 'Ownership').toFixed(0)}%</Text>
       </View>
-      {/* Reach — bottom */}
+      {/* Reach - bottom */}
       <View style={{ position: 'absolute', bottom: 2, left: 0, right: 0, alignItems: 'center' } as any}>
         <Text style={{ fontSize: 7, fontWeight: 700, color: dimColors['Reach'], fontFamily: 'Inter' }}>Reach</Text>
         <Text style={{ fontSize: 6.5, fontWeight: 700, color: LEVEL_COLOR[levelOf(getDim(avgs, 'Reach'))] ?? C.sky, fontFamily: 'Inter' }}>{getDim(avgs, 'Reach').toFixed(0)}%</Text>
       </View>
-      {/* Endurance — left */}
+      {/* Endurance - left */}
       <View style={{ position: 'absolute', left: 0, top: CY - 14 } as any}>
         <Text style={{ fontSize: 7, fontWeight: 700, color: dimColors['Endurance'], fontFamily: 'Inter' }}>Endurance</Text>
         <Text style={{ fontSize: 6.5, fontWeight: 700, color: LEVEL_COLOR[levelOf(getDim(avgs, 'Endurance'))] ?? C.sky, fontFamily: 'Inter' }}>{getDim(avgs, 'Endurance').toFixed(0)}%</Text>
@@ -794,10 +794,10 @@ function PageFooter({ name, date }: { name: string; date: string }) {
  * ALL text styles use fontFamily: 'Inter'.
  * Bold text uses fontWeight: 700 (never fontFamily: 'Helvetica-Bold').
  * SemiBold uses fontWeight: 600.
- * No fontStyle: 'italic' — Inter has no italic variant.
+ * No fontStyle: 'italic' - Inter has no italic variant.
  */
 const S = StyleSheet.create({
-  // ── Pages — fontFamily + fontWeight set at page level so every Text inherits
+  // ── Pages - fontFamily + fontWeight set at page level so every Text inherits
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
   rqCoverPage: { padding: 0, fontFamily: 'Inter', fontWeight: 400 },
   rqCoverBg:   { width: 595, height: 841, position: 'absolute', top: 0, left: 0 },
@@ -999,11 +999,11 @@ const S = StyleSheet.create({
   // ── Misc
   spacer8: { height: 8 },
   spacer12: { height: 12 },
-  // note: no fontStyle italic — Inter has no italic; use color + weight for visual distinction
+  // note: no fontStyle italic - Inter has no italic; use color + weight for visual distinction
   note: { fontSize: 7.5, fontWeight: 400, color: C.slate400 },
 });
 
-/* ─────────────────────────── Page 1 — Cover ──────────────────────────────── */
+/* ─────────────────────────── Page 1 - Cover ──────────────────────────────── */
 
 function CoverPage({ d }: { d: AQReportData }) {
   const rq    = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 0;
@@ -1037,7 +1037,7 @@ function BackCoverPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 2 — Executive Summary ─────────────────── */
+/* ─────────────────────────── Page 2 - Executive Summary ─────────────────── */
 
 function ExecutiveSummaryPage({ d }: { d: AQReportData }) {
   const aq    = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 0;
@@ -1114,7 +1114,7 @@ function ExecutiveSummaryPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 3 — RQ History ────────────────────────── */
+/* ─────────────────────────── Page 3 - RQ History ────────────────────────── */
 
 function HistoryPage({ d }: { d: AQReportData }) {
   const trend = d.aqHistory.trend ?? [];
@@ -1123,7 +1123,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
     <Page size="A4" style={S.contentPage}>
       <PageHeader title="RQ History & Attempts" subtitle="All assessment attempts, scores, and growth trajectory" />
 
-      <SectionBand title="RQ Growth Trend" sub="Score progression across all attempts — Y-axis: Score (0–100) · X-axis: Assessment Attempts" />
+      <SectionBand title="RQ Growth Trend" sub="Score progression across all attempts - Y-axis: Score (0–100) · X-axis: Assessment Attempts" />
       {trend.length >= 2 ? (
         <View style={S.analyticsCard}>
           <Text style={S.analyticsTitle}>Score Trajectory</Text>
@@ -1135,7 +1135,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
         </View>
       )}
 
-      <SectionBand title="Attempt History" sub="Detailed record of all assessment attempts — Level: test difficulty · Scale: resilience band" />
+      <SectionBand title="Attempt History" sub="Detailed record of all assessment attempts - Level: test difficulty · Scale: resilience band" />
       {/* Table header */}
       <View style={S.tableHead}>
         <Text style={[S.th, { width: 20 }]}>#</Text>
@@ -1156,17 +1156,17 @@ function HistoryPage({ d }: { d: AQReportData }) {
             <Text style={[S.td, { width: 20 }]}>{p.attempt}</Text>
             <Text style={[S.td, { flex: 2 }]}>{fmtDate(p.date)}</Text>
             <Text style={[S.td, { flex: 1, textAlign: 'center', fontWeight: 700, color: LEVEL_COLOR[p.level] ?? C.sky }]}>{p.score}/100</Text>
-            {/* LEVEL column — Easy / Medium / Hard */}
+            {/* LEVEL column - Easy / Medium / Hard */}
             <View style={{ flex: 1.4, alignItems: 'center', justifyContent: 'center' }}>
               {diff ? (
                 <View style={{ backgroundColor: diffColor[diff] + '22', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 }}>
                   <Text style={{ fontSize: 7, fontWeight: 700, color: diffColor[diff], fontFamily: 'Inter' }}>{diff}</Text>
                 </View>
               ) : (
-                <Text style={[S.td, { color: C.slate400 }]}>—</Text>
+                <Text style={[S.td, { color: C.slate400 }]}>-</Text>
               )}
             </View>
-            {/* SCALE column — Developing / Moderate / Strong / Exceptional */}
+            {/* SCALE column - Developing / Moderate / Strong / Exceptional */}
             <View style={{ flex: 2.2, alignItems: 'center', justifyContent: 'center' }}>
               <LevelPill level={p.level} style={{ alignSelf: 'center' }} />
             </View>
@@ -1194,7 +1194,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
               const delta = (trend[trend.length - 1]?.score ?? 0) - (trend[0]?.score ?? 0);
               const color = delta >= 0 ? C.emerald : C.rose;
               return <Text style={[S.kpiVal, { fontSize: 16, color }]}>{delta >= 0 ? '+' : ''}{delta.toFixed(0)} pts</Text>;
-            })() : <Text style={[S.kpiVal, { fontSize: 16, color: C.slate400 }]}>—</Text>}
+            })() : <Text style={[S.kpiVal, { fontSize: 16, color: C.slate400 }]}>-</Text>}
           </View>
         </View>
       )}
@@ -1219,8 +1219,8 @@ function HistoryPage({ d }: { d: AQReportData }) {
                 const label = lvl === 'Easy' ? 'Assessment 1' : lvl === 'Medium' ? 'Assessment 2' : 'Assessment 3';
                 return (
                   <View key={lvl} style={[S.kpiCard, { flex: 1, borderLeftWidth: 3, borderLeftColor: color, paddingVertical: 8 }]}>
-                    <Text style={[S.kpiLabel, { color, fontSize: 7.5 }]}>{lvl.toUpperCase()} — {label}</Text>
-                    <Text style={[S.kpiVal, { fontSize: 20, color }]}>{avgScore !== null ? `${avgScore}/100` : '—'}</Text>
+                    <Text style={[S.kpiLabel, { color, fontSize: 7.5 }]}>{lvl.toUpperCase()} - {label}</Text>
+                    <Text style={[S.kpiVal, { fontSize: 20, color }]}>{avgScore !== null ? `${avgScore}/100` : '-'}</Text>
                     <Text style={[S.kpiSub, { fontSize: 7 }]}>{items.length} attempt{items.length !== 1 ? 's' : ''}</Text>
                     {best !== null && <Text style={[S.kpiSub, { fontSize: 7 }]}>Best: {best}/100</Text>}
                   </View>
@@ -1249,7 +1249,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 4 — Dimension Analysis ────────────────── */
+/* ─────────────────────────── Page 4 - Dimension Analysis ────────────────── */
 
 function DimensionPage({ d }: { d: AQReportData }) {
   const avgs = d.aqHistory.subscaleAverages ?? [];
@@ -1274,7 +1274,7 @@ function DimensionPage({ d }: { d: AQReportData }) {
 
   return (
     <Page size="A4" style={S.contentPage}>
-      <PageHeader title="Dimension Analysis" subtitle="CORE framework — Control, Ownership, Reach, Endurance" />
+      <PageHeader title="Dimension Analysis" subtitle="CORE framework - Control, Ownership, Reach, Endurance" />
 
       <View style={{ backgroundColor: C.slate50, borderRadius: 8, borderWidth: 1, borderColor: C.slate200, padding: 8, marginBottom: 8 }}>
         <Text style={{ fontSize: 9, fontWeight: 700, color: C.dark, marginBottom: 3 }}>CORE Interpretation Guide</Text>
@@ -1315,7 +1315,7 @@ function DimensionPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 5 — Behavioral Patterns ───────────────── */
+/* ─────────────────────────── Page 5 - Behavioral Patterns ───────────────── */
 
 function BehavioralPage({ d }: { d: AQReportData }) {
   const patterns = behaviorPatterns(d.aqHistory);
@@ -1362,7 +1362,7 @@ function BehavioralPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 6 — Emotional & Stress Analysis ───────── */
+/* ─────────────────────────── Page 6 - Emotional & Stress Analysis ───────── */
 
 function EmotionalPage({ d }: { d: AQReportData }) {
   const avgs  = d.aqHistory.subscaleAverages ?? [];
@@ -1396,7 +1396,7 @@ function EmotionalPage({ d }: { d: AQReportData }) {
               ? 'Your emotional coping intelligence is high. You regulate emotions effectively under adversity and bounce back with speed.'
               : emoScore >= 50
               ? 'Moderate emotional coping. You manage most situations but may benefit from mindfulness and regulation practices.'
-              : 'Your emotional coping is still developing. Building regulation habits — breathing protocols, journaling — will measurably improve this.'}
+              : 'Your emotional coping is still developing. Building regulation habits - breathing protocols, journaling - will measurably improve this.'}
           </Text>
         </View>
         <View style={[S.analyticsCard, S.colR]}>
@@ -1444,7 +1444,7 @@ function EmotionalPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 7 — Strengths & Weaknesses ────────────── */
+/* ─────────────────────────── Page 7 - Strengths & Weaknesses ────────────── */
 
 function StrengthsPage({ d }: { d: AQReportData }) {
   const avgs     = d.aqHistory.subscaleAverages ?? [];
@@ -1533,7 +1533,7 @@ function StrengthsPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 8 — Recommendations ───────────────────── */
+/* ─────────────────────────── Page 8 - Recommendations ───────────────────── */
 
 function RecommendationsPage({ d }: { d: AQReportData }) {
   const recs = recommendations(d.aqHistory);
@@ -1615,9 +1615,9 @@ function RecommendationsPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 9 — Progress Analytics ────────────────── */
+/* ─────────────────────────── Page 9 - Progress Analytics ────────────────── */
 
-/* ─────────────────────────── Page 9 — Final Summary ────────────────────── */
+/* ─────────────────────────── Page 9 - Final Summary ────────────────────── */
 
 function FinalSummaryPage({ d }: { d: AQReportData }) {
   const aq    = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 0;
@@ -1630,7 +1630,7 @@ function FinalSummaryPage({ d }: { d: AQReportData }) {
     { title: 'Growth Outlook', body: s.outlook, color: C.emerald },
     {
       title: 'Resilience Potential',
-      body: `Your RQ of ${aq} places you in the ${level} tier. RQ is trainable — every practice in this report compounds your resilience advantage.`,
+      body: `Your RQ of ${aq} places you in the ${level} tier. RQ is trainable - every practice in this report compounds your resilience advantage.`,
       color: C.purple,
     },
   ];
@@ -1674,7 +1674,7 @@ function FinalSummaryPage({ d }: { d: AQReportData }) {
 
           <View style={S.finalMotivationBox}>
             <Text style={S.finalMotivationText}>{`"${s.motivation}"`}</Text>
-            <Text style={S.finalMotivationSub}>— Your Resilience Quotient (RQ) Analytics Report</Text>
+            <Text style={S.finalMotivationSub}>- Your Resilience Quotient (RQ) Analytics Report</Text>
           </View>
         </View>
 
@@ -1713,42 +1713,42 @@ interface DimSolution {
 
 const DIM_SOLUTIONS: Record<string, Omit<DimSolution, 'dimension' | 'pct'>> = {
   Control: {
-    why: 'Your Control score reflects a tendency to attribute outcomes to external forces — circumstances, luck, or others — rather than to your own actions. This "external locus" mindset is common and often develops from repeated experiences where effort did not seem to produce results.',
+    why: 'Your Control score reflects a tendency to attribute outcomes to external forces - circumstances, luck, or others - rather than to your own actions. This "external locus" mindset is common and often develops from repeated experiences where effort did not seem to produce results.',
     effect: 'Low Control thinking reduces initiative and increases anxiety. When you feel powerless to influence outcomes, motivation drops, procrastination rises, and stress becomes harder to manage. It can also lead to passive responses during academic pressure.',
     solutions: [
       'Sphere of Influence: Each morning list 3 specific actions WITHIN your direct control for the day. Ignore what is outside it. Focus there daily.',
-      'Decision Journal: After each challenge, write "What one action could I take right now?" — this trains your brain to seek agency instead of helplessness.',
+      'Decision Journal: After each challenge, write "What one action could I take right now?" - this trains your brain to seek agency instead of helplessness.',
       'Micro-wins Practice: Deliberately complete 2-3 small tasks each day that you fully control. Celebrate each win. This rebuilds your belief in your own effectiveness.',
     ],
     dailyExercise: 'Every morning (5 min): Write "3 things I can control today." Every evening (3 min): Write "1 thing I controlled well today." After 21 days, this exercise measurably shifts your internal attribution patterns.',
   },
   Ownership: {
-    why: 'Low Ownership reflects a pattern of externalizing blame when things go wrong. This is a natural psychological protection mechanism — blaming outside factors shields us from painful self-criticism. However, it blocks real growth.',
+    why: 'Low Ownership reflects a pattern of externalizing blame when things go wrong. This is a natural psychological protection mechanism - blaming outside factors shields us from painful self-criticism. However, it blocks real growth.',
     effect: 'Without ownership, learning from failure becomes impossible. Growth stalls because the cause of problems is always "out there." Relationships with teachers, coaches, and peers also suffer when accountability is absent.',
     solutions: [
-      'The 1% Rule: Ask "What is 1% of this outcome that I own?" You do not need to take full blame — just find your smallest contribution and own it completely.',
+      'The 1% Rule: Ask "What is 1% of this outcome that I own?" You do not need to take full blame - just find your smallest contribution and own it completely.',
       'Accountability Partner: Share one area you are working to own with a trusted friend or mentor. External accountability dramatically accelerates this shift.',
       'Response vs. Reaction Journal: After difficult events, write: "My first reaction was ___. A more owned response would be ___." Awareness is the first step to change.',
     ],
-    dailyExercise: 'Evening Ownership Audit (3 min): Write one situation from today. Ask "What did I contribute to this outcome, even 1%?" Write your answer honestly. No self-criticism — just honest observation. This builds ownership as a reflex.',
+    dailyExercise: 'Evening Ownership Audit (3 min): Write one situation from today. Ask "What did I contribute to this outcome, even 1%?" Write your answer honestly. No self-criticism - just honest observation. This builds ownership as a reflex.',
   },
   Reach: {
-    why: 'Low Reach means that when adversity strikes in one area, it tends to flood into all other areas of your life — affecting your mood, focus, relationships, and even sleep. Stress hormones amplify this "contamination" effect neurologically.',
+    why: 'Low Reach means that when adversity strikes in one area, it tends to flood into all other areas of your life - affecting your mood, focus, relationships, and even sleep. Stress hormones amplify this "contamination" effect neurologically.',
     effect: 'One academic setback makes you feel your entire future is threatened. One argument affects your concentration for hours. One failure feels like evidence of total incompetence. This exhausts your coping resources rapidly.',
     solutions: [
       'Domain Separation: When a problem occurs, name it precisely: "This is a MATH challenge." Not "my life is ruined." Contain it to its actual domain.',
       'The Parking Lot Technique: When worries about one area intrude into another, write the worry on paper (your "parking lot") and tell yourself "I will address this at 7pm." This gives your brain permission to stop looping.',
       'Mental Compartments: Practice visualizing each life area (studies, friends, health, goals) as a separate room. When you enter one room, the others are closed. Practice this 2 minutes before studying.',
     ],
-    dailyExercise: 'Domain Shield Visualization (2 min, before study sessions): Close your eyes. Picture a transparent shield around your study space. Anything outside — social worries, family concerns, fears — stays outside while you study. Inside is clear, calm, and focused. Open your eyes and begin.',
+    dailyExercise: 'Domain Shield Visualization (2 min, before study sessions): Close your eyes. Picture a transparent shield around your study space. Anything outside - social worries, family concerns, fears - stays outside while you study. Inside is clear, calm, and focused. Open your eyes and begin.',
   },
   Endurance: {
-    why: 'Low Endurance reflects a tendency to believe that current adversity will last indefinitely — that bad feelings, hard situations, and painful circumstances are permanent. This is the "forever feeling" that the brain\u2019s negativity bias creates.',
+    why: 'Low Endurance reflects a tendency to believe that current adversity will last indefinitely - that bad feelings, hard situations, and painful circumstances are permanent. This is the "forever feeling" that the brain\u2019s negativity bias creates.',
     effect: 'The perceived permanence of adversity creates hopelessness, makes you want to quit before the situation improves, and can lead to catastrophizing. Academic pressure feels unbearable because there is no mental "end date" in sight.',
     solutions: [
       'Evidence Log: Create a list of every past adversity you have overcome. Read it when current challenges feel permanent. Evidence of past recovery trains your brain to expect future recovery.',
       'Temporal Reframing: Ask yourself: "Will this matter in 5 years?" and "Have I survived something like this before?" Both questions interrupt the permanence illusion.',
-      'The Weather Metaphor: Train yourself to see adversity like weather — temporary, passing, not a reflection of your permanent state. "This storm is not the sky."',
+      'The Weather Metaphor: Train yourself to see adversity like weather - temporary, passing, not a reflection of your permanent state. "This storm is not the sky."',
     ],
     dailyExercise: '"This Too Shall Pass" Journal (5 min, evening): Write one challenge from today. Then write: "Evidence that this is temporary: ___." Then write: "What will likely be different in 2 weeks: ___." Repeat for 21 days to rewire your temporal perception of adversity.',
   },
@@ -1770,7 +1770,7 @@ function buildRoadmap(avgs: SubscaleAverage[], level: string): RoadmapWeek[] {
 
   const habitMap: Record<string, string> = {
     Control:   'Write 3 things within my control each morning (5 min)',
-    Ownership: 'Evening ownership audit — 1 thing I own today (3 min)',
+    Ownership: 'Evening ownership audit - 1 thing I own today (3 min)',
     Reach:     'Domain Shield visualization before each study session (2 min)',
     Endurance: '"This Too Shall Pass" journal entry each evening (5 min)',
   };
@@ -1784,33 +1784,33 @@ function buildRoadmap(avgs: SubscaleAverage[], level: string): RoadmapWeek[] {
 
   const weeks: RoadmapWeek[] = [
     {
-      week: 'Week 1 — Foundation & Awareness',
-      focus: `Build self-awareness around your ${w1dim} dimension — the highest-leverage area for your RQ growth.`,
+      week: 'Week 1 - Foundation & Awareness',
+      focus: `Build self-awareness around your ${w1dim} dimension - the highest-leverage area for your RQ growth.`,
       goals: goalMap[w1dim] ?? [],
       dailyHabit: habitMap[w1dim] ?? '',
     },
     {
-      week: 'Week 2 — Building Momentum',
+      week: 'Week 2 - Building Momentum',
       focus: `Deepen ${w1dim} practice while introducing your ${w2dim} dimension work. Two-dimensional focus accelerates compound growth.`,
       goals: [...(goalMap[w1dim] ?? []).slice(0, 2), ...(goalMap[w2dim] ?? []).slice(0, 1)],
       dailyHabit: `${habitMap[w1dim] ?? ''} + ${habitMap[w2dim] ?? ''}`,
     },
     {
-      week: 'Week 3 — Behavioral Integration',
+      week: 'Week 3 - Behavioral Integration',
       focus: 'Apply your new resilience patterns in real-world situations: academic pressure, social friction, unexpected setbacks.',
       goals: [
         'Use your Week 1 tool in a real high-pressure situation',
         'Share one RQ insight with a friend or mentor',
-        level === 'Developing' ? 'Re-take the RQ assessment to measure early progress' : 'Write your Resilience Story — adversity you have overcome',
+        level === 'Developing' ? 'Re-take the RQ assessment to measure early progress' : 'Write your Resilience Story - adversity you have overcome',
       ],
       dailyHabit: 'Combined 10-min morning resilience protocol: control listing + domain shield + evidence log review',
     },
     {
-      week: 'Week 4 — Compounding & Consistency',
+      week: 'Week 4 - Compounding & Consistency',
       focus: 'Lock in your habits, measure your growth, and set your next 30-day RQ goal.',
       goals: [
         'Complete all 4 daily habits without missing a day',
-        'Review your journal — identify 3 behavioral shifts you have noticed',
+        'Review your journal - identify 3 behavioral shifts you have noticed',
         'Set your next RQ score target and 30-day action plan',
       ],
       dailyHabit: 'Full 12-min protocol: morning (control + shield) + evening (ownership + endurance journal)',
@@ -1820,7 +1820,7 @@ function buildRoadmap(avgs: SubscaleAverage[], level: string): RoadmapWeek[] {
   return weeks;
 }
 
-/* ─────────────────────────── Page 11 — Improvement Roadmap ──────────────── */
+/* ─────────────────────────── Page 11 - Improvement Roadmap ──────────────── */
 
 function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
   const avgs  = d.aqHistory.subscaleAverages ?? [];
@@ -1836,17 +1836,17 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
     { days: 'Days 1–7',  color: C.sky,     bg: '#f0f9ff',
       tasks: [
         `Begin your ${w1} daily habit (5 min morning practice)`,
-        'Start your Evidence Log — list 5 past adversities you have overcome',
-        'Identify your top 2 resilience drains — what depletes your RQ most?',
+        'Start your Evidence Log - list 5 past adversities you have overcome',
+        'Identify your top 2 resilience drains - what depletes your RQ most?',
         'Share your commitment to RQ growth with one trusted person',
       ],
     },
     { days: 'Days 8–14', color: C.indigo,  bg: '#eef2ff',
       tasks: [
-        `Deepen ${w1} practice — aim 7 consecutive days without missing`,
+        `Deepen ${w1} practice - aim 7 consecutive days without missing`,
         `Add ${w2} daily habit to your morning or evening protocol`,
         'Apply domain separation in at least 2 adversity situations this week',
-        level === 'Developing' ? 'Celebrate week 2 — acknowledge behavioural shifts, however small' : 'Face one voluntary discomfort this week (hard conversation, tough goal)',
+        level === 'Developing' ? 'Celebrate week 2 - acknowledge behavioural shifts, however small' : 'Face one voluntary discomfort this week (hard conversation, tough goal)',
       ],
     },
     { days: 'Days 15–21', color: C.purple, bg: '#f5f3ff',
@@ -1860,7 +1860,7 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
     { days: 'Days 22–30', color: C.emerald, bg: '#f0fdf4',
       tasks: [
         'Complete all 4 dimension habits for 7 consecutive days',
-        'Write your "Resilience Story" — how you have grown in 30 days',
+        'Write your "Resilience Story" - how you have grown in 30 days',
         `Re-take the RQ assessment to measure progress`,
         `Next target: ${aq}/100 → aim for ${Math.min(100, aq + 10)}/100`,
       ],
@@ -1918,21 +1918,21 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
   return (
     <>
       <Page size="A4" style={S.contentPage}>
-        <PageHeader title="30-Day RQ Development Roadmap" subtitle="Combined weekly goals & daily tasks — your complete personalised resilience growth plan" />
-        <SectionBand title="Weekly Goals + Daily Tasks" sub="Each week shows targeted goals (left) alongside concrete daily actions (right) — work both tracks together" />
+        <PageHeader title="30-Day RQ Development Roadmap" subtitle="Combined weekly goals & daily tasks - your complete personalised resilience growth plan" />
+        <SectionBand title="Weekly Goals + Daily Tasks" sub="Each week shows targeted goals (left) alongside concrete daily actions (right) - work both tracks together" />
         {weeks.slice(0, 3).map((week, wi) => renderWeek(week, wi))}
         <PageFooter name={d.studentName} date={d.generatedDate} />
       </Page>
 
       <Page size="A4" style={S.contentPage}>
         <PageHeader title="30-Day RQ Development Roadmap (Continued)" subtitle="Week 4 compounding and consistency phase" />
-        <SectionBand title="Week 4 — Compounding & Consistency" sub="Lock in habits, measure growth, and set your next 30-day RQ goal" />
+        <SectionBand title="Week 4 - Compounding & Consistency" sub="Lock in habits, measure growth, and set your next 30-day RQ goal" />
         {weeks.slice(3).map((week, wi) => renderWeek(week, wi + 3))}
 
         <View style={{ backgroundColor: C.slate50, borderRadius: 6, padding: 8, marginTop: 2 }}>
           <Text style={{ fontSize: 8, fontWeight: 700, color: C.dark, marginBottom: 2, fontFamily: 'Inter' }}>The Compound Resilience Principle</Text>
           <Text style={{ fontSize: 7, color: C.slate600, lineHeight: 1.55, fontFamily: 'Inter', fontWeight: 400 }}>
-            RQ improvement is not linear — it is exponential. The first 7 days are the hardest. By Day 14 habits begin to feel natural. By Day 21 behavioural shifts are visible. By Day 30 your neural pathways have measurably changed. Most people quit before Day 10. You will not.
+            RQ improvement is not linear - it is exponential. The first 7 days are the hardest. By Day 14 habits begin to feel natural. By Day 21 behavioural shifts are visible. By Day 30 your neural pathways have measurably changed. Most people quit before Day 10. You will not.
           </Text>
         </View>
 
@@ -1942,7 +1942,7 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 12 — Practical Solutions ──────────────── */
+/* ─────────────────────────── Page 12 - Practical Solutions ──────────────── */
 
 function PracticalSolutionsPage({ d }: { d: AQReportData }) {
   const avgs = d.aqHistory.subscaleAverages ?? [];
@@ -2017,7 +2017,7 @@ function PracticalSolutionsPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 13 — Mentorship Guidance ──────────────── */
+/* ─────────────────────────── Page 13 - Mentorship Guidance ──────────────── */
 
 function MentorshipGuidancePage({ d }: { d: AQReportData }) {
   const aq = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 50;
@@ -2054,7 +2054,7 @@ function MentorshipGuidancePage({ d }: { d: AQReportData }) {
       color: C.emerald,
       bg: '#f0fdf4',
       points: [
-        'Evidence anchoring: Confidence is not a feeling — it is a track record. Keep a "wins log" of every task you complete, problem you solve, and challenge you overcome. Review it before difficult situations.',
+        'Evidence anchoring: Confidence is not a feeling - it is a track record. Keep a "wins log" of every task you complete, problem you solve, and challenge you overcome. Review it before difficult situations.',
         'Competence stacking: Focus on becoming highly competent in 2-3 specific areas rather than average across many. Deep skill in any area transfers confidence to other domains.',
         'Act confident first: Behaviour drives emotion as much as emotion drives behaviour. Stand tall, speak clearly, make decisions. The feeling of confidence follows the actions of confidence.',
         'Micro-challenge ladder: complete one slightly difficult task each day. Confidence grows fastest through repeated evidence, not motivation talks.',
@@ -2111,7 +2111,7 @@ function MentorshipGuidancePage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 14 — Understanding Your RQ ────────────── */
+/* ─────────────────────────── Page 14 - Understanding Your RQ ────────────── */
 
 function RQUnderstandingPage({ d }: { d: AQReportData }) {
   const aq    = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 50;
@@ -2120,7 +2120,7 @@ function RQUnderstandingPage({ d }: { d: AQReportData }) {
   const faqs = [
     {
       q: 'What exactly is RQ?',
-      a: 'Resilience Quotient (RQ) measures how well you respond to adversity — challenges, stress, failure, and pressure. It is distinct from IQ and EQ. RQ specifically measures your resilience capacity: your ability to maintain function and keep moving forward when things go wrong.',
+      a: 'Resilience Quotient (RQ) measures how well you respond to adversity - challenges, stress, failure, and pressure. It is distinct from IQ and EQ. RQ specifically measures your resilience capacity: your ability to maintain function and keep moving forward when things go wrong.',
     },
     {
       q: 'Why does RQ matter for students?',
@@ -2128,21 +2128,21 @@ function RQUnderstandingPage({ d }: { d: AQReportData }) {
     },
     {
       q: 'Why do I react differently to stress than my friends?',
-      a: 'RQ varies between people based on upbringing, past adversity experiences, learned coping patterns, and neurological baseline stress tolerance. There is no "correct" way to respond to adversity — the goal is not to be unaffected by challenges but to maintain function and recover quickly. Your current RQ reflects your learned patterns, not a fixed personality trait.',
+      a: 'RQ varies between people based on upbringing, past adversity experiences, learned coping patterns, and neurological baseline stress tolerance. There is no "correct" way to respond to adversity - the goal is not to be unaffected by challenges but to maintain function and recover quickly. Your current RQ reflects your learned patterns, not a fixed personality trait.',
     },
     {
       q: 'Can RQ actually improve? How?',
-      a: 'Yes — RQ is highly trainable. Unlike IQ, RQ responds directly to intentional practice. Consistently practising the exercises in this report — control listing, ownership journaling, domain separation, and endurance reframing — rewires your adversity response. Measurable improvement typically appears within 21-60 days.',
+      a: 'Yes - RQ is highly trainable. Unlike IQ, RQ responds directly to intentional practice. Consistently practising the exercises in this report - control listing, ownership journaling, domain separation, and endurance reframing - rewires your adversity response. Measurable improvement typically appears within 21-60 days.',
     },
     {
       q: 'What does my score of ' + aq + ' (' + level + ') really mean?',
       a: level === 'Exceptional'
-        ? 'You are operating in the top tier of behavioral resilience. This means you maintain agency, accountability, and psychological stability even under significant adversity. Your challenge is not to build resilience — it is to sustain it and transmit it to others around you.'
+        ? 'You are operating in the top tier of behavioral resilience. This means you maintain agency, accountability, and psychological stability even under significant adversity. Your challenge is not to build resilience - it is to sustain it and transmit it to others around you.'
         : level === 'Strong'
         ? 'You have built solid resilience foundations. In most adversity situations you respond effectively. Your opportunity is to close the gap to Exceptional by strengthening 1-2 specific dimensions. This is achievable within 60-90 days of focused practice.'
         : level === 'Moderate'
-        ? 'You demonstrate genuine resilience in some areas while others present clear growth opportunities. This is the most common starting point — and an excellent inflection point. With the targeted practices in this report, significant improvement is achievable within 60 days.'
-        : 'You are at the beginning of your resilience journey. This is not a disadvantage — it is a starting point with the most growth potential. Many exceptional resilience stories begin here. Every practice you do from this baseline has maximum impact.',
+        ? 'You demonstrate genuine resilience in some areas while others present clear growth opportunities. This is the most common starting point - and an excellent inflection point. With the targeted practices in this report, significant improvement is achievable within 60 days.'
+        : 'You are at the beginning of your resilience journey. This is not a disadvantage - it is a starting point with the most growth potential. Many exceptional resilience stories begin here. Every practice you do from this baseline has maximum impact.',
     },
     {
       q: 'How long before I see real change?',
@@ -2153,7 +2153,7 @@ function RQUnderstandingPage({ d }: { d: AQReportData }) {
   return (
     <Page size="A4" style={S.contentPage}>
       <PageHeader title="Understanding Your RQ" subtitle="Clear answers to the most important questions about your results and your journey" />
-      <SectionBand title="Student RQ Clarity Guide" sub="Reduce confusion, increase confidence — know exactly what your results mean and what to do next" />
+      <SectionBand title="Student RQ Clarity Guide" sub="Reduce confusion, increase confidence - know exactly what your results mean and what to do next" />
 
       {faqs.map((item, i) => (
         <View key={i} style={{ borderRadius: 8, backgroundColor: C.slate50, padding: 10, marginBottom: 7, borderLeftWidth: 3, borderLeftColor: i % 2 === 0 ? C.sky : C.indigo }}>
@@ -2167,7 +2167,7 @@ function RQUnderstandingPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 15 — Study & Productivity ─────────────── */
+/* ─────────────────────────── Page 15 - Study & Productivity ─────────────── */
 
 function StudyProductivityPage({ d }: { d: AQReportData }) {
   const avgs  = d.aqHistory.subscaleAverages ?? [];
@@ -2182,7 +2182,7 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
         'Use timed focus blocks: 45-90 min of full-phone-off study, then a 10-15 min intentional break. This follows your brain\'s natural ultradian rhythm.',
         'App blocking: During study hours, use app-blocking tools (Forest, Cold Turkey, or iPhone Screen Time) to make social media physically inaccessible. Remove willpower from the equation.',
         'Physical separation: Place your phone in another room during study sessions. Even a turned-off phone on your desk reduces cognitive capacity by 10% (research verified).',
-        reach < 55 ? 'Social media "parking lot": Check it at scheduled times only (e.g., 12pm, 6pm, 9pm). This is especially important for you given your Reach score — notifications contaminate your focus zone.' : 'Notification audit: Turn off all non-essential notifications permanently. You should choose when to check — not be summoned by your phone.',
+        reach < 55 ? 'Social media "parking lot": Check it at scheduled times only (e.g., 12pm, 6pm, 9pm). This is especially important for you given your Reach score - notifications contaminate your focus zone.' : 'Notification audit: Turn off all non-essential notifications permanently. You should choose when to check - not be summoned by your phone.',
       ],
     },
     {
@@ -2190,9 +2190,9 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
       color: C.indigo,
       items: [
         'Same time, same place: Study at the same time and location daily. Your brain learns to enter focus mode automatically when the environmental cue is consistent.',
-        '90-minute cycles: Human peak focus operates in roughly 90-minute blocks. Plan your sessions accordingly — deep work for 90 min, then full break (walk, eat, rest) for 20-30 min.',
+        '90-minute cycles: Human peak focus operates in roughly 90-minute blocks. Plan your sessions accordingly - deep work for 90 min, then full break (walk, eat, rest) for 20-30 min.',
         'Hardest task first: Always begin your session with the most cognitively demanding work. Your willpower and focus are highest at the start. Easy tasks fill the end of sessions.',
-        'Weekly review: Every Sunday, spend 15 minutes reviewing the week — what worked, what did not, what needs adjusting. This compounding reflection multiplies learning speed.',
+        'Weekly review: Every Sunday, spend 15 minutes reviewing the week - what worked, what did not, what needs adjusting. This compounding reflection multiplies learning speed.',
       ],
     },
     {
@@ -2200,8 +2200,8 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
       color: C.sky,
       items: [
         'Pre-study ritual: A consistent 2-minute ritual before each session (music off, phone away, notepad open, 3 deep breaths) trains your brain to shift into focus mode on command.',
-        'Single-tab rule: During study, have only one browser tab open — the exact resource you need. Every additional open tab creates micro-attentional pulls.',
-        'Note-taking by hand: Writing notes by hand (vs. typing) forces processing and summary — significantly improving retention and concentration depth.',
+        'Single-tab rule: During study, have only one browser tab open - the exact resource you need. Every additional open tab creates micro-attentional pulls.',
+        'Note-taking by hand: Writing notes by hand (vs. typing) forces processing and summary - significantly improving retention and concentration depth.',
         'Active recall over re-reading: Testing yourself on material is 3-5x more effective for memory than re-reading notes. Use flashcards, write from memory, or teach concepts aloud.',
       ],
     },
@@ -2209,9 +2209,9 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
       title: 'Burnout Prevention',
       color: C.emerald,
       items: [
-        end < 55 ? 'Rest is productive: Your Endurance score suggests you may perceive rest as weakness. Reframe: rest is the recovery that makes the next effort possible. Athletes who do not recover do not improve.' : 'Sustainable load: Even with strong endurance, overloading consistently degrades performance. Build mandatory recovery into your weekly schedule — at least one full recovery day.',
+        end < 55 ? 'Rest is productive: Your Endurance score suggests you may perceive rest as weakness. Reframe: rest is the recovery that makes the next effort possible. Athletes who do not recover do not improve.' : 'Sustainable load: Even with strong endurance, overloading consistently degrades performance. Build mandatory recovery into your weekly schedule - at least one full recovery day.',
         'Sleep is non-negotiable: Sleep deprivation reduces cognitive performance more than being drunk. Protect 7-9 hours nightly. No exam is worth chronic sleep debt.',
-        'Social connection as fuel: Regular positive social interaction — not social media, but real conversation — is a proven cognitive performance enhancer. Schedule it intentionally.',
+        'Social connection as fuel: Regular positive social interaction - not social media, but real conversation - is a proven cognitive performance enhancer. Schedule it intentionally.',
         'Know your depletion signals: Identify your personal early burnout signs (irritability, motivation loss, persistent fatigue). When 2+ signals appear simultaneously, take a mandatory recovery day.',
       ],
     },
@@ -2259,9 +2259,9 @@ function StudyProductivityPage({ d }: { d: AQReportData }) {
   );
 }
 
-/* ─────────────────────────── Page 16 — 30-Day RQ Plan ───────────────────── */
+/* ─────────────────────────── Page 16 - 30-Day RQ Plan ───────────────────── */
 
-/* ─────────────────────────── Page 17 — Parent Guidance ──────────────────── */
+/* ─────────────────────────── Page 17 - Parent Guidance ──────────────────── */
 
 function ParentGuidancePage({ d }: { d: AQReportData }) {
   const aq    = d.aqHistory.latestScore ?? d.aqHistory.avgScore ?? 50;
@@ -2271,7 +2271,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
 
   const parentItems = [
         {
-          title: 'Reduce Outcome Pressure — Increase Process Recognition',
+          title: 'Reduce Outcome Pressure - Increase Process Recognition',
           body: 'Constant focus on grades, ranks, and scores inadvertently trains external attribution ("my value = my result"). Instead, regularly notice and comment on your child\'s effort, persistence, and problem-solving approach. "I noticed you kept working on that even when it was difficult" builds internal locus of control far more than "Great score!"',
           color: C.sky,
         },
@@ -2279,12 +2279,12 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
           title: 'Let Them Struggle (Productively)',
           body: weak.length > 0
             ? `Your child's ${weak[0].dimension} score is currently developing. One of the best things you can do is resist rescuing them from every difficulty. Allow age-appropriate struggle with academic and social challenges. Ask "What are your options?" before offering solutions. Productive struggle is where RQ is built.`
-            : 'Your child demonstrates solid resilience. Continue providing appropriate challenges — slightly beyond their comfort zone. RQ is not built in safety; it is built at the edge of manageable difficulty.',
+            : 'Your child demonstrates solid resilience. Continue providing appropriate challenges - slightly beyond their comfort zone. RQ is not built in safety; it is built at the edge of manageable difficulty.',
           color: C.indigo,
         },
         {
           title: 'Communicate Belief, Not Just Expectations',
-          body: 'There is a critical difference between "You should do better" (expectation-pressure) and "I know you can handle this" (belief-confidence). The first triggers performance anxiety; the second activates resilience. Before exams, before challenges, communicate your genuine belief in their ability to cope — regardless of outcome.',
+          body: 'There is a critical difference between "You should do better" (expectation-pressure) and "I know you can handle this" (belief-confidence). The first triggers performance anxiety; the second activates resilience. Before exams, before challenges, communicate your genuine belief in their ability to cope - regardless of outcome.',
           color: C.emerald,
         },
         {
@@ -2294,7 +2294,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
         },
         {
           title: 'Create Emotional Safety at Home',
-          body: 'High-RQ students consistently report feeling safe to fail at home. If academic failure triggers significant punishment or disappointment, the student\'s psychological resources are spent managing that fear rather than building resilience. Create space where setbacks can be discussed openly, without shame — focus the conversation on learning, not blame.',
+          body: 'High-RQ students consistently report feeling safe to fail at home. If academic failure triggers significant punishment or disappointment, the student\'s psychological resources are spent managing that fear rather than building resilience. Create space where setbacks can be discussed openly, without shame - focus the conversation on learning, not blame.',
           color: C.amber,
         },
   ];
@@ -2317,7 +2317,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
         <View style={{ backgroundColor: '#f0f9ff', borderRadius: 8, borderWidth: 1, borderColor: C.sky, padding: 12, marginBottom: 12 }}>
           <Text style={{ fontSize: 10, fontWeight: 700, color: C.dark, marginBottom: 4 }}>Understanding Your Child's Result</Text>
           <Text style={{ fontSize: 8.5, fontWeight: 400, color: C.slate700, lineHeight: 1.6 }}>
-            {d.studentName} has completed the Resilience Quotient assessment and scored {aq}/100 ({level} level). This report is not a judgement — it is a map. An RQ score shows where a student is today and exactly what needs to grow. {level === 'Developing' || level === 'Moderate' ? 'A lower-to-moderate RQ score does not predict poor outcomes — it reveals specific growth areas that, with the right support, can improve measurably within 30-60 days.' : 'A strong RQ score indicates your child has developed healthy resilience patterns. Your role now is to sustain the conditions that made this possible.'}
+            {d.studentName} has completed the Resilience Quotient assessment and scored {aq}/100 ({level} level). This report is not a judgement - it is a map. An RQ score shows where a student is today and exactly what needs to grow. {level === 'Developing' || level === 'Moderate' ? 'A lower-to-moderate RQ score does not predict poor outcomes - it reveals specific growth areas that, with the right support, can improve measurably within 30-60 days.' : 'A strong RQ score indicates your child has developed healthy resilience patterns. Your role now is to sustain the conditions that made this possible.'}
           </Text>
         </View>
 
@@ -2332,7 +2332,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
         <View style={{ backgroundColor: C.slate50, borderRadius: 8, padding: 10, marginBottom: 10 }}>
           <Text style={{ fontSize: 8.5, fontWeight: 700, color: C.dark, marginBottom: 3 }}>A Note for Parents</Text>
           <Text style={{ fontSize: 8, fontWeight: 400, color: C.slate600, lineHeight: 1.6 }}>
-            The fact that {d.studentName} has completed this assessment demonstrates curiosity and self-awareness — qualities that are already high-RQ behaviors. Your support, framed as belief rather than pressure, will be the single greatest accelerator of their growth. You do not need to become a resilience expert — you just need to create the conditions where resilience can grow.
+            The fact that {d.studentName} has completed this assessment demonstrates curiosity and self-awareness - qualities that are already high-RQ behaviors. Your support, framed as belief rather than pressure, will be the single greatest accelerator of their growth. You do not need to become a resilience expert - you just need to create the conditions where resilience can grow.
           </Text>
         </View>
 
@@ -2362,7 +2362,7 @@ function ParentGuidancePage({ d }: { d: AQReportData }) {
 export function AQReport(props: AQReportData) {
   return (
     <Document
-      title={`RQ Premium Report — ${props.studentName}`}
+      title={`RQ Premium Report - ${props.studentName}`}
       author="Resilience Quotient (RQ) Analytics Platform"
       subject="Resilience Quotient Behavioral Analytics Report"
       keywords="RQ, Resilience, Psychometric, Analytics"

@@ -285,7 +285,7 @@ export default function CouponsPage() {
                         <div className="min-w-0">
                           <p className={`font-bold text-lg ${colors.text}`}>{shortName}</p>
                           <p className={`text-xs ${colors.text} opacity-70 font-medium mt-0.5`}>
-                            {item.isConfigured ? `Prefix: ${item.prefix || "—"}` : "Not configured"}
+                            {item.isConfigured ? `Prefix: ${item.prefix || "-"}` : "Not configured"}
                           </p>
                         </div>
                       </div>
@@ -345,7 +345,7 @@ export default function CouponsPage() {
                           <div key={`${usage.couponCode}-${index}`} className="flex items-center justify-between gap-3 bg-white/80 rounded-xl px-3 py-2 border border-gray-100">
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-black truncate">{usage.studentName}</p>
-                              <p className="text-xs text-black font-medium truncate">{usage.studentEmail || "—"}</p>
+                              <p className="text-xs text-black font-medium truncate">{usage.studentEmail || "-"}</p>
                             </div>
                             <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-2.5 py-1 whitespace-nowrap">
                               {usage.couponCode}

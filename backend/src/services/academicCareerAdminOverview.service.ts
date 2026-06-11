@@ -115,7 +115,7 @@ function normalizeGrade(grade?: string): GradeLabel | null {
 }
 
 function gradeToShort(grade: GradeLabel | null): string {
-  if (!grade) return "—";
+  if (!grade) return "-";
   if (grade === "Grade 8") return "8";
   if (grade === "Grade 9") return "9";
   return "10";

@@ -88,7 +88,7 @@ function CareerDnaCorrectAnswerField({
   if (CAREER_DNA_LIKERT_TYPES.has(subType)) {
     return (
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        <span className="font-semibold">Likert scoring</span> — no correct answer.{" "}
+        <span className="font-semibold">Likert scoring</span> - no correct answer.{" "}
         {subType === "STRESS_RESILIENCE"
           ? "Scored A=4, B=3, C=2, D=1. Questions ending with * use reversed scoring (A=1…D=4)."
           : subType === "LEARNING_STYLE"
@@ -100,14 +100,14 @@ function CareerDnaCorrectAnswerField({
 
   if (subType === "PERSONALITY") {
     const DIMENSION_OPTIONS = [
-      { value: "E", label: "SO — Social Orientation" },
-      { value: "I", label: "RO — Reflective Orientation" },
-      { value: "S", label: "PO — Practical Observation" },
-      { value: "N", label: "CT — Conceptual Thinking" },
-      { value: "T", label: "LD — Logical Decision" },
-      { value: "F", label: "VD — Value-Based Decision" },
-      { value: "J", label: "SW — Structured Working" },
-      { value: "P", label: "FW — Flexible Working" },
+      { value: "E", label: "SO - Social Orientation" },
+      { value: "I", label: "RO - Reflective Orientation" },
+      { value: "S", label: "PO - Practical Observation" },
+      { value: "N", label: "CT - Conceptual Thinking" },
+      { value: "T", label: "LD - Logical Decision" },
+      { value: "F", label: "VD - Value-Based Decision" },
+      { value: "J", label: "SW - Structured Working" },
+      { value: "P", label: "FW - Flexible Working" },
     ];
     return (
       <div>
@@ -119,7 +119,7 @@ function CareerDnaCorrectAnswerField({
           onChange={(e) => onChange(e.target.value)}
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         >
-          <option value="">— Select dimension —</option>
+          <option value="">- Select dimension -</option>
           {DIMENSION_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
@@ -138,13 +138,13 @@ function CareerDnaCorrectAnswerField({
   if (subType === "CAREER_INTEREST") {
     return (
       <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        <span className="font-semibold">RIASEC interest scoring</span> — Option A = Yes (interested),
+        <span className="font-semibold">RIASEC interest scoring</span> - Option A = Yes (interested),
         Option B = No. Score is the % of "Yes" answers per domain. No per-question correct answer.
       </div>
     );
   }
 
-  // COGNITIVE or APTITUDE — standard correct answer label
+  // COGNITIVE or APTITUDE - standard correct answer label
   return (
     <div>
       <label className="block text-sm font-semibold text-black mb-1.5">Correct Answer</label>

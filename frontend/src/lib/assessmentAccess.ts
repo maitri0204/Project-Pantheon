@@ -178,7 +178,7 @@ export function formatAttemptHistoryResult(
   evaluation?: AttemptHistoryEvaluation | null,
 ): AttemptHistoryResultDisplay {
   if (!evaluation) {
-    return { label: "Score", value: "—" };
+    return { label: "Score", value: "-" };
   }
 
   const code = normalizeAssessmentCode(assessmentCode);
@@ -213,7 +213,7 @@ export function formatAttemptHistoryResult(
     return { label: "Trait", value: traitValue };
   }
 
-  return { label: "Score", value: "—" };
+  return { label: "Score", value: "-" };
 }
 
 /** @deprecated Use formatAttemptHistoryResult for trait-aware attempt lists. */

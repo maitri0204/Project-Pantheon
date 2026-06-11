@@ -263,7 +263,7 @@ export default function AcademicCareerOrgDashboard({
   if (overview.totalCompletedAssessments === 0) {
     return (
       <OrgDashboardEmpty
-        title="Academic Career & Interest — Dashboard"
+        title="Academic Career & Interest - Dashboard"
         subtitle="Real-time educational CRM analytics from student assessments (grades 8–10)."
         assessmentName="Academic Career & Interest Test"
         studentsPath={studentsPath}

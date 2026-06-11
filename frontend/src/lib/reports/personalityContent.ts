@@ -332,7 +332,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
 
   INTJ: {
     overview:
-      "You are a visionary thinker who combines deep thinking, long-term vision, and logical decision-making. Your core identity: \"I want to understand how things work—and make them better.\"",
+      "You are a visionary thinker who combines deep thinking, long-term vision, and logical decision-making. Your core identity: \"I want to understand how things work-and make them better.\"",
     sections: [
       {
         title: "1. The Way You Direct and Receive Energy (Reflective Orientation)",
@@ -375,7 +375,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
           "Prefer closure and decisions rather than uncertainty",
           "Often think in long-term strategies",
           "Dislike chaos, inefficiency, and last-minute changes",
-          "Don't just react to life—they design it",
+          "Don't just react to life-they design it",
         ],
       },
       {
@@ -445,7 +445,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
           "Prefer thinking before speaking",
           "Recharge by spending time alone",
           "Enjoy quiet environments, independent work, and solo problem-solving",
-          "Don't dislike people—just get drained by too much social interaction",
+          "Don't dislike people-just get drained by too much social interaction",
         ],
       },
       {
@@ -762,7 +762,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
           "Naturally connect unrelated concepts",
           "Ask \"Why?\" and \"What if?\" frequently",
           "Think about future possibilities rather than present realities",
-          "Don't just see what is — explore what could be",
+          "Don't just see what is - explore what could be",
         ],
       },
       {
@@ -951,7 +951,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
       {
         title: "1. The Way You Direct and Receive Energy (Social Orientation)",
         bullets: [
-          "Externally energized — gain energy from people, conversations, and action",
+          "Externally energized - gain energy from people, conversations, and action",
           "Sitting alone for long periods drains you quickly",
           "Think better out loud than in your head",
           "Prefer doing over planning",
@@ -1049,7 +1049,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
 
   ENFP: {
     overview:
-      "You are vision-driven, people-focused, an idea generator, and a natural motivator. You thrive in environments where you can explore, influence, create, and inspire. You are not just a thinker — you are a possibility creator.",
+      "You are vision-driven, people-focused, an idea generator, and a natural motivator. You thrive in environments where you can explore, influence, create, and inspire. You are not just a thinker - you are a possibility creator.",
     sections: [
       {
         title: "1. The Way You Direct and Receive Energy (Social Orientation)",
@@ -1059,7 +1059,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
           "Feel drained in isolation or repetitive solo work",
           "Seek stimulation, variety, and interaction",
           "Think out loud through people",
-          "May confuse social activity with productivity — being busy ≠ being effective",
+          "May confuse social activity with productivity - being busy ≠ being effective",
         ],
       },
       {
@@ -1415,7 +1415,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
           "Responsible and disciplined",
           "Team-oriented with practical and detail-focused approach",
           "Loyal and supportive with strong sense of duty",
-          "Combine people skills + structure — a rare and valuable combination",
+          "Combine people skills + structure - a rare and valuable combination",
         ],
       },
       {
@@ -1459,7 +1459,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
       {
         title: "1. The Way You Direct and Receive Energy (Social Orientation)",
         bullets: [
-          "Externally energized — focus on people, conversations, and social environments",
+          "Externally energized - focus on people, conversations, and social environments",
           "Enjoy leading discussions, guiding groups, and influencing others",
           "Express ideas openly and confidently",
           "Feel energized when interacting with people, helping, or mentoring others",
@@ -1560,7 +1560,7 @@ export const PERSONALITY_CONTENT: Record<string, PersonalityProfile> = {
       {
         title: "1. The Way You Direct and Receive Energy (Social Orientation)",
         bullets: [
-          "Externally oriented — gain energy from interacting with the outside world",
+          "Externally oriented - gain energy from interacting with the outside world",
           "Feel energized when leading teams, engaging in discussions and debates",
           "Prefer action over reflection; social environments over isolation",
           "Speak first, think while speaking",

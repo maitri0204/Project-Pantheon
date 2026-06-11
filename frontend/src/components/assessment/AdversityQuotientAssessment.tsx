@@ -79,7 +79,7 @@ const getLevelDescription = (level: string): string => {
     Moderate:
       "Your RQ profile reveals developing resilience patterns. You show genuine strength in some dimensions while others present clear growth opportunities. Focused practice will yield measurable improvement.",
     Developing:
-      "Your resilience capacity is in an early stage of development — this is not a limitation, it is a starting point with tremendous upside.",
+      "Your resilience capacity is in an early stage of development - this is not a limitation, it is a starting point with tremendous upside.",
   };
   return descriptions[level] || descriptions.Moderate;
 };
@@ -177,7 +177,7 @@ async function downloadAQPdf(result: AQResult, attempt: AQAttempt) {
     }
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(margin, y, maxWidth, 22, 3, 3, "S");
-    line(`${sub.dimension} — ${sub.rawScore}/${sub.maxScore} (${Math.round(sub.percentage)}%)`, margin + 4, y + 7, 11, true);
+    line(`${sub.dimension} - ${sub.rawScore}/${sub.maxScore} (${Math.round(sub.percentage)}%)`, margin + 4, y + 7, 11, true);
     pdf.setDrawColor(226, 232, 240);
     pdf.rect(margin + 4, y + 11, maxWidth - 8, 4);
     const fill = (maxWidth - 8) * (sub.percentage / 100);
@@ -274,7 +274,7 @@ const ResultCard: React.FC<ResultProps> = ({ attempt, result }) => {
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-3 mt-0.5">•</span>
-                  <span>The four dimensions — Control, Ownership, Reach, Endurance — show different aspects of resilience.</span>
+                  <span>The four dimensions - Control, Ownership, Reach, Endurance - show different aspects of resilience.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-3 mt-0.5">•</span>

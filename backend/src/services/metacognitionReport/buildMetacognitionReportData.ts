@@ -17,9 +17,9 @@ function toNumber(value: unknown): number {
 }
 
 function formatAssessmentDate(value?: Date | string | null): string {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
 
@@ -57,8 +57,8 @@ export function buildMetacognitionReportData(input: {
   return {
     student: {
       name: input.studentName,
-      grade: input.grade?.trim() || "—",
-      school: input.school?.trim() || "—",
+      grade: input.grade?.trim() || "-",
+      school: input.school?.trim() || "-",
       assessmentDate: formatAssessmentDate(input.submittedAt),
       counselor: input.counselor?.trim() || "Learning Counselor",
     },

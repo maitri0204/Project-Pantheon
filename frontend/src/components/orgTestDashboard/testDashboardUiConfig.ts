@@ -70,7 +70,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     layout: "study-abroad",
     title: "Study Abroad Readiness Dashboard",
     subtitle: "Track 12-dimension readiness: language, academics, finances, visa, culture, and decision confidence.",
-    emptyTitle: "Study Abroad Readiness — Organization Overview",
+    emptyTitle: "Study Abroad Readiness - Organization Overview",
     emptySubtitle: "Readiness dimensions and bands appear when students complete the assessment.",
     accentClass: "from-sky-600 to-indigo-600",
     chartColors: ["#0ea5e9", "#6366f1", "#10b981", "#f59e0b", "#f43f5e", "#8b5cf6"],
@@ -84,7 +84,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
       const pct = avgPct(data);
       const band = bandFromPercentage(pct);
       return [
-        { label: "Avg readiness score", value: data.summary.metricValue ?? "—", sub: data.summary.metricSub },
+        { label: "Avg readiness score", value: data.summary.metricValue ?? "-", sub: data.summary.metricSub },
         { label: "Avg readiness %", value: `${pct}%`, sub: band },
         { label: "Students assessed", value: data.summary.uniqueStudents, sub: "Unique learners" },
         { label: "Total attempts", value: data.summary.totalAttempts, sub: "Completed assessments" },
@@ -95,7 +95,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     layout: "career-compass",
     title: "Career Compass Dashboard",
     subtitle: "Personality profiles and dimension tendencies across your student cohort.",
-    emptyTitle: "Career Compass — Personality Type Analytics",
+    emptyTitle: "Career Compass - Personality Type Analytics",
     emptySubtitle: "Type distribution appears when students complete Career Compass.",
     accentClass: "from-emerald-600 to-teal-600",
     chartColors: ["#10b981", "#0ea5e9", "#6366f1", "#f59e0b", "#f43f5e", "#8b5cf6"],
@@ -107,7 +107,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     resultColumnLabel: "Personality type",
     buildStatCards: (data) => {
       const topCode = data.distributions[0]?.label ?? "";
-      const displayType = topCode ? formatPersonalityType(topCode) : "—";
+      const displayType = topCode ? formatPersonalityType(topCode) : "-";
       return [
         { label: "Most common profile", value: displayType, sub: data.summary.metricSub },
         { label: "Unique types", value: data.distributions.length, sub: "Observed in cohort" },
@@ -120,7 +120,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     layout: "johari",
     title: "CLEAR Dashboard",
     subtitle: "Organization-wide self-awareness across open, blind, hidden, and unknown quadrants.",
-    emptyTitle: "CLEAR — Johari Window Self-Awareness Map",
+    emptyTitle: "CLEAR - Johari Window Self-Awareness Map",
     emptySubtitle: "Quadrant analytics appear after students complete CLEAR.",
     accentClass: "from-indigo-600 to-blue-600",
     chartColors: ["#10b981", "#f59e0b", "#0ea5e9", "#8b5cf6"],
@@ -135,12 +135,12 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
       return [
         {
           label: "Avg solicits feedback",
-          value: j ? j.avgSolicitsFeedback.toFixed(1) : "—",
+          value: j ? j.avgSolicitsFeedback.toFixed(1) : "-",
           sub: "Org cohort average (0–50)",
         },
         {
           label: "Avg self-disclosure",
-          value: j ? j.avgSelfDisclosure.toFixed(1) : "—",
+          value: j ? j.avgSelfDisclosure.toFixed(1) : "-",
           sub: "Org cohort average (0–50)",
         },
         { label: "Open area (avg)", value: `${quadrantValue(data, "open").toFixed(1)}%`, sub: "Known to self & others" },
@@ -152,7 +152,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     layout: "litmus",
     title: "Litmus Test Dashboard",
     subtitle: "Parenting style profile - King, Servant, Elder, Prince, and Joker - across parent respondents.",
-    emptyTitle: "Litmus Test — Parenting Style Profile",
+    emptyTitle: "Litmus Test - Parenting Style Profile",
     emptySubtitle: "Style analytics appear when parents complete Litmus.",
     accentClass: "from-rose-600 to-pink-600",
     chartColors: ["#e11d48", "#ec4899", "#d946ef", "#8b5cf6", "#f43f5e"],
@@ -174,7 +174,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
       emptySectionDescription: "Parent activity will appear here after Litmus assessments are completed.",
     },
     buildStatCards: (data) => [
-      { label: "Dominant style", value: data.summary.metricValue ?? "—" },
+      { label: "Dominant style", value: data.summary.metricValue ?? "-" },
       { label: "Parents assessed", value: data.summary.uniqueStudents },
       { label: "Completed tests", value: data.summary.totalAttempts },
       { label: "Style variants", value: data.distributions.length, sub: "Observed in cohort" },
@@ -183,8 +183,8 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
   METACOGNITION_TEST: {
     layout: "metacognition",
     title: "Thinking & Expression Skills Dashboard",
-    subtitle: "Metacognition across Awareness, Planning, Monitoring, Regulation, and Reflection — plus learner quadrant profiles.",
-    emptyTitle: "Thinking & Expression Skills — Domain Analytics",
+    subtitle: "Metacognition across Awareness, Planning, Monitoring, Regulation, and Reflection - plus learner quadrant profiles.",
+    emptyTitle: "Thinking & Expression Skills - Domain Analytics",
     emptySubtitle: "Domain patterns appear after students complete the test.",
     accentClass: "from-cyan-600 to-blue-600",
     chartColors: ["#0891b2", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6"],
@@ -196,11 +196,11 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     resultColumnLabel: "Learner profile",
     buildStatCards: (data) => {
       const meta = data.metacognitionSummary;
-      const topQuadrant = meta?.quadrantDistribution[0]?.label ?? "—";
+      const topQuadrant = meta?.quadrantDistribution[0]?.label ?? "-";
       return [
         { label: "Avg total score", value: data.summary.metricValue ?? avgScore(data), sub: "Across all domains" },
-        { label: "Knowledge (avg)", value: meta ? `${meta.avgKnowledgePct}%` : "—", sub: "Awareness domain" },
-        { label: "Regulation (avg)", value: meta ? `${meta.avgRegulationPct}%` : "—", sub: "Planning through Reflection" },
+        { label: "Knowledge (avg)", value: meta ? `${meta.avgKnowledgePct}%` : "-", sub: "Awareness domain" },
+        { label: "Regulation (avg)", value: meta ? `${meta.avgRegulationPct}%` : "-", sub: "Planning through Reflection" },
         { label: "Top learner quadrant", value: topQuadrant, sub: "Most common profile" },
       ];
     },
@@ -209,7 +209,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
     layout: "career-dna",
     title: "Career DNA Profiler Dashboard",
     subtitle: "Personality type and career interest combinations, plus scored profiler sections across your cohort.",
-    emptyTitle: "Career DNA Profiler — Multi-Section Overview",
+    emptyTitle: "Career DNA Profiler - Multi-Section Overview",
     emptySubtitle: "Section analytics appear after students complete Career DNA.",
     accentClass: "from-fuchsia-600 to-violet-600",
     chartColors: ["#d946ef", "#a855f7", "#8b5cf6", "#6366f1", "#ec4899", "#f43f5e"],
@@ -225,7 +225,7 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
       { label: "Profiles completed", value: data.summary.totalAttempts },
       {
         label: "Top scored section",
-        value: data.dimensionAverages[0]?.label ?? "—",
+        value: data.dimensionAverages[0]?.label ?? "-",
         sub: data.dimensionAverages[0] ? `${data.dimensionAverages[0].value}% avg` : undefined,
       },
     ],

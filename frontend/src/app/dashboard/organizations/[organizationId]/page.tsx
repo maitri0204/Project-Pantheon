@@ -39,7 +39,7 @@ type OrganizationCouponDetailsResponse = {
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "—";
+  if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -55,7 +55,7 @@ const getWebsiteHref = (website?: string) => {
 };
 
 const formatPhoneNumber = (value?: string) => {
-  if (!value?.trim()) return "—";
+  if (!value?.trim()) return "-";
   const trimmed = value.trim().replace(/\s+/g, "");
   const indiaMatch = trimmed.match(/^\+91(\d{10})$/);
   if (indiaMatch) {
@@ -237,12 +237,12 @@ export default function OrganizationDetailsPage() {
                 {getWebsiteHref(organization.website)}
               </a>
             ) : (
-              <p className="mt-1.5 text-base font-semibold text-black">—</p>
+              <p className="mt-1.5 text-base font-semibold text-black">-</p>
             )}
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-black font-semibold">Name</p>
-            <p className="mt-1.5 text-base font-semibold text-black">{organization.contactPersonName || "—"}</p>
+            <p className="mt-1.5 text-base font-semibold text-black">{organization.contactPersonName || "-"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-black font-semibold">Phone Number</p>
@@ -250,11 +250,11 @@ export default function OrganizationDetailsPage() {
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-black font-semibold">Institute / Company Name</p>
-            <p className="mt-1.5 text-base font-semibold text-black break-words">{organization.companyName || organization.name || "—"}</p>
+            <p className="mt-1.5 text-base font-semibold text-black break-words">{organization.companyName || organization.name || "-"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-black font-semibold">Contact Email</p>
-            <p className="mt-1.5 text-base font-semibold text-black break-all">{organization.contactEmail || "—"}</p>
+            <p className="mt-1.5 text-base font-semibold text-black break-all">{organization.contactEmail || "-"}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-wide text-black font-semibold">Created On</p>

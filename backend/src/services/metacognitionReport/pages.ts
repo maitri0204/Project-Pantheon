@@ -34,7 +34,7 @@ export function buildAllPages(data: AssessmentData): string {
   const qProfile = getQuadrantProfile(quadrantType);
 
   const pages = [
-    // PAGE 1 (content) — template cover is prepended in buildReport.ts
+    // PAGE 1 (content) - template cover is prepended in buildReport.ts
     pageShell("Section 01", "Learning Intelligence Snapshot", "A high-level executive overview of your learning profile, key performance indicators, and priority development areas.", `
       <div class="card-grid-4">
         ${statCard(`${overall.percentage}%`, "Overall Score")}

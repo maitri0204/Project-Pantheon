@@ -347,7 +347,7 @@ function computeCareerDnaBreakdown(
     const parts = Array.from(domainMap.entries())
       .map(([code, domain]) => ({
         partNumber: domain.partNumber,
-        partName: `${code} — ${domain.title}`,
+        partName: `${code} - ${domain.title}`,
         score: domain.yes,
         maxScore: domain.total,
         percentage: domain.total ? Math.round((domain.yes / domain.total) * 100) : 0,

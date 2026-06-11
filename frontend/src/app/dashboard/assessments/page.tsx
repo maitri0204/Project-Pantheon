@@ -219,7 +219,7 @@ export default function AssessmentsPage() {
               <dl className="grid grid-cols-1 gap-x-5 gap-y-2 text-sm min-[400px]:grid-cols-2">
                 <div className="space-y-0.5">
                   <dt className="text-black">Questions</dt>
-                  <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "—"}</dd>
+                  <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "-"}</dd>
                 </div>
                 <div className="space-y-0.5 text-right">
                   <dt className="text-black">Currency</dt>

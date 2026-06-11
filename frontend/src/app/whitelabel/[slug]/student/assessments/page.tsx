@@ -520,7 +520,7 @@ export default function StudentAssessmentsPage() {
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <span className="flex items-center gap-1.5">
                     <span className="text-base">📋</span>
-                    <span><strong className="font-bold text-slate-700">{qCount || "—"}</strong> Questions</span>
+                    <span><strong className="font-bold text-slate-700">{qCount || "-"}</strong> Questions</span>
                   </span>
                   {completed && assessment.attempt?.completedAt && (
                     <span className="text-[10px] text-slate-400">

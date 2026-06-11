@@ -18,9 +18,9 @@ type EvaluationDimension = {
 };
 
 function formatAssessmentDate(value?: Date | string | null): string {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
 
@@ -95,8 +95,8 @@ export function buildCareerCompassReportData(input: {
   return {
     student: {
       name: input.studentName || "Student",
-      grade: input.grade || "—",
-      institute: input.institute || "—",
+      grade: input.grade || "-",
+      institute: input.institute || "-",
       assessmentDate: formatAssessmentDate(input.submittedAt),
       counselor: input.counselor || "Career Counselor",
     },

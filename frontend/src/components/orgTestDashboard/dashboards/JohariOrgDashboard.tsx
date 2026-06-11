@@ -27,15 +27,15 @@ export default function JohariOrgDashboard({ data, studentsPath }: OrgDashboardP
   return (
     <div className="min-w-0 space-y-6">
       <OrgDashboardHeader
-        title="CLEAR — Johari Window Self-Awareness Map"
+        title="CLEAR - Johari Window Self-Awareness Map"
         subtitle="Organization-wide view of open, blind, hidden, and unknown areas in student self-awareness."
-        summaryLine={`${summary.uniqueStudents} students · Dominant quadrant: ${summary.metricValue ?? "—"}`}
+        summaryLine={`${summary.uniqueStudents} students · Dominant quadrant: ${summary.metricValue ?? "-"}`}
         studentsPath={studentsPath}
         accentClass="from-indigo-600 to-blue-600"
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Dominant Quadrant" value={summary.metricValue ?? "—"} />
+        <StatCard label="Dominant Quadrant" value={summary.metricValue ?? "-"} />
         <StatCard label="Open Area (Avg)" value={`${open.toFixed(1)}%`} sub="Known to self & others" />
         <StatCard label="Blind Spot (Avg)" value={`${blind.toFixed(1)}%`} sub="Known to others only" />
         <StatCard label="Students" value={summary.uniqueStudents} sub={`${summary.totalAttempts} attempts`} />

@@ -334,7 +334,7 @@ export default function LedgerPage() {
                     <div>
                       <p className="text-[10px] uppercase text-black">Discount</p>
                       <p className="mt-0.5 text-xs font-medium text-green-700">
-                        {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
+                        {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "-"}
                       </p>
                     </div>
                     <div>
@@ -356,7 +356,7 @@ export default function LedgerPage() {
               <div>
                 <p className="mb-0.5 text-[10px] uppercase text-black">Discount</p>
                 <p className="text-xs font-bold text-green-700">
-                  {filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "—"}
+                  {filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "-"}
                 </p>
               </div>
               <div>
@@ -438,7 +438,7 @@ export default function LedgerPage() {
                         </td>
                         <td className="px-3 py-3 text-right text-black">{fmt(inv.amount)}</td>
                         <td className="px-3 py-3 text-right text-green-700">
-                          {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "—"}
+                          {inv.discountAmount > 0 ? `- ${fmt(inv.discountAmount)}` : "-"}
                         </td>
                         <td className="px-3 py-3 text-right font-semibold text-black">
                           {fmt(inv.finalAmount)}
@@ -454,8 +454,8 @@ export default function LedgerPage() {
                           </span>
                         </td>
                         <td className="px-3 py-3">
-                          <span className="block truncate font-mono text-black" title={inv.couponCode ?? "—"}>
-                            {inv.couponCode ?? "—"}
+                          <span className="block truncate font-mono text-black" title={inv.couponCode ?? "-"}>
+                            {inv.couponCode ?? "-"}
                           </span>
                         </td>
                       </tr>
@@ -469,7 +469,7 @@ export default function LedgerPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-black">{fmt(filteredSummary.gross)}</td>
                     <td className="px-4 py-3 text-right text-green-700">
-                      {filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "—"}
+                      {filteredSummary.discount > 0 ? `- ${fmt(filteredSummary.discount)}` : "-"}
                     </td>
                     <td className="px-4 py-3 text-right text-black">{fmt(filteredSummary.net)}</td>
                     <td className="px-4 py-3 text-right text-indigo-700">

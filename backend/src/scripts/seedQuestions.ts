@@ -320,7 +320,7 @@ async function seed() {
   ];
 
   for (const { key, varName, testType } of careerDnaFiles) {
-    console.log(`📚 Seeding Career DNA — ${testType}...`);
+    console.log(`📚 Seeding Career DNA - ${testType}...`);
     const raw = loadQuestionsFromFile(SOURCE_FILES[key], varName);
     const mapped = mapCareerDNA(raw, testType);
     console.log(`   Loaded ${mapped.length} questions`);

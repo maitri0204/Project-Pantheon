@@ -44,7 +44,7 @@ const isAllowedOrigin = (origin: string): boolean => {
   }
 };
 
-// Express is behind Nginx reverse proxy — required for express-rate-limit
+// Express is behind Nginx reverse proxy - required for express-rate-limit
 // to correctly identify client IPs from X-Forwarded-For, and to prevent
 // ERR_ERL_UNEXPECTED_X_FORWARDED_FOR validation errors.
 app.set("trust proxy", 1);

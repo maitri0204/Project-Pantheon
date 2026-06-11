@@ -6,7 +6,7 @@ import { STYLE_COLORS } from "./templateAssessmentData";
 import type { LitmusAssessmentData, LitmusStyleKey } from "./types";
 import { PAGE } from "./theme";
 
-/** Cover overlay layout — measured from LITMUS.jpg template (1414×2000 → A4). */
+/** Cover overlay layout - measured from LITMUS.jpg template (1414×2000 → A4). */
 const COVER_NAME_LEFT = 58;
 const COVER_NAME_TOP = 455;
 const COVER_LEFT_BOX_LEFT = 59;

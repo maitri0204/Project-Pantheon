@@ -12,16 +12,16 @@ function toNumber(value: unknown): number {
 }
 
 function formatAssessmentDate(value?: Date | string | null): string {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 }
 
 function formatSubmittedAt(value?: Date | string | null): string {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("en-IN", {
     day: "numeric",
     month: "long",
@@ -95,12 +95,12 @@ function buildKeyTakeaways(
   const feedbackComparison = sfScore > sdScore
     ? `Your feedback-seeking score (${sfScore}) exceeds your self-disclosure score (${sdScore}), meaning others may know more about your impact than you realize.`
     : sfScore < sdScore
-      ? `Your self-disclosure score (${sdScore}) exceeds your feedback-seeking score (${sfScore}), meaning you share more than you seek feedback on — balance both for growth.`
+      ? `Your self-disclosure score (${sdScore}) exceeds your feedback-seeking score (${sfScore}), meaning you share more than you seek feedback on - balance both for growth.`
       : `Your feedback-seeking and self-disclosure scores are balanced (${sfScore}/${sdScore}), creating a steady foundation for self-awareness growth.`;
 
   return [
     feedbackComparison,
-    `Your ${zoneLabels[largestZone]} zone (${areas[largestZone]}%) is your largest area — focus here for the fastest self-awareness gains.`,
+    `Your ${zoneLabels[largestZone]} zone (${areas[largestZone]}%) is your largest area - focus here for the fastest self-awareness gains.`,
     `Your Blind zone (${areas.blind}%) signals important growth opportunities through active feedback.`,
     `Expanding your Open zone from ${areas.open}% will directly improve trust, grades, and relationships.`,
     "With intentional effort, your growth trajectory over 90 days can be substantial.",
@@ -135,8 +135,8 @@ export function buildClearReportData(input: {
   data.student = {
     ...data.student,
     name: studentName,
-    classGrade: input.grade?.trim() || "—",
-    institute: input.school?.trim() || "—",
+    classGrade: input.grade?.trim() || "-",
+    institute: input.school?.trim() || "-",
     assessmentDate: formatAssessmentDate(input.submittedAt),
     counselor: counselorName,
     email: input.email?.trim() || data.student.email,

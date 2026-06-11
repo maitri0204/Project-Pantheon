@@ -76,11 +76,11 @@ export function buildAcademicCareerReportHtml(input: {
     <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:28px;">
       <div style="background:#eff6ff;border-radius:12px;padding:14px;">
         <p style="margin:0 0 4px;font-size:12px;color:#64748b;">Grade</p>
-        <p style="margin:0;font-weight:700;">${escapeHtml(grade || "—")}</p>
+        <p style="margin:0;font-weight:700;">${escapeHtml(grade || "-")}</p>
       </div>
       <div style="background:#eff6ff;border-radius:12px;padding:14px;">
         <p style="margin:0 0 4px;font-size:12px;color:#64748b;">Institution</p>
-        <p style="margin:0;font-weight:700;">${escapeHtml(school || "—")}</p>
+        <p style="margin:0;font-weight:700;">${escapeHtml(school || "-")}</p>
       </div>
       <div style="background:#eff6ff;border-radius:12px;padding:14px;">
         <p style="margin:0 0 4px;font-size:12px;color:#64748b;">Completed</p>

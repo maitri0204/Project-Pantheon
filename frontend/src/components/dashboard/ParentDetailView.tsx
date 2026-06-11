@@ -46,9 +46,9 @@ const normalizeDisplayCode = (code: string) => {
 };
 
 const formatDateTime = (value?: string) => {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("en-IN");
 };
 
@@ -106,7 +106,7 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
             <p className="mt-2 flex flex-col gap-1 text-sm text-blue-100 sm:flex-row sm:items-center sm:gap-2">
               <span className="inline-flex min-w-0 items-center gap-2 break-all"><Mail className="h-4 w-4 shrink-0" /> {parent.email}</span>
             </p>
-            <p className="mt-1 flex items-center gap-2 text-sm text-blue-100"><Phone className="h-4 w-4 shrink-0" /> {`${parent.phoneCode || ""}${parent.phone || ""}`.trim() || "—"}</p>
+            <p className="mt-1 flex items-center gap-2 text-sm text-blue-100"><Phone className="h-4 w-4 shrink-0" /> {`${parent.phoneCode || ""}${parent.phone || ""}`.trim() || "-"}</p>
           </div>
           <div className="grid w-full grid-cols-2 gap-3 sm:max-w-sm md:w-auto md:max-w-none">
             <div className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md">
@@ -124,7 +124,7 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><School className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Organization</span></div>
-          <p className="mt-2 break-words text-base font-semibold text-black">{parent.organization?.name || "—"}</p>
+          <p className="mt-2 break-words text-base font-semibold text-black">{parent.organization?.name || "-"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><ShieldCheck className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Joined</span></div>
@@ -132,7 +132,7 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-black"><Phone className="h-4 w-4" /><span className="text-xs font-semibold uppercase tracking-wide">Phone</span></div>
-          <p className="mt-2 text-base font-semibold text-black">{`${parent.phoneCode || ""}${parent.phone || ""}`.trim() || "—"}</p>
+          <p className="mt-2 text-base font-semibold text-black">{`${parent.phoneCode || ""}${parent.phone || ""}`.trim() || "-"}</p>
         </div>
       </div>
 
