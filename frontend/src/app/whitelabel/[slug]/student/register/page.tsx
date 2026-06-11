@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Country, State, City } from "country-state-city";
 import { apiRequest, setStoredAuth } from "@/lib/api";
+import { PLATFORM_LOGIN_URL } from "@/lib/studentRegisterUrl";
 
 type OrgBranding = { companyName: string; logoUrl?: string; primaryColor: string; accentColor?: string };
 type PortalPublic = { organization: { id: string; name: string; slug: string; branding: OrgBranding } };
@@ -282,7 +283,7 @@ export default function StudentRegisterPage() {
                   </button>
                   <p className="text-center text-sm text-slate-500">
                     Already registered?{" "}
-                    <Link href={`/whitelabel/${slug}/login`} className="font-semibold hover:underline" style={{ color: primary }}>Log in</Link>
+                    <Link href={PLATFORM_LOGIN_URL} className="font-semibold hover:underline" style={{ color: primary }}>Log in</Link>
                   </p>
                 </form>
               </div>
@@ -308,7 +309,7 @@ export default function StudentRegisterPage() {
                     Join <span className="font-semibold text-slate-800">{organization.branding.companyName}</span> and unlock your assessments.
                   </p>
                   <div className="mt-1">
-                    <Link href={`/whitelabel/${slug}/login`} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:-translate-y-0.5 transition">
+                    <Link href={PLATFORM_LOGIN_URL} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-600 shadow-sm hover:-translate-y-0.5 transition">
                       Already have an account? <span style={{ color: primary }}>Login →</span>
                     </Link>
                   </div>
@@ -462,7 +463,7 @@ export default function StudentRegisterPage() {
 
                 <p className="text-center text-sm text-slate-500">
                   Already have an account?{" "}
-                  <Link href={`/whitelabel/${slug}/login`} className="font-semibold hover:underline" style={{ color: primary }}>Log in</Link>
+                  <Link href={PLATFORM_LOGIN_URL} className="font-semibold hover:underline" style={{ color: primary }}>Log in</Link>
                 </p>
               </form>
             </div>
