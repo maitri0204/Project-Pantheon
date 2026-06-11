@@ -1,160 +1,100 @@
-"use client";
+import {
+  ArrowRight,
+  CheckCircle,
+  ClipboardList,
+  FlaskConical,
+  Target,
+  Users,
+} from "lucide-react";
 
-import { useState, type CSSProperties } from "react";
-import { ArrowRight, Clock3, LayoutGrid, Users } from "lucide-react";
-
-import { LANDING_ASSESSMENTS } from "@/lib/landingAssessments";
+import { LANDING_ASSESSMENT_CATALOG } from "@/lib/landingAssessmentCatalog";
 import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
-type FilterKey = "All" | "Students" | "Parents" | "Grades 8–10";
-
-const FILTERS: FilterKey[] = ["All", "Students", "Parents", "Grades 8–10"];
-
-function matchesFilter(audience: string, filter: FilterKey): boolean {
-  if (filter === "All") return true;
-  if (filter === "Grades 8–10") return audience === "Grades 8–10";
-  if (filter === "Parents") return audience.includes("Parent");
-  if (filter === "Students")
-    return audience.includes("Student") || audience === "Grades 8–10";
-  return true;
-}
-
 export default function LandingAssessments() {
-  const [active, setActive] = useState<FilterKey>("All");
-
-  const visible = LANDING_ASSESSMENTS.filter((a) =>
-    matchesFilter(a.audience, active),
-  );
-
   return (
-    <section id="assessments" className="relative overflow-hidden bg-gradient-to-b from-white via-blue-50/50 to-white py-16 sm:py-24">
-      {/* Background accents */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.18),transparent_50%),radial-gradient(circle_at_bottom_left,rgba(147,197,253,0.15),transparent_50%)]" />
-      <div className="shape-sphere float-2 -left-10 top-24 hidden h-24 w-24 opacity-50 lg:block" />
-      <div className="shape-cube float-4 right-[3%] top-1/2 hidden h-14 w-14 opacity-60 lg:block" />
+    <section
+      id="assessments"
+      className="section-glow content-wrap relative mx-auto scroll-mt-10 px-4 pb-16 pt-4 sm:px-6 lg:px-8"
+    >
+      <div className="mx-auto mb-12 max-w-3xl space-y-4 text-center">
+        <h2 className="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+          Explore Our <span className="gradient-title">8 Assessments</span>
+        </h2>
+        <p className="text-lg leading-8 text-slate-600">
+          Each assessment is built around a proven psychological model, and everyone ends with an instant,
+          personalized report. Find the test that answers your biggest question.
+        </p>
+      </div>
 
-      <div className="content-wrap relative mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2">
+        {LANDING_ASSESSMENT_CATALOG.map((test) => (
+          <article key={test.name} className="test-card p-6 sm:p-8">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-600 via-cyan-400 to-sky-600" />
 
-        {/* Section header */}
-        <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-blue-700">
-            <LayoutGrid className="h-4 w-4" />
-            Assessment Catalog
-          </span>
-          <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
-            Every test you need —{" "}
-            <span className="gradient-text-animated">in one place</span>
-          </h2>
-          <p className="mt-4 text-lg leading-8 text-slate-600">
-            Scientifically designed assessments for students, parents, and schools. Register once
-            and access the complete suite — all with detailed premium PDF reports.
-          </p>
-        </div>
-
-        {/* Filter tabs */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setActive(f)}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-                active === f
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-200"
-                  : "border border-blue-100 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-          <span className="ml-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-500">
-            {visible.length} test{visible.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-
-        {/* Cards grid */}
-        <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {visible.map((assessment, idx) => (
-            <article
-              key={assessment.code}
-              className="group tilt-card flex flex-col overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_10px_30px_rgba(59,130,246,0.08)]"
-            >
-              {/* Gradient banner */}
-              <div
-                className={`relative flex min-h-[130px] flex-col items-center justify-center bg-gradient-to-br ${assessment.accentClass} px-6 py-7 text-white`}
-              >
-                {/* Number tag */}
-                <span className="absolute right-4 top-4 text-3xl font-black leading-none opacity-20 select-none">
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
-
-                <span className="text-5xl drop-shadow-lg">{assessment.emoji}</span>
-                <h3 className="mt-3 text-center text-lg font-black leading-tight tracking-tight drop-shadow">
-                  {assessment.name}
-                </h3>
+            <div className="relative space-y-5 pt-2">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg">
+                  <test.icon className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black tracking-tight text-slate-950">{test.name}</h3>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-500">{test.tagline}</p>
+                </div>
               </div>
 
-              {/* Card body */}
-              <div className="flex flex-1 flex-col p-5">
-                {/* Badges row */}
-                <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    <Users className="h-3 w-3" />
-                    {assessment.audience}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                    <Clock3 className="h-3 w-3" />
-                    {assessment.duration}
-                  </span>
+              <p className="text-base leading-7 text-slate-600">{test.definition}</p>
+
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <ClipboardList className="h-3.5 w-3.5" />
+                    Format
+                  </div>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{test.formatType}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-slate-600">{test.duration}</p>
                 </div>
+                <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <Target className="h-3.5 w-3.5" />
+                    Scoring
+                  </div>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{test.scoring}</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <Users className="h-3.5 w-3.5" />
+                    Best for
+                  </div>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{test.audience}</p>
+                </div>
+              </div>
 
-                {/* Description */}
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {assessment.description}
+              <div>
+                <p className="mb-2.5 text-sm font-bold uppercase tracking-wide text-slate-500">
+                  What it measures
                 </p>
-
-                {/* Highlight chips */}
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {assessment.highlights.map((h) => (
-                    <li
-                      key={h}
-                      className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700"
-                    >
-                      ✓ {h}
+                <ul className="space-y-2">
+                  {test.measures.map((point) => (
+                    <li key={point} className="flex items-start gap-2.5 text-[15px] leading-6 text-slate-700">
+                      <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-sky-600" />
+                      {point}
                     </li>
                   ))}
                 </ul>
+              </div>
 
-                {/* CTA */}
+              <div className="pt-1">
                 <a
                   href={STUDENT_REGISTER_URL}
-                  className="mt-5 inline-flex items-center gap-2 self-start rounded-xl border border-blue-100 px-4 py-2 text-sm font-bold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50 group-hover:gap-3"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:gap-3 hover:brightness-110"
                 >
                   Register to take this test
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
-            </article>
-          ))}
-        </div>
-
-        {/* Bottom CTA strip */}
-        <div className="relative mt-12 overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 p-6 text-center shadow-[0_14px_40px_rgba(59,130,246,0.10)] sm:p-8">
-          <div className="shape-ring spin-slower right-4 top-4 hidden h-16 w-16 opacity-50 sm:block" style={{ "--ring-w": "10px" } as CSSProperties} />
-          <p className="text-lg font-bold text-slate-900">
-            All 8 assessments are available after a single free registration.
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            No payment required to register. Assessments are purchased individually or through your school/organization.
-          </p>
-          <a
-            href={STUDENT_REGISTER_URL}
-            className="shine mt-5 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-7 py-3 text-base font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5"
-          >
-            Create your free account
-            <ArrowRight className="h-5 w-5" />
-          </a>
-        </div>
+            </div>
+          </article>
+        ))}
       </div>
     </section>
   );

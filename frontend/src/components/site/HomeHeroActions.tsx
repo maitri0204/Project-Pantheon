@@ -23,7 +23,7 @@ export default function HomeHeroActions() {
         href={STUDENT_REGISTER_URL}
         className="shine glow-pulse inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5"
       >
-        Register free
+        Register
         <span aria-hidden>→</span>
       </a>
       <a

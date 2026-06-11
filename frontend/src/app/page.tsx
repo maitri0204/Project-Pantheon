@@ -15,7 +15,6 @@ import {
   BarChart3,
   BookOpenText,
   CheckCircle,
-  ChevronDown,
   ClipboardCheck,
   FileText,
   GraduationCap,
@@ -31,7 +30,7 @@ const howItWorks = [
   {
     step: "01",
     title: "Register in minutes",
-    body: "Sign up with your email, verify via OTP, and join the Kareer Studio assessment portal instantly — completely free.",
+    body: "Sign up with your email, verify via OTP, and join the Kareer Studio assessment portal instantly - completely free.",
     icon: ClipboardCheck,
     color: "bg-blue-100 text-blue-600",
   },
@@ -45,7 +44,7 @@ const howItWorks = [
   {
     step: "03",
     title: "Get your report",
-    body: "Receive a detailed, branded PDF report with scores, insights, and actionable next steps — delivered to your inbox.",
+    body: "Receive a detailed, branded PDF report with scores, insights, and actionable next steps - delivered to your inbox.",
     icon: FileText,
     color: "bg-cyan-100 text-cyan-600",
   },
@@ -59,12 +58,12 @@ const personas = [
     color: "from-blue-500 to-indigo-600",
     text: "text-blue-700",
     tests: [
-      "Career Compass — personality & direction",
-      "Career DNA — deep aptitude profiler",
-      "CLEAR — self-awareness & blind spots",
-      "RQ — resilience quotient",
-      "TEST — thinking & expression skills",
-      "Academic Career & Interest Test (Grades 8–10)",
+      "Career Compass - personality & direction",
+      "Career DNA - deep aptitude profiler",
+      "CLEAR - self-awareness & blind spots",
+      "RQ - resilience quotient",
+      "TEST - thinking & expression skills",
+      "Academic Career & Interest Test (Grades 8-10)",
       "Study Abroad Readiness (Grades 10+)",
     ],
   },
@@ -75,7 +74,7 @@ const personas = [
     color: "from-sky-500 to-blue-600",
     text: "text-sky-700",
     tests: [
-      "Litmus Test — understand your parenting style",
+      "Litmus Test - understand your parenting style",
       "K·S·E·P·J scoring across 5 dimensions",
       "Family guidance report with action plan",
       "Insights to support your child's growth",
@@ -87,7 +86,7 @@ const outcomes = [
   {
     icon: FileText,
     title: "Premium PDF Report",
-    body: "Multi-page, beautifully designed reports with scores, breakdowns, and next steps — ready to print or share.",
+    body: "Multi-page, beautifully designed reports with scores, breakdowns, and next steps - ready to print or share.",
     accent: "bg-blue-100 text-blue-600",
   },
   {
@@ -99,7 +98,7 @@ const outcomes = [
   {
     icon: BarChart3,
     title: "Dimension Scores",
-    body: "Every assessment breaks down your result into multiple scored dimensions — not just a single number.",
+    body: "Every assessment breaks down your result into multiple scored dimensions - not just a single number.",
     accent: "bg-cyan-100 text-cyan-600",
   },
   {
@@ -117,7 +116,7 @@ const outcomes = [
   {
     icon: BookOpenText,
     title: "Science-Backed",
-    body: "RQ, Johari Window, metacognition, and interest-mapping frameworks trusted by counselors worldwide.",
+    body: "RQ, CLEAR, TEST, and AIM frameworks trusted by counselors worldwide.",
     accent: "bg-sky-100 text-sky-600",
   },
 ];
@@ -154,7 +153,7 @@ export default function Home() {
                 </h1>
                 <p className="reveal-up max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl" style={{ animationDelay: "0.2s" }}>
                   Career discovery, resilience profiling, academic-interest mapping, and study-abroad
-                  readiness — one trusted platform for students and parents.
+                  readiness - one trusted platform for students and parents.
                 </p>
               </div>
 
@@ -191,14 +190,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Scroll cue */}
-          <a
-            href="#assessments"
-            className="bounce-slow mx-auto mb-2 flex w-fit flex-col items-center gap-1 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
-          >
-            Explore all 8 assessments
-            <ChevronDown className="h-5 w-5" />
-          </a>
         </div>
 
         {/* Wave divider into the next section */}
@@ -209,7 +200,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── MARQUEE ──────────────────────────────────────────────────────── */}
+      {/* ─── EXPLORE CTA + MARQUEE ─────────────────────────────────────────── */}
+      <div className="content-wrap mx-auto px-4 pt-2 sm:px-6 lg:px-8">
+        <a
+          href="#assessments"
+          className="shine mx-auto mb-5 flex w-fit items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5"
+        >
+          Explore all 8 assessments
+          <ArrowRight className="h-5 w-5" />
+        </a>
+      </div>
       <LandingMarquee />
 
       {/* ─── WHO IS IT FOR ────────────────────────────────────────────────── */}
@@ -219,10 +219,6 @@ export default function Home() {
 
         <div className="content-wrap relative mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-blue-700">
-              <Users className="h-4 w-4" />
-              Students & parents
-            </span>
             <h2 className="mt-4 text-3xl font-black text-slate-950 sm:text-4xl">
               Who should take these assessments?
             </h2>
@@ -278,15 +274,11 @@ export default function Home() {
 
         <div className="content-wrap relative mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-blue-700">
-              <Sparkles className="pulse-soft h-4 w-4" />
-              What's included
-            </span>
             <h2 className="mt-4 text-3xl font-black text-slate-950 sm:text-4xl">
               More than just a score
             </h2>
             <p className="mt-3 text-lg text-slate-600">
-              Every assessment delivers a complete, actionable package — not a single number.
+              Every assessment delivers a complete, actionable package - not a single number.
             </p>
           </div>
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -310,10 +302,6 @@ export default function Home() {
           <div className="shape-pill float-3 -bottom-3 left-1/4 hidden h-8 w-20 opacity-70 lg:block" style={{ "--shape-rot": "-24deg" } as CSSProperties} />
 
           <div className="relative mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-1.5 text-sm font-bold uppercase tracking-[0.18em] text-blue-700">
-              <Zap className="h-4 w-4" />
-              Simple process
-            </span>
             <h2 className="mt-4 text-3xl font-black text-slate-950 sm:text-4xl">
               From sign-up to report in minutes
             </h2>
@@ -338,38 +326,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ─── TRUST STRIP ──────────────────────────────────────────────────── */}
-      <section className="content-wrap mx-auto px-4 pb-14 sm:px-6 lg:px-8">
-        <div className="grid gap-px overflow-hidden rounded-3xl border border-blue-100 bg-blue-100/50 shadow-[0_14px_40px_rgba(59,130,246,0.10)] md:grid-cols-3">
-          {[
-            {
-              icon: BarChart3,
-              title: "Science-backed frameworks",
-              body: "RQ, Johari Window, metacognition, and interest-mapping models used by counselors worldwide.",
-            },
-            {
-              icon: Sparkles,
-              title: "Premium PDF reports",
-              body: "Multi-page, branded reports you can download, email, and share with parents or mentors.",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Secure & verified access",
-              body: "OTP login, role-based dashboards, and anti-cheat safeguards for fair, reliable results.",
-            },
-          ].map((item) => (
-            <div key={item.title} className="bg-white p-7 transition hover:bg-blue-50/50">
-              <div className="inline-flex rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 p-3 text-white shadow-lg shadow-blue-200">
-                <item.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-lg font-bold text-slate-950">{item.title}</h3>
-              <p className="mt-2 text-sm leading-7 text-slate-600">{item.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <LandingCta />
 
       <Footer />

@@ -111,7 +111,7 @@ export const LANDING_ASSESSMENTS: LandingAssessment[] = [
 ];
 
 export const LANDING_STATS = [
-  { value: "8", label: "Expert assessments" },
-  { value: "30+", label: "Pages of insights per report" },
-  { value: "12+", label: "Readiness dimensions measured" },
+  { value: "08", label: "Expert Assessments" },
+  { value: "15+", label: "Pages of Insightful Report" },
+  { value: "52", label: "Readiness Dimensions Measured" },
 ];

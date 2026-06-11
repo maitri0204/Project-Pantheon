@@ -5,8 +5,7 @@ import { ArrowRight, BadgeCheck, Sparkles } from "lucide-react";
 import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 const perks = [
-  "Free to register",
-  "OTP verification — no password needed",
+  "OTP verification - no password needed",
   "Access all 8 assessments",
   "Premium PDF reports included",
 ];
@@ -35,7 +34,7 @@ export default function LandingCta() {
 
           <p className="mx-auto mt-4 max-w-2xl text-center text-base leading-8 text-blue-50 sm:text-lg">
             Join thousands of students and parents who use Assessment Center to make confident
-            decisions about careers, streams, and education — backed by science, not guesswork.
+            decisions about careers, streams, and education - backed by science, not guesswork.
           </p>
 
           {/* Perks */}

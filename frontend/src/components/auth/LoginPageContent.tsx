@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiRequest, clearStoredAuth, getStoredAuth, setStoredAuth } from "@/lib/api";
+import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 type Step = "email" | "otp";
 
@@ -467,6 +468,17 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
               >
                 {loading ? "Sending OTP..." : "Send OTP"}
               </button>
+
+              <p className="text-center text-sm text-slate-600">
+                Don&apos;t have an account?{" "}
+                <a
+                  href={STUDENT_REGISTER_URL}
+                  className="font-semibold hover:opacity-80"
+                  style={{ color: orgBranding?.primaryColor || "#2563eb" }}
+                >
+                  Register
+                </a>
+              </p>
 
               {portalOrganizationSlug ? (
                 <p className="text-center text-xs text-slate-500">
