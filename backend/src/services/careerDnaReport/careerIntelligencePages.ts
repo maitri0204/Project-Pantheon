@@ -1,3 +1,4 @@
+import { renderReportBullets } from "../reportBullets";
 import {
   careerFitTop10,
   jobRoleExplorer,
@@ -61,9 +62,13 @@ function pageWrap(content: string, pageLabel: string, section7Footer = false): s
 }
 
 function bullets(items: string[], max = 5): string {
-  return `<ul style="margin:0;padding-left:16px;font-size:10px;color:#374151;line-height:1.65;">
-    ${items.slice(0, max).map((i) => `<li style="margin-bottom:3px;">${i}</li>`).join("")}
-  </ul>`;
+  return renderReportBullets(items.slice(0, max), {
+    color: "#374151",
+    bulletColor: "#5B4CF0",
+    compact: true,
+    fontSize: "10px",
+    lineHeight: 1.65,
+  });
 }
 
 function matchBadge(match: number): string {

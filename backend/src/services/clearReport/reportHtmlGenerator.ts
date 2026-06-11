@@ -1,9 +1,16 @@
+import { REPORT_BULLET_CSS, renderReportBullets } from "../reportBullets";
 import { buildBackCoverPage, buildCoverPage } from "./coverPages";
 import { buildJohariSvg } from "./johariSvg";
 import type { ClearAssessmentData, ClearPlanMonth } from "./types";
 
 const bullets = (items: string[], color = "#2563EB") =>
-  `<ul class="bullets">${items.map((i) => `<li style="--dot:${color}">${i}</li>`).join("")}</ul>`;
+  renderReportBullets(items, {
+    color: "#334155",
+    bulletColor: color,
+    className: "report-bullets--clear",
+    fontSize: "12px",
+    lineHeight: 1.6,
+  });
 
 const pageHeader = (num: number, title: string, subtitle?: string) => `
   <div class="ph">
@@ -75,9 +82,9 @@ export function generateReportHTML(d: ClearAssessmentData): string {
     .card h3{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#64748B;margin-bottom:8px}
     .prose{font-size:12px;line-height:1.7;color:#334155}
     .lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#64748B;margin-bottom:6px}
-    .bullets{list-style:none}
-    .bullets li{padding-left:12px;position:relative;margin-bottom:5px;font-size:12px;color:#334155;line-height:1.6}
-    .bullets li::before{content:'';position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:var(--dot,#2563EB)}
+    ${REPORT_BULLET_CSS}
+    .parent-compact .report-bullets--clear{font-size:10px;line-height:1.45}
+    .parent-compact .report-bullets--clear > li{margin-bottom:3px}
     .kpi{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;position:relative;overflow:hidden}
     .kpi-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#64748B}
     .kpi-v{font-size:22px;font-weight:800;margin-top:4px;color:#0F172A}
@@ -164,7 +171,6 @@ export function generateReportHTML(d: ClearAssessmentData): string {
     .parent-card h4{font-size:11px;font-weight:700;margin-bottom:6px}
     .parent-compact .parent-card{padding:8px 10px}
     .parent-compact .parent-card h4{font-size:10px;margin-bottom:4px}
-    .parent-compact .bullets li{font-size:10px;margin-bottom:3px;line-height:1.45}
     .parent-compact .insight{padding:10px 12px}
     .flow-gap{display:flex;flex-direction:column;gap:12px}
     .final-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#64748B;margin-bottom:4px}

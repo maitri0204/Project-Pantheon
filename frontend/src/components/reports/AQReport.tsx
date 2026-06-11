@@ -2083,7 +2083,7 @@ function MentorshipGuidancePage({ d }: { d: AQReportData }) {
       </View>
       {sec.points.map((p, pi) => (
         <View key={pi} style={{ flexDirection: 'row', paddingLeft: 4, marginBottom: 5 }}>
-          <Text style={{ fontSize: 8, color: sec.color, fontWeight: 700, marginRight: 6 }}>→</Text>
+          <Text style={{ fontSize: 8, color: sec.color, fontWeight: 700, marginRight: 6, width: 10, textAlign: 'center' }}>•</Text>
           <Text style={{ fontSize: 8, fontWeight: 400, color: C.slate700, flex: 1, lineHeight: 1.55 }}>{p}</Text>
         </View>
       ))}

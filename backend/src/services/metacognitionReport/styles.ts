@@ -1,3 +1,5 @@
+import { REPORT_BULLET_CSS } from "../reportBullets";
+
 export const reportStyles = `
   :root {
     --blue: #2563EB;
@@ -151,22 +153,7 @@ export const reportStyles = `
   .stat-label { font-size: 7px; font-weight: 700; color: var(--slate-500); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 3px; }
 
   /* Bullets */
-  ul { list-style: none; padding: 0; margin: 0; }
-  ul li {
-    font-size: 9.5px; line-height: 1.55; color: var(--slate-900);
-    padding-left: 12px; position: relative; margin-bottom: 4px;
-  }
-  ul li::before {
-    content: "";
-    position: absolute; left: 0; top: 6px;
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: var(--blue);
-  }
-  .bullets-success li::before { background: var(--success); }
-  .bullets-warning li::before { background: var(--warning); }
-  .bullets-danger li::before { background: var(--danger); }
-  .bullets-purple li::before { background: var(--purple); }
+  ${REPORT_BULLET_CSS}
 
   /* Progress */
   .progress-row { margin-bottom: 12px; }
@@ -562,8 +549,6 @@ export const reportStyles = `
   .page-num { font-size: 8px; font-weight: 700; color: var(--blue); }
 
   /* Checklist */
-  .checklist li::before { content: "☐"; background: none; font-size: 10px; top: 0; color: var(--blue); }
-
   /* Page content fill */
   .page-content { flex: 1; }
   .page-fill .card { margin-bottom: 7px; }

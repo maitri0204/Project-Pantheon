@@ -402,6 +402,11 @@ export function buildAllPages(data: AssessmentData): string {
         "Reward yourself for completing all awareness checks for 5 consecutive days",
         "Note which subjects benefit most from awareness checks",
       ])}
+    `, 12, TOTAL),
+
+    // PAGE 14 - Weeks 3-4
+    pageShell("Section 12 (continued)", "90-Day Improvement Plan", "Phase 1 - Weeks 3 - 4: Build awareness journal and consolidate Month 1 habits.", `
+      ${phaseHeader("Phase 1", "Weeks 3 - 4 · Days 15 - 30", "Build the awareness journal, then analyze patterns and consolidate habits.")}
       ${weekPlanBlock("Week 3", "Build the awareness journal", [
         "Start an awareness journal - 3 sentences after each study session",
         "Journal format: What I learned / What confused me / What I'll do next",
@@ -417,11 +422,6 @@ export function buildAllPages(data: AssessmentData): string {
         "Identify the single most recurring gap across all entries",
         "Set one specific awareness goal for Week 4 based on patterns found",
       ])}
-    `, 12, TOTAL),
-
-    // PAGE 14 - Week 4
-    pageShell("Section 12 (continued)", "90-Day Improvement Plan", "Phase 1 - Week 4: Analyze patterns and consolidate Month 1 habits.", `
-      ${phaseHeader("Phase 1", "Week 4 · Day 22 - 30", "Analyze patterns and consolidate habits from Weeks 1 - 3.")}
       ${weekPlanBlock("Week 4", "Analyze patterns and consolidate habits", [
         "Review all journal entries and identify top 3 recurring patterns",
         "Create a personal 'awareness triggers' list for quick reference",

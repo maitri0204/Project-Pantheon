@@ -1,9 +1,27 @@
+import { renderReportBullets } from "../reportBullets";
 import { icons, CardVariant } from "./icons";
 import { getQuadrantType, QuadrantType } from "./quadrantContent";
 
 export function bullets(items: string[], variant?: "success" | "warning" | "danger" | "purple" | "checklist"): string {
-  const cls = variant === "checklist" ? "checklist" : variant ? `bullets-${variant}` : "";
-  return `<ul class="${cls}">${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+  const bulletColor =
+    variant === "success"
+      ? "var(--success)"
+      : variant === "warning"
+        ? "var(--warning)"
+        : variant === "danger"
+          ? "var(--danger)"
+          : variant === "purple"
+            ? "var(--purple)"
+            : "var(--blue)";
+  return renderReportBullets(items, {
+    color: "var(--slate-900)",
+    bulletColor,
+    compact: true,
+    checklist: variant === "checklist",
+    className: "report-bullets--metacog",
+    fontSize: "9.5px",
+    lineHeight: 1.55,
+  });
 }
 
 export function progressBar(label: string, pct: number, variant?: "default" | "success" | "warning" | "danger"): string {

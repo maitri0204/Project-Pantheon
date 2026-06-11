@@ -1,3 +1,4 @@
+import { REPORT_BULLET_CSS, renderReportBullets } from "../reportBullets";
 import type { reportData as RD } from "./reportData";
 import { careerFitTop10 } from "./careerIntelligenceData";
 import { careerIntelligenceModulePages } from "./careerIntelligencePages";
@@ -271,8 +272,8 @@ function backCoverPage(): string {
 function executiveSummaryPage(d: ReportData): string {
   const overallPct = Math.round((d.candidate.totalScore / 760) * 100); // rough max
 
-  const bulletList = (arr: string[]) =>
-    arr.map(b => `<li style="margin-bottom:5px;">${b}</li>`).join("");
+  const bulletList = (arr: string[], color = "#374151", fontSize = "10.5px", lineHeight = 1.75) =>
+    renderReportBullets(arr, { color, bulletColor: "#5B4CF0", fontSize, lineHeight });
 
   return `
   <div class="page content-page">
@@ -290,9 +291,7 @@ function executiveSummaryPage(d: ReportData): string {
     ${card(`
       <p style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#5B4CF0;
                 text-transform:uppercase;margin:0 0 10px;">Key Takeaways</p>
-      <ul style="margin:0;padding-left:16px;font-size:10.5px;color:#374151;line-height:1.75;">
-        ${bulletList(d.keyTakeaways)}
-      </ul>
+      ${bulletList(d.keyTakeaways)}
     `, "margin-bottom:16px;")}
 
     <!-- Strengths + Development -->
@@ -300,16 +299,12 @@ function executiveSummaryPage(d: ReportData): string {
       ${card(`
         <p style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#22C55E;
                   text-transform:uppercase;margin:0 0 10px;">Top Strengths</p>
-        <ul style="margin:0;padding-left:16px;font-size:10.5px;color:#111827;line-height:1.7;">
-          ${bulletList(d.topStrengths)}
-        </ul>
+        ${bulletList(d.topStrengths, "#111827", "10.5px", 1.7)}
       `, "flex:1;")}
       ${card(`
         <p style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#EF4444;
                   text-transform:uppercase;margin:0 0 10px;">Development Areas</p>
-        <ul style="margin:0;padding-left:16px;font-size:10.5px;color:#111827;line-height:1.7;">
-          ${bulletList(d.developmentAreas)}
-        </ul>
+        ${bulletList(d.developmentAreas, "#111827", "10.5px", 1.7)}
       `, "flex:1;")}
     </div>
 
@@ -371,11 +366,14 @@ function cognitiveAptitudePage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;color:#5B4CF0;letter-spacing:0.1em;
                     text-transform:uppercase;margin:0 0 6px;">Insight</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.75;">
-            <li>Numerical and memory processing are standout strengths (90% each).</li>
-            <li>Verbal and spatial reasoning are in the moderate range- targeted practice will close the gap.</li>
-            <li>Overall cognitive profile places this candidate above the 70th percentile.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Numerical and memory processing are standout strengths (90% each).",
+              "Verbal and spatial reasoning are in the moderate range- targeted practice will close the gap.",
+              "Overall cognitive profile places this candidate above the 70th percentile.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.75 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:8px 0 0;">
             <strong>Suggested Action:</strong> Leverage quantitative strengths for data-heavy roles; build verbal and spatial
             skills through structured exercises over a 60-day period.
@@ -395,11 +393,14 @@ function cognitiveAptitudePage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;color:#5B4CF0;letter-spacing:0.1em;
                     text-transform:uppercase;margin:0 0 6px;">Insight</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.75;">
-            <li>Logical, numerical, and creativity aptitude all score 90%- exceptional analytical depth.</li>
-            <li>Verbal and mechanical aptitude (60%) are development opportunities.</li>
-            <li>Creativity & Innovation score positions candidate well for product and strategy roles.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Logical, numerical, and creativity aptitude all score 90%- exceptional analytical depth.",
+              "Verbal and mechanical aptitude (60%) are development opportunities.",
+              "Creativity & Innovation score positions candidate well for product and strategy roles.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.75 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:8px 0 0;">
             <strong>Suggested Action:</strong> Pursue roles requiring quantitative problem-solving and
             innovative thinking; supplement with verbal communication skill-building.
@@ -446,31 +447,43 @@ function personalityPage(d: ReportData): string {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div>
           <p style="font-size:10.5px;font-weight:700;color:#111827;margin:0 0 4px;">Social Style- Reflective Orientation (88%)</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.7;">
-            <li>Prefers thoughtful, considered interactions over impulsive responses.</li>
-            <li>Builds trust through consistency and depth of knowledge.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Prefers thoughtful, considered interactions over impulsive responses.",
+              "Builds trust through consistency and depth of knowledge.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.7 },
+          )}
         </div>
         <div>
           <p style="font-size:10.5px;font-weight:700;color:#111827;margin:0 0 4px;">Thinking Style- Conceptual Thinking (84%)</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.7;">
-            <li>Strong capacity for abstract reasoning and big-picture strategy.</li>
-            <li>Well-suited for research, design, and systems thinking roles.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Strong capacity for abstract reasoning and big-picture strategy.",
+              "Well-suited for research, design, and systems thinking roles.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.7 },
+          )}
         </div>
         <div>
           <p style="font-size:10.5px;font-weight:700;color:#111827;margin:0 0 4px;">Decision Style- Value-Based (94%)</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.7;">
-            <li>Decisions are principle-driven, coherent, and defensible.</li>
-            <li>High integrity under pressure- valuable in leadership contexts.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Decisions are principle-driven, coherent, and defensible.",
+              "High integrity under pressure- valuable in leadership contexts.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.7 },
+          )}
         </div>
         <div>
           <p style="font-size:10.5px;font-weight:700;color:#111827;margin:0 0 4px;">Working Style- Flexible (94%)</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.7;">
-            <li>Adapts readily to shifting priorities and work formats.</li>
-            <li>Thrives in dynamic, project-based or remote environments.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Adapts readily to shifting priorities and work formats.",
+              "Thrives in dynamic, project-based or remote environments.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.7 },
+          )}
         </div>
       </div>
     `)}
@@ -507,12 +520,15 @@ function careerInterestPage(d: ReportData): string {
       <div style="flex:1;">
         ${card(`
           <p style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#5B4CF0;
-                    text-transform:uppercase;margin:0 0 8px;">What ISE Means</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.8;">
-            <li><strong>Investigative (100%):</strong> Driven by analysis, research, and intellectual curiosity.</li>
-            <li><strong>Social (57%):</strong> Values collaboration, teaching, and human-centred work.</li>
-            <li><strong>Enterprising (43%):</strong> Comfortable with leadership, persuasion, and initiative.</li>
-          </ul>
+                    text-transform:uppercase;margin:0 0 8px;">What THIS Means</p>
+          ${renderReportBullets(
+            [
+              "<strong>Investigative (100%):</strong> Driven by analysis, research, and intellectual curiosity.",
+              "<strong>Social (57%):</strong> Values collaboration, teaching, and human-centred work.",
+              "<strong>Enterprising (43%):</strong> Comfortable with leadership, persuasion, and initiative.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.8 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:10px 0 0;">
             <strong>Suggested Action:</strong> Prioritise roles that blend analytical depth with human impact-
             research leadership, data strategy, and advisory consulting are natural fits.
@@ -522,12 +538,15 @@ function careerInterestPage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;letter-spacing:0.1em;color:#22C55E;
                     text-transform:uppercase;margin:0 0 8px;">Top Career Alignments</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.8;">
-            <li>Data Science &amp; Machine Learning</li>
-            <li>Management Consulting</li>
-            <li>Research &amp; Development</li>
-            <li>Product Strategy &amp; Analytics</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Data Science &amp; Machine Learning",
+              "Management Consulting",
+              "Research &amp; Development",
+              "Product Strategy &amp; Analytics",
+            ],
+            { color: "#374151", bulletColor: "#22C55E", compact: true, fontSize: "10px", lineHeight: 1.8 },
+          )}
         `, "margin-top:12px;")}
       </div>
     </div>
@@ -562,11 +581,14 @@ function emotionalLearningPage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;color:#F59E0B;letter-spacing:0.1em;
                     text-transform:uppercase;margin:0 0 6px;">Key Insight</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.75;">
-            <li>Self-awareness (50%) is the strongest EQ dimension- a solid foundation.</li>
-            <li>Empathy (25%) and social skills (30%) are critical development priorities.</li>
-            <li>EQ development will directly amplify leadership effectiveness.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Self-awareness (50%) is the strongest EQ dimension- a solid foundation.",
+              "Empathy (25%) and social skills (30%) are critical development priorities.",
+              "EQ development will directly amplify leadership effectiveness.",
+            ],
+            { color: "#374151", bulletColor: "#F59E0B", compact: true, fontSize: "10px", lineHeight: 1.75 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:8px 0 0;">
             <strong>Suggested Action:</strong> Enroll in a structured EQ coaching program. Focus on
             empathy-building exercises and active listening practices over 90 days.
@@ -585,11 +607,14 @@ function emotionalLearningPage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;color:#5B4CF0;letter-spacing:0.1em;
                     text-transform:uppercase;margin:0 0 6px;">Key Insight</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.75;">
-            <li>Auditory (100%) and Social/Solitary (80%) learning are dominant channels.</li>
-            <li>Thrives with podcast-style learning, lectures, and peer discussion.</li>
-            <li>Kinesthetic learning (33%)- consider adding practical lab or project work.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Auditory (100%) and Social/Solitary (80%) learning are dominant channels.",
+              "Thrives with podcast-style learning, lectures, and peer discussion.",
+              "Kinesthetic learning (33%)- consider adding practical lab or project work.",
+            ],
+            { color: "#374151", bulletColor: "#5B4CF0", compact: true, fontSize: "10px", lineHeight: 1.75 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:8px 0 0;">
             <strong>Suggested Action:</strong> Structure learning through audio-led formats, study groups,
             and solo deep-work sessions for maximum retention.
@@ -638,11 +663,14 @@ function behaviouralResiliencePage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;color:#22C55E;letter-spacing:0.1em;
                     text-transform:uppercase;margin:0 0 6px;">Insight</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.75;">
-            <li>Teamwork (70%) is the highest behavioural competency- strong collaborative instinct.</li>
-            <li>Communication skills (68%) are solid; focused practice will push this above 80%.</li>
-            <li>Leadership potential (63%) is present- needs confidence-building experiences.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Teamwork (70%) is the highest behavioural competency- strong collaborative instinct.",
+              "Communication skills (68%) are solid; focused practice will push this above 80%.",
+              "Leadership potential (63%) is present- needs confidence-building experiences.",
+            ],
+            { color: "#374151", bulletColor: "#22C55E", compact: true, fontSize: "10px", lineHeight: 1.75 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:8px 0 0;">
             <strong>Suggested Action:</strong> Seek team lead or project coordinator roles to activate
             leadership potential while leveraging collaborative strengths.
@@ -661,11 +689,14 @@ function behaviouralResiliencePage(d: ReportData): string {
         ${card(`
           <p style="font-size:9px;font-weight:700;color:#F59E0B;letter-spacing:0.1em;
                     text-transform:uppercase;margin:0 0 6px;">Insight</p>
-          <ul style="margin:0;padding-left:14px;font-size:10px;color:#374151;line-height:1.75;">
-            <li>Stress Triggers & Awareness (80%)- highly self-aware under pressure.</li>
-            <li>All four resilience dimensions are in the 70-80% range- consistent performance.</li>
-            <li>This profile indicates strong psychological readiness for demanding environments.</li>
-          </ul>
+          ${renderReportBullets(
+            [
+              "Stress Triggers & Awareness (80%)- highly self-aware under pressure.",
+              "All four resilience dimensions are in the 70-80% range- consistent performance.",
+              "This profile indicates strong psychological readiness for demanding environments.",
+            ],
+            { color: "#374151", bulletColor: "#F59E0B", compact: true, fontSize: "10px", lineHeight: 1.75 },
+          )}
           <p style="font-size:10px;color:#374151;line-height:1.6;margin:8px 0 0;">
             <strong>Suggested Action:</strong> Maintain resilience through regular mindfulness, reflection,
             and stress-debrief routines- especially during high-stakes career transitions.
@@ -764,6 +795,7 @@ export function buildReportHtml(data: ReportData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Career DNA Executive Report</title>
   <style>
+    ${REPORT_BULLET_CSS}
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {

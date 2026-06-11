@@ -352,7 +352,6 @@ function buildActionPlans(
         `Clear shortlist aligned with ${short}: ${careerFocus}`,
         `One completed mini-project in ${subjects[0] || stream}`,
         "Professional network of 2+ mentors",
-        `Written journal on ${cluster.toLowerCase()} career paths`,
       ],
     },
     plan60: {

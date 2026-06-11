@@ -1,7 +1,7 @@
 /* eslint-disable */
 'use client';
 
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import {
   ALL_TOPICS,
   type AssessmentResult,
@@ -216,24 +216,56 @@ function ensureSentence(text: string) {
   return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 }
 
+function BulletLine({
+  children,
+  color = '#1e293b',
+  bulletColor,
+  fontSize = 10.5,
+  lineHeight = 1.55,
+}: {
+  children: ReactNode;
+  color?: string;
+  bulletColor?: string;
+  fontSize?: number;
+  lineHeight?: number;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+      <span
+        style={{
+          flexShrink: 0,
+          width: 12,
+          fontSize,
+          lineHeight,
+          color: bulletColor ?? color,
+          textAlign: 'center',
+        }}
+      >
+        •
+      </span>
+      <span style={{ flex: 1, minWidth: 0, fontSize, lineHeight, color, margin: 0 }}>{children}</span>
+    </div>
+  );
+}
+
 function ReportBulletList({ items, color }: { items: string[]; color: string }) {
   return (
-    <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: 7 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
       {items.map((item, idx) => (
-        <li key={idx} style={{ fontSize: 11.5, color, lineHeight: 1.65 }}>
+        <BulletLine key={idx} color={color} fontSize={11.5} lineHeight={1.65}>
           {ensureSentence(item)}
-        </li>
+        </BulletLine>
       ))}
-    </ul>
+    </div>
   );
 }
 
 function CounselorTopicBlock({ title, body }: { title: string; body: string }) {
   return (
-    <li style={{ fontSize: 11.5, color: '#0f172a', lineHeight: 1.65, marginBottom: 2 }}>
+    <BulletLine color="#0f172a" fontSize={11.5} lineHeight={1.65}>
       <span style={{ fontWeight: 800, color: '#0f172a' }}>{title}: </span>
       <span>{ensureSentence(body)}</span>
-    </li>
+    </BulletLine>
   );
 }
 
@@ -398,10 +430,10 @@ function StrengthsFocusGrid({
               <div style={{ height: 5, background: '#dcfce7', borderRadius: 2.5, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${s}%`, background: 'linear-gradient(90deg,#86efac,#4ade80)', borderRadius: 2.5 }} />
               </div>
-              <ul style={{ marginTop: 7, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, listStyleType: 'disc' }}>
-                <li style={{ fontSize: 10.5, color: '#166534', lineHeight: 1.55 }}>{ensureSentence(strengthNarrative(t))}</li>
-                <li style={{ fontSize: 10.5, color: '#166534', lineHeight: 1.55 }}>{ensureSentence(strengthExtension(t, s))}</li>
-              </ul>
+              <div style={{ marginTop: 7, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <BulletLine color="#166534">{ensureSentence(strengthNarrative(t))}</BulletLine>
+                <BulletLine color="#166534">{ensureSentence(strengthExtension(t, s))}</BulletLine>
+              </div>
             </div>
           ))}
         </div>
@@ -429,11 +461,11 @@ function StrengthsFocusGrid({
               <div style={{ height: 5, background: '#ffe4e6', borderRadius: 2.5, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${s}%`, background: 'linear-gradient(90deg,#fda4af,#f43f5e)', borderRadius: 2.5 }} />
               </div>
-              <ul style={{ marginTop: 7, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, listStyleType: 'disc' }}>
-                <li style={{ fontSize: 10.5, color: '#9f1239', lineHeight: 1.55 }}>{ensureSentence(focusNarrative(t))}</li>
-                <li style={{ fontSize: 10.5, color: '#9f1239', lineHeight: 1.55 }}>{ensureSentence(focusActionPlan(t, s))}</li>
-                <li style={{ fontSize: 10.5, color: '#9f1239', lineHeight: 1.55 }}>{ensureSentence(focusExtension(s))}</li>
-              </ul>
+              <div style={{ marginTop: 7, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <BulletLine color="#9f1239">{ensureSentence(focusNarrative(t))}</BulletLine>
+                <BulletLine color="#9f1239">{ensureSentence(focusActionPlan(t, s))}</BulletLine>
+                <BulletLine color="#9f1239">{ensureSentence(focusExtension(s))}</BulletLine>
+              </div>
             </div>
           ))}
         </div>
@@ -470,21 +502,19 @@ function RoadmapPhaseList({ steps, totalPhases }: { steps: RoadmapStep[]; totalP
               <p style={{ fontSize: 10, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Goal</p>
               <p style={{ fontSize: 11, color: '#1e293b', lineHeight: 1.55, marginBottom: 8 }}>{step.summary}</p>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Key Tasks</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {step.actions.slice(0, 3).map((a, j) => (
-                  <div key={j} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#818cf8', marginTop: 4, flexShrink: 0 }} />
-                    <p style={{ fontSize: 10.5, color: '#1e293b', lineHeight: 1.5, margin: 0 }}>{a}</p>
-                  </div>
+                  <BulletLine key={j} color="#1e293b" bulletColor="#818cf8">
+                    {a}
+                  </BulletLine>
                 ))}
               </div>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 7, marginBottom: 3 }}>Guidance & Mentorship</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {step.resources.slice(0, 2).map((r, j) => (
-                  <div key={j} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#4338ca', marginTop: 4, flexShrink: 0 }} />
-                    <p style={{ fontSize: 10.5, color: '#1e293b', lineHeight: 1.5, margin: 0 }}>{r}</p>
-                  </div>
+                  <BulletLine key={j} color="#1e293b" bulletColor="#4338ca">
+                    {r}
+                  </BulletLine>
                 ))}
               </div>
               <div style={{ marginTop: 6, padding: '5px 10px', background: '#f8faff', borderRadius: 6, border: '1px solid #e0e7ff', display: 'inline-flex', gap: 4, alignItems: 'center' }}>
@@ -874,7 +904,7 @@ export default function StudyAbroadPremiumPrintReport({
             <div style={{ marginTop: 18, background: '#fefce8', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 16px' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Recommended Action</p>
               <p style={{ fontSize: 11.5, color: '#78350f', lineHeight: 1.65 }}>
-                Prioritise all dimensions below 50% first, while sustaining dimensions above 80% through weekly maintenance. Schedule a counselling session with ADMITra / KAREER Studioto build a customised, score-threshold based action plan.
+                Prioritise all dimensions below 50% first, while sustaining dimensions above 80% through weekly maintenance. Schedule a counselling session with ADMITra / KAREER Studio to build a customised, score-threshold based action plan.
               </p>
             </div>
           )}
@@ -1004,11 +1034,11 @@ export default function StudyAbroadPremiumPrintReport({
             <p style={{ fontSize: 11.5, color: '#0f172a', lineHeight: 1.65, fontWeight: 800, marginBottom: 12 }}>
               {counselorIntro}
             </p>
-            <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc', display: 'flex', flexDirection: 'column', gap: 9 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {counselorTopics.map((topic) => (
                 <CounselorTopicBlock key={topic.title} title={topic.title} body={topic.body} />
               ))}
-            </ul>
+            </div>
           </div>
 
           {/* Parent guidance */}
