@@ -179,7 +179,7 @@ export default function Home() {
 
               <div className="tilt-card relative overflow-hidden rounded-[2rem] border border-blue-100 bg-white/95 shadow-[0_32px_80px_rgba(37,99,235,0.15)]">
                 <Image
-                  src="/image.png"
+                  src="/image1.png"
                   alt="Assessment Center - career and readiness assessments for students and parents"
                   width={960}
                   height={720}
