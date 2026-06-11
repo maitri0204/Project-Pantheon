@@ -20,16 +20,17 @@ export default function HomeHeroActions() {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
       <a
-        href="/login"
-        className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:translate-y-[-1px]"
+        href={STUDENT_REGISTER_URL}
+        className="shine glow-pulse inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-500/25 transition hover:-translate-y-0.5"
       >
-        Login
+        Register free
+        <span aria-hidden>→</span>
       </a>
       <a
-        href={STUDENT_REGISTER_URL}
-        className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50"
+        href="/login"
+        className="inline-flex items-center justify-center rounded-2xl border border-blue-200 bg-white/90 px-7 py-3.5 text-base font-semibold text-blue-700 backdrop-blur transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50"
       >
-        Register
+        Login
       </a>
     </div>
   );

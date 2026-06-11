@@ -14,7 +14,7 @@ dotenv.config({ path: path.join(__dirname, "..", ".env") });
 // Validate critical environment variables at startup
 validateEnvironmentVariables();
 
-const PORT = Number(process.env.PORT) || 5014;
+const PORT = Number(process.env.PORT) || 5000;
 
 const startServer = async (): Promise<void> => {
   try {

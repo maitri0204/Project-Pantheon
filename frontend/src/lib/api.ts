@@ -1,5 +1,5 @@
 const normalizeApiUrl = (value?: string): string => {
-  const fallback = "http://localhost:5014/api";
+  const fallback = "http://localhost:5000/api";
   const raw = (value || fallback).trim();
 
   if (!raw) {

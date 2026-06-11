@@ -122,6 +122,244 @@ body {
   }
 }
 
+/* ─── Landing page: 3D objects & wow effects ─────────────────────────── */
+
+/* Glossy 3D sphere */
+.shape-sphere {
+  position: absolute;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 18%, transparent 42%),
+    radial-gradient(circle at 65% 70%, rgba(29, 78, 216, 0.55), rgba(59, 130, 246, 0.85) 55%, #93c5fd 100%);
+  box-shadow:
+    inset -10px -14px 28px rgba(15, 23, 42, 0.22),
+    0 24px 48px rgba(59, 130, 246, 0.28);
+  pointer-events: none;
+}
+
+.shape-sphere--cyan {
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 18%, transparent 42%),
+    radial-gradient(circle at 65% 70%, rgba(8, 145, 178, 0.55), rgba(34, 211, 238, 0.85) 55%, #a5f3fc 100%);
+  box-shadow:
+    inset -10px -14px 28px rgba(15, 23, 42, 0.18),
+    0 24px 48px rgba(34, 211, 238, 0.26);
+}
+
+/* Glossy 3D rounded cube */
+.shape-cube {
+  position: absolute;
+  border-radius: 22%;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.1) 35%, transparent 60%),
+    linear-gradient(145deg, #60a5fa 0%, #6366f1 55%, #4338ca 100%);
+  box-shadow:
+    inset -8px -10px 22px rgba(15, 23, 42, 0.28),
+    inset 4px 6px 14px rgba(255, 255, 255, 0.5),
+    0 22px 44px rgba(99, 102, 241, 0.3);
+  transform: rotate(14deg);
+  pointer-events: none;
+}
+
+/* 3D ring / torus — conic gradient hollowed out with a radial mask
+   (the old border-gradient trick rendered as a dark box in some browsers) */
+.shape-ring {
+  position: absolute;
+  border-radius: 9999px;
+  background: conic-gradient(from 120deg, #bfdbfe, #38bdf8, #818cf8, #67e8f9, #bfdbfe);
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--ring-w, 12px)),
+    #000 calc(100% - var(--ring-w, 12px) + 1px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - var(--ring-w, 12px)),
+    #000 calc(100% - var(--ring-w, 12px) + 1px)
+  );
+  filter: drop-shadow(0 14px 28px rgba(56, 189, 248, 0.3));
+  pointer-events: none;
+}
+
+/* Soft 3D pill / capsule */
+.shape-pill {
+  position: absolute;
+  border-radius: 9999px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.15) 40%, transparent 65%),
+    linear-gradient(135deg, #7dd3fc, #38bdf8 55%, #0ea5e9);
+  box-shadow:
+    inset -6px -8px 18px rgba(15, 23, 42, 0.18),
+    0 18px 38px rgba(14, 165, 233, 0.28);
+  transform: rotate(-24deg);
+  pointer-events: none;
+}
+
+.float-1 { animation: float3d 7s ease-in-out infinite; }
+.float-2 { animation: float3d 9s ease-in-out infinite 0.8s; }
+.float-3 { animation: float3d 11s ease-in-out infinite 1.6s; }
+.float-4 { animation: float3d 8s ease-in-out infinite 2.4s; }
+
+/* Slow continuous rotations (decorative rings, orbits) */
+.spin-slow { animation: spin360 14s linear infinite; }
+.spin-slower { animation: spin360 26s linear infinite; }
+
+@keyframes spin360 {
+  to { transform: rotate(360deg); }
+}
+
+/* Soft scale pulse for icons/badges */
+.pulse-soft { animation: pulseSoft 2.6s ease-in-out infinite; }
+
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.12); opacity: 0.85; }
+}
+
+/* Scroll-down cue bounce */
+.bounce-slow { animation: bounceSlow 2.2s ease-in-out infinite; }
+
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+@keyframes float3d {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--shape-rot, 0deg));
+  }
+  50% {
+    transform: translateY(-16px) rotate(calc(var(--shape-rot, 0deg) + 4deg));
+  }
+}
+
+/* Animated gradient headline */
+.gradient-text-animated {
+  background: linear-gradient(90deg, #2563eb, #4f46e5, #06b6d4, #2563eb);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Entrance animations (staggered via inline animation-delay) */
+.reveal-up {
+  opacity: 0;
+  animation: revealUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 3D tilt hover for cards */
+.tilt-card {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card:hover {
+  transform: perspective(900px) rotateX(3deg) rotateY(-4deg) translateY(-8px) scale(1.015);
+  box-shadow: 0 30px 60px rgba(37, 99, 235, 0.16);
+}
+
+/* Pulsing glow behind CTAs */
+.glow-pulse {
+  position: relative;
+}
+
+.glow-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.5), rgba(34, 211, 238, 0.5));
+  filter: blur(18px);
+  opacity: 0.55;
+  z-index: -1;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.98); }
+  50% { opacity: 0.7; transform: scale(1.02); }
+}
+
+/* Shimmer sweep on hover (cards/buttons) */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.7s ease;
+  pointer-events: none;
+}
+
+.shine:hover::before {
+  left: 130%;
+}
+
+/* Score ring for the hero report mockup */
+.score-ring {
+  border-radius: 9999px;
+  background: conic-gradient(#2563eb 0deg, #06b6d4 260deg, #e2e8f0 260deg 360deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring-inner {
+  border-radius: 9999px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Animated chart bars in hero mockup */
+.bar-animate {
+  animation: barGrow 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin: left;
+}
+
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Dotted grid backdrop */
+.dot-grid {
+  background-image: radial-gradient(rgba(37, 99, 235, 0.14) 1.5px, transparent 1.5px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
 /* Increase base font sizes across the dashboard */
 .text-xs { font-size: 0.9rem !important; line-height: 1.35rem !important; }
 .text-sm { font-size: 1rem !important; line-height: 1.55rem !important; }
