@@ -28,7 +28,7 @@ export const LANDING_ASSESSMENT_CATALOG: LandingAssessmentDetail[] = [
     name: "Career Compass",
     tagline: "Career Exploration & Planning Assessment",
     definition:
-      "A scientifically designed personality assessment that helps students understand their strengths, interests, and natural working style — so they can choose the right stream, subjects, and career path with confidence.",
+      "A scientifically designed personality assessment that helps students understand their strengths, interests, and natural working style - so they can choose the right stream, subjects, and career path with confidence.",
     audience: "Students: Grade 8 onwards",
     formatType: "MCQs",
     duration: "~25-30 min",
