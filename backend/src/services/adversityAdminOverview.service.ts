@@ -51,11 +51,11 @@ export type AdversityAdminStudentStat = {
 };
 
 const BUCKET_BOUNDARIES = [
-  { label: "0–24", min: 0, max: 24, fill: "#f43f5e" },
-  { label: "25–49", min: 25, max: 49, fill: "#f97316" },
-  { label: "50–64", min: 50, max: 64, fill: "#f59e0b" },
-  { label: "65–79", min: 65, max: 79, fill: "#0ea5e9" },
-  { label: "80–100", min: 80, max: 100, fill: "#10b981" },
+  { label: "0-24", min: 0, max: 24, fill: "#f43f5e" },
+  { label: "25-49", min: 25, max: 49, fill: "#f97316" },
+  { label: "50-64", min: 50, max: 64, fill: "#f59e0b" },
+  { label: "65-79", min: 65, max: 79, fill: "#0ea5e9" },
+  { label: "80-100", min: 80, max: 100, fill: "#10b981" },
 ];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

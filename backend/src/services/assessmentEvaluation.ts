@@ -36,22 +36,22 @@ const CAREER_COMPASS_DIMENSION_NAMES: Record<string, string> = {
 };
 
 const CAREER_COMPASS_DESCRIPTIONS: Record<string, string> = {
-  ISTJ: "The Systematic Organizer – Responsible, thorough, and dependable. You value tradition and loyalty.",
-  ISFJ: "The Protective Supporter – Warm, considerate, and dedicated to helping others in a practical way.",
-  INFJ: "The Purpose Driven Guide – Insightful, principled, and compassionate. You seek meaning and connection.",
-  INTJ: "The Master Strategist – Strategic, determined, and independent. You love complex challenges.",
-  ISTP: "The Practical Problem Solver – Observant, analytical, and hands-on. You enjoy understanding how things work.",
-  ISFP: "The Artist – Gentle, sensitive, and artistic. You live in the moment and value harmony.",
-  INFP: "The Value Creator – Idealistic, empathetic, and creative. You strive to make the world better.",
-  INTP: "The Curious – Logical, innovative, and curious. You love exploring ideas and theories.",
-  ESTP: "The Action Taker – Energetic, pragmatic, and action-oriented. You thrive on excitement.",
-  ESFP: "The Joyful Performer – Spontaneous, fun-loving, and sociable. You bring joy to those around you.",
-  ENFP: "The Visionary – Enthusiastic, creative, and people-oriented. You see potential everywhere.",
-  ENTP: "The Entrepreneur – Quick-witted, clever, and outspoken. You love intellectual challenges.",
-  ESTJ: "The Strategic Leader – Organized, logical, and assertive. You take charge and get things done.",
-  ESFJ: "The Community Builder – Caring, social, and traditional. You prioritize harmony and cooperation.",
-  ENFJ: "The Mentor Leader – Charismatic, empathetic, and organized. You inspire and lead others.",
-  ENTJ: "The Visionary Director – Bold, imaginative, and strong-willed. You are a natural leader.",
+  ISTJ: "The Systematic Organizer - Responsible, thorough, and dependable. You value tradition and loyalty.",
+  ISFJ: "The Protective Supporter - Warm, considerate, and dedicated to helping others in a practical way.",
+  INFJ: "The Purpose Driven Guide - Insightful, principled, and compassionate. You seek meaning and connection.",
+  INTJ: "The Master Strategist - Strategic, determined, and independent. You love complex challenges.",
+  ISTP: "The Practical Problem Solver - Observant, analytical, and hands-on. You enjoy understanding how things work.",
+  ISFP: "The Artist - Gentle, sensitive, and artistic. You live in the moment and value harmony.",
+  INFP: "The Value Creator - Idealistic, empathetic, and creative. You strive to make the world better.",
+  INTP: "The Curious - Logical, innovative, and curious. You love exploring ideas and theories.",
+  ESTP: "The Action Taker - Energetic, pragmatic, and action-oriented. You thrive on excitement.",
+  ESFP: "The Joyful Performer - Spontaneous, fun-loving, and sociable. You bring joy to those around you.",
+  ENFP: "The Visionary - Enthusiastic, creative, and people-oriented. You see potential everywhere.",
+  ENTP: "The Entrepreneur - Quick-witted, clever, and outspoken. You love intellectual challenges.",
+  ESTJ: "The Strategic Leader - Organized, logical, and assertive. You take charge and get things done.",
+  ESFJ: "The Community Builder - Caring, social, and traditional. You prioritize harmony and cooperation.",
+  ENFJ: "The Mentor Leader - Charismatic, empathetic, and organized. You inspire and lead others.",
+  ENTJ: "The Visionary Director - Bold, imaginative, and strong-willed. You are a natural leader.",
 };
 
 const JOHARI_SOLICITS_FEEDBACK_ITEMS = [

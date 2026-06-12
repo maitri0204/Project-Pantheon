@@ -77,7 +77,7 @@ function page2Executive(doc: Doc, data: LitmusAssessmentData): void {
   y = Math.max(yLeft, yRight) + SP.sm;
 
   contentBand(doc, MARGIN.left + 10, y, CONTENT_W - 20, "Executive Summary",
-    `At ${overallPercent(data)}% overall, your parenting is purposeful and forward-focused. The Prince–King combination produces ambitious, directed children - but may reduce spontaneous joy and self-directed exploration. Your next priority: pair high expectations with emotional safety and shared decision-making.`,
+    `At ${overallPercent(data)}% overall, your parenting is purposeful and forward-focused. The Prince-King combination produces ambitious, directed children - but may reduce spontaneous joy and self-directed exploration. Your next priority: pair high expectations with emotional safety and shared decision-making.`,
     C.goldSoft);
 }
 
@@ -121,7 +121,7 @@ function page3Dna(doc: Doc, data: LitmusAssessmentData): void {
   });
 
   textCard(doc, MARGIN.left + 10, maxTraitBottom, CONTENT_W - 20, "Parenting Identity Insight",
-    "Your Prince–King DNA means you naturally design your child's future with conviction. The opportunity ahead is not to parent less intentionally - but to parent more relationally. When investment meets emotional partnership, your child inherits both ambition and inner security.",
+    "Your Prince-King DNA means you naturally design your child's future with conviction. The opportunity ahead is not to parent less intentionally - but to parent more relationally. When investment meets emotional partnership, your child inherits both ambition and inner security.",
     C.warm, C.gold);
 }
 
@@ -215,7 +215,7 @@ function page6Secondary(doc: Doc, data: LitmusAssessmentData): void {
     `Your ${data.secondaryStyle} score (${data.scores[data.secondaryStyle]}/${data.maxStyleScore}) activates when ${data.primaryStyle}'s growth plans need enforcement. You step in with decisions, rules, and non-negotiables. This secondary style gives your parenting backbone - but can override collaboration when stakes feel high.`,
     C.dangerSoft, STYLE_COLORS.King);
 
-  y = textCard(doc, MARGIN.left + 10, y, CONTENT_W - 20, "King–Prince Synergy Guidance",
+  y = textCard(doc, MARGIN.left + 10, y, CONTENT_W - 20, "King-Prince Synergy Guidance",
     "Use King energy for boundaries and deadlines - not for every daily choice. When your child proposes an alternative plan, resist the urge to override immediately. A powerful phrase: 'Convince me.' This keeps standards high while building their reasoning muscle.",
     C.dangerSoft, STYLE_COLORS.King);
 
@@ -322,7 +322,7 @@ function page8Emotional(doc: Doc, data: LitmusAssessmentData): void {
   ], C.warm, C.gold);
 
   textCard(doc, MARGIN.left + 10, y, CONTENT_W - 20, "Emotional Mentorship Guidance",
-    "Children with Prince–King parents often develop strong outer confidence before inner confidence. Your role as emotional mentor is to name feelings without fixing them immediately. Try: 'That sounds frustrating - tell me more before we solve it.' Over time, this builds emotional literacy that matches their achievement drive.",
+    "Children with Prince-King parents often develop strong outer confidence before inner confidence. Your role as emotional mentor is to name feelings without fixing them immediately. Try: 'That sounds frustrating - tell me more before we solve it.' Over time, this builds emotional literacy that matches their achievement drive.",
     C.purpleSoft, C.purple);
 }
 
@@ -433,7 +433,7 @@ function page13Scenarios(doc: Doc, data: LitmusAssessmentData): void {
   let y = sectionTitle(doc, "Real-Life Parenting Scenarios", MARGIN.top + 4, "Recommended responses for common family situations");
 
   y = textCard(doc, MARGIN.left + 10, y, CONTENT_W - 20, "",
-    "These scenarios translate your Prince–King profile into practical responses. The goal is not perfect reactions - but intentional ones. Before each situation, pause and ask: 'Which style does my child need right now - structure, empathy, wisdom, investment, or lightness?'",
+    "These scenarios translate your Prince-King profile into practical responses. The goal is not perfect reactions - but intentional ones. Before each situation, pause and ask: 'Which style does my child need right now - structure, empathy, wisdom, investment, or lightness?'",
     C.warm, C.blue);
 
   const scenarios: [string, string][] = [
@@ -477,18 +477,18 @@ function page14Roadmap(doc: Doc, data: LitmusAssessmentData): void {
 }
 
 function page15Plan90(doc: Doc, data: LitmusAssessmentData): void {
-  let y = sectionTitle(doc, "90 Days Development Plan", MARGIN.top + 4, "A structured 12-week transformation for Prince–King parents");
+  let y = sectionTitle(doc, "90 Days Development Plan", MARGIN.top + 4, "A structured 12-week transformation for Prince-King parents");
 
   y = textCard(doc, MARGIN.left + 10, y, CONTENT_W - 20, "",
     "One unified plan across three months - no separate 30-day or 60-day tracks. Month 1 builds foundation, Month 2 deepens collaboration, Month 3 locks in sustainable balance across all five parenting styles.",
     C.goldSoft, C.gold);
 
   y = monthPlanBlock(doc, MARGIN.left + 10, y, CONTENT_W - 20,
-    "Month 1 · Weeks 1–4  (Foundation Phase)",
+    "Month 1 · Weeks 1-4  (Foundation Phase)",
     [
       "Establish emotional check-in ritual and daily connection habits.",
       "Introduce child-led decisions twice weekly.",
-      "Track one Servant moment daily; build Prince–King awareness.",
+      "Track one Servant moment daily; build Prince-King awareness.",
       "Create emotional safety before pushing for performance.",
     ],
     [
@@ -502,7 +502,7 @@ function page15Plan90(doc: Doc, data: LitmusAssessmentData): void {
     C.teal, C.tealSoft);
 
   monthPlanBlock(doc, MARGIN.left + 10, y, CONTENT_W - 20,
-    "Month 2 · Weeks 5–8  (Deepening Phase)",
+    "Month 2 · Weeks 5-8  (Deepening Phase)",
     [
       "Build collaborative decision-making habits.",
       "Strengthen trust through consistent follow-through.",
@@ -521,10 +521,10 @@ function page15Plan90(doc: Doc, data: LitmusAssessmentData): void {
 }
 
 function page16Plan90Continued(doc: Doc, data: LitmusAssessmentData): void {
-  let y = sectionTitle(doc, "90 Days Development Plan", MARGIN.top + 4, "Month 3 · Weeks 9–12");
+  let y = sectionTitle(doc, "90 Days Development Plan", MARGIN.top + 4, "Month 3 · Weeks 9-12");
 
   y = monthPlanBlock(doc, MARGIN.left + 10, y, CONTENT_W - 20,
-    "Month 3 · Weeks 9–12  (Transformation Phase)",
+    "Month 3 · Weeks 9-12  (Transformation Phase)",
     [
       "Achieve sustainable balance across all five parenting styles.",
       "Build a family culture of growth combined with emotional safety.",
@@ -541,7 +541,7 @@ function page16Plan90Continued(doc: Doc, data: LitmusAssessmentData): void {
     C.gold, C.goldSoft);
 
   insightCard(doc, MARGIN.left + 10, y, CONTENT_W - 20, "90-Day Transformation Outcomes",
-    "A child who pursues excellence without fear of disappointing you. Family decisions feel collaborative rather than imposed. Your parenting identity expands from architect to mentor - Prince–King strengths balanced by Servant warmth and Elder wisdom.",
+    "A child who pursues excellence without fear of disappointing you. Family decisions feel collaborative rather than imposed. Your parenting identity expands from architect to mentor - Prince-King strengths balanced by Servant warmth and Elder wisdom.",
     C.success, C.successSoft);
 }
 

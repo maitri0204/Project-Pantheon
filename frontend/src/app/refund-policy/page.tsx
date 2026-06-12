@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Footer from "@/components/site/Footer";
 
-export const metadata = { title: "Refund Policy – Assessment Center" };
+export const metadata = { title: "Refund Policy - Assessment Center" };
 
 export default function RefundPolicyPage() {
   return (

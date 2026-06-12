@@ -314,7 +314,7 @@ function recommendations(d: AQHistoryResponse): Recommendation[] {
   });
   recs.push({
     title: 'Track Your RQ Journey Consistently',
-    body:  'Re-assess your RQ every 4–6 weeks. Regular measurement creates awareness loops that accelerate behavioral change. Watch your dimension scores over time - targeted practice yields compound improvement. Focus on trend direction across attempts rather than reacting to one isolated score.',
+    body:  'Re-assess your RQ every 4-6 weeks. Regular measurement creates awareness loops that accelerate behavioral change. Watch your dimension scores over time - targeted practice yields compound improvement. Focus on trend direction across attempts rather than reacting to one isolated score.',
   });
   recs.push({
     title: 'Build a Resilience Support System',
@@ -342,7 +342,7 @@ function finalSummary(d: AQHistoryResponse) {
     Strong: {
       interpretation: 'Your RQ profile demonstrates strong behavioral resilience. You navigate most adversities effectively with clear, targeted opportunities to reach the Exceptional tier.',
       conclusion:     'You have built a solid resilience foundation. The gap between Strong and Exceptional is intentional practice on your specific lower-scoring dimensions.',
-      outlook:        'With focused development on 1–2 dimensions, you have clear potential to reach Exceptional within 60–90 days of consistent practice.',
+      outlook:        'With focused development on 1-2 dimensions, you have clear potential to reach Exceptional within 60-90 days of consistent practice.',
       motivation:     'Every adversity you navigate is data for your growth. You are already strong - the extraordinary is within your reach.',
     },
     Moderate: {
@@ -354,7 +354,7 @@ function finalSummary(d: AQHistoryResponse) {
     Developing: {
       interpretation: 'Your RQ profile indicates that your resilience capacity is still developing. This is not a limitation - it is a starting point with tremendous growth potential.',
       conclusion:     'Many individuals who begin with developing-level RQ go on to achieve exceptional resilience through intentional, consistent practice. Your commitment to self-assessment already sets you apart.',
-      outlook:        'Focus on one dimension at a time, starting with your lowest-scoring area. Small, consistent improvements compound into significant behavioral change over 30–60 days.',
+      outlook:        'Focus on one dimension at a time, starting with your lowest-scoring area. Small, consistent improvements compound into significant behavioral change over 30-60 days.',
       motivation:     'The willingness to measure and understand your adversity response is itself a sign of high potential. The RQ journey begins with awareness. You have taken that step.',
     },
   };
@@ -1089,10 +1089,10 @@ function ExecutiveSummaryPage({ d }: { d: AQReportData }) {
       {/* RQ Scale reference */}
       <SectionBand title="RQ Score Scale Reference" sub="Understanding where your score sits on the behavioral resilience spectrum" />
       {[
-        { range: '80 – 100', lvl: 'Exceptional', desc: 'Top-tier resilience. Operates under extreme adversity with full agency.', marks: '80/100 – 100/100' },
-        { range: '65 – 79',  lvl: 'Strong',      desc: 'Above-average resilience. Handles most challenges effectively.',          marks: '65/100 – 79/100' },
-        { range: '50 – 64',  lvl: 'Moderate',    desc: 'Developing resilience. Strong in some dimensions, with clear growth areas.', marks: '50/100 – 64/100' },
-        { range: '0 – 49',   lvl: 'Developing',  desc: 'Foundational stage. Significant growth potential through targeted practice.', marks: '0/100 – 49/100' },
+        { range: '80 - 100', lvl: 'Exceptional', desc: 'Top-tier resilience. Operates under extreme adversity with full agency.', marks: '80/100 - 100/100' },
+        { range: '65 - 79',  lvl: 'Strong',      desc: 'Above-average resilience. Handles most challenges effectively.',          marks: '65/100 - 79/100' },
+        { range: '50 - 64',  lvl: 'Moderate',    desc: 'Developing resilience. Strong in some dimensions, with clear growth areas.', marks: '50/100 - 64/100' },
+        { range: '0 - 49',   lvl: 'Developing',  desc: 'Foundational stage. Significant growth potential through targeted practice.', marks: '0/100 - 49/100' },
       ].map(r => (
         <View key={r.lvl} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: C.slate100 }}>
           <View style={[S.pill, { backgroundColor: LEVEL_BG[r.lvl] ?? C.slate100, marginRight: 10, width: 70 }]}>
@@ -1123,7 +1123,7 @@ function HistoryPage({ d }: { d: AQReportData }) {
     <Page size="A4" style={S.contentPage}>
       <PageHeader title="RQ History & Attempts" subtitle="All assessment attempts, scores, and growth trajectory" />
 
-      <SectionBand title="RQ Growth Trend" sub="Score progression across all attempts - Y-axis: Score (0–100) · X-axis: Assessment Attempts" />
+      <SectionBand title="RQ Growth Trend" sub="Score progression across all attempts - Y-axis: Score (0-100) · X-axis: Assessment Attempts" />
       {trend.length >= 2 ? (
         <View style={S.analyticsCard}>
           <Text style={S.analyticsTitle}>Score Trajectory</Text>
@@ -1459,7 +1459,7 @@ function StrengthsPage({ d }: { d: AQReportData }) {
       {balanced ? (
         <View style={[S.analyticsCard, { alignItems: 'center', paddingVertical: 24 }]}>
           <Text style={S.analyticsTitle}>Balanced Profile</Text>
-          <Text style={S.dimInterp}>All your dimensions fall within the moderate range (55–65%). Complete more assessments to reveal clearer strengths and targeted growth areas.</Text>
+          <Text style={S.dimInterp}>All your dimensions fall within the moderate range (55-65%). Complete more assessments to reveal clearer strengths and targeted growth areas.</Text>
         </View>
       ) : (
         <View style={S.twoCol}>
@@ -1515,7 +1515,7 @@ function StrengthsPage({ d }: { d: AQReportData }) {
       <View style={S.spacer12} />
       <SectionBand title="Behavioral Observations" />
       {[
-        strengths.length >= 2 && { title: 'Multi-Dimensional Strength', body: `You are performing strongly in ${strengths.length} dimensions, creating a compounding resilience effect. High-RQ individuals typically have 2–3 strong dimensions that reinforce each other.` },
+        strengths.length >= 2 && { title: 'Multi-Dimensional Strength', body: `You are performing strongly in ${strengths.length} dimensions, creating a compounding resilience effect. High-RQ individuals typically have 2-3 strong dimensions that reinforce each other.` },
         weaknesses.length > 0 && { title: 'Targeted Growth Opportunity', body: `Your ${weaknesses.map(w => w.dimension).join(' and ')} dimension${weaknesses.length > 1 ? 's' : ''} ${weaknesses.length > 1 ? 'are' : 'is'} the highest-leverage area for RQ improvement. A 10-point increase in a low dimension typically yields more overall RQ growth than improving an already-strong dimension.` },
         !weaknesses.length && strengths.length > 0 && { title: 'Consolidated Strengths', body: 'Your strong dimensions indicate consistent psychological resilience patterns. Focus on translating these strengths into leadership, academic performance, and sustained high-pressure performance.' },
       ].filter(Boolean).map((obs: any, i) => (
@@ -1833,7 +1833,7 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
 
   /* Align the 30-day phases with the 4 weeks (index-matched) */
   const phaseMeta = [
-    { days: 'Days 1–7',  color: C.sky,     bg: '#f0f9ff',
+    { days: 'Days 1-7',  color: C.sky,     bg: '#f0f9ff',
       tasks: [
         `Begin your ${w1} daily habit (5 min morning practice)`,
         'Start your Evidence Log - list 5 past adversities you have overcome',
@@ -1841,7 +1841,7 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
         'Share your commitment to RQ growth with one trusted person',
       ],
     },
-    { days: 'Days 8–14', color: C.indigo,  bg: '#eef2ff',
+    { days: 'Days 8-14', color: C.indigo,  bg: '#eef2ff',
       tasks: [
         `Deepen ${w1} practice - aim 7 consecutive days without missing`,
         `Add ${w2} daily habit to your morning or evening protocol`,
@@ -1849,15 +1849,15 @@ function ImprovementRoadmapPage({ d }: { d: AQReportData }) {
         level === 'Developing' ? 'Celebrate week 2 - acknowledge behavioural shifts, however small' : 'Face one voluntary discomfort this week (hard conversation, tough goal)',
       ],
     },
-    { days: 'Days 15–21', color: C.purple, bg: '#f5f3ff',
+    { days: 'Days 15-21', color: C.purple, bg: '#f5f3ff',
       tasks: [
         'Use your full resilience toolkit in one high-pressure situation',
         'Teach one resilience concept to a friend (teaching deepens mastery)',
         'Mid-point reflection: what behavioural shifts have you noticed?',
-        'Update your Evidence Log with Week 2–3 wins',
+        'Update your Evidence Log with Week 2-3 wins',
       ],
     },
-    { days: 'Days 22–30', color: C.emerald, bg: '#f0fdf4',
+    { days: 'Days 22-30', color: C.emerald, bg: '#f0fdf4',
       tasks: [
         'Complete all 4 dimension habits for 7 consecutive days',
         'Write your "Resilience Story" - how you have grown in 30 days',

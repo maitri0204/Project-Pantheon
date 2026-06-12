@@ -136,12 +136,12 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
         {
           label: "Avg solicits feedback",
           value: j ? j.avgSolicitsFeedback.toFixed(1) : "-",
-          sub: "Org cohort average (0–50)",
+          sub: "Org cohort average (0-50)",
         },
         {
           label: "Avg self-disclosure",
           value: j ? j.avgSelfDisclosure.toFixed(1) : "-",
-          sub: "Org cohort average (0–50)",
+          sub: "Org cohort average (0-50)",
         },
         { label: "Open area (avg)", value: `${quadrantValue(data, "open").toFixed(1)}%`, sub: "Known to self & others" },
         { label: "Students", value: data.summary.uniqueStudents, sub: `${data.summary.totalAttempts} attempts` },

@@ -374,7 +374,7 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
     {
       phase: 1,
       title: 'Diagnostic & Goal Setting',
-      timeframe: 'Week 1 – 2',
+      timeframe: 'Week 1 - 2',
       summary: `Your readiness score is ${scoreToPercentage(result.overallScore)}%. This phase is about understanding your profile deeply and setting clear, realistic targets.`,
       actions: [
         `Review your weakest area (${w[0]?.label ?? 'focus area'} - ${w[0]?.score ?? 0}%) and list 3 specific goals to improve it.`,
@@ -394,11 +394,11 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
     {
       phase: 2,
       title: `Core Skill Building - ${w[0]?.label ?? 'Primary Focus'}`,
-      timeframe: 'Week 3 – 5',
+      timeframe: 'Week 3 - 5',
       summary: `Your weakest dimension is ${w[0]?.label ?? 'core readiness'} (${w[0]?.score ?? 0}%). Focused effort here creates the highest impact on your readiness score.`,
       actions: [
         `Dedicate 1 hour daily to improving ${w[0]?.label ?? 'this area'} through targeted exercises and practice.`,
-        `Find 2–3 online courses or structured resources specifically for ${w[0]?.label ?? 'this area'}.`,
+        `Find 2-3 online courses or structured resources specifically for ${w[0]?.label ?? 'this area'}.`,
         'Practice with mock scenarios relevant to your weak area (visa interviews, financial planning, etc.).',
         'Join an online community of students preparing for study abroad (Reddit, Facebook groups, Discord).',
         'Track weekly progress on a score journal - aim for at least +10 points by end of week 5.',
@@ -414,14 +414,14 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
     {
       phase: 3,
       title: 'Academic & Language Strengthening',
-      timeframe: 'Week 6 – 8',
+      timeframe: 'Week 6 - 8',
       summary: 'Academic credentials and language proficiency are the two most critical gatekeepers for study abroad success. Nail these before anything else.',
       actions: [
         'Register for or intensify IELTS/TOEFL preparation - aim for your target score this phase.',
         'Update your CV/resume in the format preferred by universities in your target country.',
         'Begin drafting your Statement of Purpose (SOP) - write 3 different angle versions.',
         'Request recommendation letters from professors or employers at least 6 weeks before deadlines.',
-        'Research and shortlist 8–10 scholarships and grants that match your academic profile.',
+        'Research and shortlist 8-10 scholarships and grants that match your academic profile.',
       ],
       resources: [
         'IELTS/TOEFL prep platforms: ADMITra/KAREER Studio , Magoosh, British Council, ETS Official',
@@ -434,11 +434,11 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
     {
       phase: 4,
       title: 'Financial & Visa Planning',
-      timeframe: 'Week 9 – 11',
+      timeframe: 'Week 9 - 11',
       summary: 'Financial preparedness and visa compliance are non-negotiable. Missing documents or underfunding are the #1 reasons students lose their place.',
       actions: [
         'Calculate your total study abroad budget: tuition + accommodation + living + travel + emergency fund.',
-        'Prepare your bank account to show 6–12 months of living expenses as proof of funds.',
+        'Prepare your bank account to show 6-12 months of living expenses as proof of funds.',
         'Research the exact visa requirements for your target country (documents, fees, timelines, biometrics).',
         'Begin collecting required documents: birth certificate, police clearance, medical records, transcripts.',
         'Research health insurance requirements and student insurance options in your destination country.',
@@ -454,7 +454,7 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
     {
       phase: 5,
       title: 'Psychological & Cultural Preparation',
-      timeframe: 'Week 12 – 14',
+      timeframe: 'Week 12 - 14',
       summary: 'Mental resilience and cultural adaptability are what separate students who thrive from those who struggle after arrival.',
       actions: [
         'Research the culture, customs, and social norms of your destination country in depth.',
@@ -474,7 +474,7 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
     {
       phase: 6,
       title: 'Final Sprint & Application Submission',
-      timeframe: 'Week 15 – 16',
+      timeframe: 'Week 15 - 16',
       summary: 'This is the execution phase. Finalize all applications, confirm logistics, and prepare for the journey ahead.',
       actions: [
         'Finalize and submit all university applications before their deadlines - apply to at least 5 universities.',
@@ -488,7 +488,7 @@ export function deriveRoadmap(result: AssessmentResult): RoadmapStep[] {
         'Pre-departure guides from your target university international office plus ADMITra/KAREER Studio planning support',
         'StudyAbroad Readiness AI retake, followed by a ADMITra/KAREER Studio or admitra readiness review',
       ],
-      milestone: 'Submit at least 8–10 complete university applications with all required documents and receive at least 1 acknowledgement.',
+      milestone: 'Submit at least 8-10 complete university applications with all required documents and receive at least 1 acknowledgement.',
       priority: 'high',
     },
   ];

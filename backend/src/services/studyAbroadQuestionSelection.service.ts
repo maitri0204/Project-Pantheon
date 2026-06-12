@@ -98,7 +98,7 @@ export function buildStudyAbroadQuestionSetForAttempt<T extends {
   return shuffleArray(all50);
 }
 
-/** Shuffle option order per question; preserve bank questionNumber (1–150) for anti-repeat tracking. */
+/** Shuffle option order per question; preserve bank questionNumber (1-150) for anti-repeat tracking. */
 export function mapStudyAbroadAttemptQuestions(questions: IAttemptQuestion[]): IAttemptQuestion[] {
   return questions.map((question) => shuffleOptionsForQuestion(question));
 }

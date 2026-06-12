@@ -264,7 +264,7 @@ export default function AcademicCareerOrgDashboard({
     return (
       <OrgDashboardEmpty
         title="Academic Career & Interest - Dashboard"
-        subtitle="Real-time educational CRM analytics from student assessments (grades 8–10)."
+        subtitle="Real-time educational CRM analytics from student assessments (grades 8-10)."
         assessmentName="Academic Career & Interest Test"
         studentsPath={studentsPath}
         accentClass="from-violet-600 to-purple-600"

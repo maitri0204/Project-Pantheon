@@ -374,7 +374,7 @@ export const assessmentData = {
       {
         month: 1,
         label: "Month 1",
-        weekRange: "Week 1 – Week 4",
+        weekRange: "Week 1 - Week 4",
         theme: "Foundation & Self-Awareness",
         goals: [
           "Increase classroom participation by 50%",
@@ -397,7 +397,7 @@ export const assessmentData = {
       {
         month: 2,
         label: "Month 2",
-        weekRange: "Week 5 – Week 8",
+        weekRange: "Week 5 - Week 8",
         theme: "Visibility & Confidence Building",
         goals: [
           "Express ideas weekly in each subject",
@@ -420,7 +420,7 @@ export const assessmentData = {
       {
         month: 3,
         label: "Month 3",
-        weekRange: "Week 9 – Week 12",
+        weekRange: "Week 9 - Week 12",
         theme: "Leadership & Personal Impact",
         goals: [
           "Shift Johari Open zone toward 22%+",

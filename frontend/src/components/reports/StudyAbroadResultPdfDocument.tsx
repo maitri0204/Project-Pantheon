@@ -84,11 +84,11 @@ export function StudyAbroadResultPdfDocument({ report }: { report: StudyAbroadPd
           </Text>
         ))}
         <Text style={[styles.h2, { marginTop: 24 }]}>Readiness Bands</Text>
-        <Text>91–100% - Completely Ready</Text>
-        <Text>76–90% - Almost Ready</Text>
-        <Text>51–75% - Moderately Ready</Text>
-        <Text>26–50% - Partially Ready</Text>
-        <Text>0–25% - At Risk</Text>
+        <Text>91-100% - Completely Ready</Text>
+        <Text>76-90% - Almost Ready</Text>
+        <Text>51-75% - Moderately Ready</Text>
+        <Text>26-50% - Partially Ready</Text>
+        <Text>0-25% - At Risk</Text>
       </Page>
     </Document>
   );

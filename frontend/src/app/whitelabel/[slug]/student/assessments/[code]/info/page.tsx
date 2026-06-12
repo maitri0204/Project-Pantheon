@@ -48,7 +48,7 @@ const content: Record<string, AssessmentPageContent> = {
           supportingLine:
             "Used by students, parents, and schools to guide academic stream selection, subject choices, and future career direction.",
           sidePoints: [
-            "For Grade 8–12 students",
+            "For Grade 8-12 students",
             "Career awareness and self-discovery",
             "Personality-pattern based insights",
           ],
@@ -374,7 +374,7 @@ const content: Record<string, AssessmentPageContent> = {
             title: "FAQs",
             cards: [
               { title: "Is this a personality test?", body: "No. It identifies parenting behavior patterns and their effect on children." },
-              { title: "How long does it take?", body: "About 15–20 minutes, followed by your score and report." },
+              { title: "How long does it take?", body: "About 15-20 minutes, followed by your score and report." },
               { title: "Will this help confidence?", body: "Yes, when the insights are used to guide real behavior change." },
             ],
           },
@@ -464,7 +464,7 @@ const content: Record<string, AssessmentPageContent> = {
             "A grade-specific assessment for students in Grades 8, 9, and 10 that identifies strong interest domains and aligns them with subjects, streams, and career exposure.",
           supportingLine:
             "The report helps students, parents, and counselors make evidence-based academic decisions instead of guesswork.",
-          sidePoints: ["Grade 8–10 only", "10 interest domains", "Stream and career guidance"],
+          sidePoints: ["Grade 8-10 only", "10 interest domains", "Stream and career guidance"],
         },
         sections: [
           {
@@ -655,7 +655,7 @@ const content: Record<string, AssessmentPageContent> = {
           {
             title: "Ideal For",
             bullets: [
-              "School students (Grades 5–12)",
+              "School students (Grades 5-12)",
               "Students preparing for competitive learning environments",
               "Parents who want deeper insights into learning styles",
               "Schools promoting thinking-based education",
@@ -832,7 +832,7 @@ const content: Record<string, AssessmentPageContent> = {
       const heroSidePoints =
         normalizedCode === "CAREER_COMPASS"
           ? [
-              { title: "Grade 8–12 guidance", desc: "Career awareness and self-discovery", icon: "🧭" },
+              { title: "Grade 8-12 guidance", desc: "Career awareness and self-discovery", icon: "🧭" },
               { title: "Personality patterns", desc: "Understand natural tendencies", icon: "🧠" },
               { title: "Actionable direction", desc: "Suggested academic and career paths", icon: "📈" },
             ]

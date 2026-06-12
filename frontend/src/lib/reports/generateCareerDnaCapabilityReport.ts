@@ -1,5 +1,5 @@
 /**
- * Career DNA – Cognitive + Aptitude Capability Engine (v4)
+ * Career DNA - Cognitive + Aptitude Capability Engine (v4)
  *
  * FIXES APPLIED:
  *  - Root cause fix: pdf.setTextColor() used for text (NOT setFillColor)
@@ -452,7 +452,7 @@ function addPageFooter(pdf: any, pageNum: number, total: number, PW: number) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
   pdf.text(`Page ${pageNum} of ${total}`, PW / 2, 292, { align: "center" });
-  pdf.text("Career DNA – Capability Profile Report", 8, 292);
+  pdf.text("Career DNA - Capability Profile Report", 8, 292);
   setTxt(pdf, 15, 23, 42);
 }
 
@@ -516,7 +516,7 @@ function drawRadarChart(
     pdf.line(cx, cy, x, y);
   }
 
-  // Score polygon – FIXED: correct relative segments from scorePoints[i] to scorePoints[i+1]
+  // Score polygon - FIXED: correct relative segments from scorePoints[i] to scorePoints[i+1]
   const scorePoints: [number, number][] = labels.map((_, i) =>
     pt(i, radius * (Math.min(100, Math.max(0, scores[i])) / 100))
   );
@@ -566,7 +566,7 @@ function drawRadarChart(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SECTION SCORE CARD (Page 1 – attractive 2-column layout)
+// SECTION SCORE CARD (Page 1 - attractive 2-column layout)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function drawSectionCard(
@@ -608,7 +608,7 @@ function drawSectionCard(
     pdf.text(`${pct}%`, x + w - 3, y + 5.5, { align: "right" });
   }
 
-  // Score fraction below header – unified formatting
+  // Score fraction below header - unified formatting
   if (!hideScore) {
     setTxt(pdf, 30, 41, 59);
     pdf.setFont("helvetica", "bold");
@@ -1566,7 +1566,7 @@ export async function generateCareerDnaCapabilityReport(
   const { traitScores, studentName, classGrade, schoolName, submittedAt, otherSectionScores } = args;
 
   const allPresent = TRAIT_KEYS.every((k) => typeof traitScores[k] === "number" && !Number.isNaN(traitScores[k]));
-  if (!allPresent) throw new Error("Incomplete – all 9 trait scores required.");
+  if (!allPresent) throw new Error("Incomplete - all 9 trait scores required.");
 
   const careerDb = await loadCareerDb();
   const top10 = buildCareerRecommendations(traitScores, careerDb, 10);

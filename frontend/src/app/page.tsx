@@ -50,21 +50,58 @@ const howItWorks = [
   },
 ];
 
-const personas = [
+type PersonaTest =
+  | string
+  | {
+      title: string;
+      subtitle: string;
+    };
+
+const personas: Array<{
+  icon: typeof GraduationCap;
+  title: string;
+  sub: string;
+  color: string;
+  text: string;
+  tests: PersonaTest[];
+  listClassName?: string;
+}> = [
   {
     icon: GraduationCap,
     title: "Students",
-    sub: "Grades 6–12 & college",
+    sub: "Grades 6-12 & college",
     color: "from-blue-500 to-indigo-600",
     text: "text-blue-700",
+    listClassName: "sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3",
     tests: [
-      "Career Compass - personality & direction",
-      "Career DNA - deep aptitude profiler",
-      "CLEAR - self-awareness & blind spots",
-      "RQ - resilience quotient",
-      "TEST - thinking & expression skills",
-      "Academic Career & Interest Test (Grades 8-10)",
-      "Study Abroad Readiness (Grades 10+)",
+      {
+        title: "Career Compass Test",
+        subtitle: "Personality based Stream & Career Selection",
+      },
+      {
+        title: "Career DNA Test",
+        subtitle: "Cognitive & Aptitude based Stream & Career Selection",
+      },
+      {
+        title: "Academic Interest Mapping Test",
+        subtitle: "Interest based Stream & Career Selection",
+      },
+      {
+        title: "CLEAR Test",
+        subtitle: "Check your Self-awareness & Blind Spots",
+      },
+      {
+        title: "Thinking & Expression Skill Test",
+        subtitle: "Know your Thinking & Expression Ability",
+      },
+      {
+        title: "Resiliance Quotient Test",
+        subtitle: "Ability to handle Pressure & Stress",
+      },
+      {
+        title: "Study Abroad Readiness",
+        subtitle: "Check your Readiness to Study Abroad",
+      },
     ],
   },
   {
@@ -228,9 +265,14 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
+          <div className="mx-auto mt-12 grid max-w-5xl gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-start">
             {personas.map((p) => (
-              <div key={p.title} className="tilt-card overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_14px_40px_rgba(59,130,246,0.10)]">
+              <div
+                key={p.title}
+                className={`tilt-card overflow-hidden rounded-3xl border border-blue-100 bg-white shadow-[0_14px_40px_rgba(59,130,246,0.10)] ${
+                  p.title === "Students" ? "lg:min-h-[28rem]" : ""
+                }`}
+              >
                 <div className={`bg-gradient-to-br ${p.color} relative flex items-center gap-4 overflow-hidden px-6 py-5 text-white`}>
                   <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/15 blur-xl" />
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
@@ -241,14 +283,25 @@ export default function Home() {
                     <p className="text-sm text-white/85">{p.sub}</p>
                   </div>
                 </div>
-                <div className="p-5">
-                  <ul className="space-y-2.5">
-                    {p.tests.map((t) => (
-                      <li key={t} className="flex items-start gap-2 text-sm text-slate-700">
-                        <BadgeCheck className={`mt-0.5 h-4 w-4 shrink-0 ${p.text}`} />
-                        {t}
-                      </li>
-                    ))}
+                <div className={`p-5 ${p.title === "Students" ? "sm:p-6" : ""}`}>
+                  <ul className={p.listClassName ?? "space-y-2.5"}>
+                    {p.tests.map((t) => {
+                      const key = typeof t === "string" ? t : t.title;
+
+                      return (
+                        <li key={key} className="flex items-start gap-2.5">
+                          <BadgeCheck className={`mt-0.5 h-4 w-4 shrink-0 ${p.text}`} />
+                          {typeof t === "string" ? (
+                            <span className="text-sm leading-6 text-slate-700">{t}</span>
+                          ) : (
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-bold leading-5 text-slate-900 sm:text-sm">{t.title}</p>
+                              <p className="mt-0.5 text-xs leading-5 text-slate-600 sm:text-[13px]">{t.subtitle}</p>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                   <a
                     href={STUDENT_REGISTER_URL}

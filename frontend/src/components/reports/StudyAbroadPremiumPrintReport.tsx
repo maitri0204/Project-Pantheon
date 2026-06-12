@@ -590,9 +590,9 @@ export default function StudyAbroadPremiumPrintReport({
     (pct >= 76
       ? 'This performance reflects strong foundational readiness across most dimensions - the student is well-positioned to pursue international education opportunities.'
       : pct >= 51
-      ? 'This score reflects a solid foundation with specific dimensions requiring focused development. Structured preparation over 3–6 months could significantly elevate readiness.'
+      ? 'This score reflects a solid foundation with specific dimensions requiring focused development. Structured preparation over 3-6 months could significantly elevate readiness.'
       : pct >= 26
-      ? 'Meaningful readiness exists in several areas, yet significant gaps remain across key dimensions. A comprehensive 6–12 month preparation plan is strongly recommended.'
+      ? 'Meaningful readiness exists in several areas, yet significant gaps remain across key dimensions. A comprehensive 6-12 month preparation plan is strongly recommended.'
       : 'Foundational readiness challenges are present across multiple dimensions. Systematic, guided preparation is essential before initiating any study abroad applications.') +
     ` The strongest performance area is ${top[0]?.label ?? 'N/A'} (${top[0]?.score ?? 0}%), which should be prominently featured in applications. The primary development opportunity is ${bottom[0]?.label ?? 'N/A'} (${bottom[0]?.score ?? 0}%), where targeted intervention will yield the greatest readiness gains.`;
   const summaryPoints = aiSummary.split('.').map(s => s.trim()).filter(Boolean).map(s => `${s}.`);
@@ -635,7 +635,7 @@ export default function StudyAbroadPremiumPrintReport({
       (pct >= 76
         ? 'The results indicate strong preparation - your child is approaching readiness for international study. Continue reinforcing their strengths and addressing the highlighted focus areas.'
         : pct >= 51
-        ? 'Meaningful progress is evident. With structured 3–6 month preparation focusing on the identified weaker areas, significant readiness improvement is achievable.'
+        ? 'Meaningful progress is evident. With structured 3-6 month preparation focusing on the identified weaker areas, significant readiness improvement is achievable.'
         : 'There is room to grow. Your active involvement - particularly in financial planning, emotional support, and awareness-building - will be critical to their success.'),
   ];
   const parentActionItems = [
@@ -880,9 +880,9 @@ export default function StudyAbroadPremiumPrintReport({
                 <p style={{ fontSize: 11.5, color: '#1e293b', lineHeight: 1.65 }}>
                   {band === 'Completely Ready' && 'Exceptional readiness across all dimensions. You are fully equipped for international study - focus on top-tier applications and maximising scholarship opportunities.'}
                   {band === 'Almost Ready' && 'Strong foundation in place. A few targeted improvements in weaker areas will complete your readiness profile. Ideal time to begin serious university applications.'}
-                  {band === 'Moderately Ready' && 'Core readiness is developing well. A structured 3–6 month preparation program focusing on identified weak dimensions will significantly boost your profile.'}
+                  {band === 'Moderately Ready' && 'Core readiness is developing well. A structured 3-6 month preparation program focusing on identified weak dimensions will significantly boost your profile.'}
                   {band === 'Partially Ready' && 'Meaningful readiness exists but substantial preparation is required. Prioritise the bottom three dimensions and track monthly progress against clear milestones.'}
-                  {band === 'At Risk' && 'Significant gaps identified across multiple dimensions. A comprehensive foundation-building program over 6–12 months is strongly recommended before applying.'}
+                  {band === 'At Risk' && 'Significant gaps identified across multiple dimensions. A comprehensive foundation-building program over 6-12 months is strongly recommended before applying.'}
                 </p>
               </div>
             </div>
@@ -960,11 +960,11 @@ export default function StudyAbroadPremiumPrintReport({
             </p>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 1.7 }}>
               {pct >= 76
-                ? `${displayName} demonstrates strong readiness for international education. We recommend proceeding with university shortlisting and application preparation. Focus on strengthening the bottom 2–3 dimensions while building a compelling application narrative around your strongest areas.`
+                ? `${displayName} demonstrates strong readiness for international education. We recommend proceeding with university shortlisting and application preparation. Focus on strengthening the bottom 2-3 dimensions while building a compelling application narrative around your strongest areas.`
                 : pct >= 51
-                ? `${displayName} has a solid foundation but requires 3–6 months of structured preparation before applications. Prioritise the identified weak dimensions, complete language proficiency tests, and begin financial planning immediately.`
+                ? `${displayName} has a solid foundation but requires 3-6 months of structured preparation before applications. Prioritise the identified weak dimensions, complete language proficiency tests, and begin financial planning immediately.`
                 : pct >= 26
-                ? `${displayName} needs comprehensive preparation before pursuing study abroad. A 6–12 month preparation program covering academic strengthening, financial planning, psychological readiness, and administrative preparedness is strongly recommended.`
+                ? `${displayName} needs comprehensive preparation before pursuing study abroad. A 6-12 month preparation program covering academic strengthening, financial planning, psychological readiness, and administrative preparedness is strongly recommended.`
                 : `${displayName} requires foundational preparation across multiple readiness dimensions. A systematic 12+ month program with counselor-guided milestones is essential. Begin with the highest-priority dimensions and reassess quarterly.`}
             </p>
           </div>
@@ -995,11 +995,11 @@ export default function StudyAbroadPremiumPrintReport({
             <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Score Band Reference</p>
             <div style={{ border: '1px solid #f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
               {[
-                { range: '91–100%', band: 'Completely Ready', color: '#22c55e', desc: 'Exceptional readiness - ideal for top-tier applications' },
-                { range: '76–90%', band: 'Almost Ready', color: '#0ea5e9', desc: 'Strong foundation - minor refinements needed' },
-                { range: '51–75%', band: 'Moderately Ready', color: '#818cf8', desc: 'Good base - structured 3-6 month prep required' },
-                { range: '26–50%', band: 'Partially Ready', color: '#f59e0b', desc: 'Development gaps - 6-12 month prep plan essential' },
-                { range: '0–25%', band: 'At Risk', color: '#f43f5e', desc: 'Foundational work needed - systematic approach required' },
+                { range: '91-100%', band: 'Completely Ready', color: '#22c55e', desc: 'Exceptional readiness - ideal for top-tier applications' },
+                { range: '76-90%', band: 'Almost Ready', color: '#0ea5e9', desc: 'Strong foundation - minor refinements needed' },
+                { range: '51-75%', band: 'Moderately Ready', color: '#818cf8', desc: 'Good base - structured 3-6 month prep required' },
+                { range: '26-50%', band: 'Partially Ready', color: '#f59e0b', desc: 'Development gaps - 6-12 month prep plan essential' },
+                { range: '0-25%', band: 'At Risk', color: '#f43f5e', desc: 'Foundational work needed - systematic approach required' },
               ].map((row, i) => (
                 <div key={row.band} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 14px', background: i % 2 === 0 ? 'white' : '#fafafa', borderBottom: i < 4 ? '1px solid #f1f5f9' : 'none' }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: row.color, flexShrink: 0 }} />

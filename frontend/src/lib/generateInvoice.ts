@@ -126,7 +126,7 @@ const normalizeState = (value?: string): string => {
     return byName.name.toLowerCase().replace(/[\s\-_.]/g, "");
   }
 
-  // 3. Generic fallback – normalise whitespace/dashes for any other country
+  // 3. Generic fallback - normalise whitespace/dashes for any other country
   return raw.toLowerCase().replace(/[\s\-_.]/g, "");
 };
 

@@ -355,7 +355,7 @@ function buildActionPlans(
       ],
     },
     plan60: {
-      phaseLabel: `Days 31 – 60 | Discovery Phase for ${short}`,
+      phaseLabel: `Days 31 - 60 | Discovery Phase for ${short}`,
       sections: [
         {
           title: "Clear Goals & Tasks",
@@ -367,7 +367,7 @@ function buildActionPlans(
           ],
         },
         {
-          title: "Goals (Days 31–60)",
+          title: "Goals (Days 31-60)",
           items: [
             `Deep-dive into ${careerFocus}`,
             `Build first portfolio piece for ${topCareers[0]}`,
@@ -420,7 +420,7 @@ function buildActionPlans(
       ],
     },
     plan90: {
-      phaseLabel: `Days 61 – 90 | Acceleration Phase for ${short}`,
+      phaseLabel: `Days 61 - 90 | Acceleration Phase for ${short}`,
       sections: [
         {
           title: "Clear Goals & Tasks",
@@ -432,7 +432,7 @@ function buildActionPlans(
           ],
         },
         {
-          title: "Goals (Days 61–90)",
+          title: "Goals (Days 61-90)",
           items: [
             `Finalize ${stream} stream and ${subjectList} subjects`,
             `Complete a flagship project for ${topCareers[0]}`,

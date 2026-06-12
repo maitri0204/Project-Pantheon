@@ -1,11 +1,4 @@
-import {
-  ArrowRight,
-  CheckCircle,
-  ClipboardList,
-  FlaskConical,
-  Target,
-  Users,
-} from "lucide-react";
+import { ArrowRight, CheckCircle, Users } from "lucide-react";
 
 import { LANDING_ASSESSMENT_CATALOG } from "@/lib/landingAssessmentCatalog";
 import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
@@ -32,41 +25,24 @@ export default function LandingAssessments() {
             <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-600 via-cyan-400 to-sky-600" />
 
             <div className="relative space-y-5 pt-2">
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg">
                   <test.icon className="h-7 w-7" />
                 </div>
-                <div>
-                  <h3 className="text-2xl font-black tracking-tight text-slate-950">{test.name}</h3>
-                  <p className="mt-0.5 text-sm font-semibold text-slate-500">{test.tagline}</p>
+                <div className="min-w-0 pt-0.5">
+                  <h3 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">{test.name}</h3>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-600 sm:text-[15px]">{test.tagline}</p>
                 </div>
               </div>
 
               <p className="text-base leading-7 text-slate-600">{test.definition}</p>
 
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    <ClipboardList className="h-3.5 w-3.5" />
-                    Format
-                  </div>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{test.formatType}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-slate-600">{test.duration}</p>
+              <div className="rounded-xl bg-slate-50 px-4 py-3">
+                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <Users className="h-3.5 w-3.5" />
+                  Best for
                 </div>
-                <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    <Target className="h-3.5 w-3.5" />
-                    Scoring
-                  </div>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{test.scoring}</p>
-                </div>
-                <div className="rounded-xl bg-slate-50 px-3.5 py-2.5">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    <Users className="h-3.5 w-3.5" />
-                    Best for
-                  </div>
-                  <p className="mt-1 text-sm font-bold text-slate-900">{test.audience}</p>
-                </div>
+                <p className="mt-1 text-sm font-bold text-slate-900">{test.audience}</p>
               </div>
 
               <div>
