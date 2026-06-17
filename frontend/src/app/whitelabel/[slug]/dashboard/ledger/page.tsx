@@ -41,7 +41,7 @@ type InvoiceItem = {
     city?: string;
     state?: string;
     country?: string;
-  };
+  } | null;
   organization?: {
     name?: string;
     contactEmail?: string;
@@ -98,12 +98,16 @@ export default function OrgLedgerPage() {
     if (!search.trim()) return invoices;
     const q = search.toLowerCase();
 
-    return invoices.filter(
-      (inv) =>
+    return invoices.filter((inv) => {
+      const name = inv.user ? `${inv.user.firstName} ${inv.user.lastName}`.toLowerCase() : "";
+      const email = inv.user?.email.toLowerCase() ?? "";
+
+      return (
         inv.invoiceNumber.toLowerCase().includes(q) ||
-        `${inv.user.firstName} ${inv.user.lastName}`.toLowerCase().includes(q) ||
-        inv.user.email.toLowerCase().includes(q)
-    );
+        name.includes(q) ||
+        email.includes(q)
+      );
+    });
   }, [invoices, search]);
 
   const summary = useMemo(
@@ -161,6 +165,7 @@ export default function OrgLedgerPage() {
           <div className="flex flex-col gap-3 lg:hidden">
             {filtered.map((inv) => {
               const meta = ASSESSMENT_META[inv.assessmentCode];
+              const userName = inv.user ? `${inv.user.firstName} ${inv.user.lastName}` : "Unknown";
               const dateStr = new Date(inv.createdAt).toLocaleDateString("en-IN", {
                 day: "2-digit",
                 month: "short",
@@ -183,10 +188,8 @@ export default function OrgLedgerPage() {
                   </span>
 
                   <div>
-                    <p className="text-xs font-medium text-black">
-                      {inv.user.firstName} {inv.user.lastName}
-                    </p>
-                    <p className="text-[11px] text-black">{inv.user.email}</p>
+                    <p className="text-xs font-medium text-black">{userName}</p>
+                    <p className="text-[11px] text-black">{inv.user?.email ?? "—"}</p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 border-t border-gray-50 pt-2">
@@ -248,6 +251,7 @@ export default function OrgLedgerPage() {
                 <tbody className="divide-y divide-gray-50">
                   {filtered.map((inv, idx) => {
                     const meta = ASSESSMENT_META[inv.assessmentCode];
+                    const userName = inv.user ? `${inv.user.firstName} ${inv.user.lastName}` : "Unknown";
                     const dateStr = new Date(inv.createdAt).toLocaleDateString("en-IN", {
                       day: "2-digit",
                       month: "short",
@@ -269,10 +273,8 @@ export default function OrgLedgerPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="whitespace-nowrap text-xs font-medium text-black">
-                            {inv.user.firstName} {inv.user.lastName}
-                          </p>
-                          <p className="text-[11px] text-black">{inv.user.email}</p>
+                          <p className="whitespace-nowrap text-xs font-medium text-black">{userName}</p>
+                          <p className="text-[11px] text-black">{inv.user?.email ?? "—"}</p>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-black">{fmt(inv.amount)}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-right text-xs text-green-700">
