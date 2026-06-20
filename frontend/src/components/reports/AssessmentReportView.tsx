@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Briefcase, BookOpen, GraduationCap } from "lucide-react";
 
-import { apiRequest, getStoredAuth, isAuthenticated } from "../../lib/api";
+import { apiRequest, getStoredAuth } from "../../lib/api";
 import { sendAttemptReportEmail } from "@/lib/reports/sendAttemptReportEmail";
 import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
 import { generateCareerCompassReport } from "../../lib/reports/generateCareerCompassReport";
@@ -383,7 +383,8 @@ function parseRqEvaluation(evaluation: unknown): RQEvaluation | null {
 async function resolveRqAttemptsForReport(
   normalizedCode: string,
   rqAttempts: RQAttemptItem[] | null,
-  fetchPath: string,
+  authToken: string | undefined,
+  fetchPath: string
 ): Promise<RQAttemptItem[] | undefined> {
   if (normalizedCode !== "RESILIENCE_TEST") {
     return undefined;
@@ -391,7 +392,7 @@ async function resolveRqAttemptsForReport(
   if (Array.isArray(rqAttempts)) {
     return rqAttempts;
   }
-  if (!isAuthenticated() || !fetchPath.startsWith("/platform/student/")) {
+  if (!authToken || !fetchPath.startsWith("/platform/student/")) {
     return undefined;
   }
 
@@ -399,6 +400,7 @@ async function resolveRqAttemptsForReport(
     const res = await apiRequest<{ attempts: RQAttemptItem[] }>(
       `/platform/student/assessments/${normalizedCode}/attempts`,
       {},
+      authToken
     );
     return res.attempts;
   } catch {
@@ -425,6 +427,7 @@ type DetailedReportPdfContext = {
   profileFromAuth: { grade?: string; institutionName?: string; firstName?: string; lastName?: string; email?: string };
   authEmail?: string;
   rqAttempts: RQAttemptItem[] | null;
+  authToken?: string;
   fetchPath: string;
 };
 
@@ -441,14 +444,9 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     profileFromAuth,
     authEmail,
     rqAttempts,
+    authToken,
     fetchPath,
   } = ctx;
-
-  const requireSession = () => {
-    if (!isAuthenticated()) {
-      throw new Error("Sign in is required to download this report");
-    }
-  };
 
   const submittedLabel = report.submittedAt
     ? new Date(report.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
@@ -459,7 +457,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     if (!rqEvaluation) {
       throw new Error("RQ report data is not available for this attempt");
     }
-    const attempts = await resolveRqAttemptsForReport(normalizedCode, rqAttempts, fetchPath);
+    const attempts = await resolveRqAttemptsForReport(normalizedCode, rqAttempts, authToken, fetchPath);
     const blob = await generateRQReportBlob(
       rqEvaluation,
       report,
@@ -474,34 +472,51 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
       if (normalizedCode === "JOHARI_WINDOW") {
-    requireSession();
-    return generateClearReport(fetchPath, reportStudentName);
+    if (!authToken) {
+      throw new Error("Sign in is required to download the CLEAR report");
+    }
+    return generateClearReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "CAREER_COMPASS") {
-    requireSession();
-    return generateCareerCompassReport(fetchPath, reportStudentName);
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Career Compass report");
+    }
+    return generateCareerCompassReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "METACOGNITION_TEST") {
-    requireSession();
-    return generateMetacognitionReport(fetchPath, reportStudentName);
+    if (!authToken) {
+      throw new Error("Sign in is required to download the TEST report");
+    }
+    return generateMetacognitionReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "LITMUS_TEST") {
-    requireSession();
-    return generateLitmusReport(fetchPath, reportStudentName);
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Litmus report");
+    }
+    return generateLitmusReport(authToken, fetchPath, reportStudentName);
       }
 
       if (normalizedCode === "CAREER_DNA") {
-    requireSession();
-    return generateCareerDnaExecutiveReport(fetchPath, reportStudentName);
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Career DNA report");
+    }
+    return generateCareerDnaExecutiveReport(authToken, fetchPath, reportStudentName);
   }
 
   if (normalizedCode === "STUDY_ABROAD") {
-    requireSession();
-    return generateStudyAbroadReportForEmail(report.attemptId, fetchPath);
-  }
+    if (!authToken) {
+      throw new Error("Sign in is required to download the Study Abroad report");
+    }
+    const { blob, fileName } = await generateStudyAbroadReportForEmail(
+      authToken,
+      report.attemptId,
+      fetchPath,
+    );
+    return { blob, fileName };
+      }
 
       if (normalizedCode === "ACADEMIC_CAREER") {
     const backCoverImageSrc = await loadPublicImageDataUrl("/academic-career/back-cover.jpg");
@@ -567,19 +582,19 @@ export default function AssessmentReportView({
   const [emailError, setEmailError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(loginHref);
       return;
     }
 
-    apiRequest<ReportResponse>(fetchPath, {})
+    apiRequest<ReportResponse>(fetchPath, {}, auth.token)
       .then((res) => setReport(res.report))
       .catch((e) => setError(e instanceof Error ? e.message : "Unable to load report"))
       .finally(() => setLoading(false));
-  }, [auth?.user, fetchPath, loginHref, router]);
+  }, [auth?.token, fetchPath, loginHref, router]);
 
   useEffect(() => {
-    if (!auth?.user || !report || !fetchPath.startsWith("/platform/student/")) {
+    if (!auth?.token || !report || !fetchPath.startsWith("/platform/student/")) {
       return;
     }
 
@@ -588,14 +603,14 @@ export default function AssessmentReportView({
       return;
     }
 
-    apiRequest<{ attempts: RQAttemptItem[] }>(`/platform/student/assessments/${report.assessmentCode}/attempts`, {})
+    apiRequest<{ attempts: RQAttemptItem[] }>(`/platform/student/assessments/${report.assessmentCode}/attempts`, {}, auth.token)
       .then((res) => {
         setRQAttempts(res.attempts);
       })
       .catch(() => {
         setRQAttempts(null);
       });
-  }, [auth?.user, report, fetchPath]);
+  }, [auth?.token, report, fetchPath]);
 
   if (loading) {
     return (
@@ -651,14 +666,19 @@ export default function AssessmentReportView({
     profileFromAuth,
     authEmail: (auth?.user as { email?: string })?.email,
     rqAttempts,
+    authToken: auth?.token,
     fetchPath,
   };
 
   const downloadDetailedReport = async () => {
+    const currentAuth = getStoredAuth();
     setDownloading(true);
     setDownloadError(null);
     try {
-      const { blob, fileName } = await buildDetailedReportPdf(pdfContext);
+      const { blob, fileName } = await buildDetailedReportPdf({
+        ...pdfContext,
+        authToken: currentAuth?.token,
+      });
       triggerPdfDownload(blob, fileName);
     } catch (e) {
       setDownloadError(e instanceof Error ? e.message : "Failed to generate report PDF");
@@ -668,7 +688,8 @@ export default function AssessmentReportView({
   };
 
   const emailDetailedReport = async () => {
-    if (!report || !isAuthenticated()) return;
+    const currentAuth = getStoredAuth();
+    if (!report || !currentAuth?.token) return;
     setEmailing(true);
     setEmailSuccess(false);
     setEmailError(null);
@@ -676,7 +697,11 @@ export default function AssessmentReportView({
       await sendAttemptReportEmail({
         normalizedCode,
         attemptId: report.attemptId,
-        buildDetailedReportPdf: () => buildDetailedReportPdf(pdfContext),
+        token: currentAuth.token,
+        buildDetailedReportPdf: () => buildDetailedReportPdf({
+          ...pdfContext,
+          authToken: currentAuth.token,
+        }),
       });
       setEmailSuccess(true);
       setTimeout(() => setEmailSuccess(false), 5000);

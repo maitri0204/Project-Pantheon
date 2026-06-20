@@ -206,7 +206,7 @@ export default function QuestionsPage() {
       return;
     }
 
-    apiRequest<SuperadminResponse>("/superadmin/dashboard", {})
+    apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token)
       .then((res) => {
         setAssessments(res.assessments);
         if (res.assessments.length > 0) {
@@ -231,12 +231,16 @@ export default function QuestionsPage() {
     try {
       const res = await apiRequest<QuestionsResponse>(
         `/superadmin/assessments/${code}/questions`,
-        {}              );
+        {},
+        auth.token
+      );
 
       if (res.questions.length === 0 && code === "METACOGNITION_TEST") {
         const legacy = await apiRequest<QuestionsResponse>(
           "/superadmin/assessments/METACOGNITION/questions",
-          {}                  );
+          {},
+          auth.token
+        );
 
         setQuestions(
           legacy.questions.map((question) => ({
@@ -318,7 +322,9 @@ export default function QuestionsPage() {
             options: sanitizeOptions(addForm.options),
             correctAnswer: addForm.correctAnswer || undefined,
           }),
-        }              );
+        },
+        auth.token
+      );
 
       setMessage("Question added.");
       setShowAdd(false);
@@ -363,7 +369,9 @@ export default function QuestionsPage() {
             options: sanitizeOptions(editForm.options),
             correctAnswer: editForm.correctAnswer || undefined,
           }),
-        }              );
+        },
+        auth.token
+      );
 
       setMessage("Question updated.");
       setEditQuestion(null);
@@ -380,7 +388,7 @@ export default function QuestionsPage() {
     if (!auth || !confirm("Delete this question?")) return;
 
     try {
-      await apiRequest(`/superadmin/questions/${id}`, { method: "DELETE" });
+      await apiRequest(`/superadmin/questions/${id}`, { method: "DELETE" }, auth.token);
       setMessage("Question deleted.");
       await loadQuestions(activeCode);
     } catch (err) {

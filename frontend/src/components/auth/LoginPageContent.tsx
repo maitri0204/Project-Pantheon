@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { apiRequest, clearStoredAuth, establishAuthSession, getStoredAuth, navigateAfterLogin } from "@/lib/api";
-import { checkSessionCookie } from "@/lib/sessionCookie";
+import { apiRequest, clearStoredAuth, getStoredAuth, setStoredAuth } from "@/lib/api";
 import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 type Step = "email" | "otp";
@@ -70,19 +69,28 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
   useEffect(() => {
     let cancelled = false;
 
-    const redirectIfAlreadySignedIn = async () => {
+    const validateAndRedirect = async () => {
       const auth = getStoredAuth();
       if (!auth) {
         return;
       }
 
-      const hasSession = await checkSessionCookie();
-      if (cancelled) {
+      const validationPath = isLearnerRole(auth.user.role)
+        ? "/platform/student/dashboard"
+        : "/platform/dashboard";
+
+      try {
+        await apiRequest(validationPath, {}, auth.token);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("validateAndRedirect: token validation failed", err);
+        if (!cancelled) {
+          clearStoredAuth();
+        }
         return;
       }
 
-      if (!hasSession) {
-        clearStoredAuth();
+      if (cancelled) {
         return;
       }
 
@@ -110,7 +118,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
       setError("Please sign in through your organization's portal link.");
     };
 
-    void redirectIfAlreadySignedIn();
+    void validateAndRedirect();
 
     return () => {
       cancelled = true;
@@ -300,17 +308,30 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
       const resolvedOrgSlug = (portalOrganizationSlug || response.orgSlug || "").toLowerCase().trim() || undefined;
       const { orgSlug: _responseOrgSlug, ...authPayload } = response;
 
+      // Determine branding to persist in stored auth
+      let finalOrgCompanyName: string | undefined = undefined;
+      let finalOrgLogoUrl: string | undefined = undefined;
       const finalOrgSlug = resolvedOrgSlug || portalOrganizationSlug || undefined;
-      const finalOrgCompanyName =
-        portalOrganizationSlug && response.user.role !== "SUPERADMIN" && orgBranding
-          ? orgBranding.companyName
-          : undefined;
-      const finalOrgLogoUrl =
-        portalOrganizationSlug && response.user.role !== "SUPERADMIN" && orgBranding
-          ? orgBranding.logoUrl
-          : undefined;
 
-      await establishAuthSession({
+      if (portalOrganizationSlug && response.user.role !== "SUPERADMIN" && orgBranding) {
+        finalOrgCompanyName = orgBranding.companyName;
+        finalOrgLogoUrl = orgBranding.logoUrl;
+      } else if (finalOrgSlug && response.user.role !== "SUPERADMIN") {
+        // If we have an org slug but no branding loaded from host, try to fetch branding
+        try {
+          const brandingRes = await apiRequest<{ organization: { branding?: OrganizationBranding } }>(
+            `/platform/whitelabel/${finalOrgSlug}`
+          );
+          if (brandingRes.organization?.branding) {
+            finalOrgCompanyName = brandingRes.organization.branding.companyName;
+            finalOrgLogoUrl = brandingRes.organization.branding.logoUrl;
+          }
+        } catch (err) {
+          // ignore; UI will fallback to initials
+        }
+      }
+
+      setStoredAuth({
         ...authPayload,
         ...(finalOrgSlug && response.user.role !== "SUPERADMIN"
           ? { orgSlug: finalOrgSlug, organizationSlug: finalOrgSlug }
@@ -318,26 +339,25 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         ...(finalOrgCompanyName ? { orgCompanyName: finalOrgCompanyName } : {}),
         ...(finalOrgLogoUrl ? { orgLogoUrl: finalOrgLogoUrl } : {}),
       });
-
       if (response.user.role === "REVIEWER") {
-        navigateAfterLogin("/reviewer/payment");
+        router.push("/reviewer/payment");
         return;
       }
       if (response.user.role === "ORG_ADMIN" && resolvedOrgSlug) {
-        navigateAfterLogin(`/whitelabel/${resolvedOrgSlug}/dashboard`);
+        router.push(`/whitelabel/${resolvedOrgSlug}/dashboard`);
         return;
       }
       if (isLearnerRole(response.user.role) && resolvedOrgSlug) {
-        navigateAfterLogin(`/whitelabel/${resolvedOrgSlug}/student/dashboard`);
+        router.push(`/whitelabel/${resolvedOrgSlug}/student/dashboard`);
         return;
       }
       if (response.user.role === "SUPERADMIN") {
-        navigateAfterLogin("/dashboard");
+        router.push("/dashboard");
         return;
       }
 
       if (portalOrganizationSlug) {
-        navigateAfterLogin(
+        router.push(
           response.user.role === "ORG_ADMIN"
             ? `/whitelabel/${portalOrganizationSlug}/dashboard`
             : isLearnerRole(response.user.role)

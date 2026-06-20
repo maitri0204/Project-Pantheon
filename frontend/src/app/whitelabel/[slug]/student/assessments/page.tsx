@@ -6,8 +6,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import AssessmentComingSoonCard from "@/components/assessment/AssessmentComingSoonCard";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import { allowsMultipleAttempts, buildStudentResultPath, normalizeAssessmentCode } from "@/lib/assessmentAccess";
-import { storeAttemptId, getAttemptId } from "@/lib/assessmentAttemptSession";
-import { storePaymentSessionId } from "@/lib/assessmentPaymentSession";
 import { isAssessmentLocked, sortAssessmentsByAvailability } from "@/lib/assessmentRelease";
 
 type StudentAssessmentsResponse = {
@@ -212,14 +210,14 @@ export default function StudentAssessmentsPage() {
   );
 
   const load = () => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(`/whitelabel/${slug}/login`);
       return;
     }
 
     setLoading(true);
     setLoadError(null);
-    apiRequest<StudentAssessmentsResponse>("/platform/student/assessments", {})
+    apiRequest<StudentAssessmentsResponse>("/platform/student/assessments", {}, auth.token)
       .then((res) => { setData(res); setLoadError(null); })
       .catch((err) => {
         if (!getStoredAuth()) {
@@ -234,7 +232,7 @@ export default function StudentAssessmentsPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth?.user, slug]);
+  }, [auth?.token, slug]);
 
   useEffect(() => {
     if (loading || retakeHandledRef.current) return;
@@ -255,24 +253,29 @@ export default function StudentAssessmentsPage() {
 
   const loadRazorpayScript = async () => {
     if (typeof window === "undefined") return false;
-    try {
-      const { loadRazorpayCheckoutScript } = await import("@/lib/razorpay/loadRazorpayCheckout");
-      await loadRazorpayCheckoutScript();
-      return true;
-    } catch {
-      return false;
-    }
+    if (window.Razorpay) return true;
+
+    return new Promise<boolean>((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
   const fetchPricing = async (code: string, enteredCoupon?: string) => {
-    if (!auth?.user) return;
+    if (!auth?.token) return;
     setPricingLoading(true);
     setPricingError(null);
     try {
       const query = enteredCoupon?.trim() ? `?couponCode=${encodeURIComponent(enteredCoupon.trim())}` : "";
       const response = await apiRequest<AssessmentPricingResponse>(
         `/platform/student/assessments/${code}/pricing${query}`,
-        {}              );
+        {},
+        auth.token
+      );
       setPricing(response);
     } catch (error) {
       setPricing(null);
@@ -298,18 +301,15 @@ export default function StudentAssessmentsPage() {
   };
 
   const startTestWithPayment = async (code: string, paymentSessionId?: string) => {
-    if (!auth?.user) return;
+    if (!auth?.token) return;
     setStartingCode(code);
     try {
       const response = await apiRequest<{ attempt: { id: string } }>(`/platform/student/assessments/${code}/start`, {
         method: "POST",
         body: JSON.stringify(paymentSessionId ? { paymentSessionId } : {}),
-      });
-      if (paymentSessionId) {
-        storePaymentSessionId(code, paymentSessionId);
-      }
-      storeAttemptId(code, response.attempt.id);
-      router.push(`/whitelabel/${slug}/student/assessments/${code}/take`);
+      }, auth.token);
+      const paymentQuery = paymentSessionId ? `&paymentSessionId=${encodeURIComponent(paymentSessionId)}` : "";
+      router.push(`/whitelabel/${slug}/student/assessments/${code}/take?attemptId=${response.attempt.id}${paymentQuery}`);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unable to start assessment";
       window.alert(msg);
@@ -320,7 +320,7 @@ export default function StudentAssessmentsPage() {
   };
 
   const handleProceedToPay = async () => {
-    if (!auth?.user || !checkoutAssessmentCode) return;
+    if (!auth?.token || !checkoutAssessmentCode) return;
     setCheckoutLoading(true);
     try {
       const orderResponse = await apiRequest<PaymentOrderResponse>(
@@ -329,6 +329,7 @@ export default function StudentAssessmentsPage() {
           method: "POST",
           body: JSON.stringify({ couponCode: couponCode.trim() || undefined }),
         },
+        auth.token
       );
 
       if (!orderResponse.paymentRequired) {
@@ -366,7 +367,9 @@ export default function StudentAssessmentsPage() {
                   razorpay_order_id: paymentResult.razorpay_order_id,
                   razorpay_signature: paymentResult.razorpay_signature,
                 }),
-              }                          );
+              },
+              auth.token
+            );
             closeCheckout();
             await startTestWithPayment(checkoutAssessmentCode, orderResponse.paymentSessionId);
           } catch (error) {
@@ -394,8 +397,7 @@ export default function StudentAssessmentsPage() {
       return;
     }
     if (!attemptId) return;
-    storeAttemptId(assessmentCode, attemptId);
-    router.push(buildStudentResultPath(slug, assessmentCode));
+    router.push(buildStudentResultPath(slug, assessmentCode, { attemptId }));
   };
 
   if (loading) {

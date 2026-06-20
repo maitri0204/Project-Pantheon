@@ -1,7 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 
-import { toSafeClientErrorMessage } from "../services/safeErrorMessage";
-
 export const errorHandler = (
   error: unknown,
   _req: Request,
@@ -28,7 +26,5 @@ export const errorHandler = (
 
   // eslint-disable-next-line no-console
   console.error("Unhandled error:", error);
-  res.status(status).json({
-    message: status === 403 ? message : toSafeClientErrorMessage(error),
-  });
+  res.status(status).json({ message: status === 403 ? message : "Internal server error" });
 };

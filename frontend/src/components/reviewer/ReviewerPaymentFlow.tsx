@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { apiRequest, getStoredAuth } from "@/lib/api";
-import { loadRazorpayCheckoutScript } from "@/lib/razorpay/loadRazorpayCheckout";
 
 type ReviewerOrderResponse = {
   keyId: string;
@@ -20,12 +19,17 @@ declare global {
 const REVIEWER_EMAIL = "reviewer@admitra.io";
 
 const loadRazorpayScript = async () => {
-  try {
-    await loadRazorpayCheckoutScript();
-    return true;
-  } catch {
-    return false;
-  }
+  if (typeof window === "undefined") return false;
+  if (window.Razorpay) return true;
+
+  return new Promise<boolean>((resolve) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 };
 
 export default function ReviewerPaymentFlow() {
@@ -45,7 +49,9 @@ export default function ReviewerPaymentFlow() {
     try {
       const response = await apiRequest<ReviewerOrderResponse>(
         "/platform/reviewer/payment/order",
-        { method: "POST" }              );
+        { method: "POST" },
+        auth.token
+      );
 
       const loaded = await loadRazorpayScript();
       if (!loaded || !window.Razorpay) return window.alert("Unable to load payment gateway");
@@ -72,7 +78,9 @@ export default function ReviewerPaymentFlow() {
                   razorpay_order_id: paymentResult.razorpay_order_id,
                   razorpay_signature: paymentResult.razorpay_signature,
                 }),
-              }                          );
+              },
+              auth.token
+            );
             window.alert("Payment completed successfully.");
           } catch (error) {
             window.alert(error instanceof Error ? error.message : "Payment verification failed");

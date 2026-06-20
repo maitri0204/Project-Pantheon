@@ -59,7 +59,7 @@ export default function OrganizationProfilePage() {
   const isSuperAdmin = user?.role === "SUPERADMIN";
 
   useEffect(() => {
-    if (!auth?.user || !user) {
+    if (!auth?.token || !user) {
       router.replace(getDashboardLoginPath());
       return;
     }
@@ -69,7 +69,7 @@ export default function OrganizationProfilePage() {
       return;
     }
 
-    apiRequest<{ organization: OrgProfile }>(`/platform/organization/profile`, {})
+    apiRequest<{ organization: OrgProfile }>(`/platform/organization/profile`, {}, auth.token)
       .then((res) => {
         setOrganization(res.organization);
       })
@@ -106,7 +106,9 @@ export default function OrganizationProfilePage() {
           {
             method: "PATCH",
             body: JSON.stringify({ logoUrl: base64String }),
-          }                  );
+          },
+          auth!.token
+        );
 
         setOrganization(response.organization);
         setSuccess("Logo updated successfully!");

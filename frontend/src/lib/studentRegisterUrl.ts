@@ -4,6 +4,3 @@ export const STUDENT_REGISTER_URL =
 
 /** Platform login (not whitelabel-scoped). */
 export const PLATFORM_LOGIN_URL = "/login";
-
-/** Main application home page — used after sign-out. */
-export const PLATFORM_HOME_URL = "/";

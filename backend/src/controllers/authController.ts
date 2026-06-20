@@ -9,20 +9,7 @@ import { generateCaptcha, verifyCaptcha } from "../services/captcha";
 import { sendOtpEmail, sendRegistrationConfirmationEmail } from "../services/email";
 import { isAllowedOrganizationWebsite } from "../services/websiteValidation";
 import { compareOtp, generateOtp, getOtpExpiry, hashOtp, isOtpExpired } from "../services/otp";
-import { isBase64ImageWithinLimit } from "../services/uploadValidation";
-import {
-  decryptRegistrationSensitiveFields,
-  encryptRegistrationSensitiveFields,
-} from "../services/sensitiveData";
-import {
-  MAX_OTP_ATTEMPTS,
-  OTP_INVALID_MESSAGE,
-  OTP_REQUEST_SUCCESS_MESSAGE,
-  OTP_TOO_MANY_MESSAGE,
-  registerFailedOtpAttempt,
-} from "../services/authSecurity";
-import { signToken, verifyToken } from "../services/token";
-import { clearAuthCookie, getAuthTokenFromRequest, setAuthCookie } from "../services/authCookie";
+import { signToken } from "../services/token";
 import { AuthRequest } from "../types/auth";
 
 const formatUser = (user: IUser) => ({
@@ -44,44 +31,6 @@ const formatUser = (user: IUser) => ({
   phoneCode: user.phoneCode,
 });
 
-const issueAuthSession = (
-  res: Response,
-  user: IUser,
-  extra: Record<string, unknown> = {},
-): void => {
-  const token = signToken(user);
-  setAuthCookie(res, token);
-  res.json({
-    token,
-    user: formatUser(user),
-    ...extra,
-  });
-};
-
-export const logout = async (_req: Request, res: Response): Promise<void> => {
-  clearAuthCookie(res);
-  res.json({ message: "Logged out successfully" });
-};
-
-export const validateSession = (req: Request, res: Response): void => {
-  try {
-    const token = getAuthTokenFromRequest({
-      authorizationHeader: req.headers.authorization,
-      cookieHeader: req.headers.cookie,
-    });
-
-    if (!token) {
-      res.status(401).json({ valid: false });
-      return;
-    }
-
-    verifyToken(token);
-    res.json({ valid: true });
-  } catch {
-    res.status(401).json({ valid: false });
-  }
-};
-
 const validateCaptchaPayload = async (captchaToken?: string, captchaAnswer?: string): Promise<boolean> => {
   if (!captchaToken || typeof captchaAnswer !== "string") {
     return false;
@@ -95,53 +44,7 @@ const validateCaptchaPayload = async (captchaToken?: string, captchaAnswer?: str
   return verifyCaptcha(captchaToken, numericAnswer);
 };
 
-const MAX_LOGIN_OTP_ATTEMPTS = MAX_OTP_ATTEMPTS;
-
-const formatOrganizationSummary = (organization: unknown) => {
-  if (!organization || typeof organization !== "object") {
-    return null;
-  }
-
-  const org = organization as {
-    _id?: { toString?: () => string };
-    name?: string;
-    slug?: string;
-    type?: string;
-    website?: string;
-    contactEmail?: string;
-    branding?: {
-      companyName?: string;
-      logoUrl?: string;
-      primaryColor?: string;
-      accentColor?: string;
-    };
-    settings?: {
-      allowSelfSignup?: boolean;
-    };
-  };
-
-  return {
-    id: org._id && typeof org._id.toString === "function" ? org._id.toString() : undefined,
-    name: org.name,
-    slug: org.slug,
-    type: org.type,
-    website: org.website,
-    contactEmail: org.contactEmail,
-    branding: org.branding
-      ? {
-          companyName: org.branding.companyName,
-          logoUrl: org.branding.logoUrl,
-          primaryColor: org.branding.primaryColor,
-          accentColor: org.branding.accentColor,
-        }
-      : undefined,
-    settings: org.settings
-      ? {
-          allowSelfSignup: org.settings.allowSelfSignup,
-        }
-      : undefined,
-  };
-};
+const MAX_LOGIN_OTP_ATTEMPTS = 5;
 
 export const getCaptchaChallenge = async (_req: Request, res: Response): Promise<void> => {
   res.json({ data: await generateCaptcha() });
@@ -301,11 +204,7 @@ const validateWhitelabelLoginContext = ({
 
 export const requestRegistrationOtp = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, captchaToken, captchaAnswer } = req.body as {
-      email?: string;
-      captchaToken?: string;
-      captchaAnswer?: string;
-    };
+    const { email } = req.body as { email?: string };
 
     if (!email?.trim()) {
       res.status(400).json({ message: "Email is required" });
@@ -317,15 +216,10 @@ export const requestRegistrationOtp = async (req: Request, res: Response): Promi
       return;
     }
 
-    if (!(await validateCaptchaPayload(captchaToken, captchaAnswer))) {
-      res.status(400).json({ message: "Invalid captcha" });
-      return;
-    }
-
     const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      res.json({ message: OTP_REQUEST_SUCCESS_MESSAGE, email: normalizedEmail });
+      res.status(409).json({ message: "Email already exists" });
       return;
     }
 
@@ -352,7 +246,7 @@ export const requestRegistrationOtp = async (req: Request, res: Response): Promi
       purpose: "registration",
     });
 
-    res.json({ message: OTP_REQUEST_SUCCESS_MESSAGE, email: normalizedEmail });
+    res.json({ message: "OTP sent to your email", email: normalizedEmail });
   } catch (error) {
     console.error("Request registration OTP error:", error);
     res.status(500).json({ message: "Failed to send OTP" });
@@ -375,22 +269,19 @@ export const verifyRegistrationOtp = async (req: Request, res: Response): Promis
 
     const registration = await OrganizationRegistration.findOne({ email: email.toLowerCase().trim() });
     if (!registration) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(404).json({ message: "Registration request not found" });
       return;
     }
 
     if (!registration.otpHash || isOtpExpired(registration.otpExpiresAt)) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(400).json({ message: "OTP expired or invalid. Please request a fresh one." });
       return;
     }
 
     if (!compareOtp(otp.trim(), registration.otpHash)) {
-      const result = await registerFailedOtpAttempt(registration);
-      if (result === "locked") {
-        res.status(429).json({ message: OTP_TOO_MANY_MESSAGE });
-        return;
-      }
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      registration.otpAttempts += 1;
+      await registration.save();
+      res.status(400).json({ message: "Invalid OTP" });
       return;
     }
 
@@ -521,16 +412,6 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       return;
     }
 
-    if (body.logoUrl?.trim().startsWith("data:image/") && !isBase64ImageWithinLimit(body.logoUrl.trim())) {
-      res.status(400).json({ message: "Logo file is too large. Maximum size is 500KB." });
-      return;
-    }
-
-    if (body.signatureUrl.trim().startsWith("data:image/") && !isBase64ImageWithinLimit(body.signatureUrl.trim())) {
-      res.status(400).json({ message: "Signature file is too large. Maximum size is 500KB." });
-      return;
-    }
-
     const websiteValue = body.website?.trim() || "";
     if (websiteValue && !isAllowedOrganizationWebsite(websiteValue)) {
       res.status(400).json({
@@ -542,10 +423,6 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
     const legalEntityType = "Trust";
     const slugSeed = body.companyName;
     const orgSlug = await getUniqueOrganizationSlug(slugSeed);
-    const requiresApproval = process.env.NODE_ENV === "production"
-      ? process.env.ORG_REGISTRATION_REQUIRES_APPROVAL !== "false"
-      : process.env.ORG_REGISTRATION_REQUIRES_APPROVAL === "true";
-    const isActive = !requiresApproval;
 
     const organization = await Organization.create({
       name: body.companyName.trim(),
@@ -553,7 +430,7 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       website: body.website?.trim() || undefined,
       contactEmail: normalizedEmail,
       type: "WHITELABEL",
-      isActive,
+      isActive: true,
       branding: {
         companyName: body.companyName.trim(),
         logoUrl: body.logoUrl?.trim() || undefined,
@@ -573,7 +450,7 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       role: "ORG_ADMIN",
       organization: organization._id,
       isVerified: true,
-      isActive,
+      isActive: true,
       otpHash: undefined,
       otpExpiresAt: undefined,
       otpPurpose: null,
@@ -602,20 +479,13 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
     registration.trustRegistrationNumber = body.trustRegistrationNumber?.trim();
     registration.gstNumber = body.gstNumber?.trim();
     registration.website = body.website?.trim();
-    const encryptedSensitiveFields = encryptRegistrationSensitiveFields({
-      panIndividual: body.panIndividual?.trim(),
-      panCompany: body.panCompany?.trim(),
-      bankAccountName: body.bankAccountName?.trim(),
-      bankAccountNumber: body.bankAccountNumber?.trim(),
-      ifscCode: body.ifscCode?.trim(),
-    });
-    registration.panIndividual = encryptedSensitiveFields.panIndividual;
-    registration.panCompany = encryptedSensitiveFields.panCompany;
+    registration.panIndividual = body.panIndividual?.trim();
+    registration.panCompany = body.panCompany?.trim();
     registration.tan = body.tan?.trim();
-    registration.bankAccountName = encryptedSensitiveFields.bankAccountName;
+    registration.bankAccountName = body.bankAccountName?.trim();
     registration.accountType = body.accountType;
-    registration.bankAccountNumber = encryptedSensitiveFields.bankAccountNumber;
-    registration.ifscCode = encryptedSensitiveFields.ifscCode;
+    registration.bankAccountNumber = body.bankAccountNumber?.trim();
+    registration.ifscCode = body.ifscCode?.trim();
     registration.logoUrl = body.logoUrl?.trim();
     registration.signatureUrl = body.signatureUrl?.trim();
     registration.generatedSlug = orgSlug;
@@ -645,27 +515,9 @@ export const completeOrganizationRegistration = async (req: Request, res: Respon
       // Don't fail the registration if email fails, just log it
     }
 
-    if (requiresApproval) {
-      res.status(201).json({
-        message: "Organization registration submitted for approval. You will receive an email once approved.",
-        pendingApproval: true,
-        organization: {
-          id: organization._id,
-          slug: organization.slug,
-          name: organization.name,
-          website: organization.website,
-          logoUrl: organization.branding.logoUrl,
-        },
-      });
-      return;
-    }
-
-    const token = signToken(user);
-    setAuthCookie(res, token);
     res.status(201).json({
       message: "Organization registration completed",
-      pendingApproval: false,
-      token,
+      token: signToken(user),
       user: formatUser(user),
       organization: {
         id: organization._id,
@@ -717,10 +569,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      res.status(201).json({
-        message: "Signup successful. Verify the OTP sent to your email.",
-        email: normalizedEmail,
-      });
+      res.status(409).json({ message: "User already exists" });
       return;
     }
 
@@ -782,27 +631,24 @@ export const verifySignupOtp = async (req: Request, res: Response): Promise<void
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(404).json({ message: "User not found" });
       return;
     }
 
     if (user.isVerified) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(400).json({ message: "User already verified" });
       return;
     }
 
     if (user.otpPurpose !== "SIGNUP" || !user.otpHash || isOtpExpired(user.otpExpiresAt)) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(400).json({ message: "OTP expired or invalid. Please sign up again." });
       return;
     }
 
     if (!compareOtp(otp.trim(), user.otpHash)) {
-      const result = await registerFailedOtpAttempt(user);
-      if (result === "locked") {
-        res.status(429).json({ message: OTP_TOO_MANY_MESSAGE });
-        return;
-      }
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      user.otpAttempts += 1;
+      await user.save();
+      res.status(400).json({ message: "Invalid OTP" });
       return;
     }
 
@@ -814,7 +660,10 @@ export const verifySignupOtp = async (req: Request, res: Response): Promise<void
     user.lastLoginAt = new Date();
     await user.save();
 
-    issueAuthSession(res, user);
+    res.json({
+      token: signToken(user),
+      user: formatUser(user),
+    });
   } catch (error) {
     console.error("Verify signup OTP error:", error);
     res.status(500).json({ message: "Failed to verify OTP" });
@@ -847,17 +696,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("organization");
     if (!user) {
-      res.json({ message: OTP_REQUEST_SUCCESS_MESSAGE, email: email.toLowerCase().trim() });
+      res.status(404).json({ message: "User not found" });
       return;
     }
 
     if (!user.isVerified) {
-      res.json({ message: OTP_REQUEST_SUCCESS_MESSAGE, email: email.toLowerCase().trim() });
+      res.status(400).json({ message: "Account is not verified yet" });
       return;
     }
 
     if (!user.isActive) {
-      res.json({ message: OTP_REQUEST_SUCCESS_MESSAGE, email: email.toLowerCase().trim() });
+      res.status(403).json({ message: "Account is inactive" });
       return;
     }
 
@@ -881,7 +730,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       purpose: "login",
     });
 
-    res.json({ message: OTP_REQUEST_SUCCESS_MESSAGE, email: user.email });
+    res.json({ message: "OTP sent to your email", email: user.email });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Failed to send login OTP" });
@@ -908,7 +757,7 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
 
     const user = await User.findOne({ email: email.toLowerCase().trim() }).populate("organization");
     if (!user) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(404).json({ message: "User not found" });
       return;
     }
 
@@ -919,17 +768,24 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
     }
 
     if (user.otpPurpose !== "LOGIN" || !user.otpHash || isOtpExpired(user.otpExpiresAt)) {
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+      res.status(400).json({ message: "OTP expired or invalid. Please request a fresh one." });
       return;
     }
 
     if (!compareOtp(otp.trim(), user.otpHash)) {
-      const result = await registerFailedOtpAttempt(user);
-      if (result === "locked") {
-        res.status(429).json({ message: OTP_TOO_MANY_MESSAGE });
+      user.otpAttempts += 1;
+
+      if (user.otpAttempts >= MAX_LOGIN_OTP_ATTEMPTS) {
+        user.otpHash = undefined;
+        user.otpExpiresAt = undefined;
+        user.otpPurpose = null;
+        await user.save();
+        res.status(429).json({ message: "Too many invalid OTP attempts. Please request a new one." });
         return;
       }
-      res.status(400).json({ message: OTP_INVALID_MESSAGE });
+
+      await user.save();
+      res.status(400).json({ message: "Invalid OTP" });
       return;
     }
 
@@ -940,7 +796,9 @@ export const verifyLoginOtp = async (req: Request, res: Response): Promise<void>
     user.lastLoginAt = new Date();
     await user.save();
 
-    issueAuthSession(res, user, {
+    res.json({
+      token: signToken(user),
+      user: formatUser(user),
       orgSlug:
         typeof user.organization === "object" && user.organization && "slug" in user.organization
           ? (user.organization as { slug?: string }).slug || null
@@ -963,7 +821,7 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
   res.json({
     user: {
       ...formatUser(req.user),
-      organization: formatOrganizationSummary(req.user.organization),
+      organization: req.user.organization,
     },
     orgSlug:
       typeof req.user.organization === "object" && req.user.organization && "slug" in req.user.organization
@@ -1172,8 +1030,10 @@ export const verifyStudentRegisterOtp = async (req: Request, res: Response): Pro
     await user.populate("organization");
     const org = user.organization as unknown as { slug: string } | undefined;
 
-    issueAuthSession(res, user, {
+    res.json({
       message: "Registration successful! Redirecting to your dashboard.",
+      token: signToken(user),
+      user: formatUser(user),
       organizationSlug: org?.slug,
     });
   } catch (error) {

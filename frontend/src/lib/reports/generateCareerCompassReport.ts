@@ -1,4 +1,4 @@
-import { authenticatedFetch } from "@/lib/api";
+import { API_URL } from "@/lib/api";
 
 function careerCompassReportApiPath(reportFetchPath: string): string {
   return reportFetchPath.replace(/\/report$/, "/career-compass-report");
@@ -6,11 +6,15 @@ function careerCompassReportApiPath(reportFetchPath: string): string {
 
 /** Download the Career Compass intelligence PDF generated server-side. */
 export async function generateCareerCompassReport(
+  token: string,
   reportFetchPath: string,
   studentName: string,
 ): Promise<{ blob: Blob; fileName: string }> {
   const path = careerCompassReportApiPath(reportFetchPath);
-  const response = await authenticatedFetch(path);
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     const rawText = await response.text();

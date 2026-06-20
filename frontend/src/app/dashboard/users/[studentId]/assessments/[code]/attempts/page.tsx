@@ -24,10 +24,12 @@ export default function SuperadminOrgStudentAttemptListPage() {
   const auth = useMemo(() => getStoredAuth(), []);
 
   useEffect(() => {
-    if (!auth?.user || !studentId || !code) return;
+    if (!auth?.token || !studentId || !code) return;
     apiRequest<AttemptMetaResponse>(
       `/platform/students/${studentId}/assessments/${code}/attempts`,
-      {}          )
+      {},
+      auth.token,
+    )
       .then((res) => {
         const latest = res.attempts?.[res.attempts.length - 1];
         if (latest) {
@@ -35,7 +37,7 @@ export default function SuperadminOrgStudentAttemptListPage() {
         }
       })
       .catch(() => undefined);
-  }, [auth?.user, studentId, code]);
+  }, [auth?.token, studentId, code]);
 
   return (
     <AssessmentAttemptHistoryView

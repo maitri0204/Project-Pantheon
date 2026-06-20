@@ -362,7 +362,9 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
         {
           method: "POST",
           body: JSON.stringify({ status: "COMPLETED" }),
-        }              );
+        },
+        auth.token
+      );
 
       onComplete(data.result);
     } catch (err) {
@@ -383,10 +385,14 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
         const [attemptData, questionsData] = await Promise.all([
           apiRequest<{ attempt: AQAttempt }>(
             `/platform/student/attempts/${attemptId}`,
-            { method: "GET" }                      ),
+            { method: "GET" },
+            auth.token
+          ),
           apiRequest<{ questions: AQQuestion[] }>(
             "/api/assessments/questions?assessmentCode=ADVERSITY_TEST",
-            { method: "GET" }                      ),
+            { method: "GET" },
+            auth.token
+          ),
         ]);
 
         setAttempt(attemptData.attempt);
@@ -448,7 +454,9 @@ const TestInterface: React.FC<{ attemptId: string; onComplete: (result: AQResult
             questions: updatedAttempt.questions,
             answeredCount: Math.max(attempt.answeredCount, currentIndex + 1),
           }),
-        }              );
+        },
+        auth.token
+      );
 
       setAttempt(updatedAttempt);
 

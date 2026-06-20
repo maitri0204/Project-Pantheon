@@ -5,7 +5,6 @@ import {
   STUDY_ABROAD_A4,
   waitForReportRender,
 } from "@/lib/reports/studyAbroadPdfCapture";
-import { applyReportCaptureSandbox } from "@/lib/reports/reportCaptureSandbox";
 
 /** Lower scale + JPEG keeps the 22-page TEST report under ~3 MB. */
 const METACOGNITION_CAPTURE_SCALE = 1.25;
@@ -165,7 +164,6 @@ export async function captureMetacognitionHtmlToPdf(html: string): Promise<Blob>
   Object.assign(iframe.style, IFRAME_STYLE);
   iframe.setAttribute("aria-hidden", "true");
   iframe.setAttribute("tabindex", "-1");
-  applyReportCaptureSandbox(iframe);
   document.body.appendChild(iframe);
 
   try {

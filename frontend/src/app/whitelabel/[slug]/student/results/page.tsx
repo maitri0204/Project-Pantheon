@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BarChart3, CalendarClock, Sparkles } from "lucide-react";
 
-import { storeAttemptId } from "@/lib/assessmentAttemptSession";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import {
   allowsMultipleAttempts,
@@ -50,12 +49,12 @@ export default function StudentResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(`/whitelabel/${slug}/login`);
       return;
     }
 
-    apiRequest<StudentResultsResponse>("/platform/student/results", {})
+    apiRequest<StudentResultsResponse>("/platform/student/results", {}, auth.token)
       .then((res) => { setResults(res.results || []); setError(null); })
       .catch((err) => {
         if (!getStoredAuth()) {
@@ -65,7 +64,7 @@ export default function StudentResultsPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [auth?.user, router, slug]);
+  }, [auth?.token, router, slug]);
 
   if (loading) {
     return (
@@ -80,7 +79,7 @@ export default function StudentResultsPage() {
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
         <p className="text-sm text-red-600">{error}</p>
         <button
-          onClick={() => { setLoading(true); setError(null); apiRequest<StudentResultsResponse>("/platform/student/results", {}).then((res) => setResults(res.results || [])).catch((err) => { if (!getStoredAuth()) router.replace(`/whitelabel/${slug}/login`); else setError(err instanceof Error ? err.message : "Failed to load results"); }).finally(() => setLoading(false)); }}
+          onClick={() => { setLoading(true); setError(null); apiRequest<StudentResultsResponse>("/platform/student/results", {}, auth?.token).then((res) => setResults(res.results || [])).catch((err) => { if (!getStoredAuth()) router.replace(`/whitelabel/${slug}/login`); else setError(err instanceof Error ? err.message : "Failed to load results"); }).finally(() => setLoading(false)); }}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
         >
           Retry
@@ -154,10 +153,11 @@ export default function StudentResultsPage() {
                     <button
                       onClick={() => {
                         if (!canViewReport) return;
-                        if (!allowsMultipleAttempts(result.assessmentCode)) {
-                          storeAttemptId(result.assessmentCode, result.id);
-                        }
-                        router.push(buildStudentResultPath(slug, result.assessmentCode));
+                        router.push(
+                          allowsMultipleAttempts(result.assessmentCode)
+                            ? buildStudentResultPath(slug, result.assessmentCode)
+                            : buildStudentResultPath(slug, result.assessmentCode, { attemptId: result.id })
+                        );
                       }}
                       disabled={!canViewReport}
                       className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_-18px_rgba(37,99,235,0.9)] hover:from-blue-700 hover:to-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"

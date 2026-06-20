@@ -54,7 +54,7 @@ export default function AssessmentAttemptHistoryView({
   const [error, setError] = useState<string | null>(null);
 
   const fetchAttempts = async () => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(loginHref);
       return;
     }
@@ -63,7 +63,7 @@ export default function AssessmentAttemptHistoryView({
     setError(null);
 
     try {
-      const response = await apiRequest<AttemptHistoryResponse>(fetchPath, {});
+      const response = await apiRequest<AttemptHistoryResponse>(fetchPath, {}, auth.token);
       setAttempts(response.attempts || []);
     } catch (err) {
       if (!getStoredAuth()) {
@@ -80,7 +80,7 @@ export default function AssessmentAttemptHistoryView({
   useEffect(() => {
     fetchAttempts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth?.user, fetchPath]);
+  }, [auth?.token, fetchPath]);
 
   return (
     <div className="min-w-0 space-y-5">

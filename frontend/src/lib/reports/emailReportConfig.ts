@@ -5,8 +5,8 @@
  */
 export const PREMIUM_CLIENT_PDF_EMAIL_CODES = new Set([
   "RESILIENCE_TEST",
-  "ACADEMIC_CAREER",
   "STUDY_ABROAD",
+  "ACADEMIC_CAREER",
 ]);
 
 /** Assessments whose email PDF is generated on the server via serverGenerate: true. */

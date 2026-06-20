@@ -5,7 +5,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import StudyAbroadPremiumPrintReport from "@/components/reports/StudyAbroadPremiumPrintReport";
 import { getStoredAuth } from "@/lib/api";
-import { getAttemptId } from "@/lib/assessmentAttemptSession";
 import { fetchStudyAbroadPrintContext } from "@/lib/studyAbroad/printReportData";
 
 export default function StudyAbroadReportPrintPage() {
@@ -14,7 +13,7 @@ export default function StudyAbroadReportPrintPage() {
   const router = useRouter();
   const slug = String(params?.slug ?? "");
   const code = String(params?.code ?? "").toUpperCase();
-  const attemptId = searchParams?.get("attemptId")?.trim() || getAttemptId(code) || "";
+  const attemptId = searchParams?.get("attemptId")?.trim() ?? "";
   const auth = useMemo(() => getStoredAuth(), []);
 
   const [loading, setLoading] = useState(true);
@@ -22,7 +21,7 @@ export default function StudyAbroadReportPrintPage() {
   const [printContext, setPrintContext] = useState<Awaited<ReturnType<typeof fetchStudyAbroadPrintContext>> | null>(null);
 
   useEffect(() => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(`/whitelabel/${slug}/login`);
       return;
     }
@@ -37,13 +36,13 @@ export default function StudyAbroadReportPrintPage() {
       return;
     }
 
-    void fetchStudyAbroadPrintContext(attemptId)
+    void fetchStudyAbroadPrintContext(auth.token, attemptId)
       .then(setPrintContext)
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : "Failed to load report");
       })
       .finally(() => setLoading(false));
-  }, [attemptId, auth?.user, code, router, slug]);
+  }, [attemptId, auth?.token, code, router, slug]);
 
   if (loading) {
     return (
@@ -67,7 +66,7 @@ export default function StudyAbroadReportPrintPage() {
     );
   }
 
-  const backHref = `/whitelabel/${slug}/student/assessments/${code}/result`;
+  const backHref = `/whitelabel/${slug}/student/assessments/${code}/result?attemptId=${attemptId}`;
 
   return (
     <StudyAbroadPremiumPrintReport

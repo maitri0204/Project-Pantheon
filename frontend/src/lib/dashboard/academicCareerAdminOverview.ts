@@ -66,6 +66,7 @@ export type AcademicCareerAdminOverview = {
 };
 
 export async function fetchAcademicCareerAdminOverview(
+  token: string,
   options?: { organizationSlug?: string },
 ): Promise<AcademicCareerAdminOverview> {
   const slugQuery = options?.organizationSlug
@@ -74,5 +75,6 @@ export async function fetchAcademicCareerAdminOverview(
   return apiRequest<AcademicCareerAdminOverview>(
     `/platform/assessments/ACADEMIC_CAREER/admin-overview${slugQuery}`,
     {},
+    token,
   );
 }

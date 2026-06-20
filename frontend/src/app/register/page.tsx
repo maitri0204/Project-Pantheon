@@ -22,12 +22,7 @@ type RegisterCompleteResponse = {
   organization: {
     slug: string;
   };
-  pendingApproval?: boolean;
 };
-
-type CaptchaResponse = { data: { token: string; question: string } };
-
-const REGISTRATION_SUCCESS_KEY = "pantheon-registration-success";
 
 const COUNTRIES = ["India"];
 const STATES = ["Maharashtra", "Gujarat", "Delhi", "Karnataka", "Tamil Nadu", "Rajasthan"];
@@ -47,9 +42,6 @@ export default function RegisterPage() {
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [signaturePreview, setSignaturePreview] = useState<string>("");
-  const [captchaQuestion, setCaptchaQuestion] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [primaryCountryCode, setPrimaryCountryCode] = useState("+91");
   const [alternateCountryCode, setAlternateCountryCode] = useState("+91");
   const [selectedCountryIso, setSelectedCountryIso] = useState("IN");
@@ -106,21 +98,6 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, registeredAddress: prev.officeAddress }));
   }, [formData.sameAsOfficeAddress, formData.officeAddress]);
 
-  const loadCaptcha = async (): Promise<void> => {
-    try {
-      const response = await apiRequest<CaptchaResponse>("/auth/captcha");
-      setCaptchaToken(response.data.token);
-      setCaptchaQuestion(response.data.question);
-      setCaptchaAnswer("");
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Failed to load captcha");
-    }
-  };
-
-  useEffect(() => {
-    void loadCaptcha();
-  }, []);
-
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -174,7 +151,7 @@ export default function RegisterPage() {
     try {
       const response = await apiRequest<{ message: string }>("/auth/register/request-otp", {
         method: "POST",
-        body: JSON.stringify({ email, captchaToken, captchaAnswer }),
+        body: JSON.stringify({ email }),
       });
       setMessage(response.message);
       setStep("otp");
@@ -183,7 +160,6 @@ export default function RegisterPage() {
       window.setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Unable to send OTP");
-      void loadCaptcha();
     } finally {
       setLoading(false);
     }
@@ -197,7 +173,7 @@ export default function RegisterPage() {
     try {
       const response = await apiRequest<{ message: string }>("/auth/register/request-otp", {
         method: "POST",
-        body: JSON.stringify({ email, captchaToken, captchaAnswer }),
+        body: JSON.stringify({ email }),
       });
       setMessage(response.message);
       setCooldown(60);
@@ -205,7 +181,6 @@ export default function RegisterPage() {
       window.setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Unable to resend OTP");
-      void loadCaptcha();
     } finally {
       setLoading(false);
     }
@@ -249,15 +224,7 @@ export default function RegisterPage() {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      window.sessionStorage.setItem(
-        REGISTRATION_SUCCESS_KEY,
-        JSON.stringify({
-          email,
-          slug: response.organization.slug,
-          pendingApproval: Boolean(response.pendingApproval),
-        }),
-      );
-      router.push("/register/success");
+      router.push(`/register/success?email=${encodeURIComponent(email)}&slug=${encodeURIComponent(response.organization.slug)}`);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Unable to complete registration");
     } finally {
@@ -375,18 +342,6 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="name@company.com"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-base font-semibold text-black">Security check <span className="text-red-600">*</span></label>
-                <p className="mb-2 text-sm text-black/70">Solve: {captchaQuestion || "Loading..."}</p>
-                <input
-                  type="text"
-                  required
-                  value={captchaAnswer}
-                  onChange={(e) => setCaptchaAnswer(e.target.value)}
-                  className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter answer"
                 />
               </div>
               <button

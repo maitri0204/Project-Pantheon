@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Country, State, City } from "country-state-city";
-import { apiRequest, establishAuthSession, navigateAfterLogin } from "@/lib/api";
+import { apiRequest, setStoredAuth } from "@/lib/api";
 import { PLATFORM_LOGIN_URL } from "@/lib/studentRegisterUrl";
 
 type OrgBranding = { companyName: string; logoUrl?: string; primaryColor: string; accentColor?: string };
@@ -195,7 +195,7 @@ export default function StudentRegisterPage() {
       }>("/auth/student-register/verify-otp", {
         method:"POST", body: JSON.stringify({ email: registeredEmail, otp }),
       });
-      await establishAuthSession({
+      setStoredAuth({
         token: res.token,
         user: res.user,
         orgCompanyName: organization.branding.companyName,
@@ -203,10 +203,7 @@ export default function StudentRegisterPage() {
         orgLogoUrl: organization.branding.logoUrl,
       });
       setStep("success");
-      setTimeout(
-        () => navigateAfterLogin(`/whitelabel/${res.organizationSlug || slug}/student/dashboard`),
-        1200,
-      );
+      setTimeout(() => router.push(`/whitelabel/${res.organizationSlug || slug}/student/dashboard`), 1200);
     } catch (err) { setError(err instanceof Error ? err.message : "Verification failed"); }
     finally { setSubmitting(false); }
   };

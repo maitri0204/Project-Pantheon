@@ -165,7 +165,7 @@ export default function DashboardPage() {
     if (auth.user.role === "ORG_ADMIN" && auth.orgSlug) {
       setOrgSlug(auth.orgSlug);
     }
-    apiRequest<DashboardResponse>("/platform/dashboard", {})
+    apiRequest<DashboardResponse>("/platform/dashboard", {}, auth.token)
       .then((res) => {
         setRole(res.role);
         setStats(res.stats);
@@ -189,7 +189,7 @@ export default function DashboardPage() {
     }
 
     const refreshStats = () => {
-      apiRequest<DashboardResponse>("/platform/dashboard", {})
+      apiRequest<DashboardResponse>("/platform/dashboard", {}, auth.token)
         .then((res) => setStats(res.stats))
         .catch(() => {});
     };

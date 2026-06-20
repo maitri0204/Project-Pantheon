@@ -1,5 +1,3 @@
-import { getStoredAuth } from "@/lib/api";
-
 export type Topic =
   | 'Language Readiness'
   | 'Scholastic Readiness'
@@ -70,6 +68,14 @@ export const PROFILE_KEY = 'ks_profile_v1';
 const USED_IDS_KEY = 'ks_used_q_ids_v1';
 const STUDENT_STORAGE_PREFIX = 'ks_student';
 
+interface StoredSessionUser {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+}
+
 function normalizeStorageSegment(value: string): string {
   return value
     .trim()
@@ -78,26 +84,16 @@ function normalizeStorageSegment(value: string): string {
     .replace(/^_+|_+$/g, '') || 'guest';
 }
 
-type StoredSessionUser = {
-  _id?: string;
-  id?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-};
-
 function readStoredSessionUser(): StoredSessionUser | null {
-  const auth = getStoredAuth();
-  if (!auth) {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem('user');
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredSessionUser;
+  } catch {
     return null;
   }
-
-  return {
-    id: auth.user.id,
-    email: auth.user.email,
-    firstName: auth.user.firstName,
-    lastName: auth.user.lastName,
-  };
 }
 
 export function getStudentStorageScope(): string {

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { apiRequest, clearStoredAuth, getStoredAuth } from "@/lib/api";
-import { PLATFORM_HOME_URL } from "@/lib/studentRegisterUrl";
+import { clearStoredAuth, getStoredAuth } from "@/lib/api";
 
 type StudentPortalShellProps = {
   children: React.ReactNode;
@@ -92,24 +92,6 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
     setEmail(auth.user.email);
     setOrgCompanyName(auth.orgCompanyName || "Organization");
     setOrgLogoUrl(auth.orgLogoUrl || "");
-
-    const brandingSlug = auth.orgSlug || slug;
-    if (brandingSlug && (!auth.orgLogoUrl || !auth.orgCompanyName)) {
-      void apiRequest<{
-        organization: { branding: { companyName: string; logoUrl?: string } };
-      }>(`/platform/whitelabel/${brandingSlug}`)
-        .then((response) => {
-          const branding = response.organization?.branding;
-          if (branding?.companyName) {
-            setOrgCompanyName(branding.companyName);
-          }
-          if (branding?.logoUrl) {
-            setOrgLogoUrl(branding.logoUrl);
-          }
-        })
-        .catch(() => undefined);
-    }
-
     setLoading(false);
   }, [router, slug]);
 
@@ -118,7 +100,7 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
 
   const logout = () => {
     clearStoredAuth();
-    router.replace(PLATFORM_HOME_URL);
+    router.replace("/");
   };
 
   if (loading) {
@@ -144,13 +126,15 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
 
         <div className="w-[140px] h-[56px] sm:w-[180px] sm:h-[72px] md:w-[200px] md:h-[84px] flex items-center justify-center text-white text-xs font-bold overflow-hidden rounded-xl">
           {orgLogoUrl ? (
-            <img
+            <Image
               src={orgLogoUrl}
               alt={`${orgCompanyName} logo`}
+              width={200}
+              height={84}
               className="h-full w-full object-contain"
             />
           ) : (
-            <span className="text-gray-700">{orgCompanyName.substring(0, 2).toUpperCase()}</span>
+            <span>{orgCompanyName.substring(0, 2).toUpperCase()}</span>
           )}
         </div>
       </nav>

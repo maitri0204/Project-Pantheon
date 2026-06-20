@@ -1,4 +1,4 @@
-import { API_URL, authenticatedFetch } from "@/lib/api";
+import { API_URL } from "@/lib/api";
 
 function litmusReportApiPath(reportFetchPath: string): string {
   return reportFetchPath.replace(/\/report$/, "/litmus-report");
@@ -6,11 +6,15 @@ function litmusReportApiPath(reportFetchPath: string): string {
 
 /** Download the Litmus parenting assessment PDF generated server-side via PDFKit. */
 export async function generateLitmusReport(
+  token: string,
   reportFetchPath: string,
   parentName: string,
 ): Promise<{ blob: Blob; fileName: string }> {
   const path = litmusReportApiPath(reportFetchPath);
-  const response = await authenticatedFetch(path);
+  const response = await fetch(`${API_URL}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
 
   if (!response.ok) {
     const rawText = await response.text();

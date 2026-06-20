@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
-import { getAttemptId, storeAttemptId } from "@/lib/assessmentAttemptSession";
 import AttemptHistoryResultSummary from "@/components/assessment/AttemptHistoryResultSummary";
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
 import { apiRequest, getStoredAuth } from "@/lib/api";
@@ -48,7 +47,7 @@ function AssessmentAttemptHistory(props: {
   const [error, setError] = useState<string | null>(null);
 
   const fetchAttempts = async () => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(loginHref);
       return;
     }
@@ -57,7 +56,7 @@ function AssessmentAttemptHistory(props: {
     setError(null);
 
     try {
-      const response = await apiRequest<AttemptHistoryResponse>(`/platform/student/assessments/${assessmentCode}/attempts`, {});
+      const response = await apiRequest<AttemptHistoryResponse>(`/platform/student/assessments/${assessmentCode}/attempts`, {}, auth.token);
       setAttempts(response.attempts || []);
     } catch (err) {
       if (!getStoredAuth()) {
@@ -74,7 +73,7 @@ function AssessmentAttemptHistory(props: {
   useEffect(() => {
     fetchAttempts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth?.user, assessmentCode]);
+  }, [auth?.token, assessmentCode]);
 
   return (
     <div className="space-y-5">
@@ -112,10 +111,7 @@ function AssessmentAttemptHistory(props: {
               return (
                 <button
                   key={attempt.attemptId}
-                  onClick={() => {
-                    storeAttemptId(assessmentCode, attempt.attemptId);
-                    router.push(buildStudentResultPath(slug, assessmentCode));
-                  }}
+                  onClick={() => router.push(buildStudentResultPath(slug, assessmentCode, { attemptId: attempt.attemptId }))}
                   className="w-full rounded-3xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-white"
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -176,7 +172,7 @@ function AttemptHistoryOrRedirect(props: {
   const [assessmentName, setAssessmentName] = useState(props.assessmentCode);
 
   useEffect(() => {
-    if (!auth?.user) {
+    if (!auth?.token) {
       router.replace(props.loginHref);
       return;
     }
@@ -190,7 +186,9 @@ function AttemptHistoryOrRedirect(props: {
       try {
         const response = await apiRequest<AttemptHistoryResponse>(
           `/platform/student/assessments/${props.assessmentCode}/attempts`,
-          {}                  );
+          {},
+          auth.token
+        );
         const attempts = response.attempts || [];
 
         if (cancelled) return;
@@ -214,8 +212,7 @@ function AttemptHistoryOrRedirect(props: {
         }
 
         const latestAttempt = attempts[attempts.length - 1];
-        storeAttemptId(props.assessmentCode, latestAttempt.attemptId);
-        router.replace(buildStudentResultPath(props.slug, props.assessmentCode));
+        router.replace(buildStudentResultPath(props.slug, props.assessmentCode, { attemptId: latestAttempt.attemptId }));
       } catch (err) {
         if (cancelled) return;
         if (!getStoredAuth()) {
@@ -235,7 +232,7 @@ function AttemptHistoryOrRedirect(props: {
     return () => {
       cancelled = true;
     };
-  }, [auth?.user, props.assessmentCode, props.loginHref, props.slug, router]);
+  }, [auth?.token, props.assessmentCode, props.loginHref, props.slug, router]);
 
   if (loading) {
     return (
@@ -285,8 +282,7 @@ export default function StudentAssessmentResultPage() {
   const searchParams = useSearchParams();
   const slug = params?.slug || "";
   const code = normalizeAssessmentCode(String(params?.code || ""));
-  const attemptIdFromUrl = searchParams?.get("attemptId") || "";
-  const attemptId = attemptIdFromUrl || getAttemptId(code) || "";
+  const attemptId = searchParams?.get("attemptId") || "";
 
   const attemptListHref = buildStudentResultPath(slug, code);
   const isMultiAttemptAssessment = allowsMultipleAttempts(code);

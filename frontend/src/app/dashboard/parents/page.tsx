@@ -51,7 +51,7 @@ export default function ParentsPage() {
   useEffect(() => {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
-    apiRequest<ParentsResponse>("/platform/parents", {})
+    apiRequest<ParentsResponse>("/platform/parents", {}, auth.token)
       .then((res) => {
         setParents(res.parents);
         setError(null);

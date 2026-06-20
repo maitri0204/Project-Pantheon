@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { apiRequest, clearStoredAuth, getStoredAuth } from "@/lib/api";
-import { PLATFORM_HOME_URL } from "@/lib/studentRegisterUrl";
 
 type NavDefinition = {
   label: string;
@@ -58,21 +57,6 @@ const navDefinitions: NavDefinition[] = [
           strokeLinejoin="round"
           strokeWidth={2}
           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: "Pending Approvals",
-    suffix: "/pending-organizations",
-    exact: false,
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
     ),
@@ -250,7 +234,7 @@ export default function DashboardShell({
     setAuthResolved(true);
 
     if (auth.user.role === "ORG_ADMIN" && auth.orgSlug && (!auth.orgLogoUrl || !auth.orgCompanyName)) {
-      void apiRequest<OrgBrandingResponse>(`/platform/whitelabel/${auth.orgSlug}`, {})
+      void apiRequest<OrgBrandingResponse>(`/platform/whitelabel/${auth.orgSlug}`, {}, auth.token)
         .then((res) => {
           const fetchedCompanyName = res.organization?.branding?.companyName || "";
           const fetchedLogoUrl = res.organization?.branding?.logoUrl || "";
@@ -318,7 +302,7 @@ export default function DashboardShell({
 
   const handleLogout = () => {
     clearStoredAuth();
-    router.replace(PLATFORM_HOME_URL);
+    router.replace(loginPath);
   };
 
   const isActive = (href: string, exact: boolean) => {

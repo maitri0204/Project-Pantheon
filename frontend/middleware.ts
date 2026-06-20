@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { AUTH_COOKIE_NAME } from "@/lib/authCookieConfig";
-import { getServerBackendApiUrl, validateAuthToken } from "@/lib/verifyAuthToken";
-
-const normalizeApiUrl = (): string => getServerBackendApiUrl();
+const normalizeApiUrl = (value?: string): string => {
+  const fallback = "http://localhost:5000/api";
+  const raw = (value || fallback).trim();
+  if (!raw) return fallback;
+  let normalized = raw.replace(/\/+$/, "");
+  if (!normalized.endsWith("/api")) {
+    normalized = `${normalized}/api`;
+  }
+  return normalized;
+};
 
 async function resolveWhitelabelSlug(hostname: string): Promise<string | null> {
-  const apiUrl = normalizeApiUrl();
+  const apiUrl = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
   try {
     const response = await fetch(
       `${apiUrl}/platform/whitelabel-by-host?host=${encodeURIComponent(hostname)}`,
-      { next: { revalidate: 300 } },
+      { cache: "no-store" },
     );
     if (!response.ok) {
       return null;
@@ -22,53 +28,12 @@ async function resolveWhitelabelSlug(hostname: string): Promise<string | null> {
   }
 }
 
-function isProtectedPath(pathname: string): boolean {
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/reviewer/")) {
-    return true;
-  }
-
-  const whitelabelProtected = pathname.match(/^\/whitelabel\/[^/]+\/(student|dashboard)(\/|$)/);
-  if (whitelabelProtected) {
-    if (pathname.includes("/student/login") || pathname.includes("/student/register")) {
-      return false;
-    }
-    if (/^\/whitelabel\/[^/]+\/login\/?$/.test(pathname)) {
-      return false;
-    }
-    return true;
-  }
-
-  if (pathname.startsWith("/student")) {
-    if (pathname.startsWith("/student/login") || pathname.startsWith("/student/register")) {
-      return false;
-    }
-    return true;
-  }
-
-  return false;
-}
-
-function getLoginRedirect(pathname: string, request: NextRequest, tenantSlug?: string | null): URL {
-  const slugFromPath = pathname.match(/^\/whitelabel\/([^/]+)/)?.[1];
-  const slug = slugFromPath || tenantSlug;
-
-  if (slug && (pathname.includes("/student") || pathname.startsWith("/student"))) {
-    return new URL(`/whitelabel/${slug}/student/login`, request.url);
-  }
-
-  if (slug) {
-    return new URL(`/whitelabel/${slug}/login`, request.url);
-  }
-
-  return new URL("/login", request.url);
-}
-
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || "";
-  const hostname = host.split(":")[0].toLowerCase();
+  const hostname = host.split(":")[0];
   const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname === "/session") {
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
     return NextResponse.next();
   }
 
@@ -86,31 +51,17 @@ export async function middleware(request: NextRequest) {
     hostname === `www.${mainDomain}` ||
     hostname.endsWith(`.${mainDomain}`);
 
-  let tenantSlug: string | null = null;
-  let response: NextResponse;
-
   if (isMainDomain) {
-    response = NextResponse.next();
-  } else {
-    tenantSlug = await resolveWhitelabelSlug(hostname);
-    if (tenantSlug) {
-      const rewritePath = pathname === "/" ? "" : pathname;
-      response = NextResponse.rewrite(new URL(`/whitelabel/${tenantSlug}${rewritePath}`, request.url));
-    } else if (process.env.NODE_ENV === "production") {
-      return NextResponse.json({ message: "Unknown host" }, { status: 404 });
-    } else {
-      response = NextResponse.next();
-    }
+    return NextResponse.next();
   }
 
-  if (isProtectedPath(pathname)) {
-    const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
-    if (!token || !(await validateAuthToken(token))) {
-      return NextResponse.redirect(getLoginRedirect(pathname, request, tenantSlug));
-    }
+  const slug = await resolveWhitelabelSlug(hostname);
+  if (slug) {
+    const rewritePath = pathname === "/" ? "" : pathname;
+    return NextResponse.rewrite(new URL(`/whitelabel/${slug}${rewritePath}`, request.url));
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

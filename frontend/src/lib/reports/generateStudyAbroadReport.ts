@@ -166,30 +166,16 @@ async function captureStudyAbroadReportPdf(context: StudyAbroadPrintContext): Pr
   }
 }
 
-function resolveAttemptId(reportFetchPath: string): string {
-  const match = reportFetchPath.match(/\/attempts\/([^/]+)\/report$/);
-  if (!match?.[1]) {
-    throw new Error("Unable to resolve attempt for Study Abroad report");
-  }
-  return match[1];
-}
-
-/** Builds the premium multi-page Study Abroad PDF (same layout as report-print). */
+/** Builds the premium PDF (7+ pages when strengths/roadmap continue) in the background. Used for download and email. */
 export async function generateStudyAbroadReportForEmail(
+  token: string,
   attemptId: string,
   reportFetchPath?: string,
 ): Promise<{ blob: Blob; fileName: string }> {
-  const context = await fetchStudyAbroadPrintContext(attemptId, reportFetchPath);
+  const context = await fetchStudyAbroadPrintContext(token, attemptId, reportFetchPath);
   const blob = await captureStudyAbroadReportPdf(context);
   const fileName = `Study-Abroad-Report-${context.studentName.replace(/\s+/g, "-")}.pdf`;
   return { blob, fileName };
-}
-
-export async function generateStudyAbroadReport(
-  reportFetchPath: string,
-  _studentName: string,
-): Promise<{ blob: Blob; fileName: string }> {
-  return generateStudyAbroadReportForEmail(resolveAttemptId(reportFetchPath), reportFetchPath);
 }
 
 export function studyAbroadPrintReportPath(

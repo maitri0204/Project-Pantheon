@@ -88,6 +88,7 @@ export type AssessmentAdminDashboardResponse = {
 };
 
 export async function fetchAssessmentAdminDashboard(
+  token: string,
   assessmentCode: string,
   options?: { organizationSlug?: string },
 ): Promise<AssessmentAdminDashboardResponse> {
@@ -98,5 +99,6 @@ export async function fetchAssessmentAdminDashboard(
   return apiRequest<AssessmentAdminDashboardResponse>(
     `/platform/assessments/${code}/admin-dashboard${slugQuery}`,
     {},
+    token,
   );
 }

@@ -83,10 +83,10 @@ export default function AssessmentsPage() {
     try {
       let list: Assessment[];
       if (orgAdmin) {
-        const res = await apiRequest<SuperadminResponse>("/platform/assessments", {});
+        const res = await apiRequest<SuperadminResponse>("/platform/assessments", {}, currentAuth.token);
         list = res.assessments;
       } else {
-        const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {});
+        const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, currentAuth.token);
         list = res.assessments;
       }
       setAssessments(list);
@@ -122,7 +122,7 @@ export default function AssessmentsPage() {
       await apiRequest(`/superadmin/assessments/${code}/release-date`, {
         method: "PATCH",
         body: JSON.stringify({ releaseDate }),
-      });
+      }, auth.token);
       setMessage(
         releaseDate
           ? `Release date updated for ${normalizeAssessmentCodeForDisplay(code)}.`
@@ -149,7 +149,7 @@ export default function AssessmentsPage() {
           gstEnabled: Boolean(gstEnabledDrafts[code]),
           gstPercentage: Number(gstRateDrafts[code] || 0),
         }),
-      });
+      }, auth.token);
       setMessage(`Pricing updated for ${normalizeAssessmentCodeForDisplay(code)}.`);
       await load();
     } catch (e) {

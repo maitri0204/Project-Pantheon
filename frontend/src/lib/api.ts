@@ -1,7 +1,5 @@
-import { clearSessionCookie, syncSessionCookie } from "@/lib/sessionCookie";
-
 const normalizeApiUrl = (value?: string): string => {
-  const fallback = typeof window === "undefined" ? "http://localhost:5000/api" : "/api";
+  const fallback = "http://localhost:5000/api";
   const raw = (value || fallback).trim();
 
   if (!raw) {
@@ -19,6 +17,7 @@ const normalizeApiUrl = (value?: string): string => {
 export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export type StoredAuth = {
+  token: string;
   user: {
     id: string;
     firstName: string;
@@ -37,30 +36,10 @@ export type StoredAuth = {
   organizationSlug?: string;
 };
 
-type SetStoredAuthInput = StoredAuth & { token?: string };
+const MAX_AUTH_TOKEN_LENGTH = 8192;
 
-const clearLegacyAuthStorage = (): void => {
-  window.localStorage.removeItem("token");
-  window.localStorage.removeItem("user");
-};
-
-const stripLegacyTokenFromStorage = (): void => {
-  const raw = window.localStorage.getItem("pantheon-auth");
-  if (!raw) {
-    return;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (!("token" in parsed)) {
-      return;
-    }
-
-    delete parsed.token;
-    window.localStorage.setItem("pantheon-auth", JSON.stringify(parsed));
-  } catch {
-    window.localStorage.removeItem("pantheon-auth");
-  }
+const isTokenTooLarge = (token?: string): boolean => {
+  return Boolean(token && token.length > MAX_AUTH_TOKEN_LENGTH);
 };
 
 export const getStoredAuth = (): StoredAuth | null => {
@@ -68,81 +47,51 @@ export const getStoredAuth = (): StoredAuth | null => {
     return null;
   }
 
-  stripLegacyTokenFromStorage();
-
   const raw = window.localStorage.getItem("pantheon-auth");
   if (!raw) {
     return null;
   }
 
   try {
-    return JSON.parse(raw) as StoredAuth;
+    const auth = JSON.parse(raw) as StoredAuth;
+    if (isTokenTooLarge(auth?.token)) {
+      clearStoredAuth();
+      return null;
+    }
+    return auth;
   } catch (error) {
+    // Log parse errors to aid debugging and clear invalid stored state
+    // Keep behavior of clearing stored auth to avoid infinite parse loops
     // eslint-disable-next-line no-console
-    console.error("getStoredAuth: failed to parse stored auth", error);
+    console.error("getStoredAuth: failed to parse stored auth", error, raw);
     clearStoredAuth();
     return null;
   }
 };
 
-export const setStoredAuth = (value: SetStoredAuthInput): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const { token, ...profile } = value;
-  clearLegacyAuthStorage();
-  window.localStorage.setItem("pantheon-auth", JSON.stringify(profile));
-  if (token?.trim()) {
-    void syncSessionCookie(token.trim());
-  }
+export const setStoredAuth = (value: StoredAuth): void => {
+  window.localStorage.setItem("pantheon-auth", JSON.stringify(value));
 };
-
-/** Navigate to a protected route after login — full navigation ensures middleware sees the new cookie. */
-export const navigateAfterLogin = (path: string): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.location.assign(path);
-};
-
-/** Persist session profile and wait for the HttpOnly cookie before navigating to protected routes. */
-export async function establishAuthSession(value: SetStoredAuthInput): Promise<void> {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const { token, ...profile } = value;
-  clearLegacyAuthStorage();
-  window.localStorage.setItem("pantheon-auth", JSON.stringify(profile));
-  if (token?.trim()) {
-    await syncSessionCookie(token.trim());
-  }
-}
 
 export const clearStoredAuth = (): void => {
-  if (typeof window === "undefined") {
-    return;
-  }
-
   window.localStorage.removeItem("pantheon-auth");
-  clearLegacyAuthStorage();
-  void clearSessionCookie();
-  void fetch(`${API_URL}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => undefined);
 };
-
-export const isAuthenticated = (): boolean => Boolean(getStoredAuth()?.user?.id);
 
 export const apiRequest = async <T>(
   path: string,
   options: RequestInit = {},
+  token?: string
 ): Promise<T> => {
+  if (isTokenTooLarge(token)) {
+    clearStoredAuth();
+    throw new Error("Authentication token is invalid or too large. Please log in again.");
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     cache: "no-store",
@@ -157,6 +106,7 @@ export const apiRequest = async <T>(
     try {
       data = JSON.parse(rawText);
     } catch (error) {
+      // Log malformed JSON responses for easier debugging
       // eslint-disable-next-line no-console
       console.error("apiRequest: failed to parse JSON response", error, rawText);
       data = { message: "Invalid JSON response from server" };
@@ -170,7 +120,7 @@ export const apiRequest = async <T>(
     const shouldClearAuth =
       response.status === 401 &&
       typeof window !== "undefined" &&
-      isAuthenticated() &&
+      Boolean(token) &&
       !path.includes("/email-report") &&
       (authFailureMessage === "Invalid or expired token"
         || authFailureMessage === "Invalid session"
@@ -184,24 +134,18 @@ export const apiRequest = async <T>(
   return data as T;
 };
 
-/** Authenticated fetch for binary responses (PDF download, etc.). */
-export const authenticatedFetch = async (
-  path: string,
-  options: RequestInit = {},
-): Promise<Response> => {
-  return fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    cache: "no-store",
-  });
-};
-
 /** Upload a generated report PDF for email delivery (multipart; avoids large JSON base64 payloads). */
 export const uploadEmailReportPdf = async <T = { message: string }>(
   path: string,
   pdfBlob: Blob,
   fileName: string,
+  token?: string,
 ): Promise<T> => {
+  if (isTokenTooLarge(token)) {
+    clearStoredAuth();
+    throw new Error("Authentication token is invalid or too large. Please log in again.");
+  }
+
   if (!pdfBlob.size) {
     throw new Error("Report PDF was empty. Please try downloading the report first.");
   }
@@ -217,7 +161,9 @@ export const uploadEmailReportPdf = async <T = { message: string }>(
 
   const response = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    credentials: "include",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: formData,
     cache: "no-store",
   });
