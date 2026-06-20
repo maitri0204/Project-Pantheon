@@ -5,7 +5,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { clearStoredAuth, getStoredAuth } from "@/lib/api";
+import { apiRequest, clearStoredAuth, getStoredAuth } from "@/lib/api";
+import { PLATFORM_HOME_URL } from "@/lib/studentRegisterUrl";
 
 type StudentPortalShellProps = {
   children: React.ReactNode;
@@ -100,7 +101,7 @@ export default function StudentPortalShell({ children, slug }: StudentPortalShel
 
   const logout = () => {
     clearStoredAuth();
-    router.replace("/");
+    router.replace(PLATFORM_HOME_URL);
   };
 
   if (loading) {
