@@ -14,6 +14,7 @@ import {
   verifySignupOtp,
   verifyStudentRegisterOtp,
   logout,
+  validateSession,
 } from "../controllers/authController";
 import { requireAuth } from "../middleware/auth";
 
@@ -52,6 +53,7 @@ router.post("/signup/verify-otp", authAttemptLimit, verifySignupOtp);
 router.post("/login", authAttemptLimit, login);
 router.post("/login/verify-otp", authAttemptLimit, verifyLoginOtp);
 router.post("/logout", logout);
+router.get("/validate-session", validateSession);
 router.post("/student-register", otpRequestLimit, studentRegister);
 router.post("/student-register/verify-otp", authAttemptLimit, verifyStudentRegisterOtp);
 router.get("/me", requireAuth, getMe);

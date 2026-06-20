@@ -1,21 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { isValidAuthToken } from "@/lib/verifyAuthToken";
+import { AUTH_COOKIE_NAME } from "@/lib/authCookieConfig";
+import { getServerBackendApiUrl, validateAuthToken } from "@/lib/verifyAuthToken";
 
-const AUTH_COOKIE_NAME = "pantheon_token";
-
-const normalizeApiUrl = (value?: string): string => {
-  const fallback = process.env.API_PROXY_TARGET
-    ? `${process.env.API_PROXY_TARGET.replace(/\/+$/, "")}/api`
-    : "http://localhost:5000/api";
-  const raw = (value || process.env.NEXT_PUBLIC_API_URL || fallback).trim();
-  if (!raw) return fallback;
-  let normalized = raw.replace(/\/+$/, "");
-  if (!normalized.endsWith("/api")) {
-    normalized = `${normalized}/api`;
-  }
-  return normalized;
-};
+const normalizeApiUrl = (): string => getServerBackendApiUrl();
 
 async function resolveWhitelabelSlug(hostname: string): Promise<string | null> {
   const apiUrl = normalizeApiUrl();
@@ -117,7 +105,7 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedPath(pathname)) {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
-    if (!token || !(await isValidAuthToken(token))) {
+    if (!token || !(await validateAuthToken(token))) {
       return NextResponse.redirect(getLoginRedirect(pathname, request, tenantSlug));
     }
   }

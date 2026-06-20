@@ -21,8 +21,8 @@ import {
   OTP_TOO_MANY_MESSAGE,
   registerFailedOtpAttempt,
 } from "../services/authSecurity";
-import { signToken } from "../services/token";
-import { clearAuthCookie, setAuthCookie } from "../services/authCookie";
+import { signToken, verifyToken } from "../services/token";
+import { clearAuthCookie, getAuthTokenFromRequest, setAuthCookie } from "../services/authCookie";
 import { AuthRequest } from "../types/auth";
 
 const formatUser = (user: IUser) => ({
@@ -61,6 +61,25 @@ const issueAuthSession = (
 export const logout = async (_req: Request, res: Response): Promise<void> => {
   clearAuthCookie(res);
   res.json({ message: "Logged out successfully" });
+};
+
+export const validateSession = (req: Request, res: Response): void => {
+  try {
+    const token = getAuthTokenFromRequest({
+      authorizationHeader: req.headers.authorization,
+      cookieHeader: req.headers.cookie,
+    });
+
+    if (!token) {
+      res.status(401).json({ valid: false });
+      return;
+    }
+
+    verifyToken(token);
+    res.json({ valid: true });
+  } catch {
+    res.status(401).json({ valid: false });
+  }
 };
 
 const validateCaptchaPayload = async (captchaToken?: string, captchaAnswer?: string): Promise<boolean> => {
