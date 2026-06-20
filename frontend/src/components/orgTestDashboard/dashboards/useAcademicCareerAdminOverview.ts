@@ -17,12 +17,12 @@ export function useAcademicCareerAdminOverview(loginPath: string, organizationSl
 
   useEffect(() => {
     const auth = getStoredAuth();
-    if (!auth?.token) {
+    if (!auth?.user) {
       router.replace(loginPath);
       return;
     }
 
-    fetchAcademicCareerAdminOverview(auth.token, { organizationSlug })
+    fetchAcademicCareerAdminOverview({ organizationSlug })
       .then((res) => setOverview(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load analytics"))
       .finally(() => setLoading(false));

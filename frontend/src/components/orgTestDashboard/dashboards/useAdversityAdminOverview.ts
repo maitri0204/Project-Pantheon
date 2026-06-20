@@ -17,12 +17,12 @@ export function useAdversityAdminOverview(loginPath: string, organizationSlug?: 
 
   useEffect(() => {
     const auth = getStoredAuth();
-    if (!auth?.token) {
+    if (!auth?.user) {
       router.replace(loginPath);
       return;
     }
 
-    fetchAdversityAdminOverview(auth.token, { organizationSlug })
+    fetchAdversityAdminOverview({ organizationSlug })
       .then((res) => setOverview(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load analytics"))
       .finally(() => setLoading(false));

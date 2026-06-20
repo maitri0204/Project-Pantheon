@@ -21,12 +21,12 @@ export function useAssessmentOrgDashboard(
 
   useEffect(() => {
     const auth = getStoredAuth();
-    if (!auth?.token) {
+    if (!auth?.user) {
       router.replace(loginPath);
       return;
     }
 
-    fetchAssessmentAdminDashboard(auth.token, assessmentCode, {
+    fetchAssessmentAdminDashboard(assessmentCode, {
       organizationSlug,
     })
       .then((res) => setData(res))

@@ -14,6 +14,8 @@ export const validateEnvironmentVariables = (): void => {
     "SMTP_PASS",
     "RAZORPAY_KEY_ID",
     "RAZORPAY_KEY_SECRET",
+    "ENCRYPTION_KEY",
+    "RAZORPAY_WEBHOOK_SECRET",
   ];
 
   const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
@@ -49,6 +51,10 @@ export const validateEnvironmentVariables = (): void => {
       console.warn(`⚠️  Optional environment variable not set: ${name} (${suggestion})`);
     }
   });
+
+  if (isProduction && process.env.ORG_REGISTRATION_REQUIRES_APPROVAL === "false") {
+    console.warn("⚠️  ORG_REGISTRATION_REQUIRES_APPROVAL=false; new org registrations are auto-approved without superadmin review.");
+  }
 
   // Validate critical env vars have reasonable values
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.length < 16) {

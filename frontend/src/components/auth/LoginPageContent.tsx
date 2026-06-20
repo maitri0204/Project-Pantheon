@@ -80,7 +80,7 @@ export default function LoginPageContent({ forcedOrganizationSlug }: LoginPageCo
         : "/platform/dashboard";
 
       try {
-        await apiRequest(validationPath, {}, auth.token);
+        await apiRequest(validationPath, {});
       } catch (err) {
         // eslint-disable-next-line no-console
         console.warn("validateAndRedirect: token validation failed", err);

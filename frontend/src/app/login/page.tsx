@@ -6,13 +6,15 @@ import { Suspense } from "react";
 
 import LoginPageContent from "@/components/auth/LoginPageContent";
 
+const ORGANIZATION_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const organizationSlug = searchParams?.get("organizationSlug")?.toLowerCase().trim();
-    if (organizationSlug) {
+    if (organizationSlug && ORGANIZATION_SLUG_PATTERN.test(organizationSlug)) {
       router.replace(`/whitelabel/${organizationSlug}/login`);
     }
   }, [router, searchParams]);

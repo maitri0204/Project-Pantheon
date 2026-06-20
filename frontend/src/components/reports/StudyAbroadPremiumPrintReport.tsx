@@ -672,7 +672,7 @@ export default function StudyAbroadPremiumPrintReport({
 
   return (
     <div className={rootClassName}>
-      <style dangerouslySetInnerHTML={{ __html: STYLES }} />
+      <style>{STYLES}</style>
 
       {showToolbar ? (
         <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'linear-gradient(135deg,#6366f1,#9333ea)', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>

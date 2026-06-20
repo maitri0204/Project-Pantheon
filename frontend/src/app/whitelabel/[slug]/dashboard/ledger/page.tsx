@@ -88,7 +88,7 @@ export default function OrgLedgerPage() {
       return;
     }
 
-    apiRequest<{ invoices: InvoiceItem[]; summary: Summary }>("/platform/organization/invoices", {}, auth.token)
+    apiRequest<{ invoices: InvoiceItem[]; summary: Summary }>("/platform/organization/invoices", {})
       .then((res) => setInvoices(res.invoices))
       .catch(() => setError("Failed to load invoices."))
       .finally(() => setLoading(false));

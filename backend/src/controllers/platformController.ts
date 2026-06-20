@@ -32,8 +32,11 @@ import {
   formatAssessmentReleaseLabel,
   isAssessmentReleased,
 } from "../services/assessmentRelease";
-import { refreshOrganizationCorsOrigins } from "../services/corsOrigins";
+import { isOrganizationWebsiteHostname, refreshOrganizationCorsOrigins } from "../services/corsOrigins";
 import { isAllowedOrganizationWebsite } from "../services/websiteValidation";
+import { isBase64ImageWithinLimit, isPdfBuffer, sanitizeAttachmentFileName } from "../services/uploadValidation";
+import { toSafeClientErrorMessage } from "../services/safeErrorMessage";
+import { decryptRegistrationSensitiveFields } from "../services/sensitiveData";
 import { sendAssessmentReportToStudent } from "../services/email";
 import { buildCareerDnaReportData } from "../services/careerDnaReport/buildCareerDnaReportData";
 import { buildCareerDnaExecutiveHtml } from "../services/careerDnaReport/buildCareerDnaExecutiveHtml";
@@ -45,6 +48,8 @@ import { generateLitmusReportPdf } from "../services/litmusReport/generateLitmus
 import { buildCareerCompassReportData } from "../services/careerCompassReport/buildCareerCompassReportData";
 import { generateCareerCompassReportPdf } from "../services/careerCompassReport/generateCareerCompassReport";
 import { renderHtmlReportPdf } from "../services/reportPdf/renderHtmlReportPdf";
+import { buildStudyAbroadReportHtml } from "../services/studyAbroadReport/buildStudyAbroadReportHtml";
+import type { StudyAbroadEvaluationResult } from "../services/studyAbroadScoring.service";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -276,7 +281,7 @@ const mapQuestionBankToAttemptQuestions = (
     sourceTestType: sourceQuestion?.testType,
     partNumber: sourceQuestion?.partNumber,
     passage: sourceQuestion?.passage,
-    options: question.options ?? [],
+    options: question.options?.map(({ label, text }) => ({ label, text })) ?? [],
     answer: undefined,
   };
 });
@@ -481,11 +486,9 @@ export const getPlatformOverview = async (_req: AuthRequest, res: Response): Pro
   res.json({
     platform: {
       assessmentCount,
-      organizationCount,
       capabilities: [
         "Unified assessment catalog",
         "Whitelabel organization support",
-        "Superadmin pricing and coupon management",
         "OTP + captcha auth",
       ],
     },
@@ -602,14 +605,31 @@ export const getWhitelabelPortalByHost = async (req: AuthRequest, res: Response)
     return;
   }
 
-  const escapedHost = normalizedHost.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const organization = await Organization.findOne({
+  const hostCandidates = [
+    normalizedHost,
+    `www.${normalizedHost}`,
+    `https://${normalizedHost}`,
+    `https://www.${normalizedHost}`,
+    `http://${normalizedHost}`,
+    `http://www.${normalizedHost}`,
+  ];
+
+  let organization = await Organization.findOne({
     isActive: true,
     type: "WHITELABEL",
-    website: {
-      $regex: new RegExp(`^(https?://)?(www\\.)?${escapedHost}(/|$)`, "i"),
-    },
+    website: { $in: hostCandidates },
   });
+
+  if (!organization) {
+    const escapedHost = normalizedHost.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    organization = await Organization.findOne({
+      isActive: true,
+      type: "WHITELABEL",
+      website: {
+        $regex: new RegExp(`^(https?://)?(www\\.)?${escapedHost}(/|$)`, "i"),
+      },
+    });
+  }
 
   if (!organization) {
     res.status(404).json({ message: "Whitelabel organization not found for this host" });
@@ -642,6 +662,37 @@ const getSiteVisitStats = async (): Promise<SiteVisitStats> => {
 
 export const recordSiteVisit = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+    const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+    const frontendUrl = process.env.FRONTEND_URL?.split(",")[0]?.trim();
+    const mainDomain = (process.env.MAIN_DOMAIN || "assessments.admitra.io").trim().toLowerCase();
+
+    const isAllowedSource = [origin, referer].some((value) => {
+      if (!value) {
+        return false;
+      }
+
+      try {
+        const hostname = new URL(value).hostname.toLowerCase();
+        return (
+          hostname === "localhost"
+          || hostname === "127.0.0.1"
+          || hostname === mainDomain
+          || hostname === `www.${mainDomain}`
+          || hostname.endsWith(`.${mainDomain}`)
+          || isOrganizationWebsiteHostname(hostname)
+          || (frontendUrl ? value.startsWith(frontendUrl) : false)
+        );
+      } catch {
+        return false;
+      }
+    });
+
+    if (!isAllowedSource) {
+      res.status(403).json({ message: "Invalid site visit source" });
+      return;
+    }
+
     const page = typeof req.body?.page === "string" ? req.body.page.trim().toLowerCase() : "";
     const incrementField = page === "home"
       ? "homePageVisits"
@@ -1459,7 +1510,10 @@ type InvoiceListItem = {
   organization: InvoiceOrganizationSummary | null;
 };
 
-const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<InvoiceListItem[]> => {
+const buildInvoiceListItems = async (
+  query: Record<string, unknown>,
+  audience: "student" | "org_admin" = "org_admin",
+): Promise<InvoiceListItem[]> => {
   const invoices = await Invoice.find(query)
     .populate("user", "firstName lastName email phone grade institutionName city state country")
     .populate("organization", "name slug contactEmail website branding.companyName branding.logoUrl")
@@ -1575,26 +1629,37 @@ const buildInvoiceListItems = async (query: Record<string, unknown>): Promise<In
         state: invoice.user.state,
         country: invoice.user.country,
       } : null,
-      organization: invoice.organization ? {
-        _id: String(invoice.organization._id),
-        name: String(invoice.organization.name || ""),
-        slug: String(invoice.organization.slug || ""),
-        contactEmail: invoice.organization.contactEmail,
-        website: invoice.organization.website,
-        phone: registrationByOrganizationId.get(String(invoice.organization._id))?.primaryMobile,
-        officeAddress: registrationByOrganizationId.get(String(invoice.organization._id))?.officeAddress,
-        state: registrationByOrganizationId.get(String(invoice.organization._id))?.state,
-        country: registrationByOrganizationId.get(String(invoice.organization._id))?.country,
-        panNumber: registrationByOrganizationId.get(String(invoice.organization._id))?.panCompany,
-        gstNumber: registrationByOrganizationId.get(String(invoice.organization._id))?.gstNumber,
-        signatoryFirstName: registrationByOrganizationId.get(String(invoice.organization._id))?.firstName,
-        signatoryLastName: registrationByOrganizationId.get(String(invoice.organization._id))?.lastName,
-        signatureUrl: registrationByOrganizationId.get(String(invoice.organization._id))?.signatureUrl,
-        branding: {
-          companyName: invoice.organization.branding?.companyName,
-          logoUrl: invoice.organization.branding?.logoUrl,
-        },
-      } : null,
+      organization: invoice.organization ? (() => {
+        const registration = registrationByOrganizationId.get(String(invoice.organization._id));
+        const base = {
+          _id: String(invoice.organization._id),
+          name: String(invoice.organization.name || ""),
+          slug: String(invoice.organization.slug || ""),
+          branding: {
+            companyName: invoice.organization.branding?.companyName,
+            logoUrl: invoice.organization.branding?.logoUrl,
+          },
+        };
+
+        if (audience === "student") {
+          return base;
+        }
+
+        return {
+          ...base,
+          contactEmail: invoice.organization.contactEmail,
+          website: invoice.organization.website,
+          phone: registration?.primaryMobile,
+          officeAddress: registration?.officeAddress,
+          state: registration?.state,
+          country: registration?.country,
+          panNumber: registration?.panCompany,
+          gstNumber: registration?.gstNumber,
+          signatoryFirstName: registration?.firstName,
+          signatoryLastName: registration?.lastName,
+          signatureUrl: registration?.signatureUrl,
+        };
+      })() : null,
     };
   });
 };
@@ -1739,7 +1804,7 @@ export const createReviewerPaymentOrder = async (req: AuthRequest, res: Response
       currency: REVIEWER_PAYMENT_CURRENCY,
     });
   } catch (error) {
-    res.status(400).json({ message: error instanceof Error ? error.message : "Unable to create reviewer payment order" });
+    res.status(400).json({ message: toSafeClientErrorMessage(error, "Unable to create reviewer payment order") });
   }
 };
 
@@ -1784,6 +1849,40 @@ export const verifyReviewerPayment = async (req: AuthRequest, res: Response): Pr
       return;
     }
 
+    const pendingPayment = await ReviewerPayment.findOne({
+      razorpayOrderId: razorpay_order_id,
+      user: req.user._id,
+    });
+
+    if (!pendingPayment) {
+      res.status(404).json({ message: "Reviewer payment order not found" });
+      return;
+    }
+
+    const razorpay = getRazorpayClient();
+    if (razorpay) {
+      try {
+        const payment = await razorpay.payments.fetch(razorpay_payment_id);
+        const expectedAmount = Math.round(Number(pendingPayment.amount || 0) * 100);
+        const paidAmount = Number(payment.amount || 0);
+        const paymentStatus = String(payment.status || "").toLowerCase();
+        if (
+          String(payment.order_id || "") !== razorpay_order_id
+          || paidAmount !== expectedAmount
+          || (paymentStatus !== "captured" && paymentStatus !== "authorized")
+        ) {
+          pendingPayment.status = "FAILED";
+          await pendingPayment.save();
+          res.status(400).json({ message: "Payment amount or status verification failed" });
+          return;
+        }
+      } catch (paymentFetchError) {
+        console.error("verifyReviewerPayment: Razorpay fetch failed", paymentFetchError);
+        res.status(502).json({ message: "Unable to verify payment with Razorpay" });
+        return;
+      }
+    }
+
     const paymentRecord = await ReviewerPayment.findOneAndUpdate(
       {
         razorpayOrderId: razorpay_order_id,
@@ -1817,7 +1916,7 @@ export const verifyReviewerPayment = async (req: AuthRequest, res: Response): Pr
 
     res.json({ message: "Payment verified", paymentId: String(paymentRecord._id) });
   } catch (error) {
-    res.status(500).json({ message: error instanceof Error ? error.message : "Unable to verify reviewer payment" });
+    res.status(500).json({ message: toSafeClientErrorMessage(error, "Unable to verify reviewer payment") });
   }
 };
 
@@ -2555,7 +2654,7 @@ export const getStudentAssessmentPricing = async (req: AuthRequest, res: Respons
     });
     res.json(pricing);
   } catch (error) {
-    res.status(400).json({ message: error instanceof Error ? error.message : "Unable to calculate pricing" });
+    res.status(400).json({ message: toSafeClientErrorMessage(error, "Unable to calculate pricing") });
   }
 };
 
@@ -2570,7 +2669,7 @@ export const listStudentInvoices = async (req: AuthRequest, res: Response): Prom
     user: req.user!._id,
     organization: req.user!.organization,
     status: "PAID",
-  });
+  }, "student");
 
   res.json({
     invoices: invoices.filter((invoice) => isAssessmentAccessibleForLearner(learnerRole, invoice.assessmentCode, req.user?.grade)),
@@ -2721,7 +2820,7 @@ export const createStudentAssessmentPaymentOrder = async (req: AuthRequest, res:
       pricing,
     });
   } catch (error) {
-    res.status(400).json({ message: error instanceof Error ? error.message : "Unable to create payment order" });
+    res.status(400).json({ message: toSafeClientErrorMessage(error, "Unable to create payment order") });
   }
 };
 
@@ -3103,7 +3202,7 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
       { $set: { status: "PAID" } },
     );
     res.status(409).json({
-      message: error instanceof Error ? error.message : "Unable to allocate coupon",
+      message: toSafeClientErrorMessage(error, "Unable to allocate coupon"),
     });
     return;
   }
@@ -3429,12 +3528,12 @@ export const getStudentAttemptReport = async (req: AuthRequest, res: Response): 
 
 const supportsServerEmailReportPdf = (assessmentCode: string): boolean => {
   const code = normalizeAssessmentCode(assessmentCode);
-  // RQ, Study Abroad, and Academic Career use premium client-built PDFs (uploaded via multipart).
   return isCareerCompassAssessmentCode(code)
     || isLitmusAssessmentCode(code)
     || code === "CAREER_DNA"
     || isMetacognitionAssessmentCode(code)
-    || isClearAssessmentCode(code);
+    || isClearAssessmentCode(code)
+    || isStudyAbroadAssessmentCode(code);
 };
 
 const buildAttemptEmailReportPdf = async (
@@ -3487,6 +3586,14 @@ const buildAttemptEmailReportPdf = async (
     return {
       buffer,
       fileName: `CLEAR_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
+  if (isStudyAbroadAssessmentCode(code)) {
+    const { buffer, studentName } = await buildStudyAbroadPdfBufferForAttempt(attempt);
+    return {
+      buffer,
+      fileName: `Study_Abroad_Report_${studentName.replace(/\s+/g, "_")}.pdf`,
     };
   }
 
@@ -3543,8 +3650,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
   const canGenerateOnServer = supportsServerEmailReportPdf(attempt.assessmentCode);
   const code = normalizeAssessmentCode(attempt.assessmentCode);
   const requiresClientPdf = code === RESILIENCE_ASSESSMENT_CODE
-    || isAcademicCareerAssessmentCode(code)
-    || isStudyAbroadAssessmentCode(code);
+    || isAcademicCareerAssessmentCode(code);
 
   const shouldGenerateOnServer = hasClientPdf
     ? false
@@ -3579,7 +3685,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
   } catch (error) {
     console.error("emailStudentAttemptReport pdf build error:", error);
     res.status(503).json({
-      message: error instanceof Error ? error.message : "Failed to generate report PDF for email",
+      message: toSafeClientErrorMessage(error, "Failed to generate report PDF for email"),
     });
     return;
   }
@@ -3588,6 +3694,13 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
     res.status(503).json({ message: "Report PDF was empty" });
     return;
   }
+
+  if (!isPdfBuffer(pdfBuffer)) {
+    res.status(400).json({ message: "Only PDF files are allowed" });
+    return;
+  }
+
+  resolvedFileName = sanitizeAttachmentFileName(resolvedFileName, safeName);
 
   if (pdfBuffer.length > maxEmailPdfBytes) {
     res.status(413).json({ message: "Report file is too large to email" });
@@ -3605,7 +3718,7 @@ export const emailStudentAttemptReport = async (req: AuthRequest, res: Response)
   } catch (error) {
     console.error("emailStudentAttemptReport error:", error);
     res.status(503).json({
-      message: error instanceof Error ? error.message : "Failed to send report email",
+      message: toSafeClientErrorMessage(error, "Failed to send report email"),
     });
     return;
   }
@@ -3636,10 +3749,11 @@ export const getOrganizationProfile = async (req: AuthRequest, res: Response): P
       return;
     }
 
-    const [orgAdmin, orgRegistration] = await Promise.all([
+    const [orgAdmin, orgRegistrationRaw] = await Promise.all([
       User.findOne({ organization: organization._id, role: "ORG_ADMIN" }).lean(),
       OrganizationRegistration.findOne({ organization: organization._id }).lean(),
     ]);
+    const orgRegistration = decryptRegistrationSensitiveFields(orgRegistrationRaw);
 
     const derivedRepresentativeName = orgAdmin
       ? `${orgAdmin.firstName || ""} ${orgAdmin.lastName || ""}`.trim()
@@ -3769,6 +3883,13 @@ export const updateOrganizationLogo = async (req: AuthRequest, res: Response): P
     if (!logoUrl.startsWith("data:image/") && !logoUrl.startsWith("http")) {
       res.status(400).json({ message: "Invalid logo format" });
       return;
+    }
+
+    if (logoUrl.startsWith("data:image/")) {
+      if (!isBase64ImageWithinLimit(logoUrl)) {
+        res.status(400).json({ message: "Logo file is too large. Maximum size is 500KB." });
+        return;
+      }
     }
 
     const organizationId = req.user.organization && typeof req.user.organization === "object"
@@ -4124,9 +4245,8 @@ export const downloadStudentCareerDnaReport = async (req: AuthRequest, res: Resp
     sendCareerDnaExecutivePdf(res, buffer, studentName);
   } catch (error) {
     console.error("downloadStudentCareerDnaReport error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate Career DNA report";
     res.status(503).json({
-      message,
+      message: toSafeClientErrorMessage(error, "Failed to generate Career DNA report"),
       fallback: "career-dna-report-html",
       hint: "Use the in-browser PDF download, which does not require server Chrome.",
     });
@@ -4148,9 +4268,8 @@ export const downloadAdminCareerDnaReport = async (req: AuthRequest, res: Respon
     sendCareerDnaExecutivePdf(res, buffer, learnerName);
   } catch (error) {
     console.error("downloadAdminCareerDnaReport error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate Career DNA report";
     res.status(503).json({
-      message,
+      message: toSafeClientErrorMessage(error, "Failed to generate Career DNA report"),
       fallback: "career-dna-report-html",
       hint: "Use the in-browser PDF download, which does not require server Chrome.",
     });
@@ -4390,6 +4509,101 @@ const buildLitmusPdfBufferForAttempt = async (
   return { buffer, parentName };
 };
 
+const buildStudyAbroadPdfBufferForAttempt = async (
+  attempt: InstanceType<typeof StudentAssessmentAttempt>,
+): Promise<{ buffer: Buffer; studentName: string }> => {
+  const user = await User.findById(attempt.user).select({ firstName: 1, lastName: 1 }).lean();
+  const studentName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Student";
+  const evaluation = attempt.evaluation as StudyAbroadEvaluationResult | undefined;
+  if (!evaluation?.assessmentCode) {
+    throw new Error("Study Abroad evaluation data is missing for this attempt");
+  }
+
+  const html = buildStudyAbroadReportHtml({
+    studentName,
+    submittedAt: attempt.completedAt || attempt.updatedAt,
+    evaluation,
+  });
+  const buffer = await renderHtmlReportPdf(html);
+  return { buffer, studentName };
+};
+
+const sendStudyAbroadReportPdf = (res: Response, buffer: Buffer, studentName: string) => {
+  const safeName = studentName.replace(/\s+/g, "_");
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="Study_Abroad_Report_${safeName}.pdf"`,
+    "Content-Length": buffer.length,
+  });
+  res.send(buffer);
+};
+
+export const downloadStudentStudyAbroadReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!requireStudentUser(req, res)) {
+    return;
+  }
+
+  const learnerRole = req.user!.role as LearnerRole;
+  const attemptIdParam = req.params.attemptId;
+  const attemptId = typeof attemptIdParam === "string" ? attemptIdParam.trim() : "";
+  if (!attemptId) {
+    res.status(400).json({ message: "Attempt ID is required" });
+    return;
+  }
+
+  try {
+    const attempt = await StudentAssessmentAttempt.findOne({
+      _id: attemptId,
+      user: req.user!._id,
+      organization: req.user!.organization,
+      status: "COMPLETED",
+    });
+
+    if (!attempt) {
+      res.status(404).json({ message: "Completed attempt not found" });
+      return;
+    }
+
+    if (!isStudyAbroadAssessmentCode(attempt.assessmentCode)) {
+      res.status(400).json({ message: "Study Abroad report is not available for this assessment" });
+      return;
+    }
+
+    if (!requireLearnerAssessmentAccess(res, learnerRole, attempt.assessmentCode, req.user?.grade)) {
+      return;
+    }
+
+    const { buffer, studentName } = await buildStudyAbroadPdfBufferForAttempt(attempt);
+    sendStudyAbroadReportPdf(res, buffer, studentName);
+  } catch (error) {
+    console.error("downloadStudentStudyAbroadReport error:", error);
+    res.status(500).json({ message: toSafeClientErrorMessage(error, "Failed to generate Study Abroad report") });
+  }
+};
+
+export const downloadAdminStudyAbroadReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ message: "Authentication required" });
+    return;
+  }
+
+  try {
+    const resolved = await findAdminCompletedAttempt(req, res);
+    if (!resolved) return;
+
+    if (!isStudyAbroadAssessmentCode(resolved.attempt.assessmentCode)) {
+      res.status(400).json({ message: "Study Abroad report is not available for this assessment" });
+      return;
+    }
+
+    const { buffer, studentName } = await buildStudyAbroadPdfBufferForAttempt(resolved.attempt);
+    sendStudyAbroadReportPdf(res, buffer, studentName);
+  } catch (error) {
+    console.error("downloadAdminStudyAbroadReport error:", error);
+    res.status(500).json({ message: toSafeClientErrorMessage(error, "Failed to generate Study Abroad report") });
+  }
+};
+
 const sendLitmusReportPdf = (res: Response, buffer: Buffer, parentName: string) => {
   const safeName = parentName.replace(/\s+/g, "_");
   res.set({
@@ -4435,8 +4649,7 @@ export const downloadStudentLitmusReport = async (req: AuthRequest, res: Respons
     sendLitmusReportPdf(res, buffer, parentName);
   } catch (error) {
     console.error("downloadStudentLitmusReport error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate Litmus report";
-    res.status(500).json({ message });
+    res.status(500).json({ message: toSafeClientErrorMessage(error, "Failed to generate Litmus report") });
   }
 };
 
@@ -4454,8 +4667,7 @@ export const downloadAdminLitmusReport = async (req: AuthRequest, res: Response)
     sendLitmusReportPdf(res, buffer, parentName);
   } catch (error) {
     console.error("downloadAdminLitmusReport error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate Litmus report";
-    res.status(500).json({ message });
+    res.status(500).json({ message: toSafeClientErrorMessage(error, "Failed to generate Litmus report") });
   }
 };
 
@@ -4534,8 +4746,7 @@ export const downloadStudentCareerCompassReport = async (req: AuthRequest, res: 
     sendCareerCompassReportPdf(res, buffer, studentName);
   } catch (error) {
     console.error("downloadStudentCareerCompassReport error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate Career Compass report";
-    res.status(503).json({ message });
+    res.status(503).json({ message: toSafeClientErrorMessage(error, "Failed to generate Career Compass report") });
   }
 };
 
@@ -4553,7 +4764,6 @@ export const downloadAdminCareerCompassReport = async (req: AuthRequest, res: Re
     sendCareerCompassReportPdf(res, buffer, studentName);
   } catch (error) {
     console.error("downloadAdminCareerCompassReport error:", error);
-    const message = error instanceof Error ? error.message : "Failed to generate Career Compass report";
-    res.status(503).json({ message });
+    res.status(503).json({ message: toSafeClientErrorMessage(error, "Failed to generate Career Compass report") });
   }
 };

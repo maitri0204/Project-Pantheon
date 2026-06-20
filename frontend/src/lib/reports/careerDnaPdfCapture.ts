@@ -6,6 +6,7 @@ import {
   STUDY_ABROAD_A4,
   waitForReportRender,
 } from "@/lib/reports/studyAbroadPdfCapture";
+import { applyReportCaptureSandbox } from "@/lib/reports/reportCaptureSandbox";
 
 const IFRAME_STYLE: Partial<CSSStyleDeclaration> = {
   position: "fixed",
@@ -38,6 +39,7 @@ export async function captureCareerDnaHtmlToPdf(html: string): Promise<Blob> {
   Object.assign(iframe.style, IFRAME_STYLE);
   iframe.setAttribute("aria-hidden", "true");
   iframe.setAttribute("tabindex", "-1");
+  applyReportCaptureSandbox(iframe);
   document.body.appendChild(iframe);
 
   try {

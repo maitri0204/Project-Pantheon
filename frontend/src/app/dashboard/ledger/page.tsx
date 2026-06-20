@@ -111,7 +111,7 @@ export default function LedgerPage() {
       return;
     }
 
-    apiRequest<LedgerResponse>("/superadmin/ledger", {}, auth.token)
+    apiRequest<LedgerResponse>("/superadmin/ledger", {})
       .then((res) => {
         setInvoices(res.invoices);
         setSummary(res.summary);

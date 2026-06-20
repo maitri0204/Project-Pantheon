@@ -2,7 +2,31 @@ import { NextFunction, Response } from "express";
 
 import User, { UserRole } from "../models/User";
 import { AuthRequest } from "../types/auth";
+import { getAuthTokenFromRequest } from "../services/authCookie";
 import { verifyToken } from "../services/token";
+
+const loadAuthenticatedUser = async (req: AuthRequest, res: Response): Promise<boolean> => {
+  const token = getAuthTokenFromRequest({
+    authorizationHeader: req.headers.authorization,
+    cookieHeader: req.headers.cookie,
+  });
+
+  if (!token) {
+    res.status(401).json({ message: "Authentication required" });
+    return false;
+  }
+
+  const payload = verifyToken(token);
+  const user = await User.findById(payload.sub).populate("organization");
+
+  if (!user || !user.isActive) {
+    res.status(401).json({ message: "Invalid session" });
+    return false;
+  }
+
+  req.user = user;
+  return true;
+};
 
 export const requireAuth = async (
   req: AuthRequest,
@@ -10,23 +34,11 @@ export const requireAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-    if (!token) {
-      res.status(401).json({ message: "Authentication required" });
+    const authenticated = await loadAuthenticatedUser(req, res);
+    if (!authenticated) {
       return;
     }
 
-    const payload = verifyToken(token);
-    const user = await User.findById(payload.sub).populate("organization");
-
-    if (!user || !user.isActive) {
-      res.status(401).json({ message: "Invalid session" });
-      return;
-    }
-
-    req.user = user;
     next();
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -59,8 +71,10 @@ export const optionalAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const token = getAuthTokenFromRequest({
+      authorizationHeader: req.headers.authorization,
+      cookieHeader: req.headers.cookie,
+    });
 
     if (!token) {
       next();
@@ -74,7 +88,6 @@ export const optionalAuth = async (
       req.user = user;
     }
   } catch (err) {
-    // Continue without authenticated user when token is invalid; log for diagnostics
     // eslint-disable-next-line no-console
     console.warn("optionalAuth: invalid token", err);
   }

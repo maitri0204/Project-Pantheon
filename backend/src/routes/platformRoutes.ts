@@ -18,6 +18,8 @@ import {
   downloadAdminLitmusReport,
   downloadStudentCareerCompassReport,
   downloadStudentLitmusReport,
+  downloadStudentStudyAbroadReport,
+  downloadAdminStudyAbroadReport,
   getStudentDetailsForAdmin,
   listStudentAssessmentAttemptsForAdmin,
   getOrganizationCouponSummary,
@@ -60,10 +62,26 @@ const router = Router();
 
 const siteVisitLimit = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Too many site visit events." },
+});
+
+const paymentActionLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many payment requests. Please try again later." },
+});
+
+const reportActionLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many report requests. Please try again later." },
 });
 
 router.get("/overview", getPlatformOverview);
@@ -178,6 +196,20 @@ router.get(
   requireRoles("SUPERADMIN", "ORG_ADMIN"),
   downloadAdminLitmusReport,
 );
+router.get(
+  "/students/:studentId/attempts/:attemptId/study-abroad-report",
+  reportActionLimit,
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminStudyAbroadReport,
+);
+router.get(
+  "/parents/:parentId/attempts/:attemptId/study-abroad-report",
+  reportActionLimit,
+  requireAuth,
+  requireRoles("SUPERADMIN", "ORG_ADMIN"),
+  downloadAdminStudyAbroadReport,
+);
 router.get("/parents", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), listParents);
 router.get("/parents/:parentId", requireAuth, requireRoles("SUPERADMIN", "ORG_ADMIN"), getParentDetailsForAdmin);
 router.get("/student/dashboard", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentDashboard);
@@ -186,10 +218,10 @@ router.get("/student/invoices", requireAuth, requireRoles("STUDENT", "PARENT"), 
 router.get("/student/assessments", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentAssessments);
 router.get("/student/assessments/:code/attempts", requireAuth, requireRoles("STUDENT", "PARENT"), listStudentAssessmentAttempts);
 router.get("/student/assessments/:code/pricing", requireAuth, requireRoles("STUDENT", "PARENT"), getStudentAssessmentPricing);
-router.post("/student/assessments/:code/payment/order", requireAuth, requireRoles("STUDENT", "PARENT"), createStudentAssessmentPaymentOrder);
-router.post("/student/assessments/:code/payment/verify", requireAuth, requireRoles("STUDENT", "PARENT"), verifyStudentAssessmentPayment);
-router.post("/reviewer/payment/order", requireAuth, requireRoles("REVIEWER"), createReviewerPaymentOrder);
-router.post("/reviewer/payment/verify", requireAuth, requireRoles("REVIEWER"), verifyReviewerPayment);
+router.post("/student/assessments/:code/payment/order", paymentActionLimit, requireAuth, requireRoles("STUDENT", "PARENT"), createStudentAssessmentPaymentOrder);
+router.post("/student/assessments/:code/payment/verify", paymentActionLimit, requireAuth, requireRoles("STUDENT", "PARENT"), verifyStudentAssessmentPayment);
+router.post("/reviewer/payment/order", paymentActionLimit, requireAuth, requireRoles("REVIEWER"), createReviewerPaymentOrder);
+router.post("/reviewer/payment/verify", paymentActionLimit, requireAuth, requireRoles("REVIEWER"), verifyReviewerPayment);
 router.get("/organization/invoices", requireAuth, requireRoles("ORG_ADMIN"), listOrganizationInvoices);
 router.get("/organization/coupons/summary", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationCouponSummary);
 router.get("/organization/profile", requireAuth, requireRoles("ORG_ADMIN"), getOrganizationProfile);
@@ -234,11 +266,19 @@ router.get(
   requireRoles("STUDENT", "PARENT"),
   downloadStudentLitmusReport,
 );
+router.get(
+  "/student/attempts/:attemptId/study-abroad-report",
+  reportActionLimit,
+  requireAuth,
+  requireRoles("STUDENT", "PARENT"),
+  downloadStudentStudyAbroadReport,
+);
 router.patch("/student/attempts/:attemptId/answers", requireAuth, requireRoles("STUDENT", "PARENT"), saveStudentAttemptAnswers);
 router.post("/student/attempts/:attemptId/submit", requireAuth, requireRoles("STUDENT", "PARENT"), submitStudentAttempt);
 router.post("/student/attempts/:attemptId/anti-cheat-event", requireAuth, requireRoles("STUDENT", "PARENT"), logAntiCheatEvent);
 router.post(
   "/student/attempts/:attemptId/email-report",
+  reportActionLimit,
   requireAuth,
   requireRoles("STUDENT", "PARENT"),
   emailReportUpload.single("pdf"),

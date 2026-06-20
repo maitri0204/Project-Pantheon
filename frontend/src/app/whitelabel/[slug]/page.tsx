@@ -58,8 +58,8 @@ export default function WhitelabelPortalPage() {
       .catch((requestError) => setError(requestError instanceof Error ? requestError.message : "Failed to load portal"))
       .finally(() => setLoading(false));
 
-    if (auth?.token) {
-      apiRequest<PortalResponse>(`/platform/whitelabel/${resolvedSlug}`, {}, auth.token)
+    if (auth?.user) {
+      apiRequest<PortalResponse>(`/platform/whitelabel/${resolvedSlug}`, {})
         .then((res) => setData(res))
         .catch(() => {
           // keep public branding response if authenticated request fails

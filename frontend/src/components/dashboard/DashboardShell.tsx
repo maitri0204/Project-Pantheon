@@ -62,6 +62,21 @@ const navDefinitions: NavDefinition[] = [
     ),
   },
   {
+    label: "Pending Approvals",
+    suffix: "/pending-organizations",
+    exact: false,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+    ),
+  },
+  {
     label: "Students",
     suffix: "/users",
     exact: false,
@@ -234,7 +249,7 @@ export default function DashboardShell({
     setAuthResolved(true);
 
     if (auth.user.role === "ORG_ADMIN" && auth.orgSlug && (!auth.orgLogoUrl || !auth.orgCompanyName)) {
-      void apiRequest<OrgBrandingResponse>(`/platform/whitelabel/${auth.orgSlug}`, {}, auth.token)
+      void apiRequest<OrgBrandingResponse>(`/platform/whitelabel/${auth.orgSlug}`, {})
         .then((res) => {
           const fetchedCompanyName = res.organization?.branding?.companyName || "";
           const fetchedLogoUrl = res.organization?.branding?.logoUrl || "";

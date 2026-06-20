@@ -11,8 +11,10 @@ import {
   Maximize,
 } from "lucide-react";
 
-import { apiRequest, getStoredAuth } from "@/lib/api";
+import { storeAttemptId, getAttemptId } from "@/lib/assessmentAttemptSession";
+import { consumePaymentSessionId } from "@/lib/assessmentPaymentSession";
 import { getAssessmentDisplayName, normalizeAssessmentCode } from "@/lib/assessmentAccess";
+import { apiRequest, getStoredAuth } from "@/lib/api";
 
 type AttemptOption = {
   label: string;
@@ -169,8 +171,9 @@ export default function StudentTakeAssessmentPage() {
   const fallbackCodeFromRest = Array.isArray(params?.rest) ? params.rest[2] : "";
   const fallbackCodeFromPath = routeParts[5] || "";
   const code = normalizeAssessmentCode(params?.code || fallbackCodeFromRest || fallbackCodeFromPath || "");
-  const paymentSessionId = searchParams?.get("paymentSessionId") || undefined;
-  const existingAttemptId = searchParams?.get("attemptId")?.trim() || "";
+  const paymentSessionIdFromUrl = searchParams?.get("paymentSessionId") || undefined;
+  const attemptIdFromUrl = searchParams?.get("attemptId")?.trim() || "";
+  const existingAttemptId = attemptIdFromUrl || getAttemptId(code) || "";
   const auth = useMemo(() => getStoredAuth(), []);
 
   const [loading, setLoading] = useState(true);
@@ -188,22 +191,22 @@ export default function StudentTakeAssessmentPage() {
   const fullscreenExitedRef = useRef(false); // Track if fullscreen was exited (anti-cheat)
 
   useEffect(() => {
-    if (!auth?.token || !slug || !code) {
+    if (!auth?.user || !slug || !code) {
       router.replace(`/whitelabel/${slug}/login`);
       return;
     }
 
+    const paymentSessionId = existingAttemptId
+      ? paymentSessionIdFromUrl
+      : (paymentSessionIdFromUrl || consumePaymentSessionId(code));
+
     const loadAttempt = existingAttemptId
       ? apiRequest<GetAttemptResponse>(
         `/platform/student/attempts/${existingAttemptId}`,
-        {},
-        auth.token,
-      )
+        {}              )
       : apiRequest<StartAttemptResponse>(
         `/platform/student/assessments/${code}/start`,
-        { method: "POST", body: JSON.stringify({ paymentSessionId }) },
-        auth.token,
-      );
+        { method: "POST", body: JSON.stringify({ paymentSessionId }) }              );
 
     loadAttempt
       .then((response) => {
@@ -215,6 +218,7 @@ export default function StudentTakeAssessmentPage() {
         }
 
         setAttemptId(attempt.id);
+        storeAttemptId(code, attempt.id);
         setAssessmentName(getAssessmentDisplayName(code, attempt.assessmentName));
         setQuestions(attempt.questions);
 
@@ -230,7 +234,7 @@ export default function StudentTakeAssessmentPage() {
         router.replace(`/whitelabel/${slug}/student/assessments`);
       })
       .finally(() => setLoading(false));
-  }, [auth?.token, code, existingAttemptId, paymentSessionId, router, slug]);
+  }, [auth?.user, code, existingAttemptId, paymentSessionIdFromUrl, router, slug]);
 
   // ── Fullscreen management ──────────────────────────────────────────────────
   const enterFullscreen = useCallback(async () => {
@@ -258,12 +262,10 @@ export default function StudentTakeAssessmentPage() {
         console.warn("handleFullscreenChange: Fullscreen exited - test paused for security");
         
         // Log event to backend asynchronously (non-blocking)
-        if (attemptId && auth?.token) {
+        if (attemptId && auth?.user) {
           apiRequest(
             `/platform/student/attempts/${attemptId}/anti-cheat-event`,
-            { method: "POST", body: JSON.stringify({ eventType: "fullscreen_exit" }) },
-            auth.token
-          ).catch((err) => {
+            { method: "POST", body: JSON.stringify({ eventType: "fullscreen_exit" }) }                      ).catch((err) => {
             console.warn("handleFullscreenChange: Failed to log anti-cheat event", err);
           });
         }
@@ -273,7 +275,7 @@ export default function StudentTakeAssessmentPage() {
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, [loading, questions.length, showInstructions, attemptId, auth?.token]);
+  }, [loading, questions.length, showInstructions, attemptId, auth?.user]);
 
   // ── Anti-cheat ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -312,13 +314,11 @@ export default function StudentTakeAssessmentPage() {
   // ── Answer handler ─────────────────────────────────────────────────────────
   const handleAnswer = async (questionId: string, label: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: label }));
-    if (!attemptId || !auth?.token) return;
+    if (!attemptId || !auth?.user) return;
     try {
       await apiRequest(
         `/platform/student/attempts/${attemptId}/answers`,
-        { method: "PATCH", body: JSON.stringify({ answers: [{ questionId, answer: label }] }) },
-        auth.token
-      );
+        { method: "PATCH", body: JSON.stringify({ answers: [{ questionId, answer: label }] }) }              );
     } catch (err) {
       // non-blocking but log for telemetry
       // eslint-disable-next-line no-console
@@ -343,16 +343,14 @@ export default function StudentTakeAssessmentPage() {
     const defaultAnswer = "3";
     setAnswers((prev) => ({ ...prev, [currentQuestion.questionId]: defaultAnswer }));
 
-    if (!attemptId || !auth?.token) {
+    if (!attemptId || !auth?.user) {
       return;
     }
 
     try {
       await apiRequest(
         `/platform/student/attempts/${attemptId}/answers`,
-        { method: "PATCH", body: JSON.stringify({ answers: [{ questionId: currentQuestion.questionId, answer: defaultAnswer }] }) },
-        auth.token
-      );
+        { method: "PATCH", body: JSON.stringify({ answers: [{ questionId: currentQuestion.questionId, answer: defaultAnswer }] }) }              );
     } catch (err) {
       // non-blocking - log error for analysis
       // eslint-disable-next-line no-console
@@ -383,7 +381,7 @@ export default function StudentTakeAssessmentPage() {
     setSubmitting(true);
     isSubmittingRef.current = true;
     try {
-      if (attemptId && auth?.token) {
+      if (attemptId && auth?.user) {
         const payload = questions
           .map((question) => ({ questionId: question.questionId, answer: answers[question.questionId] }))
           .filter((entry) => entry.answer);
@@ -391,17 +389,13 @@ export default function StudentTakeAssessmentPage() {
         if (payload.length > 0) {
           await apiRequest(
             `/platform/student/attempts/${attemptId}/answers`,
-            { method: "PATCH", body: JSON.stringify({ answers: payload }) },
-            auth.token
-          );
+            { method: "PATCH", body: JSON.stringify({ answers: payload }) }                      );
         }
       }
 
       const response = await apiRequest<{ attemptId: string }>(
         `/platform/student/attempts/${attemptId}/submit`,
-        { method: "POST" },
-        auth!.token
-      );
+        { method: "POST" }              );
 
       if (document.fullscreenElement) {
         await Promise.race([
@@ -411,7 +405,8 @@ export default function StudentTakeAssessmentPage() {
       }
 
       const submittedAttemptId = response?.attemptId || attemptId;
-      router.replace(`/whitelabel/${slug}/student/assessments/${code}/result?attemptId=${submittedAttemptId}`);
+      storeAttemptId(code, submittedAttemptId);
+      router.replace(`/whitelabel/${slug}/student/assessments/${code}/result`);
     } catch (error) {
       console.warn("handleSubmit: submission failed", error);
       isSubmittingRef.current = false;

@@ -124,9 +124,7 @@ export default function CouponsPage() {
     if (auth.user.role === "ORG_ADMIN") {
       const summaryRes = await apiRequest<{ summary: OrganizationCouponSummaryItem[] }>(
         "/platform/organization/coupons/summary",
-        {},
-        auth.token
-      );
+        {}              );
       setMode("ORG_ADMIN");
       setOrgSummary(summaryRes.summary || []);
       setLoading(false);
@@ -149,7 +147,7 @@ export default function CouponsPage() {
   async function savePrice(code: string) {
     if (!auth) return; setSaving(code);
     try {
-      await apiRequest(`/superadmin/assessments/${code}/pricing`, { method: "PATCH", body: JSON.stringify({ basePrice: Number(priceDrafts[code]) }) }, auth.token);
+      await apiRequest(`/superadmin/assessments/${code}/pricing`, { method: "PATCH", body: JSON.stringify({ basePrice: Number(priceDrafts[code]) }) });
       setPricing((p) => ({ ...p, [code]: Number(priceDrafts[code]) })); setEditingPrice(null); flash("ok", "Price updated.");
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -162,7 +160,7 @@ export default function CouponsPage() {
     if (!auth) return;
     const next = !gst[code]; setGst((g) => ({ ...g, [code]: next }));
     try {
-      await apiRequest(`/superadmin/assessments/${code}/pricing`, { method: "PATCH", body: JSON.stringify({ gstEnabled: next }) }, auth.token);
+      await apiRequest(`/superadmin/assessments/${code}/pricing`, { method: "PATCH", body: JSON.stringify({ gstEnabled: next }) });
       flash("ok", `GST ${next ? "enabled" : "disabled"}`);
     } catch (err) {
       // eslint-disable-next-line no-console
@@ -179,7 +177,7 @@ export default function CouponsPage() {
       await apiRequest("/superadmin/coupons", { method: "POST", body: JSON.stringify({
         code: form.code.toUpperCase().trim(), discountType: form.discountType, value: Number(form.value),
         applicableAssessmentCodes: [form.assessmentCode], expiresAt,
-      })}, auth.token);
+      })});
       flash("ok", "Coupon created!");
       setForm((f) => ({ ...f, code: "", discountType: "PERCENT", value: "10", expiryDate: "", expiryTime: "23:59" }));
       await load();
@@ -192,7 +190,7 @@ export default function CouponsPage() {
 
   async function deleteCoupon(id: string) {
     if (!auth || !confirm("Delete this coupon?")) return;
-    try { await apiRequest(`/superadmin/coupons/${id}`, { method: "DELETE" }, auth.token); flash("ok", "Deleted."); await load(); }
+    try { await apiRequest(`/superadmin/coupons/${id}`, { method: "DELETE" }); flash("ok", "Deleted."); await load(); }
     catch (err) {
       // eslint-disable-next-line no-console
       console.warn("deleteCoupon: failed to delete coupon", err, id);
@@ -210,7 +208,7 @@ export default function CouponsPage() {
     e.preventDefault(); if (!auth || !editCoupon) return; setSaving("edit");
     try {
       const expiresAt = editForm.expiryDate ? new Date(`${editForm.expiryDate}T${editForm.expiryTime}:00`).toISOString() : undefined;
-      await apiRequest(`/superadmin/coupons/${editCoupon._id}`, { method: "PATCH", body: JSON.stringify({ discountType: editForm.discountType, value: Number(editForm.value), expiresAt }) }, auth.token);
+      await apiRequest(`/superadmin/coupons/${editCoupon._id}`, { method: "PATCH", body: JSON.stringify({ discountType: editForm.discountType, value: Number(editForm.value), expiresAt }) });
       flash("ok", "Coupon updated."); setEditCoupon(null); await load();
     } catch (err) {
       // eslint-disable-next-line no-console

@@ -34,8 +34,18 @@ export const sendOtpEmail = async ({
   const transporter = getTransporter();
 
   if (!transporter) {
-    // eslint-disable-next-line no-console
-    console.log(`[OTP:${purpose}] ${email} => ${otp}`);
+    const allowDevOtpLog =
+      process.env.NODE_ENV !== "production" && process.env.ALLOW_DEV_OTP_LOG !== "false";
+
+    if (allowDevOtpLog) {
+      // eslint-disable-next-line no-console
+      console.log(`[DEV OTP:${purpose}] ${email} => ${otp}`);
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[OTP:${purpose}] SMTP not configured; OTP was not emailed to ${email}. Set SMTP_* or ALLOW_DEV_OTP_LOG=true in development.`,
+      );
+    }
     return;
   }
 

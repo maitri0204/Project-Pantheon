@@ -9,7 +9,6 @@ import {
 type SendAttemptReportEmailInput = {
   normalizedCode: string;
   attemptId: string;
-  token: string;
   buildDetailedReportPdf: () => Promise<{ blob: Blob; fileName: string }>;
 };
 
@@ -17,7 +16,6 @@ type SendAttemptReportEmailInput = {
 export async function sendAttemptReportEmail({
   normalizedCode,
   attemptId,
-  token,
   buildDetailedReportPdf,
 }: SendAttemptReportEmailInput): Promise<void> {
   if (!supportsEmailReport(normalizedCode)) {
@@ -27,17 +25,16 @@ export async function sendAttemptReportEmail({
   const emailPath = `/platform/student/attempts/${attemptId}/email-report`;
 
   if (SERVER_GENERATED_EMAIL_CODES.has(normalizedCode)) {
-    await apiRequest(
-      emailPath,
-      { method: "POST", body: JSON.stringify({ serverGenerate: true }) },
-      token,
-    );
+    await apiRequest(emailPath, {
+      method: "POST",
+      body: JSON.stringify({ serverGenerate: true }),
+    });
     return;
   }
 
   if (PREMIUM_CLIENT_PDF_EMAIL_CODES.has(normalizedCode)) {
     const { blob, fileName } = await buildDetailedReportPdf();
-    await uploadEmailReportPdf(emailPath, blob, fileName, token);
+    await uploadEmailReportPdf(emailPath, blob, fileName);
     return;
   }
 

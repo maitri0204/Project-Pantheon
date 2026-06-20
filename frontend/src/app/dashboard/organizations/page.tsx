@@ -46,7 +46,7 @@ export default function OrganizationsPage() {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setLoading(true);
     try {
-      const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {}, auth.token);
+      const res = await apiRequest<SuperadminResponse>("/superadmin/dashboard", {});
       setOrgs(res.organizations);
     } catch (err) {
       // eslint-disable-next-line no-console

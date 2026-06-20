@@ -21,12 +21,10 @@ export default function WhitelabelOrgStudentAttemptListPage() {
   const auth = useMemo(() => getStoredAuth(), []);
 
   useEffect(() => {
-    if (!auth?.token || !studentId || !code) return;
+    if (!auth?.user || !studentId || !code) return;
     apiRequest<AttemptMetaResponse>(
       `/platform/students/${studentId}/assessments/${code}/attempts`,
-      {},
-      auth.token,
-    )
+      {}          )
       .then((res) => {
         const latest = res.attempts?.[res.attempts.length - 1];
         if (latest) {
@@ -34,7 +32,7 @@ export default function WhitelabelOrgStudentAttemptListPage() {
         }
       })
       .catch(() => undefined);
-  }, [auth?.token, studentId, code]);
+  }, [auth?.user, studentId, code]);
 
   return (
     <AssessmentAttemptHistoryView

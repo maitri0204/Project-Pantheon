@@ -4,15 +4,10 @@ import { IUser } from "../models/User";
 
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET?.trim();
-  if (secret) {
-    return secret;
+  if (!secret) {
+    throw new Error("JWT_SECRET is required");
   }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("JWT_SECRET is required in production");
-  }
-
-  return "pantheon-local-dev-secret";
+  return secret;
 };
 
 const getOrganizationId = (organization: unknown): string | null => {
@@ -66,4 +61,4 @@ export const signToken = (user: IUser): string =>
   );
 
 export const verifyToken = (token: string): jwt.JwtPayload =>
-  jwt.verify(token, getJwtSecret()) as jwt.JwtPayload;
+  jwt.verify(token, getJwtSecret(), { algorithms: ["HS256"] }) as jwt.JwtPayload;

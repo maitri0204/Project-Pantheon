@@ -35,12 +35,12 @@ export default function StudentDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth?.token) {
+    if (!auth?.user) {
       router.replace(`/whitelabel/${slug}/login`);
       return;
     }
 
-    apiRequest<StudentDashboardResponse>("/platform/student/dashboard", {}, auth.token)
+    apiRequest<StudentDashboardResponse>("/platform/student/dashboard", {})
       .then((res) => { setData(res); setError(null); })
       .catch((err) => {
         // getStoredAuth returns null only when apiRequest cleared it (on 401)
@@ -51,7 +51,7 @@ export default function StudentDashboardPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [auth?.token, router, slug]);
+  }, [auth?.user, router, slug]);
 
   if (loading) {
     return (
@@ -66,7 +66,7 @@ export default function StudentDashboardPage() {
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
         <p className="text-sm text-red-600">{error}</p>
         <button
-          onClick={() => { setLoading(true); setError(null); apiRequest<StudentDashboardResponse>("/platform/student/dashboard", {}, auth?.token).then((res) => { setData(res); }).catch((err) => { setError(err instanceof Error ? err.message : "Failed to load dashboard"); }).finally(() => setLoading(false)); }}
+          onClick={() => { setLoading(true); setError(null); apiRequest<StudentDashboardResponse>("/platform/student/dashboard", {}).then((res) => { setData(res); }).catch((err) => { setError(err instanceof Error ? err.message : "Failed to load dashboard"); }).finally(() => setLoading(false)); }}
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
         >
           Retry

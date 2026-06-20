@@ -1,5 +1,3 @@
-export const DEFAULT_SUPERADMIN_EMAIL = "maitripatel2608@gmail.com";
-export const DEFAULT_SUPERADMIN_NAME = "Maitri Patel";
 export const REVIEWER_EMAIL = "reviewer@admitra.io";
 export const REVIEWER_NAME = "Reviewer";
 export const PLATFORM_ORG_SLUG = "project-pantheon";

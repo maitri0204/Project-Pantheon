@@ -71,7 +71,7 @@ export default function StudentInvoicesPage() {
   useEffect(() => {
     if (!auth) return;
 
-    apiRequest<{ invoices: InvoiceItem[] }>("/platform/student/invoices", {}, auth.token)
+    apiRequest<{ invoices: InvoiceItem[] }>("/platform/student/invoices", {})
       .then((res) => setInvoices(res.invoices))
       .catch(() => setError("Failed to load invoices."))
       .finally(() => setLoading(false));

@@ -5,7 +5,6 @@
  */
 export const PREMIUM_CLIENT_PDF_EMAIL_CODES = new Set([
   "RESILIENCE_TEST",
-  "STUDY_ABROAD",
   "ACADEMIC_CAREER",
 ]);
 
@@ -16,6 +15,7 @@ export const SERVER_GENERATED_EMAIL_CODES = new Set([
   "CAREER_DNA",
   "METACOGNITION_TEST",
   "JOHARI_WINDOW",
+  "STUDY_ABROAD",
 ]);
 
 export function supportsEmailReport(assessmentCode: string): boolean {

@@ -252,14 +252,9 @@ export function shouldShowAttemptList(assessmentCode: string): boolean {
 export function buildStudentResultPath(
   slug: string,
   assessmentCode: string,
-  options?: { attemptId?: string }
 ): string {
   const code = normalizeAssessmentCode(assessmentCode);
-  const base = `/whitelabel/${slug}/student/assessments/${code}/result`;
-  if (options?.attemptId) {
-    return `${base}?attemptId=${options.attemptId}`;
-  }
-  return base;
+  return `/whitelabel/${slug}/student/assessments/${code}/result`;
 }
 
 export function buildStudentAttemptListPath(slug: string, assessmentCode: string): string {

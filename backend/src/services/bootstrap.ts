@@ -7,14 +7,14 @@ import StudentAssessmentAttempt from "../models/StudentAssessmentAttempt";
 import User from "../models/User";
 import {
   DEFAULT_ASSESSMENTS,
-  DEFAULT_SUPERADMIN_EMAIL,
-  DEFAULT_SUPERADMIN_NAME,
   REVIEWER_EMAIL,
   REVIEWER_NAME,
   PLATFORM_ORG_NAME,
   PLATFORM_ORG_SLUG,
 } from "../constants/platform";
+import OrganizationRegistration from "../models/OrganizationRegistration";
 import { ADVERSITY_TEST_QUESTIONS } from "../scripts/seedAdversityQuestions";
+import { migratePlaintextRegistrationFields } from "./sensitiveData";
 
 /** Assessments that allow multiple completed attempts per student - never merge/delete during alias migration. */
 const MULTI_ATTEMPT_ASSESSMENT_CODES = new Set(["RESILIENCE_TEST", "STUDY_ABROAD"]);
@@ -169,24 +169,6 @@ export const bootstrapPlatform = async (): Promise<void> => {
   );
 
   await User.findOneAndUpdate(
-    { email: DEFAULT_SUPERADMIN_EMAIL },
-    {
-      $setOnInsert: {
-        firstName: DEFAULT_SUPERADMIN_NAME.split(" ")[0],
-        lastName: DEFAULT_SUPERADMIN_NAME.split(" ").slice(1).join(" ") || "Superadmin",
-        email: DEFAULT_SUPERADMIN_EMAIL,
-        isVerified: true,
-      },
-      $set: {
-        role: "SUPERADMIN",
-        organization: organization._id,
-        isActive: true,
-      },
-    },
-    { upsert: true, returnDocument: "after" }
-  );
-
-  await User.findOneAndUpdate(
     { email: REVIEWER_EMAIL },
     {
       $setOnInsert: {
@@ -235,4 +217,20 @@ export const bootstrapPlatform = async (): Promise<void> => {
   }
 
   await cleanupLegacyAssessmentAliases();
+
+  if (process.env.ENCRYPTION_KEY?.trim()) {
+    const migrated = await migratePlaintextRegistrationFields(async () =>
+      OrganizationRegistration.find({
+        $or: [
+          { panIndividual: { $exists: true, $nin: [null, ""] } },
+          { panCompany: { $exists: true, $nin: [null, ""] } },
+          { bankAccountNumber: { $exists: true, $nin: [null, ""] } },
+        ],
+      }).limit(500) as unknown as Array<Record<string, unknown> & { _id: unknown; save: () => Promise<unknown> }>,
+    );
+    if (migrated > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`Encrypted financial fields for ${migrated} organization registration record(s).`);
+    }
+  }
 };

@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
 import apiRoutes from "./routes";
+import { handleRazorpayWebhook } from "./controllers/webhookController";
 import { errorHandler } from "./middleware/errorHandler";
 import { isOrganizationWebsiteHostname } from "./services/corsOrigins";
 
@@ -18,6 +19,8 @@ const mainDomain = (process.env.MAIN_DOMAIN || "assessments.admitra.io")
   .replace(/^https?:\/\//, "")
   .replace(/^www\./, "");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const isAllowedOrigin = (origin: string): boolean => {
   if (allowedOrigins.includes(origin)) {
     return true;
@@ -27,7 +30,7 @@ const isAllowedOrigin = (origin: string): boolean => {
     const parsed = new URL(origin);
     const hostname = parsed.hostname.toLowerCase();
 
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
+    if (!isProduction && (hostname === "localhost" || hostname === "127.0.0.1")) {
       return true;
     }
 
@@ -37,7 +40,6 @@ const isAllowedOrigin = (origin: string): boolean => {
 
     return isOrganizationWebsiteHostname(hostname);
   } catch (err) {
-    // Log invalid origin parsing for debugging CORS issues
     // eslint-disable-next-line no-console
     console.warn("isAllowedOrigin: failed to parse origin", err, origin);
     return false;
@@ -53,7 +55,12 @@ app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || isAllowedOrigin(origin)) {
+      if (!origin) {
+        callback(null, !isProduction);
+        return;
+      }
+
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
         return;
       }
@@ -71,6 +78,9 @@ app.use(
     legacyHeaders: false,
   })
 );
+
+app.post("/api/webhooks/razorpay", express.raw({ type: "application/json" }), handleRazorpayWebhook);
+
 app.use(express.json({ limit: bodyLimit }));
 app.use(express.urlencoded({ extended: true, limit: bodyLimit }));
 

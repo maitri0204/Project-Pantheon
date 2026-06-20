@@ -14,6 +14,7 @@ import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
 import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
 import Question from "../models/Question";
 import User from "../models/User";
+import { toSafeClientErrorMessage } from "../services/safeErrorMessage";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -484,7 +485,7 @@ export const updateAssessmentReleaseDate = async (req: Request, res: Response): 
   } catch (error) {
     console.error("Update assessment release date error:", error);
     res.status(400).json({
-      message: error instanceof Error ? error.message : "Failed to update assessment release date",
+      message: toSafeClientErrorMessage(error, "Failed to update assessment release date"),
     });
   }
 };
@@ -687,4 +688,96 @@ export const deleteQuestion = async (req: Request, res: Response): Promise<void>
     console.error("Delete question error:", error);
     res.status(500).json({ message: "Failed to delete question" });
   }
+};
+
+export const listPendingOrganizations = async (_req: AuthRequest, res: Response): Promise<void> => {
+  const organizations = await Organization.find({ type: "WHITELABEL", isActive: false })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const organizationIds = organizations.map((organization) => organization._id);
+  const registrations = organizationIds.length
+    ? await OrganizationRegistration.find({ organization: { $in: organizationIds } })
+      .select("organization email firstName lastName companyName primaryMobile createdAt status")
+      .lean()
+    : [];
+
+  const registrationByOrgId = new Map(
+    registrations
+      .filter((registration) => registration.organization)
+      .map((registration) => [String(registration.organization), registration]),
+  );
+
+  res.json({
+    organizations: organizations.map((organization) => {
+      const registration = registrationByOrgId.get(String(organization._id));
+      return {
+        id: String(organization._id),
+        name: organization.name,
+        slug: organization.slug,
+        contactEmail: organization.contactEmail,
+        website: organization.website,
+        createdAt: organization.createdAt,
+        registration: registration
+          ? {
+              email: registration.email,
+              firstName: registration.firstName,
+              lastName: registration.lastName,
+              companyName: registration.companyName,
+              primaryMobile: registration.primaryMobile,
+              status: registration.status,
+              createdAt: registration.createdAt,
+            }
+          : null,
+      };
+    }),
+  });
+};
+
+export const approvePendingOrganization = async (req: AuthRequest, res: Response): Promise<void> => {
+  const organizationId = String(req.params.organizationId || "").trim();
+  if (!organizationId) {
+    res.status(400).json({ message: "Organization ID is required" });
+    return;
+  }
+
+  const organization = await Organization.findOneAndUpdate(
+    { _id: organizationId, type: "WHITELABEL", isActive: false },
+    { $set: { isActive: true } },
+    { new: true },
+  );
+
+  if (!organization) {
+    res.status(404).json({ message: "Pending organization not found" });
+    return;
+  }
+
+  await User.updateMany(
+    { organization: organization._id, role: "ORG_ADMIN" },
+    { $set: { isActive: true, isVerified: true } },
+  );
+
+  res.json({ message: "Organization approved", organization: { id: String(organization._id), slug: organization.slug } });
+};
+
+export const rejectPendingOrganization = async (req: AuthRequest, res: Response): Promise<void> => {
+  const organizationId = String(req.params.organizationId || "").trim();
+  if (!organizationId) {
+    res.status(400).json({ message: "Organization ID is required" });
+    return;
+  }
+
+  const organization = await Organization.findOne({ _id: organizationId, type: "WHITELABEL", isActive: false });
+  if (!organization) {
+    res.status(404).json({ message: "Pending organization not found" });
+    return;
+  }
+
+  await Promise.all([
+    User.deleteMany({ organization: organization._id }),
+    OrganizationRegistration.deleteMany({ organization: organization._id }),
+    Organization.deleteOne({ _id: organization._id }),
+  ]);
+
+  res.json({ message: "Organization registration rejected" });
 };

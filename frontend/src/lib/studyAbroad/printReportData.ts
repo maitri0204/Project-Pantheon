@@ -95,7 +95,6 @@ export function resolveStudyAbroadApiPaths(reportFetchPath: string): {
 }
 
 export async function fetchStudyAbroadPrintContext(
-  token: string,
   attemptId: string,
   reportFetchPath?: string,
 ): Promise<StudyAbroadPrintContext> {
@@ -104,8 +103,8 @@ export async function fetchStudyAbroadPrintContext(
   );
 
   const [reportRes, attemptsRes] = await Promise.all([
-    apiRequest<ReportResponse>(reportPath, {}, token),
-    apiRequest<AttemptListResponse>(attemptsPath, {}, token).catch(() => ({ attempts: [] })),
+    apiRequest<ReportResponse>(reportPath, {}),
+    apiRequest<AttemptListResponse>(attemptsPath, {}).catch(() => ({ attempts: [] })),
   ]);
 
   const report = reportRes.report;

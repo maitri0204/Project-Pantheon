@@ -1,12 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
+
+const REGISTRATION_SUCCESS_KEY = "pantheon-registration-success";
 
 function RegistrationSuccessPageInner() {
-  const searchParams = useSearchParams();
-  const email = searchParams?.get("email") || "your registered email";
+  const [email, setEmail] = useState("your registered email");
+  const [pendingApproval, setPendingApproval] = useState(false);
+
+  useEffect(() => {
+    const raw = window.sessionStorage.getItem(REGISTRATION_SUCCESS_KEY);
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const payload = JSON.parse(raw) as { email?: string; pendingApproval?: boolean };
+      if (payload.email?.trim()) {
+        setEmail(payload.email.trim());
+      }
+      if (payload.pendingApproval) {
+        setPendingApproval(true);
+      }
+    } catch {
+      // Ignore malformed session payload.
+    } finally {
+      window.sessionStorage.removeItem(REGISTRATION_SUCCESS_KEY);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 px-4 py-16">
@@ -19,10 +41,16 @@ function RegistrationSuccessPageInner() {
 
         <h1 className="text-center text-3xl font-bold text-slate-900">Registration Completed Successfully</h1>
         <p className="mt-4 text-center text-base text-slate-700">
-          Your whitelabel organization registration is complete.
+          {pendingApproval
+            ? "Your whitelabel organization registration has been submitted for approval."
+            : "Your whitelabel organization registration is complete."}
         </p>
         <p className="mt-2 text-center text-base text-slate-700">
-          Please check <span className="font-semibold text-slate-900">{email}</span> for your portal login link and credentials.
+          {pendingApproval
+            ? "We will email you at "
+            : "Please check "}
+          <span className="font-semibold text-slate-900">{email}</span>
+          {pendingApproval ? " once your account is approved." : " for your portal login link and credentials."}
         </p>
 
         <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">

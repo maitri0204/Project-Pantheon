@@ -96,9 +96,7 @@ export default function OrganizationDetailsPage() {
     try {
       const res = await apiRequest<OrganizationCouponDetailsResponse>(
         `/superadmin/organizations/${organizationId}/coupons`,
-        {},
-        auth.token
-      );
+        {}              );
       setOrganization(res.organization);
       setCouponSummary(res.couponSummary || []);
       const drafts: Record<string, { prefix: string; totalCoupons: string; discountAmount: string; isActive: boolean }> = {};
@@ -143,7 +141,7 @@ export default function OrganizationDetailsPage() {
             discountAmount: draft.discountAmount.trim() !== "" ? Number(draft.discountAmount) : 0,
             isActive: draft.isActive,
           }),
-        }, auth.token);
+        });
       } else {
         await apiRequest(`/superadmin/organizations/${organization._id}/coupons`, {
           method: "POST",
@@ -154,14 +152,12 @@ export default function OrganizationDetailsPage() {
             discountAmount: draft.discountAmount.trim() !== "" ? Number(draft.discountAmount) : 0,
             isActive: draft.isActive,
           }),
-        }, auth.token);
+        });
       }
 
       const res = await apiRequest<OrganizationCouponDetailsResponse>(
         `/superadmin/organizations/${organization._id}/coupons`,
-        {},
-        auth.token
-      );
+        {}              );
       setCouponSummary(res.couponSummary || []);
       setMessage(`Coupon settings saved for ${item.assessmentName}`);
       setTimeout(() => setMessage(null), 3500);

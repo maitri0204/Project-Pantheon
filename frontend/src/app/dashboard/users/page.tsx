@@ -54,7 +54,7 @@ export default function UsersPage() {
   useEffect(() => {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
-    apiRequest<StudentsResponse>("/platform/students", {}, auth.token)
+    apiRequest<StudentsResponse>("/platform/students", {})
       .then((res) => setUsers(res.students))
       .catch(() => router.replace(getDashboardLoginPath()))
       .finally(() => setLoading(false));

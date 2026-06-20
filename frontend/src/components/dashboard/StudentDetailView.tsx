@@ -139,16 +139,16 @@ export default function StudentDetailView({ studentId, basePath, loginPath }: St
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth?.token) {
+    if (!auth?.user) {
       router.replace(loginPath);
       return;
     }
 
-    apiRequest<StudentDetailsResponse>(`/platform/students/${studentId}`, {}, auth.token)
+    apiRequest<StudentDetailsResponse>(`/platform/students/${studentId}`, {})
       .then((res) => setData(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Unable to load student details"))
       .finally(() => setLoading(false));
-  }, [auth?.token, loginPath, router, studentId]);
+  }, [auth?.user, loginPath, router, studentId]);
 
   if (loading) {
     return (

@@ -60,16 +60,16 @@ export default function ParentDetailView({ parentId, basePath, loginPath }: Pare
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth?.token) {
+    if (!auth?.user) {
       router.replace(loginPath);
       return;
     }
 
-    apiRequest<ParentDetailsResponse>(`/platform/parents/${parentId}`, {}, auth.token)
+    apiRequest<ParentDetailsResponse>(`/platform/parents/${parentId}`, {})
       .then((res) => setData(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Unable to load parent details"))
       .finally(() => setLoading(false));
-  }, [auth?.token, loginPath, router, parentId]);
+  }, [auth?.user, loginPath, router, parentId]);
 
   if (loading) {
     return (
