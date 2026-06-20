@@ -30,8 +30,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/api/:path*",
-        destination: `${backendApiOrigin}/api/:path*`,
+        // Keep Next.js route handlers (e.g. /api/auth/session) on the frontend host.
+        source: "/api/((?!auth/session).*)",
+        destination: `${backendApiOrigin}/api/$1`,
       },
     ];
   },

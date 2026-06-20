@@ -22,7 +22,7 @@ async function resolveWhitelabelSlug(hostname: string): Promise<string | null> {
   try {
     const response = await fetch(
       `${apiUrl}/platform/whitelabel-by-host?host=${encodeURIComponent(hostname)}`,
-      { cache: "no-store" },
+      { next: { revalidate: 300 } },
     );
     if (!response.ok) {
       return null;
@@ -117,7 +117,7 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedPath(pathname)) {
     const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
-    if (!(await isValidAuthToken(token))) {
+    if (!token || !(await isValidAuthToken(token))) {
       return NextResponse.redirect(getLoginRedirect(pathname, request, tenantSlug));
     }
   }

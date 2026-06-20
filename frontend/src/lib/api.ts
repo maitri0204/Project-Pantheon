@@ -98,6 +98,29 @@ export const setStoredAuth = (value: SetStoredAuthInput): void => {
   }
 };
 
+/** Navigate to a protected route after login — full navigation ensures middleware sees the new cookie. */
+export const navigateAfterLogin = (path: string): void => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.location.assign(path);
+};
+
+/** Persist session profile and wait for the HttpOnly cookie before navigating to protected routes. */
+export async function establishAuthSession(value: SetStoredAuthInput): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const { token, ...profile } = value;
+  clearLegacyAuthStorage();
+  window.localStorage.setItem("pantheon-auth", JSON.stringify(profile));
+  if (token?.trim()) {
+    await syncSessionCookie(token.trim());
+  }
+}
+
 export const clearStoredAuth = (): void => {
   if (typeof window === "undefined") {
     return;

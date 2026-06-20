@@ -1,9 +1,19 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { isValidAuthToken } from "@/lib/verifyAuthToken";
+
 const AUTH_COOKIE_NAME = "pantheon_token";
 const MAX_AUTH_TOKEN_LENGTH = 8192;
 const AUTH_COOKIE_MAX_AGE = 8 * 60 * 60;
+
+export async function GET() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  const ok = await isValidAuthToken(token);
+
+  return NextResponse.json({ ok });
+}
 
 export async function POST(request: Request) {
   const payload = (await request.json()) as { token?: string };
