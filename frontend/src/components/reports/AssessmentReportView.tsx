@@ -500,8 +500,8 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
 
   if (normalizedCode === "STUDY_ABROAD") {
     requireSession();
-    return generateStudyAbroadReportForEmail(fetchPath, reportStudentName);
-      }
+    return generateStudyAbroadReportForEmail(report.attemptId, fetchPath);
+  }
 
       if (normalizedCode === "ACADEMIC_CAREER") {
     const backCoverImageSrc = await loadPublicImageDataUrl("/academic-career/back-cover.jpg");

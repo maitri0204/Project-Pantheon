@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { apiRequest, clearStoredAuth, getStoredAuth } from "@/lib/api";
+import { PLATFORM_LOGIN_URL } from "@/lib/studentRegisterUrl";
 
 type NavDefinition = {
   label: string;
@@ -317,7 +318,7 @@ export default function DashboardShell({
 
   const handleLogout = () => {
     clearStoredAuth();
-    router.replace(loginPath);
+    router.replace(PLATFORM_LOGIN_URL);
   };
 
   const isActive = (href: string, exact: boolean) => {
