@@ -28,13 +28,14 @@ const nextConfig: NextConfig = {
     ],
   },
   async rewrites() {
-    return [
-      {
-        // Keep Next.js route handlers (e.g. /api/auth/session) on the frontend host.
-        source: "/api/((?!auth/session).*)",
-        destination: `${backendApiOrigin}/api/$1`,
-      },
-    ];
+    return {
+      fallback: [
+        {
+          source: "/api/:path*",
+          destination: `${backendApiOrigin}/api/:path*`,
+        },
+      ],
+    };
   },
   async headers() {
     const securityHeaders = [

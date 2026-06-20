@@ -1,4 +1,4 @@
-const SESSION_SYNC_PATH = "/api/auth/session";
+const SESSION_SYNC_PATH = "/session";
 
 type SessionStatusResponse = { ok?: boolean };
 
@@ -30,22 +30,27 @@ export const syncSessionCookie = async (token: string): Promise<void> => {
     return;
   }
 
-  const response = await fetch(SESSION_SYNC_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token }),
-    credentials: "same-origin",
-    cache: "no-store",
-  });
+  try {
+    const response = await fetch(SESSION_SYNC_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+      credentials: "same-origin",
+      cache: "no-store",
+    });
 
-  if (!response.ok) {
-    throw new Error("Unable to establish session. Please try again.");
+    if (response.ok) {
+      return;
+    }
+  } catch {
+    // fall through — login may have already set the cookie via backend Set-Cookie
   }
 
-  const verified = await checkSessionCookie();
-  if (!verified) {
-    throw new Error("Session verification failed. Check that JWT_SECRET matches on frontend and backend.");
+  if (await checkSessionCookie()) {
+    return;
   }
+
+  throw new Error("Unable to establish session. Please try again.");
 };
 
 export const clearSessionCookie = async (): Promise<void> => {

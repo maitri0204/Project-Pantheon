@@ -80,7 +80,7 @@ export async function middleware(request: NextRequest) {
   const hostname = host.split(":")[0].toLowerCase();
   const pathname = request.nextUrl.pathname;
 
-  if (pathname.startsWith("/api") || pathname.startsWith("/_next")) {
+  if (pathname.startsWith("/api") || pathname.startsWith("/_next") || pathname === "/session") {
     return NextResponse.next();
   }
 
