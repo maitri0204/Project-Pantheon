@@ -20,10 +20,7 @@ import EmployabilityQuotientReport, { type EmployabilityQuotientEvaluation } fro
 import CareerDnaReport, { type CareerDnaEvaluation } from "./CareerDnaReport";
 import { generateStudyAbroadReportForEmail } from "@/lib/reports/generateStudyAbroadReport";
 import { ALL_TOPICS as STUDY_ABROAD_TOPICS } from "@/lib/studyAbroad/assessmentData";
-import {
-  EMPLOYABILITY_QUOTIENT_DIMENSIONS,
-  normalizeDimensionScores,
-} from "@/lib/employabilityQuotient/assessmentData";
+import { normalizeDimensionScores } from "@/lib/employabilityQuotient/assessmentData";
 import {
   DOMAIN_INFO,
   DIMENSION_COLORS,
@@ -524,41 +521,35 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       }
 
   if (normalizedCode === "EMPLOYABILITY_QUOTIENT") {
-    const { default: jsPDF } = await import("jspdf");
-    const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
+    const [{ pdf }, { EmployabilityQuotientPdfReport }] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("@/components/reports/EmployabilityQuotientPdfReport"),
+    ]);
+
     const overallScore = Number(evaluation.overallScore ?? 0);
-    const tier = String(evaluation.tier ?? "");
     const dimensionScores = normalizeDimensionScores(
       evaluation.dimensionScores as Record<string, number> | undefined,
     );
+    const overallPercentage = Number(
+      evaluation.overallPercentage ?? Math.round((overallScore / 50) * 100),
+    );
 
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.text("Employability Quotient Report", 15, 20);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(11);
-    pdf.text(`Student: ${reportStudentName}`, 15, 30);
-    pdf.text(`Submitted: ${submittedLabel}`, 15, 37);
-    pdf.text(`Score: ${overallScore} / 50`, 15, 44);
-    if (tier) pdf.text(`Tier: ${tier}`, 15, 51);
-
-    let y = 62;
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Dimension Scores (correct / 5)", 15, y);
-    y += 8;
-    pdf.setFont("helvetica", "normal");
-    EMPLOYABILITY_QUOTIENT_DIMENSIONS.forEach((dimension) => {
-      if (y > 270) {
-        pdf.addPage();
-        y = 20;
-      }
-      pdf.text(`${dimension}: ${dimensionScores[dimension]} / 5`, 15, y);
-      y += 7;
+    const element = EmployabilityQuotientPdfReport({
+      studentName: reportStudentName,
+      email: reportEmail,
+      generatedDate: submittedLabel !== "-" ? submittedLabel : new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }),
+      overallScore,
+      overallPercentage,
+      tier: String(evaluation.tier ?? ""),
+      dimensionScores,
+      answeredCount: Number(evaluation.answeredCount ?? report.answeredCount),
+      totalQuestions: Number(evaluation.totalQuestions ?? report.totalQuestions),
     });
 
+    const blob = await pdf(element).toBlob();
     return {
-      blob: pdf.output("blob"),
-      fileName: `Employability_Quotient_${reportStudentName.replace(/\s+/g, "_")}.pdf`,
+      blob,
+      fileName: `Employability_Quotient_Report_${reportStudentName.replace(/\s+/g, "_")}.pdf`,
     };
   }
 
