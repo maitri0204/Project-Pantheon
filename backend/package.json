@@ -10,6 +10,7 @@
     "seed:platform": "ts-node src/scripts/seedPlatform.ts",
     "seed:questions": "ts-node src/scripts/seedQuestions.ts",
     "seed:study-abroad": "ts-node src/scripts/seedStudyAbroad.ts",
+    "seed:employability-quotient": "ts-node src/scripts/seedEmployabilityQuotient.ts",
     "postinstall": "npx @puppeteer/browsers install chrome@stable || true"
   },
   "keywords": [],

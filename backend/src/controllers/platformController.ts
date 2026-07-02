@@ -56,6 +56,9 @@ const normalizeAssessmentCode = (code: string): string => {
   if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
   if (normalized === "LITMUS") return "LITMUS_TEST";
   if (LEGACY_RESILIENCE_CODES.has(normalized)) return RESILIENCE_ASSESSMENT_CODE;
+  if (normalized === "EMPLOYABILITY-QUOTIENT" || normalized === "EMPLOYABILITYQUOTIENT") {
+    return "EMPLOYABILITY_QUOTIENT";
+  }
   return normalized;
 };
 
@@ -68,6 +71,7 @@ const RETAKABLE_ASSESSMENT_CODES = new Set([
   RESILIENCE_ASSESSMENT_CODE,
   "ACADEMIC_CAREER",
   "STUDY_ABROAD",
+  "EMPLOYABILITY_QUOTIENT",
 ]);
 
 const allowsMultipleAttempts = (code: string): boolean => {
@@ -85,6 +89,8 @@ function pickAttemptHistoryEvaluation(
   if (evaluation.overallPercentage != null) picked.overallPercentage = evaluation.overallPercentage;
   if (evaluation.aqLevel != null) picked.aqLevel = evaluation.aqLevel;
   if (evaluation.band != null) picked.band = evaluation.band;
+  if (evaluation.tier != null) picked.tier = evaluation.tier;
+  if (evaluation.dimensionScores != null) picked.dimensionScores = evaluation.dimensionScores;
   if (evaluation.personalityType != null) picked.personalityType = evaluation.personalityType;
   if (evaluation.solicitsFeedbackScore != null) picked.solicitsFeedbackScore = evaluation.solicitsFeedbackScore;
   if (evaluation.selfDisclosureScore != null) picked.selfDisclosureScore = evaluation.selfDisclosureScore;

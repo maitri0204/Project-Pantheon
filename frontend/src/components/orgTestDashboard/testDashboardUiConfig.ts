@@ -5,6 +5,7 @@ import { bandFromPercentage, bandMeta } from "@/lib/studyAbroad/assessmentData";
 export type DashboardLayoutVariant =
   | "standard"
   | "study-abroad"
+  | "employability"
   | "johari"
   | "career-compass"
   | "litmus"
@@ -225,6 +226,31 @@ export const TEST_DASHBOARD_UI_CONFIG: Record<string, TestDashboardUiConfig> = {
       { label: "Profiles completed", value: data.summary.totalAttempts },
       {
         label: "Top scored section",
+        value: data.dimensionAverages[0]?.label ?? "-",
+        sub: data.dimensionAverages[0] ? `${data.dimensionAverages[0].value}% avg` : undefined,
+      },
+    ],
+  },
+  EMPLOYABILITY_QUOTIENT: {
+    layout: "employability",
+    title: "Employability Quotient Dashboard",
+    subtitle: "Track 10 future-skills dimensions: analytical thinking, resilience, leadership, creativity, and more.",
+    emptyTitle: "Employability Quotient - Organization Overview",
+    emptySubtitle: "Employability tiers and dimension averages appear when students complete the assessment.",
+    accentClass: "from-emerald-600 to-teal-600",
+    chartColors: ["#10b981", "#14b8a6", "#06b6d4", "#22c55e", "#0d9488", "#2dd4bf"],
+    barClass: "bg-emerald-500",
+    distributionTitle: "Performance tier distribution",
+    distributionDescription: "How students cluster across employability tiers.",
+    dimensionsTitle: "10 employability dimensions (org average)",
+    dimensionsDescription: "Dimension scores averaged across completed assessments.",
+    resultColumnLabel: "Performance tier",
+    buildStatCards: (data) => [
+      { label: "Avg employability score", value: data.summary.metricValue ?? "-", sub: data.summary.metricSub },
+      { label: "Students assessed", value: data.summary.uniqueStudents, sub: "Unique learners" },
+      { label: "Total attempts", value: data.summary.totalAttempts, sub: "Completed assessments" },
+      {
+        label: "Top dimension",
         value: data.dimensionAverages[0]?.label ?? "-",
         sub: data.dimensionAverages[0] ? `${data.dimensionAverages[0].value}% avg` : undefined,
       },

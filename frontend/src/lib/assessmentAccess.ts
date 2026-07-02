@@ -18,6 +18,7 @@ export const RETAKABLE_ASSESSMENT_CODES = new Set([
   RESILIENCE_ASSESSMENT_CODE,
   "ACADEMIC_CAREER",
   "STUDY_ABROAD",
+  "EMPLOYABILITY_QUOTIENT",
 ]);
 
 export type AttemptHistoryEvaluation = {
@@ -62,6 +63,7 @@ export function getAssessmentDisplayName(code: string, fallback?: string): strin
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
   if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
   if (normalized === RESILIENCE_ASSESSMENT_CODE) return "Resilience Quotient (RQ) Assessment";
+  if (normalized === "EMPLOYABILITY_QUOTIENT") return "Employability Quotient";
   if (fallback && /adversity quotient|\(aq\)/i.test(fallback)) {
     return "Resilience Quotient (RQ) Assessment";
   }
@@ -78,6 +80,16 @@ function formatAttemptHistoryScoreValue(
     const overallScore = Number(evaluation.overallScore);
     if (Number.isFinite(overallScore)) {
       return `${overallScore} / ${MAX_ASSESSMENT_SCORE}`;
+    }
+    const pct = Number(evaluation.overallPercentage);
+    if (Number.isFinite(pct)) return `${Math.round(pct)}%`;
+    return null;
+  }
+
+  if (code === "EMPLOYABILITY_QUOTIENT") {
+    const overallScore = Number(evaluation.overallScore);
+    if (Number.isFinite(overallScore)) {
+      return `${overallScore} / 50`;
     }
     const pct = Number(evaluation.overallPercentage);
     if (Number.isFinite(pct)) return `${Math.round(pct)}%`;
@@ -152,6 +164,10 @@ function formatAttemptHistoryTraitValue(
 
   if (code === "STUDY_ABROAD" && evaluation.band) {
     return String(evaluation.band);
+  }
+
+  if (code === "EMPLOYABILITY_QUOTIENT" && (evaluation as { tier?: string }).tier) {
+    return String((evaluation as { tier?: string }).tier);
   }
 
   if (isResilienceAssessment(code) && evaluation.aqLevel) {
@@ -230,6 +246,9 @@ export function normalizeAssessmentCode(code: string): string {
   if (normalized === "JOHARI" || normalized === "CLEAR") return "JOHARI_WINDOW";
   if (normalized === "LITMUS") return "LITMUS_TEST";
   if (LEGACY_RESILIENCE_CODES.has(normalized)) return RESILIENCE_ASSESSMENT_CODE;
+  if (normalized === "EMPLOYABILITY-QUOTIENT" || normalized === "EMPLOYABILITYQUOTIENT") {
+    return "EMPLOYABILITY_QUOTIENT";
+  }
   return normalized;
 }
 

@@ -32,6 +32,7 @@ import {
   type DashboardAudienceLabels,
 } from "@/components/orgTestDashboard/testDashboardUiConfig";
 import { bandFromPercentage, bandMeta } from "@/lib/studyAbroad/assessmentData";
+import { tierFromScore, tierMeta } from "@/lib/employabilityQuotient/assessmentData";
 import type { AssessmentAdminDashboardResponse } from "@/lib/dashboard/assessmentAdminDashboard";
 
 type EnhancedOrgTestDashboardProps = {
@@ -265,6 +266,99 @@ function StudyAbroadLayout({
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-black truncate">{s.label}</p>
                     <p className="text-xs text-rose-700 font-bold">{s.value}%</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ChartCard>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function EmployabilityLayout({
+  data,
+  config,
+}: {
+  data: AssessmentAdminDashboardResponse;
+  config: NonNullable<ReturnType<typeof getTestDashboardUiConfig>>;
+}) {
+  const withPct = data.allAttempts.filter((r) => Number.isFinite(r.percentage));
+  const avgPct = withPct.length
+    ? Math.round(withPct.reduce((s, r) => s + (r.percentage ?? 0), 0) / withPct.length)
+    : 0;
+  const avgScore = data.allAttempts
+    .map((r) => r.score)
+    .filter((s): s is number => Number.isFinite(s));
+  const avgRaw = avgScore.length
+    ? Math.round(avgScore.reduce((sum, value) => sum + value, 0) / avgScore.length)
+    : 0;
+  const tier = tierFromScore(avgRaw);
+  const meta = tierMeta(tier);
+  const sortedDims = [...data.dimensionAverages].sort((a, b) => b.value - a.value);
+  const strengths = sortedDims.slice(0, 3);
+  const gaps = [...data.dimensionAverages].sort((a, b) => a.value - b.value).slice(0, 3);
+
+  return (
+    <>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <ChartCard title="Org average employability" description="Average score across completed assessments.">
+          <div className="flex flex-col items-center py-2">
+            <DonutChart percentage={avgPct} stroke="#10b981" centerLabel="Avg score" />
+            <div className={`mt-4 w-full text-center rounded-xl border px-4 py-2 ${meta.border} ${meta.bg}`}>
+              <p className={`text-sm font-bold ${meta.color}`}>{tier}</p>
+              <p className="mt-1 text-xs text-slate-600">{avgRaw} / 50 correct</p>
+            </div>
+          </div>
+        </ChartCard>
+        <div className="lg:col-span-2">
+          <ChartCard title={config.dimensionsTitle} description={config.dimensionsDescription}>
+            <HorizontalBarChart
+              items={data.dimensionAverages.map((d) => ({
+                label: d.label,
+                value: d.value,
+                color: "bg-emerald-400",
+              }))}
+              barClass="bg-emerald-400"
+            />
+          </ChartCard>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DistributionChart
+          distributions={data.distributions}
+          colors={config.chartColors}
+          title={config.distributionTitle}
+          description={config.distributionDescription}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ChartCard title="Top strengths" description="Highest employability dimensions (org avg).">
+            <div className="space-y-2">
+              {strengths.map((s, i) => (
+                <div key={s.key} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/50 px-3 py-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-black truncate">{s.label}</p>
+                    <p className="text-xs text-emerald-700 font-bold">{s.value}%</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ChartCard>
+          <ChartCard title="Needs attention" description="Lowest employability dimensions (org avg).">
+            <div className="space-y-2">
+              {gaps.map((s, i) => (
+                <div key={s.key} className="flex items-center gap-2 rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-black truncate">{s.label}</p>
+                    <p className="text-xs text-amber-700 font-bold">{s.value}%</p>
                   </div>
                 </div>
               ))}
@@ -560,6 +654,7 @@ function AnalyticsBody({
   return (
     <>
       {config.layout === "study-abroad" && <StudyAbroadLayout data={data} config={config} />}
+      {config.layout === "employability" && <EmployabilityLayout data={data} config={config} />}
       {config.layout === "johari" && <JohariLayout data={data} />}
       {config.layout === "career-compass" && <CareerCompassLayout data={data} config={config} />}
       {config.layout === "litmus" && <LitmusLayout data={data} config={config} />}

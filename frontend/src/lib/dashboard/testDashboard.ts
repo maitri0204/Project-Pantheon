@@ -17,6 +17,13 @@ const TEST_DASHBOARD_META: Record<string, Omit<TestDashboardMeta, "code">> = {
     accent: "bg-blue-50 text-blue-700 border-blue-100",
     enabled: true,
   },
+  EMPLOYABILITY_QUOTIENT: {
+    title: "Employability Quotient",
+    subtitle: "Future-skills dimensions, tiers, and employability reports",
+    gradient: "from-emerald-600 to-teal-500",
+    accent: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    enabled: true,
+  },
   RESILIENCE_TEST: {
     title: "Resilience Quotient (RQ)",
     subtitle: "Resilience levels and CORE dimension analytics",

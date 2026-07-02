@@ -1,4 +1,9 @@
 import { STUDY_ABROAD_TOPICS } from "./studyAbroadQuestionSelection.service";
+import { EMPLOYABILITY_QUOTIENT_DIMENSIONS } from "../data/employabilityQuotientBank";
+import {
+  EMPLOYABILITY_QUOTIENT_MAX_SCORE,
+  tierFromScore,
+} from "./employabilityQuotientScoring.service";
 import { scoreToPercentage as studyAbroadScoreToPct } from "./studyAbroadScoring.service";
 
 export type AdminDashboardDimension = {
@@ -153,6 +158,32 @@ function parseStudyAbroad(evaluation: Record<string, unknown>): ParsedAttemptMet
   return {
     resultLabel: band,
     resultDetail: `${overallScore} / 150`,
+    score: overallScore,
+    percentage,
+    metrics,
+  };
+}
+
+function parseEmployabilityQuotient(evaluation: Record<string, unknown>): ParsedAttemptMetrics | null {
+  const overallScore = Number(evaluation.overallScore);
+  if (!Number.isFinite(overallScore)) return null;
+  const percentage = Number.isFinite(Number(evaluation.overallPercentage))
+    ? Number(evaluation.overallPercentage)
+    : Math.round((overallScore / EMPLOYABILITY_QUOTIENT_MAX_SCORE) * 100);
+  const tier = typeof evaluation.tier === "string"
+    ? evaluation.tier
+    : tierFromScore(overallScore);
+  const metrics: Record<string, number> = {};
+  const raw = evaluation.dimensionScores;
+  if (raw && typeof raw === "object") {
+    Object.entries(raw as Record<string, unknown>).forEach(([k, v]) => {
+      const n = Number(v);
+      if (Number.isFinite(n)) metrics[k] = Math.round((n / 5) * 100);
+    });
+  }
+  return {
+    resultLabel: tier,
+    resultDetail: `${overallScore} / ${EMPLOYABILITY_QUOTIENT_MAX_SCORE}`,
     score: overallScore,
     percentage,
     metrics,
@@ -457,6 +488,10 @@ function parseEvaluation(
       const parsed = parseStudyAbroad(evaluation);
       return parsed ? { ...parsed } : null;
     }
+    case "EMPLOYABILITY_QUOTIENT": {
+      const parsed = parseEmployabilityQuotient(evaluation);
+      return parsed ? { ...parsed } : null;
+    }
     case "RESILIENCE_TEST":
     case "ADVERSITY_TEST": {
       const parsed = parseAdversity(evaluation);
@@ -537,6 +572,14 @@ function buildSummary(
       summary.metricSub = scores.length ? bandFromStudyAbroadScore(avgScore) : undefined;
       break;
     }
+    case "EMPLOYABILITY_QUOTIENT": {
+      const scores = rows.map((r) => r.score).filter((s): s is number => Number.isFinite(s));
+      const avgScore = avg(scores);
+      summary.metricLabel = "Avg Score";
+      summary.metricValue = scores.length ? `${avgScore} / ${EMPLOYABILITY_QUOTIENT_MAX_SCORE}` : "-";
+      summary.metricSub = scores.length ? tierFromScore(Math.round(avgScore)) : undefined;
+      break;
+    }
     case "RESILIENCE_TEST":
     case "ADVERSITY_TEST": {
       const scores = rows.map((r) => r.score).filter((s): s is number => Number.isFinite(s));
@@ -583,6 +626,12 @@ function buildSummary(
 const DIMENSION_LABELS: Record<string, Record<string, string>> = {
   STUDY_ABROAD: Object.fromEntries(
     STUDY_ABROAD_TOPICS.map((t) => [t, t.replace(" Readiness", "")]),
+  ),
+  EMPLOYABILITY_QUOTIENT: Object.fromEntries(
+    EMPLOYABILITY_QUOTIENT_DIMENSIONS.map((dimension) => {
+      const short = dimension.length > 28 ? `${dimension.slice(0, 25)}...` : dimension;
+      return [dimension, short];
+    }),
   ),
   RESILIENCE_TEST: {
     Control: "Control",

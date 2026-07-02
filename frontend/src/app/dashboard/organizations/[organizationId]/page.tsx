@@ -72,6 +72,7 @@ const getAssessmentDisplayName = (code: string, fallbackName: string): string =>
   if (normalized === "METACOGNITION_TEST") return "TEST - Thinking & Expression Skills Test";
   if (normalized === "JOHARI_WINDOW") return "CLEAR - Cognitive Lens for Emotional Awareness & Reflection";
   if (normalized === "RESILIENCE_TEST" || normalized === "ADVERSITY_TEST") return "Resilience Quotient (RQ) Assessment";
+  if (normalized === "EMPLOYABILITY_QUOTIENT") return "Employability Quotient";
   return fallbackName;
 };
 
@@ -207,6 +208,14 @@ export default function OrganizationDetailsPage() {
         <div>
           <h1 className="break-words text-2xl font-bold text-black sm:text-3xl">{organization.name}</h1>
           <p className="text-black mt-1 text-base">Organization details and coupon configuration.</p>
+          {organization.slug && (
+            <Link
+              href={`/whitelabel/${organization.slug}/dashboard`}
+              className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800"
+            >
+              Open organization analytics dashboard →
+            </Link>
+          )}
         </div>
         <span className={`mt-1 text-sm px-3 py-1 rounded-full font-semibold ${organization.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-black"}`}>
           {organization.isActive ? "Active" : "Inactive"}

@@ -571,6 +571,55 @@ const content: Record<string, AssessmentPageContent> = {
         ],
       },
 
+      EMPLOYABILITY_QUOTIENT: {
+        theme: {
+          badge: "Employability Quotient",
+          badgeClass: "bg-emerald-50 text-emerald-800",
+          gradient: "from-emerald-50 via-white to-slate-50",
+          supportCardClass: "bg-emerald-50 text-slate-900",
+          calloutClass: "border-emerald-200 bg-emerald-50 text-slate-800",
+          glanceTextClass: "text-emerald-200",
+        },
+        hero: {
+          title: "Measure Your Employability Readiness for 2030",
+          subtitle:
+            "A scenario-based assessment across 10 future-skills dimensions — analytical thinking, resilience, leadership, creativity, and more.",
+          supportingLine:
+            "50 workplace-style multiple-choice scenarios. Each correct response earns 1 point. Retakes are allowed to track growth.",
+          sidePoints: ["50 questions", "10 skill dimensions", "Tier-based employability report"],
+        },
+        sections: [
+          {
+            title: "Who should take this assessment",
+            cards: [
+              { title: "Students", body: "Preparing for internships, placements, and early-career roles." },
+              { title: "Final-year learners", body: "Who want evidence of future-ready skills beyond academics." },
+              { title: "Career counselors", body: "Who need structured employability data for coaching conversations." },
+            ],
+          },
+          {
+            title: "10 employability dimensions",
+            subtitle: "Aligned with high-demand 2030 talent frameworks.",
+            cards: [
+              { title: "Analytical Thinking", body: "Organize data, prioritize, and apply root-cause analysis." },
+              { title: "Resilience & Agility", body: "Adapt under pressure and pivot without blame." },
+              { title: "Leadership & Influence", body: "Build safety, consensus, and title-less momentum." },
+              { title: "Service Orientation", body: "Anticipate needs and balance policy with human care." },
+            ],
+            callout: "Scoring is +1 per correct answer (0 otherwise). Overall score is out of 50 with performance tiers.",
+          },
+          {
+            title: "What you receive",
+            grid: [
+              { title: "Performance tier", body: "Future-Ready Leader, Adaptive Professional, or Emerging Contender." },
+              { title: "10-dimension radar", body: "Visual profile across all skill areas." },
+              { title: "Strengths & focus areas", body: "Top and bottom dimensions with clear labels." },
+              { title: "Downloadable PDF", body: "Shareable report for mentors and placement prep." },
+            ],
+          },
+        ],
+      },
+
       TEST: {
         theme: {
           badge: "Thinking & Expression Skills Test",

@@ -14,6 +14,7 @@ const ASSESSMENT_META: Record<string, { name: string; color: string; bg: string 
   METACOGNITION_TEST: { name: "TEST", color: "text-rose-700", bg: "bg-rose-50" },
   RESILIENCE_TEST: { name: "RQ", color: "text-orange-700", bg: "bg-orange-50" },
   STUDY_ABROAD: { name: "Study Abroad", color: "text-indigo-700", bg: "bg-indigo-50" },
+  EMPLOYABILITY_QUOTIENT: { name: "Employability Quotient", color: "text-teal-700", bg: "bg-teal-50" },
   ACADEMIC_CAREER: { name: "Academic Career", color: "text-teal-700", bg: "bg-teal-50" },
 };
 

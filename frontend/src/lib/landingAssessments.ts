@@ -108,10 +108,22 @@ export const LANDING_ASSESSMENTS: LandingAssessment[] = [
     description:
       "Measure readiness across language, academics, finances, visa, culture, and more - with a comprehensive study-abroad action plan.",
   },
+  {
+    code: "EMPLOYABILITY_QUOTIENT",
+    name: "Employability Quotient",
+    shortName: "Employability Quotient",
+    emoji: "💼",
+    accentClass: "from-emerald-500 via-teal-500 to-cyan-500",
+    audience: "Students",
+    duration: "45-60 min",
+    highlights: ["10 future-skills dimensions", "Scenario-based MCQs", "Performance tier report"],
+    description:
+      "Measure employability readiness across analytical thinking, resilience, leadership, creativity, motivation, technology, empathy, curiosity, talent management, and service orientation.",
+  },
 ];
 
 export const LANDING_STATS = [
-  { value: "08", label: "Expert Assessments" },
+  { value: "09", label: "Expert Assessments" },
   { value: "15+", label: "Pages of Insightful Report" },
   { value: "52", label: "Readiness Dimensions Measured" },
 ];

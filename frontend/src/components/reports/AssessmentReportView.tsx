@@ -16,9 +16,14 @@ import { generateAcademicCareerReport } from "../../lib/reports/generateAcademic
 import QuadrantGraph, { QuadrantLegend } from "./QuadrantGraph";
 import AcademicCareerReport from "./AcademicCareerReport";
 import StudyAbroadReport, { type StudyAbroadEvaluation } from "./StudyAbroadReport";
+import EmployabilityQuotientReport, { type EmployabilityQuotientEvaluation } from "./EmployabilityQuotientReport";
 import CareerDnaReport, { type CareerDnaEvaluation } from "./CareerDnaReport";
 import { generateStudyAbroadReportForEmail } from "@/lib/reports/generateStudyAbroadReport";
 import { ALL_TOPICS as STUDY_ABROAD_TOPICS } from "@/lib/studyAbroad/assessmentData";
+import {
+  EMPLOYABILITY_QUOTIENT_DIMENSIONS,
+  normalizeDimensionScores,
+} from "@/lib/employabilityQuotient/assessmentData";
 import {
   DOMAIN_INFO,
   DIMENSION_COLORS,
@@ -518,6 +523,45 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
     return { blob, fileName };
       }
 
+  if (normalizedCode === "EMPLOYABILITY_QUOTIENT") {
+    const { default: jsPDF } = await import("jspdf");
+    const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
+    const overallScore = Number(evaluation.overallScore ?? 0);
+    const tier = String(evaluation.tier ?? "");
+    const dimensionScores = normalizeDimensionScores(
+      evaluation.dimensionScores as Record<string, number> | undefined,
+    );
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text("Employability Quotient Report", 15, 20);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(11);
+    pdf.text(`Student: ${reportStudentName}`, 15, 30);
+    pdf.text(`Submitted: ${submittedLabel}`, 15, 37);
+    pdf.text(`Score: ${overallScore} / 50`, 15, 44);
+    if (tier) pdf.text(`Tier: ${tier}`, 15, 51);
+
+    let y = 62;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Dimension Scores (correct / 5)", 15, y);
+    y += 8;
+    pdf.setFont("helvetica", "normal");
+    EMPLOYABILITY_QUOTIENT_DIMENSIONS.forEach((dimension) => {
+      if (y > 270) {
+        pdf.addPage();
+        y = 20;
+      }
+      pdf.text(`${dimension}: ${dimensionScores[dimension]} / 5`, 15, y);
+      y += 7;
+    });
+
+    return {
+      blob: pdf.output("blob"),
+      fileName: `Employability_Quotient_${reportStudentName.replace(/\s+/g, "_")}.pdf`,
+    };
+  }
+
       if (normalizedCode === "ACADEMIC_CAREER") {
     const backCoverImageSrc = await loadPublicImageDataUrl("/academic-career/back-cover.jpg");
     const blob = await generateAcademicCareerReport({
@@ -963,6 +1007,21 @@ export default function AssessmentReportView({
         totalQuestions: Number(evaluation.totalQuestions ?? report.totalQuestions),
       };
       return <StudyAbroadReport evaluation={saEvaluation} submittedAt={report.submittedAt} />;
+    }
+
+    if (normalizedCode === "EMPLOYABILITY_QUOTIENT") {
+      const eqEvaluation: EmployabilityQuotientEvaluation = {
+        overallScore: Number(evaluation.overallScore ?? 0),
+        overallPercentage: Number(evaluation.overallPercentage ?? 0),
+        tier: String(evaluation.tier ?? ""),
+        dimensionScores: normalizeDimensionScores(
+          evaluation.dimensionScores as Record<string, number> | undefined,
+        ),
+        dimensionAnswered: evaluation.dimensionAnswered as EmployabilityQuotientEvaluation["dimensionAnswered"],
+        answeredCount: Number(evaluation.answeredCount ?? report.answeredCount),
+        totalQuestions: Number(evaluation.totalQuestions ?? report.totalQuestions),
+      };
+      return <EmployabilityQuotientReport evaluation={eqEvaluation} submittedAt={report.submittedAt} />;
     }
 
     return <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">Report generated successfully.</div>;

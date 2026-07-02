@@ -17,7 +17,7 @@ import {
 import { ADVERSITY_TEST_QUESTIONS } from "../scripts/seedAdversityQuestions";
 
 /** Assessments that allow multiple completed attempts per student - never merge/delete during alias migration. */
-const MULTI_ATTEMPT_ASSESSMENT_CODES = new Set(["RESILIENCE_TEST", "STUDY_ABROAD"]);
+const MULTI_ATTEMPT_ASSESSMENT_CODES = new Set(["RESILIENCE_TEST", "STUDY_ABROAD", "EMPLOYABILITY_QUOTIENT"]);
 
 const LEGACY_ASSESSMENT_ALIASES: Array<{ alias: string; canonical: string; canonicalName: string }> = [
   {

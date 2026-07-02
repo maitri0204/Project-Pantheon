@@ -26,8 +26,13 @@ export function useAssessmentOrgDashboard(
       return;
     }
 
+    if (auth.user.role !== "SUPERADMIN" && auth.user.role !== "ORG_ADMIN") {
+      router.replace(loginPath);
+      return;
+    }
+
     fetchAssessmentAdminDashboard(auth.token, assessmentCode, {
-      organizationSlug,
+      organizationSlug: auth.user.role === "SUPERADMIN" ? organizationSlug : undefined,
     })
       .then((res) => setData(res))
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load dashboard"))

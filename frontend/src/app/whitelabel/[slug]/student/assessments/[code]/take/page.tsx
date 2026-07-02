@@ -455,7 +455,7 @@ export default function StudentTakeAssessmentPage() {
     return ai - bi;
   });
 
-  const useFlatQuestionNavigator = code === "STUDY_ABROAD" || code === "ACADEMIC_CAREER";
+  const useFlatQuestionNavigator = code === "STUDY_ABROAD" || code === "ACADEMIC_CAREER" || code === "EMPLOYABILITY_QUOTIENT";
 
   // Build navigator-ordered list of question indexes (used for sequential Next/Previous)
   const navigatorOrderedIndexes: number[] = useFlatQuestionNavigator
@@ -516,6 +516,7 @@ export default function StudentTakeAssessmentPage() {
     if (code.includes("METACOGNITION")) return "metacognition" as const;
     if (code.includes("DNA")) return "career-dna" as const;
     if (code === "STUDY_ABROAD") return "study-abroad" as const;
+    if (code === "EMPLOYABILITY_QUOTIENT") return "employability" as const;
     return "career-compass" as const;
   })();
 
@@ -528,6 +529,7 @@ export default function StudentTakeAssessmentPage() {
     litmus: "from-amber-500 to-orange-500",
     metacognition: "from-indigo-600 to-sky-600",
     "study-abroad": "from-sky-500 to-indigo-600",
+    employability: "from-emerald-500 to-teal-600",
   }[assessmentVariant];
 
   const pageTone = {
@@ -537,6 +539,7 @@ export default function StudentTakeAssessmentPage() {
     litmus: "bg-amber-50/40",
     metacognition: "bg-sky-50/40",
     "study-abroad": "bg-sky-50/40",
+    employability: "bg-emerald-50/40",
   }[assessmentVariant];
 
   const sectionProgress = categoryGroups.map((group) => {

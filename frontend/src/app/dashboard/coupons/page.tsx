@@ -14,6 +14,7 @@ const ASSESSMENTS = [
   { code: "RESILIENCE_TEST", name: "Resilience Quotient", color: "orange" },
   { code: "STUDY_ABROAD", name: "Study Abroad", color: "sky" },
   { code: "ACADEMIC_CAREER", name: "Academic Career", color: "violet" },
+  { code: "EMPLOYABILITY_QUOTIENT", name: "Employability Quotient", color: "teal" },
 ] as const;
 
 function getAssessmentDisplayName(code: string, fallback?: string): string {
@@ -27,6 +28,7 @@ function getAssessmentDisplayName(code: string, fallback?: string): string {
     ADVERSITY_TEST: "Resilience Quotient (RQ) Assessment",
     STUDY_ABROAD: "Study Abroad Readiness",
     ACADEMIC_CAREER: "Academic Career & Interest",
+    EMPLOYABILITY_QUOTIENT: "Employability Quotient",
   };
   return assessmentMap[code] || fallback || code;
 }
@@ -40,6 +42,7 @@ const COLOR_CLASSES: Record<string, string> = {
   orange: "bg-orange-50 text-orange-700 border-orange-200",
   sky: "bg-sky-50 text-sky-700 border-sky-200",
   violet: "bg-violet-50 text-violet-700 border-violet-200",
+  teal: "bg-teal-50 text-teal-700 border-teal-200",
 };
 
 type Assessment = { _id: string; code: string; name: string; basePrice: number; gstEnabled?: boolean; gstPercentage?: number };

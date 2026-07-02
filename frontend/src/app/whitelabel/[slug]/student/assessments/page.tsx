@@ -159,6 +159,15 @@ const ASSESSMENT_THEMES: Record<string, AssessmentTheme> = {
     cardHoverBorder: "hover:border-indigo-200",
     glowClass: "bg-indigo-400",
   },
+  EMPLOYABILITY_QUOTIENT: {
+    emoji: "💼",
+    accentClass: "from-emerald-400 via-teal-500 to-cyan-500",
+    iconBg: "bg-emerald-50",
+    iconText: "text-emerald-600",
+    cardHoverShadow: "0 20px 48px -16px rgba(16,185,129,0.28)",
+    cardHoverBorder: "hover:border-emerald-200",
+    glowClass: "bg-emerald-400",
+  },
 };
 
 const DEFAULT_THEME: AssessmentTheme = {
