@@ -581,41 +581,70 @@ const content: Record<string, AssessmentPageContent> = {
           glanceTextClass: "text-emerald-200",
         },
         hero: {
-          title: "Measure Your Employability Readiness for 2030",
+          title: "Measure Your Employability Readiness",
           subtitle:
-            "A scenario-based assessment across 10 future-skills dimensions — analytical thinking, resilience, leadership, creativity, and more.",
+            "A scenario-based assessment across 10 future-skills dimensions - from analytical thinking and resilience to leadership, creativity, and service orientation.",
           supportingLine:
-            "50 workplace-style multiple-choice scenarios. Each correct response earns 1 point. Retakes are allowed to track growth.",
+            "50 workplace-style multiple-choice scenarios. Each correct answer earns 1 point (max 50). Retakes are allowed so you can track growth over time.",
           sidePoints: ["50 questions", "10 skill dimensions", "Tier-based employability report"],
         },
         sections: [
           {
             title: "Who should take this assessment",
             cards: [
-              { title: "Students", body: "Preparing for internships, placements, and early-career roles." },
-              { title: "Final-year learners", body: "Who want evidence of future-ready skills beyond academics." },
-              { title: "Career counselors", body: "Who need structured employability data for coaching conversations." },
+              { title: "Students", body: "Preparing for internships, campus placements, and early-career roles." },
+              { title: "Final-year learners", body: "Who want evidence of future-ready skills beyond academic grades." },
+              { title: "Career explorers", body: "Who want structured feedback on workplace readiness before interviews." },
             ],
           },
           {
-            title: "10 employability dimensions",
-            subtitle: "Aligned with high-demand 2030 talent frameworks.",
-            cards: [
-              { title: "Analytical Thinking", body: "Organize data, prioritize, and apply root-cause analysis." },
-              { title: "Resilience & Agility", body: "Adapt under pressure and pivot without blame." },
-              { title: "Leadership & Influence", body: "Build safety, consensus, and title-less momentum." },
-              { title: "Service Orientation", body: "Anticipate needs and balance policy with human care." },
+            title: "How scoring works",
+            bullets: [
+              "Each question has one best response - correct answers earn +1 point, others earn 0.",
+              "Overall score is out of 50 (one point per question).",
+              "Scores map to employability tiers: Future-Ready Leader (45-50), Adaptive Professional (35-44), Emerging Contender (0-34).",
+              "You can retake the assessment to measure improvement across attempts.",
             ],
-            callout: "Scoring is +1 per correct answer (0 otherwise). Overall score is out of 50 with performance tiers.",
+            callout: "There is no negative marking. The report highlights dimension-level strengths and focus areas, not just the total score.",
+          },
+          {
+            title: "10 employability dimensions",
+            subtitle: "Five questions per dimension, aligned with high-demand talent frameworks.",
+            cards: [
+              { title: "Analytical Thinking", body: "Organize data, weigh priorities, and apply root-cause analysis." },
+              { title: "Resilience & Agility", body: "Adapt under pressure and pivot without blame." },
+              { title: "Leadership & Influence", body: "Build psychological safety, consensus, and title-less momentum." },
+              { title: "Creative Thinking", body: "Solve problems laterally with resourceful, audience-aware ideas." },
+              { title: "Motivation & Self-Awareness", body: "Process feedback, set boundaries, and align choices with values." },
+              { title: "Technological Literacy", body: "Learn new tools quickly and validate digital information." },
+              { title: "Empathy & Active Listening", body: "De-escalate conflict and create space for every voice." },
+              { title: "Curiosity & Lifelong Learning", body: "Explore unfamiliar topics and unlearn outdated skills." },
+              { title: "Talent Management", body: "Coach peers, delegate fairly, and give actionable feedback." },
+              { title: "Service Orientation", body: "Anticipate user needs and balance policy with human care." },
+            ],
           },
           {
             title: "What you receive",
             grid: [
               { title: "Performance tier", body: "Future-Ready Leader, Adaptive Professional, or Emerging Contender." },
-              { title: "10-dimension radar", body: "Visual profile across all skill areas." },
-              { title: "Strengths & focus areas", body: "Top and bottom dimensions with clear labels." },
-              { title: "Downloadable PDF", body: "Shareable report for mentors and placement prep." },
+              { title: "10-dimension radar", body: "Visual profile showing correct answers per skill area (out of 5 each)." },
+              { title: "Strengths & focus areas", body: "Top and bottom dimensions with clear improvement labels." },
+              { title: "Downloadable PDF", body: "Shareable report for mentors, counselors, and placement prep." },
             ],
+          },
+        ],
+        faq: [
+          {
+            q: "How long does the assessment take?",
+            a: "Most students complete all 50 scenarios in 45–60 minutes. You can answer at your own pace within the session.",
+          },
+          {
+            q: "Can I retake the assessment?",
+            a: "Yes. Retakes are allowed so you can track employability growth across multiple attempts.",
+          },
+          {
+            q: "Is there a pass or fail?",
+            a: "No. You receive a tier and dimension breakdown that highlights readiness and development areas.",
           },
         ],
       },
@@ -738,6 +767,9 @@ const content: Record<string, AssessmentPageContent> = {
       ADVERSITY_TEST: "RESILIENCE_TEST",
       RQ_TEST: "RESILIENCE_TEST",
       RESILIENCE: "RESILIENCE_TEST",
+      EMPLOYABILITY_QUOTIENT: "EMPLOYABILITY_QUOTIENT",
+      EMPLOYABILITY: "EMPLOYABILITY_QUOTIENT",
+      "EMPLOYABILITY-QUOTIENT": "EMPLOYABILITY_QUOTIENT",
     };
 
     function normalizeAssessmentCode(code: string): keyof typeof content | null {
@@ -870,6 +902,13 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "50 questions", desc: "Randomized per session", icon: "📋" },
               { title: "Action report", desc: "Strengths, gaps, PDF", icon: "📄" },
             ]
+          : normalizedCode === "EMPLOYABILITY_QUOTIENT"
+          ? [
+              { title: "Analytical", desc: "Data-driven decisions", icon: "📊" },
+              { title: "Resilience", desc: "Adapt under pressure", icon: "🛡️" },
+              { title: "Leadership", desc: "Influence without titles", icon: "🤝" },
+              { title: "Creativity", desc: "Lateral problem-solving", icon: "💡" },
+            ]
           : [
               { title: "King", desc: "Control and structure", icon: "👑" },
               { title: "Servant", desc: "Support and independence", icon: "🤝" },
@@ -920,6 +959,12 @@ const content: Record<string, AssessmentPageContent> = {
               { title: "Timed session", desc: "60 minutes, 50 questions", icon: "⏱️" },
               { title: "Honest scoring", desc: "No right/wrong - best-fit options", icon: "✅" },
               { title: "Retake friendly", desc: "New question mix on retakes", icon: "🔁" },
+            ]
+          : normalizedCode === "EMPLOYABILITY_QUOTIENT"
+          ? [
+              { title: "+1 / 0 scoring", desc: "1 point per correct answer", icon: "✅" },
+              { title: "50 scenarios", desc: "Workplace-style MCQs", icon: "📋" },
+              { title: "Retakes allowed", desc: "Track growth over time", icon: "🔁" },
             ]
           : [
               { title: "Confidence", desc: "Your child’s confidence", icon: "🌱" },
@@ -1196,6 +1241,66 @@ const content: Record<string, AssessmentPageContent> = {
                     <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
                       <p className="text-sm font-semibold text-white">Stream fit</p>
                       <p className="mt-1 text-xs leading-5 text-slate-300">Guidance for subject and stream choices</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      if (normalizedCode === "EMPLOYABILITY_QUOTIENT") {
+        return (
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-45px_rgba(15,23,42,0.35)]">
+            <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="p-8 sm:p-10 lg:p-12">
+                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] ${page.theme.badgeClass}`}>{page.theme.badge}</span>
+                <h1 className="mt-5 max-w-2xl text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">{page.hero.title}</h1>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">{page.hero.subtitle}</p>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">{page.hero.supportingLine}</p>
+
+                <div className="mt-8 rounded-3xl bg-emerald-50 p-6 shadow-lg">
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Employability snapshot</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">
+                    Ten future-skills dimensions scored out of 5 each, rolled into a tiered readiness profile.
+                  </p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {heroBadgeItems.map((item) => (
+                      <div key={item.title} className="rounded-2xl bg-white/75 p-4 shadow-sm">
+                        <div className="text-2xl">{item.icon}</div>
+                        <p className="mt-2 text-sm font-bold text-slate-900">{item.title}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative overflow-hidden bg-[linear-gradient(160deg,#0b2f24,#111827)] p-8 text-white sm:p-10 lg:p-12">
+                <div className="absolute -right-8 -top-8 h-36 w-36 rounded-full bg-emerald-400/15 blur-3xl" />
+                <div className="absolute -left-6 bottom-4 h-28 w-28 rounded-full bg-teal-400/10 blur-3xl" />
+                <div className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">At a glance</p>
+                  <div className="mt-5 space-y-3">
+                    {heroSidePoints.map((point) => (
+                      <div key={point.title} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-xl">{point.icon}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{point.title}</p>
+                          <p className="text-xs text-slate-300">{point.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <p className="text-sm font-semibold text-white">45–50 pts</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">Future-Ready Leader tier</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
+                      <p className="text-sm font-semibold text-white">35–44 pts</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">Adaptive Professional tier</p>
                     </div>
                   </div>
                 </div>

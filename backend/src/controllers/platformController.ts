@@ -2204,15 +2204,21 @@ export const getOrganizationCouponSummary = async (req: AuthRequest, res: Respon
     return;
   }
 
-  const orgId = req.user.organization;
+  const organizationId = getReferenceId(req.user.organization);
+  if (!organizationId) {
+    res.status(400).json({ message: "Organization is missing" });
+    return;
+  }
+
+  const orgObjectId = new mongoose.Types.ObjectId(organizationId);
   const [assessments, configs, usageRows, usageDetails] = await Promise.all([
     Assessment.find({ active: true }).sort({ name: 1 }),
-    OrganizationCouponConfig.find({ organization: orgId }).sort({ assessmentCode: 1 }),
+    OrganizationCouponConfig.find({ organization: orgObjectId }).sort({ assessmentCode: 1 }),
     OrganizationCouponUsage.aggregate<{ _id: string; used: number }>([
-      { $match: { organization: orgId } },
+      { $match: { organization: orgObjectId } },
       { $group: { _id: "$assessmentCode", used: { $sum: 1 } } },
     ]),
-    OrganizationCouponUsage.find({ organization: orgId })
+    OrganizationCouponUsage.find({ organization: orgObjectId })
       .populate("user", "firstName middleName lastName email")
       .sort({ usedAt: -1 })
       .lean(),
@@ -2224,10 +2230,12 @@ export const getOrganizationCouponSummary = async (req: AuthRequest, res: Respon
 
   const configByCode = new Map(configs.map((config) => [normalizeAssessmentCode(config.assessmentCode), config]));
   const usedByCode = new Map(usageRows.map((row) => [normalizeAssessmentCode(row._id), row.used]));
+  const usageCountByCode = new Map<string, number>();
   const usageByCode = new Map<string, Array<{ couponCode: string; studentName: string; studentEmail: string; usedAt?: Date }>>();
 
   usageDetails.forEach((usage) => {
     const code = normalizeAssessmentCode(String(usage.assessmentCode || ""));
+    usageCountByCode.set(code, (usageCountByCode.get(code) || 0) + 1);
     const user = usage.user as unknown as {
       firstName?: string;
       middleName?: string;
@@ -2253,7 +2261,10 @@ export const getOrganizationCouponSummary = async (req: AuthRequest, res: Respon
   const summary = dedupedAssessments.map((assessment) => {
     const config = configByCode.get(assessment.code);
     const totalCoupons = config?.totalCoupons || 0;
-    const usedCoupons = usedByCode.get(assessment.code) || 0;
+    const usedCoupons = Math.max(
+      usedByCode.get(assessment.code) || 0,
+      usageCountByCode.get(assessment.code) || 0,
+    );
 
     return {
       assessmentCode: assessment.code,
