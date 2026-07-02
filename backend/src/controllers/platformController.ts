@@ -27,6 +27,7 @@ import {
   buildStudyAbroadQuestionSetForAttempt,
   mapStudyAbroadAttemptQuestions,
 } from "../services/studyAbroadQuestionSelection.service";
+import { mapEmployabilityQuotientAttemptQuestions } from "../services/employabilityQuotientQuestionSelection.service";
 import {
   buildAssessmentReleaseMeta,
   formatAssessmentReleaseLabel,
@@ -367,6 +368,10 @@ const isAcademicCareerAssessmentCode = (assessmentCode: string): boolean => (
 
 const isStudyAbroadAssessmentCode = (assessmentCode: string): boolean => (
   normalizeAssessmentCode(assessmentCode) === "STUDY_ABROAD"
+);
+
+const isEmployabilityQuotientAssessmentCode = (assessmentCode: string): boolean => (
+  normalizeAssessmentCode(assessmentCode) === "EMPLOYABILITY_QUOTIENT"
 );
 
 const getStudyAbroadUsedQuestionNumbers = async (
@@ -3075,6 +3080,10 @@ export const startStudentAssessment = async (req: AuthRequest, res: Response): P
     const usedQuestionNumbers = await getStudyAbroadUsedQuestionNumbers(userId, organizationId);
     const selected = buildStudyAbroadQuestionSetForAttempt(attemptQuestions, usedQuestionNumbers);
     attemptQuestions = mapStudyAbroadAttemptQuestions(selected);
+  }
+
+  if (isEmployabilityQuotientAssessmentCode(canonicalCode)) {
+    attemptQuestions = mapEmployabilityQuotientAttemptQuestions(attemptQuestions);
   }
 
   const selectedAttemptQuestions = canonicalCode === "CAREER_DNA"
