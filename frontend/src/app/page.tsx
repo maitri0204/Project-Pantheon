@@ -37,7 +37,7 @@ const howItWorks = [
   {
     step: "02",
     title: "Pick your assessment",
-    body: "Choose from career, resilience, academic-interest, study-abroad, and parent-focused tests tailored for you.",
+    body: "Choose from career, resilience, academic-interest, study-abroad, employability, and parent-focused tests tailored for you.",
     icon: Target,
     color: "bg-indigo-100 text-indigo-600",
   },
@@ -101,6 +101,10 @@ const personas: Array<{
       {
         title: "Study Abroad Readiness",
         subtitle: "Check your Readiness to Study Abroad",
+      },
+      {
+        title: "Employability Quotient",
+        subtitle: "Measure your workplace readiness for placements & internships",
       },
     ],
   },
@@ -189,8 +193,8 @@ export default function Home() {
                   <span className="gradient-text-animated">Choose smarter.</span>
                 </h1>
                 <p className="reveal-up max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl" style={{ animationDelay: "0.2s" }}>
-                  Career discovery, resilience profiling, academic-interest mapping, and study-abroad
-                  readiness - one trusted platform for students and parents.
+                  Career discovery, resilience profiling, academic-interest mapping, study-abroad
+                  readiness, and employability — one trusted platform for students and parents.
                 </p>
               </div>
 
@@ -243,7 +247,7 @@ export default function Home() {
           href="#assessments"
           className="shine mx-auto mb-5 flex w-fit items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5"
         >
-          Explore all 8 assessments
+          Explore all 9 assessments
           <ArrowRight className="h-5 w-5" />
         </a>
       </div>
@@ -260,7 +264,7 @@ export default function Home() {
               Who should take these assessments?
             </h2>
             <p className="mt-3 text-lg text-slate-600">
-              Seven assessments are built for students. The Litmus Test is designed for parents.
+              Eight assessments are built for students. The Litmus Test is designed for parents.
               Register once and access the tests that fit your role.
             </p>
           </div>

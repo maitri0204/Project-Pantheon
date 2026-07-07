@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Brain,
+  Briefcase,
   Compass,
   Dna,
   Eye,
@@ -19,7 +20,7 @@ export type LandingAssessmentDetail = {
   icon: LucideIcon;
 };
 
-/** Detailed catalog for the "Explore Our 8 Assessments" landing section. */
+/** Detailed catalog for the "Explore Our 9 Assessments" landing section (8 in grid + litmus full-width). */
 export const LANDING_ASSESSMENT_CATALOG: LandingAssessmentDetail[] = [
   {
     name: "Career Compass Assessment",
@@ -139,20 +140,40 @@ export const LANDING_ASSESSMENT_CATALOG: LandingAssessmentDetail[] = [
     icon: Plane,
   },
   {
-    name: "Litmus Parenting Assessment",
-    tagline: "Parenting Style Assessment",
+    name: "Employability Quotient",
+    tagline: "Future-Ready Workplace Skills Assessment",
     definition:
-      "Discover how your parenting style shapes your child's confidence, behaviour, and growth.",
-    audience: "Parents",
+      "A scenario-based assessment across 10 employability dimensions - from analytical thinking and resilience to leadership, creativity, and service orientation - so students can measure placement readiness with a tiered report.",
+    audience: "Students preparing for internships, campus placements, and early-career roles",
     measures: [
-      "Identify your Primary and Secondary Parenting Style",
-      "Understand your key Parenting Strengths",
-      "Discover where your parenting approach can be improved or reshaped",
-      "Know what truly drives your parenting decisions",
-      "Understand how your child is likely experiencing your parenting style",
-      "Identify possible parenting risk areas",
-      "Receive a practical 90-Day Parenting Improvement Plan",
+      "50 workplace-style multiple-choice scenarios",
+      "10 future-skills dimensions (5 questions each)",
+      "Analytical thinking, resilience, leadership, and creativity",
+      "Motivation, technology literacy, empathy, and curiosity",
+      "Talent management and service orientation",
+      "Performance tier: Future-Ready Leader, Adaptive Professional, or Emerging Contender",
+      "Dimension radar with strengths and focus areas",
+      "Downloadable PDF report for mentors and placement prep",
     ],
-    icon: HeartHandshake,
+    icon: Briefcase,
   },
 ];
+
+/** Featured separately in a full-width layout on the landing page. */
+export const LANDING_LITMUS_ASSESSMENT: LandingAssessmentDetail = {
+  name: "Litmus Parenting Assessment",
+  tagline: "Parenting Style Assessment",
+  definition:
+    "Discover how your parenting style shapes your child's confidence, behaviour, and growth.",
+  audience: "Parents",
+  measures: [
+    "Identify your Primary and Secondary Parenting Style",
+    "Understand your key Parenting Strengths",
+    "Discover where your parenting approach can be improved or reshaped",
+    "Know what truly drives your parenting decisions",
+    "Understand how your child is likely experiencing your parenting style",
+    "Identify possible parenting risk areas",
+    "Receive a practical 90-Day Parenting Improvement Plan",
+  ],
+  icon: HeartHandshake,
+};

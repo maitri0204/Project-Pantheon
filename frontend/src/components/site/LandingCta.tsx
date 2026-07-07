@@ -6,7 +6,7 @@ import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
 const perks = [
   "OTP verification - no password needed",
-  "Access all 8 assessments",
+  "Access all 9 assessments",
   "Premium PDF reports included",
 ];
 
