@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/assessment-center-logo.svg" alt="Assessment Center" width="220" />
+<img src="frontend/public/banner.jpg" alt="Assessment Center" width="220" />
 
 ### Assessment Center
 
@@ -16,6 +16,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Documentation](#-documentation)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
@@ -32,6 +33,25 @@
 Assessment Center is a whitelabel-ready assessment platform that helps organizations deliver assessments, generate reports, manage invoices and payments, and host branded portals per organization. It supports role-based dashboards for superadmins, organization admins, and students.
 
 This repository contains the frontend (Next.js + TypeScript) and backend (Node.js + Express + TypeScript) with Mongoose (MongoDB).
+
+---
+
+## 📚 Documentation
+
+Professional technical documentation is available in the [`docs/`](./docs/) folder:
+
+| Document | Description |
+|----------|-------------|
+| [Documentation Index](./docs/README.md) | Entry point and reading guide |
+| [Technical Documentation](./docs/Assessment_Center_Technical_Documentation.md) | Master SRS/architecture/feature document |
+| [Complete Feature Inventory](./docs/03_Complete_Feature_Inventory.md) | Every feature mapped to frontend, backend, DB, and API |
+| [Application Code Reference](./docs/06_Application_Code_Reference.md) | All 59 routes, 60+ components, 74 services, 17 models |
+| [API Reference](./docs/04_API_Documentation.md) | Complete REST API (70+ endpoints) |
+| [Database Design](./docs/05_Database_Documentation.md) | MongoDB schemas and relationships |
+| [Deployment Guide](./docs/07_Deployment_Guide.md) | Setup, build, and production deployment |
+| [Word (.docx) versions](./docs/docx/) | Pre-generated Word copies of all documentation |
+
+To regenerate `.docx` files: `python3 docs/scripts/convert_md_to_docx.py`
 
 ---
 
@@ -407,6 +427,7 @@ Assessment Center currently registers these assessment sources without modifying
 - AIM
 - Study Abroad Readiness
 - Resilience Quotient
+- Employability Quotient
 
 The platform seed stores the source project names, seed commands, and reference locations for evaluation/report/invoice parity.
 
