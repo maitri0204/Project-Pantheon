@@ -194,7 +194,7 @@ export default function Home() {
                 </h1>
                 <p className="reveal-up max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl" style={{ animationDelay: "0.2s" }}>
                   Career discovery, resilience profiling, academic-interest mapping, study-abroad
-                  readiness, and employability — one trusted platform for students and parents.
+                  readiness, and employability - one trusted platform for students and parents.
                 </p>
               </div>
 
