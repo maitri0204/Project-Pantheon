@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/banner.jpg" alt="Assessment Center" width="220" />
+<img src="frontend/public/banner.jpg" alt="Assessment Center" width="100%" />
 
 ### Assessment Center
 
