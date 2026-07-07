@@ -21,6 +21,7 @@ import {
   Line,
   Polygon,
   Font,
+  Image,
 } from '@react-pdf/renderer';
 
 /* ─────────────────────────── Font Registration ───────────────────────────── */
@@ -48,7 +49,11 @@ export interface EQReportData {
   dimensionScores: Record<string, number>; // 10 dimensions, each 0 - 5
   answeredCount?: number;
   totalQuestions?: number;
+  /** Data URL or absolute URL for back cover */
+  backCoverImageSrc?: string;
 }
+
+const EQ_BACK_COVER_IMAGE = '/rq/back-cover.jpg';
 
 /* ─────────────────────────── Constants ───────────────────────────────────── */
 
@@ -582,6 +587,8 @@ function PageFooter({ name, date }: { name: string; date: string }) {
 const S = StyleSheet.create({
   contentPage: { position: 'relative', backgroundColor: C.white, paddingHorizontal: 40, paddingTop: 32, paddingBottom: 74, fontFamily: 'Inter', fontWeight: 400 },
   coverPage:   { backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
+  backCoverPage: { padding: 0, fontFamily: 'Inter', fontWeight: 400 },
+  backCoverBg: { width: 595, height: 841, position: 'absolute', top: 0, left: 0 },
   finalPage:   { position: 'relative', backgroundColor: C.dark, padding: 0, fontFamily: 'Inter', fontWeight: 400 },
   finalInner:  { flex: 1, flexDirection: 'column', paddingHorizontal: 48, paddingTop: 44, paddingBottom: 44 },
 
@@ -1721,6 +1728,15 @@ function FinalSummaryPage({ d }: { d: EQReportData }) {
   );
 }
 
+function BackCoverPage({ d }: { d: EQReportData }) {
+  const backSrc = d.backCoverImageSrc ?? EQ_BACK_COVER_IMAGE;
+  return (
+    <Page size="A4" style={S.backCoverPage}>
+      <Image src={backSrc} style={S.backCoverBg} />
+    </Page>
+  );
+}
+
 /* ─────────────────────────── Document ────────────────────────────────────── */
 
 export function EmployabilityQuotientPdfReport(props: EQReportData) {
@@ -1759,6 +1775,7 @@ export function EmployabilityQuotientPdfReport(props: EQReportData) {
       <FaqPage d={props} items={faqs.slice(0, 5)} part="(I)" />
       <FaqPage d={props} items={faqs.slice(5)} part="(II)" />
       <FinalSummaryPage d={props} />
+      <BackCoverPage d={props} />
     </Document>
   );
 }

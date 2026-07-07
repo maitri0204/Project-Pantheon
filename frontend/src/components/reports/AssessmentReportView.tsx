@@ -526,6 +526,8 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       import("@/components/reports/EmployabilityQuotientPdfReport"),
     ]);
 
+    const backCoverImageSrc = await loadPublicImageDataUrl("/rq/back-cover.jpg");
+
     const overallScore = Number(evaluation.overallScore ?? 0);
     const dimensionScores = normalizeDimensionScores(
       evaluation.dimensionScores as Record<string, number> | undefined,
@@ -544,6 +546,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       dimensionScores,
       answeredCount: Number(evaluation.answeredCount ?? report.answeredCount),
       totalQuestions: Number(evaluation.totalQuestions ?? report.totalQuestions),
+      backCoverImageSrc,
     });
 
     const blob = await pdf(element).toBlob();
