@@ -205,20 +205,29 @@ export const bootstrapPlatform = async (): Promise<void> => {
   );
 
   for (const assessment of DEFAULT_ASSESSMENTS) {
-    const setOnInsert: Record<string, unknown> = {};
+    const setOnInsert: Record<string, unknown> = {
+      basePrice: assessment.basePrice,
+      gstEnabled: false,
+      gstPercentage: 18,
+    };
     if (assessment.code === "CAREER_COMPASS") {
       setOnInsert.releaseDate = new Date("2026-07-02T00:00:00+05:30");
     }
+
+    const {
+      basePrice: _defaultBasePrice,
+      ...assessmentMetadata
+    } = assessment;
 
     await Assessment.findOneAndUpdate(
       { code: assessment.code },
       {
         $set: {
-          ...assessment,
+          ...assessmentMetadata,
           active: true,
           currency: "INR",
         },
-        ...(Object.keys(setOnInsert).length ? { $setOnInsert: setOnInsert } : {}),
+        $setOnInsert: setOnInsert,
       },
       { upsert: true, returnDocument: "after" }
     );
