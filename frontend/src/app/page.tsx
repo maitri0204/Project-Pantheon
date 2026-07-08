@@ -115,7 +115,10 @@ const personas: Array<{
     color: "from-sky-500 to-blue-600",
     text: "text-sky-700",
     tests: [
-      "Litmus Test - understand your parenting style",
+      {
+        title: "Litmus Test",
+        subtitle: "understand your parenting style",
+      },
       "K·S·E·P·J scoring across 5 dimensions",
       "Family guidance report with action plan",
       "Insights to support your child's growth",

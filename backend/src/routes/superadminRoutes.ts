@@ -5,6 +5,8 @@ import {
   createOrganization,
   createOrganizationCouponConfig,
   createQuestion,
+  createStudentBySuperadmin,
+  bulkCreateStudentsBySuperadmin,
   deleteCoupon,
   deleteQuestion,
   getLedger,
@@ -24,6 +26,8 @@ const router = Router();
 
 router.use(requireAuth, requireRoles("SUPERADMIN"));
 router.get("/dashboard", getSuperadminDashboard);
+router.post("/students", createStudentBySuperadmin);
+router.post("/students/bulk", bulkCreateStudentsBySuperadmin);
 router.post("/organizations", createOrganization);
 router.get("/organizations/:organizationId/coupons", getOrganizationCouponDetails);
 router.post("/organizations/:organizationId/coupons", createOrganizationCouponConfig);

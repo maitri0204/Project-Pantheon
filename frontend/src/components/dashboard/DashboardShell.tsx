@@ -350,7 +350,7 @@ export default function DashboardShell({
                 className="h-full w-full object-contain"
               />
             ) : userRole === "SUPERADMIN" ? (
-              <img src="/logo.png" alt="Assessment Center" className="h-full w-full object-contain" />
+              <img src="/logo.png" alt="Admin Center" className="h-full w-full object-contain" />
             ) : (
               <span>{userName ? userName.charAt(0).toUpperCase() : "PP"}</span>
             )}

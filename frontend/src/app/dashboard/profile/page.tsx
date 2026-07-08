@@ -148,7 +148,7 @@ export default function OrganizationProfilePage() {
         <div className="min-w-0 px-1 py-2 sm:px-4 sm:py-8">
           <div className="mx-auto max-w-2xl">
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-black sm:text-3xl">Superadmin Profile</h1>
+              <h1 className="text-2xl font-bold text-black sm:text-3xl">Admin Profile</h1>
               <p className="mt-2 text-black">Your platform account details</p>
             </div>
 
@@ -161,7 +161,7 @@ export default function OrganizationProfilePage() {
                   <p className="text-xl font-semibold text-black truncate">{`${user.firstName} ${user.lastName}`.trim()}</p>
                   <p className="text-sm text-black truncate">{user.email}</p>
                   <span className="mt-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                    SUPERADMIN
+                    ADMIN
                   </span>
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function OrganizationProfilePage() {
               </div>
               <div className="rounded-lg bg-gradient-to-br from-purple-50 to-slate-50 p-4 border border-purple-100">
                 <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Role</p>
-                <p className="text-lg font-semibold text-black">SUPERADMIN</p>
+                <p className="text-lg font-semibold text-black">ADMIN</p>
               </div>
               <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-slate-50 p-4 border border-emerald-100">
                 <p className="text-xs font-semibold text-black uppercase tracking-wide mb-1">Account Status</p>

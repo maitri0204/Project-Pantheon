@@ -8,12 +8,12 @@ import {
 } from "../services/assessmentRelease";
 import Coupon from "../models/Coupon";
 import Invoice from "../models/Invoice";
-import Organization from "../models/Organization";
+import Organization, { IOrganization } from "../models/Organization";
 import OrganizationRegistration from "../models/OrganizationRegistration";
 import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
 import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
 import Question from "../models/Question";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -506,18 +506,19 @@ export const updateAssessmentPricing = async (req: Request, res: Response): Prom
       return;
     }
 
-    const assessment = await Assessment.findOneAndUpdate(
-      { code: code.toUpperCase() },
-      { $set: updates },
-      { new: true }
-    );
+    const canonicalCode = normalizeAssessmentCode(code);
+    const aliases = getAssessmentCodeAliases(canonicalCode);
 
+    const assessment = await Assessment.findOne({ code: { $in: aliases } });
     if (!assessment) {
       res.status(404).json({ message: "Assessment not found" });
       return;
     }
 
-    res.json({ assessment });
+    await Assessment.updateMany({ code: { $in: aliases } }, { $set: updates });
+    const updated = await Assessment.findOne({ code: assessment.code });
+
+    res.json({ assessment: updated });
   } catch (error) {
     console.error("Update assessment pricing error:", error);
     res.status(500).json({ message: "Failed to update assessment pricing" });
@@ -686,5 +687,193 @@ export const deleteQuestion = async (req: Request, res: Response): Promise<void>
   } catch (error) {
     console.error("Delete question error:", error);
     res.status(500).json({ message: "Failed to delete question" });
+  }
+};
+
+const KAREER_STUDIO_ORG_SLUG = "kareer-studio";
+
+const isValidStudentEmail = (value?: string): boolean => {
+  if (!value?.trim()) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+};
+
+const isValidStudentPhone = (value?: string): boolean => {
+  if (!value?.trim()) return false;
+  return /^\d{10}$/.test(value.trim());
+};
+
+type StudentCreateInput = {
+  rowNumber?: number;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  gender?: string;
+  email?: string;
+  phoneCode?: string;
+  phone?: string;
+  institutionName?: string;
+  grade?: string;
+  division?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+};
+
+const validateStudentCreateInput = (body: StudentCreateInput) => {
+  if (!body.firstName?.trim() || !body.lastName?.trim()) {
+    return "First name and last name are required";
+  }
+  if (!body.email?.trim() || !isValidStudentEmail(body.email)) {
+    return "Valid email is required";
+  }
+  if (!body.phone?.trim() || !isValidStudentPhone(body.phone)) {
+    return "Valid 10-digit phone number is required";
+  }
+  return null;
+};
+
+const createStudentForOrganization = async (
+  body: StudentCreateInput,
+  organization: IOrganization,
+): Promise<IUser> => {
+  const normalizedEmail = body.email!.toLowerCase().trim();
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw new Error("Email already registered. Please use a different email.");
+  }
+
+  return User.create({
+    firstName: body.firstName!.trim(),
+    middleName: body.middleName?.trim() || undefined,
+    lastName: body.lastName!.trim(),
+    gender: body.gender?.trim() || undefined,
+    email: normalizedEmail,
+    phone: body.phone!.trim(),
+    phoneCode: body.phoneCode?.trim() || "+91",
+    grade: body.grade?.trim() || undefined,
+    division: body.division?.trim() || undefined,
+    country: body.country?.trim() || undefined,
+    state: body.state?.trim() || undefined,
+    city: body.city?.trim() || undefined,
+    institutionName: body.institutionName?.trim() || organization.branding?.companyName || organization.name,
+    role: "STUDENT",
+    organization: organization._id,
+    isVerified: true,
+    isActive: true,
+    otpPurpose: null,
+    otpAttempts: 0,
+  });
+};
+
+const getKareerStudioOrganization = async () => {
+  const organization = await Organization.findOne({
+    slug: KAREER_STUDIO_ORG_SLUG,
+    isActive: true,
+    type: "WHITELABEL",
+  });
+
+  if (!organization) {
+    throw new Error("Kareer Studio organization not found");
+  }
+
+  return organization;
+};
+
+export const createStudentBySuperadmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const body = req.body as StudentCreateInput;
+    const validationError = validateStudentCreateInput(body);
+    if (validationError) {
+      res.status(400).json({ message: validationError });
+      return;
+    }
+
+    const organization = await getKareerStudioOrganization();
+    const user = await createStudentForOrganization(body, organization);
+    await user.populate("organization");
+
+    res.status(201).json({
+      message: "Student added successfully under Kareer Studio.",
+      student: {
+        _id: user._id.toString(),
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        grade: user.grade,
+        division: user.division,
+        organization: user.organization
+          ? {
+              name: (user.organization as { name?: string }).name,
+              slug: (user.organization as { slug?: string }).slug,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("already registered")) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
+    if (error instanceof Error && error.message.includes("Kareer Studio")) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+    console.error("Create student by superadmin error:", error);
+    res.status(500).json({ message: "Failed to add student" });
+  }
+};
+
+export const bulkCreateStudentsBySuperadmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { students } = req.body as { students?: StudentCreateInput[] };
+    if (!Array.isArray(students) || students.length === 0) {
+      res.status(400).json({ message: "At least one student row is required" });
+      return;
+    }
+
+    const organization = await getKareerStudioOrganization();
+    const created: Array<{ rowNumber?: number; email: string; firstName: string; lastName: string }> = [];
+    const failed: Array<{ rowNumber?: number; email?: string; message: string }> = [];
+
+    for (let index = 0; index < students.length; index += 1) {
+      const row = students[index];
+      const rowNumber = typeof row.rowNumber === "number" ? row.rowNumber : index + 2;
+      const validationError = validateStudentCreateInput(row);
+      if (validationError) {
+        failed.push({ rowNumber, email: row.email, message: validationError });
+        continue;
+      }
+
+      try {
+        const user = await createStudentForOrganization(row, organization);
+        created.push({
+          rowNumber,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        });
+      } catch (error) {
+        failed.push({
+          rowNumber,
+          email: row.email,
+          message: error instanceof Error ? error.message : "Failed to add student",
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: `Imported ${created.length} student(s). ${failed.length} row(s) failed.`,
+      createdCount: created.length,
+      failedCount: failed.length,
+      created,
+      failed,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Kareer Studio")) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+    console.error("Bulk create students by superadmin error:", error);
+    res.status(500).json({ message: "Failed to import students" });
   }
 };

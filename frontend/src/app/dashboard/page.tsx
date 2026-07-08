@@ -223,7 +223,7 @@ export default function DashboardPage() {
   if (role === "SUPERADMIN") {
     return (
       <SuperAdminHomeDashboard
-        firstName={auth?.user.firstName ?? "Superadmin"}
+        firstName={auth?.user.firstName ?? "Admin"}
         stats={stats}
         assessments={assessments}
         organizations={organizations}

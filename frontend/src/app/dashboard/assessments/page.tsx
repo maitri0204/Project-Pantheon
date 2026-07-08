@@ -53,6 +53,8 @@ export default function AssessmentsPage() {
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [gstEnabledDrafts, setGstEnabledDrafts] = useState<Record<string, boolean>>({});
   const [gstRateDrafts, setGstRateDrafts] = useState<Record<string, string>>({});
+  const [masterGstEnabled, setMasterGstEnabled] = useState(false);
+  const [masterGstRate, setMasterGstRate] = useState("18");
   const [releaseDateDrafts, setReleaseDateDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,8 +93,14 @@ export default function AssessmentsPage() {
       }
       setAssessments(list);
       setPriceDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.basePrice)])));
-      setGstEnabledDrafts(Object.fromEntries(list.map((a) => [a.code, Boolean(a.gstEnabled)])));
-      setGstRateDrafts(Object.fromEntries(list.map((a) => [a.code, String(a.gstPercentage ?? 18)])));
+      const gstEnabledMap = Object.fromEntries(list.map((a) => [a.code, Boolean(a.gstEnabled)]));
+      const gstRateMap = Object.fromEntries(list.map((a) => [a.code, String(a.gstPercentage ?? 18)]));
+      setGstEnabledDrafts(gstEnabledMap);
+      setGstRateDrafts(gstRateMap);
+      if (list.length > 0) {
+        setMasterGstEnabled(Boolean(list[0].gstEnabled));
+        setMasterGstRate(String(list[0].gstPercentage ?? 18));
+      }
       setReleaseDateDrafts(Object.fromEntries(
         list.map((a) => [a.code, formatReleaseDateForInput(a.releaseDate)]),
       ));
@@ -136,24 +144,60 @@ export default function AssessmentsPage() {
     }
   };
 
-  const updatePrice = async (code: string) => {
-    if (!auth) return;
-    setSaving(code);
+  const applyMasterGstToAll = (enabled: boolean, rate: string) => {
+    setGstEnabledDrafts((prev) => {
+      const next = { ...prev };
+      assessments.forEach((assessment) => {
+        next[assessment.code] = enabled;
+      });
+      return next;
+    });
+    setGstRateDrafts((prev) => {
+      const next = { ...prev };
+      assessments.forEach((assessment) => {
+        next[assessment.code] = rate;
+      });
+      return next;
+    });
+  };
+
+  const handleMasterGstEnabledChange = (enabled: boolean) => {
+    setMasterGstEnabled(enabled);
+    applyMasterGstToAll(enabled, masterGstRate);
+  };
+
+  const handleMasterGstRateChange = (rate: string) => {
+    setMasterGstRate(rate);
+    applyMasterGstToAll(masterGstEnabled, rate);
+  };
+
+  const saveAllPricing = async () => {
+    if (!auth || assessments.length === 0) return;
+    setSaving("all");
     setMessage(null);
     setError(null);
+
     try {
-      await apiRequest(`/superadmin/assessments/${code}/pricing`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          basePrice: Number(priceDrafts[code] || 0),
-          gstEnabled: Boolean(gstEnabledDrafts[code]),
-          gstPercentage: Number(gstRateDrafts[code] || 0),
-        }),
-      }, auth.token);
-      setMessage(`Pricing updated for ${normalizeAssessmentCodeForDisplay(code)}.`);
+      for (const assessment of assessments) {
+        const basePrice = Number(priceDrafts[assessment.code]);
+        if (!Number.isFinite(basePrice) || basePrice < 0) {
+          throw new Error(`Enter a valid base price for ${normalizeAssessmentCodeForDisplay(assessment.code)}.`);
+        }
+
+        await apiRequest(`/superadmin/assessments/${assessment.code}/pricing`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            basePrice,
+            gstEnabled: Boolean(gstEnabledDrafts[assessment.code]),
+            gstPercentage: Number(gstRateDrafts[assessment.code] || 0),
+          }),
+        }, auth.token);
+      }
+
+      setMessage("Pricing updated for all assessments.");
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to update price");
+      setError(e instanceof Error ? e.message : "Failed to update pricing");
     } finally {
       setSaving(null);
     }
@@ -182,6 +226,47 @@ export default function AssessmentsPage() {
       )}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">{error}</div>
+      )}
+
+      {isOrgAdmin === false && (
+        <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="grid flex-1 gap-4 sm:grid-cols-2">
+              <div className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
+                <span className="text-sm font-semibold text-black">Master GST Enabled</span>
+                <button
+                  type="button"
+                  onClick={() => handleMasterGstEnabledChange(!masterGstEnabled)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${masterGstEnabled ? "bg-orange-500" : "bg-gray-300"}`}
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${masterGstEnabled ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+              </div>
+              <div>
+                <label className="text-sm text-black font-semibold mb-2 block">Master GST Percentage (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  value={masterGstRate}
+                  onChange={(e) => handleMasterGstRateChange(e.target.value)}
+                  className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <button
+              onClick={() => void saveAllPricing()}
+              disabled={saving === "all"}
+              className="rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 px-6 py-3 text-base font-semibold text-white shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50"
+            >
+              {saving === "all" ? "Saving..." : "Save All Pricing"}
+            </button>
+          </div>
+          <p className="mt-3 text-sm text-black/80">
+            GST settings apply to all assessments. Update individual base prices below, then save once.
+          </p>
+        </div>
       )}
 
       {/* Search */}
@@ -285,48 +370,18 @@ export default function AssessmentsPage() {
               {isOrgAdmin === false && (
               <div className="pt-3 border-t border-gray-200">
                 <label className="text-sm text-black font-semibold mb-2 block">Base Price (₹)</label>
-                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-2 items-center">
-                  <input
-                    type="number"
-                    min={0}
-                    value={priceDrafts[a.code] ?? ""}
-                    onChange={(e) =>
-                      setPriceDrafts((prev) => ({ ...prev, [a.code]: e.target.value }))
-                    }
-                    className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={() => void updatePrice(a.code)}
-                    disabled={saving === a.code}
-                    className="w-full sm:w-auto sm:min-w-[106px] px-5 py-2.5 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl text-base font-semibold shadow-[0_8px_18px_-10px_rgba(37,99,235,0.75)] hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50"
-                  >
-                    {saving === a.code ? "..." : "Save"}
-                  </button>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2.5">
-                  <span className="text-sm font-semibold text-black">GST Enabled</span>
-                  <button
-                    type="button"
-                    onClick={() => setGstEnabledDrafts((prev) => ({ ...prev, [a.code]: !prev[a.code] }))}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${gstEnabledDrafts[a.code] ? "bg-orange-500" : "bg-gray-300"}`}
-                  >
-                    <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform ${gstEnabledDrafts[a.code] ? "translate-x-6" : "translate-x-1"}`} />
-                  </button>
-                </div>
-
-                <div className="mt-3">
-                  <label className="text-sm text-black font-semibold mb-2 block">GST Percentage (%)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step="0.01"
-                    value={gstRateDrafts[a.code] ?? ""}
-                    onChange={(e) => setGstRateDrafts((prev) => ({ ...prev, [a.code]: e.target.value }))}
-                    className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <input
+                  type="number"
+                  min={0}
+                  value={priceDrafts[a.code] ?? ""}
+                  onChange={(e) =>
+                    setPriceDrafts((prev) => ({ ...prev, [a.code]: e.target.value }))
+                  }
+                  className="w-full min-w-0 border border-gray-200 rounded-xl px-3 py-2.5 text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="mt-2 text-sm text-black/80">
+                  GST: {gstEnabledDrafts[a.code] ? `On (${gstRateDrafts[a.code] ?? masterGstRate}%)` : "Off"}
+                </p>
               </div>
               )}
               {isOrgAdmin === true && (

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import { getDashboardLoginPath } from "@/lib/dashboardAuth";
+import AddStudentModal from "@/components/students/AddStudentModal";
+import ImportStudentsModal from "@/components/students/ImportStudentsModal";
 
 type User = {
   _id: string;
@@ -47,19 +49,32 @@ export default function UsersPage() {
   const [gradeFilter, setGradeFilter] = useState("ALL");
   const [divisionFilter, setDivisionFilter] = useState("ALL");
   const [currentRole, setCurrentRole] = useState<string>("");
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [showImportStudents, setShowImportStudents] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const pathname = usePathname();
 
   const auth = useMemo(() => getStoredAuth(), []);
 
+  const loadStudents = async (token: string) => {
+    const res = await apiRequest<StudentsResponse>("/platform/students", {}, token);
+    setUsers(res.students);
+  };
+
   useEffect(() => {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
-    apiRequest<StudentsResponse>("/platform/students", {}, auth.token)
-      .then((res) => setUsers(res.students))
+    loadStudents(auth.token)
       .catch(() => router.replace(getDashboardLoginPath()))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
 
   const filtered = users.filter((u) => {
     const matchSearch =
@@ -103,10 +118,36 @@ export default function UsersPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 min-w-0">
-      <div>
-        <h1 className="text-2xl font-bold text-black sm:text-3xl">Students</h1>
-        <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Students from your organization." : "Students registered across the platform."}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-black sm:text-3xl">Students</h1>
+          <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Students from your organization." : "Students registered across the platform."}</p>
+        </div>
+        {currentRole === "SUPERADMIN" && auth?.token ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowImportStudents(true)}
+              className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              Import from Excel
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddStudent(true)}
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Add Student
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      {successMessage && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {successMessage}
+        </div>
+      )}
 
       {/* Filters */}
       <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px_180px_180px]" : "lg:grid-cols-[minmax(0,1fr)_180px_180px]"}`}>
@@ -297,6 +338,28 @@ export default function UsersPage() {
           )}
         </div>
       )}
+      {auth?.token ? (
+        <>
+          <AddStudentModal
+            open={showAddStudent}
+            token={auth.token}
+            onClose={() => setShowAddStudent(false)}
+            onSuccess={async () => {
+              setSuccessMessage("Student added successfully under Kareer Studio.");
+              await loadStudents(auth.token);
+            }}
+          />
+          <ImportStudentsModal
+            open={showImportStudents}
+            token={auth.token}
+            onClose={() => setShowImportStudents(false)}
+            onSuccess={async (message) => {
+              setSuccessMessage(message);
+              await loadStudents(auth.token);
+            }}
+          />
+        </>
+      ) : null}
     </div>
   );
 }
