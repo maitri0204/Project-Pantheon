@@ -52,35 +52,32 @@ export default function UsersPage() {
   const [currentRole, setCurrentRole] = useState<string>("");
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [showImportStudents, setShowImportStudents] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const pathname = usePathname();
 
   const auth = useMemo(() => getStoredAuth(), []);
 
-  const loadStudents = async (token: string, archivedView = showArchived) => {
-    const query = archivedView ? "?archiveView=archived" : "";
-    const res = await apiRequest<StudentsResponse>(`/platform/students${query}`, {}, token);
+  const loadStudents = async (token: string) => {
+    const res = await apiRequest<StudentsResponse>("/platform/students", {}, token);
     setUsers(res.students);
   };
 
-  const handleArchiveStudent = async (studentId: string, archived: boolean) => {
+  const handleArchiveStudent = async (studentId: string) => {
     if (!auth?.token) return;
-    const actionLabel = archived ? "archive" : "restore";
-    if (!window.confirm(`Are you sure you want to ${actionLabel} this student?`)) return;
+    if (!window.confirm("Are you sure you want to archive this student?")) return;
 
     setArchivingId(studentId);
     try {
       await apiRequest(`/superadmin/students/${studentId}/archive`, {
         method: "PATCH",
-        body: JSON.stringify({ archived }),
+        body: JSON.stringify({ archived: true }),
       }, auth.token);
-      setSuccessMessage(archived ? "Student archived successfully." : "Student restored successfully.");
-      await loadStudents(auth.token, showArchived);
+      setSuccessMessage("Student archived successfully.");
+      await loadStudents(auth.token);
     } catch (err) {
       setSuccessMessage(null);
-      window.alert(err instanceof Error ? err.message : `Failed to ${actionLabel} student`);
+      window.alert(err instanceof Error ? err.message : "Failed to archive student");
     } finally {
       setArchivingId(null);
     }
@@ -89,11 +86,11 @@ export default function UsersPage() {
   useEffect(() => {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
-    loadStudents(auth.token, showArchived)
+    loadStudents(auth.token)
       .catch(() => router.replace(getDashboardLoginPath()))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showArchived]);
+  }, []);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -175,7 +172,7 @@ export default function UsersPage() {
       )}
 
       {/* Filters */}
-      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px_180px_180px_180px]" : "lg:grid-cols-[minmax(0,1fr)_180px_180px]"}`}>
+      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px_180px_180px]" : "lg:grid-cols-[minmax(0,1fr)_180px_180px]"}`}>
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -219,16 +216,6 @@ export default function UsersPage() {
             <option key={division} value={division}>{division}</option>
           ))}
         </select>
-        {currentRole === "SUPERADMIN" ? (
-          <select
-            value={showArchived ? "ARCHIVED" : "ACTIVE"}
-            onChange={(e) => setShowArchived(e.target.value === "ARCHIVED")}
-            className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="ACTIVE">Active Students</option>
-            <option value="ARCHIVED">Archived Students</option>
-          </select>
-        ) : null}
       </div>
 
       {/* Stats row */}
@@ -300,11 +287,11 @@ export default function UsersPage() {
                       </button>
                       {currentRole === "SUPERADMIN" ? (
                         <button
-                          onClick={() => void handleArchiveStudent(user._id, user.isActive !== false)}
+                          onClick={() => void handleArchiveStudent(user._id)}
                           disabled={archivingId === user._id}
                           className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                         >
-                          {archivingId === user._id ? "Saving..." : user.isActive === false ? "Restore" : "Archive"}
+                          {archivingId === user._id ? "Saving..." : "Archive"}
                         </button>
                       ) : null}
                     </div>
@@ -374,11 +361,11 @@ export default function UsersPage() {
                               </button>
                               {currentRole === "SUPERADMIN" ? (
                                 <button
-                                  onClick={() => void handleArchiveStudent(user._id, user.isActive !== false)}
+                                  onClick={() => void handleArchiveStudent(user._id)}
                                   disabled={archivingId === user._id}
                                   className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                                 >
-                                  {archivingId === user._id ? "..." : user.isActive === false ? "Restore" : "Archive"}
+                                  {archivingId === user._id ? "..." : "Archive"}
                                 </button>
                               ) : null}
                             </div>

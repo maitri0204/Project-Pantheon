@@ -94,8 +94,8 @@ export default function ImportStudentsModal({ open, token, onClose, onSuccess }:
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 pt-20 pb-8">
+      <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Import Students from Excel</h2>

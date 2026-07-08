@@ -600,7 +600,7 @@ export default function StudentAssessmentsPage() {
       </div>
 
       {checkoutAssessmentCode && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-sm p-4 pt-20 pb-8">
           <div className="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-2xl p-6">
             <h3 className="text-xl font-bold text-slate-900">Checkout before starting test</h3>
             <p className="mt-1 text-sm text-slate-600">Apply coupon if you have one, then complete payment to start the assessment.</p>
