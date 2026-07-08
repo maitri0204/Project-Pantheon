@@ -2375,21 +2375,20 @@ export const listStudentAssessments = async (req: AuthRequest, res: Response): P
     }
 
     const questionCounts = await aggregateQuestionCounts(dedupedAssessments);
-    const assessmentsWithCounts = await Promise.all(
-      dedupedAssessments.map(async (assessment) => {
-        const questionCount = isAcademicCareerAssessmentCode(assessment.code)
-          ? await Question.countDocuments({
-            assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
-            category: getAcademicCareerGradeCategory(req.user?.grade),
-            isActive: true,
-          })
-          : questionCounts.get(normalizeAssessmentCode(assessment.code)) || 0;
-        return {
-          ...assessment,
-          questionCount,
-        };
-      }),
+    const studentVisibleQuestionCounts = await aggregateStudentVisibleQuestionCounts(
+      dedupedAssessments,
+      questionCounts,
     );
+    const assessmentsWithCounts = dedupedAssessments.map((assessment) => {
+      const canonicalCode = normalizeAssessmentCode(assessment.code);
+      const questionCount = studentVisibleQuestionCounts.get(canonicalCode)
+        ?? questionCounts.get(canonicalCode)
+        ?? 0;
+      return {
+        ...assessment,
+        questionCount,
+      };
+    });
 
     res.json({
       assessments: assessmentsWithCounts.map((assessment) => {

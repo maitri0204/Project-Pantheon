@@ -456,7 +456,7 @@ export default function StudentAssessmentsPage() {
           }
 
           const theme = getAssessmentTheme(assessment.code);
-          const qCount = assessment.questionCount || assessment.attempt?.totalQuestions;
+          const qCount = assessment.attempt?.totalQuestions || assessment.questionCount;
 
           return (
             <div
