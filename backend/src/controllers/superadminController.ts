@@ -723,7 +723,6 @@ type ParentCreateInput = {
   email?: string;
   phoneCode?: string;
   phone?: string;
-  institutionName?: string;
   country?: string;
   state?: string;
   city?: string;
@@ -750,7 +749,7 @@ const createParentForOrganization = async (
     country: body.country?.trim() || undefined,
     state: body.state?.trim() || undefined,
     city: body.city?.trim() || undefined,
-    institutionName: body.institutionName?.trim() || organization.branding?.companyName || organization.name,
+    institutionName: organization.branding?.companyName || organization.name,
     role: "PARENT",
     organization: organization._id,
     isVerified: true,

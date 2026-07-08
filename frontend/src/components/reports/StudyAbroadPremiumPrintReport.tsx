@@ -485,18 +485,18 @@ function RoadmapPhaseList({ steps, totalPhases }: { steps: RoadmapStep[]; totalP
         };
         const pc = priorityColors[step.priority];
         const showConnector = i < steps.length - 1 || step.phase < totalPhases;
-        return (
+    return (
           <div key={step.phase} style={{ background: 'white', border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 12 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
               <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#818cf8,#c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 12, fontWeight: 800 }}>{step.phase}</div>
               {showConnector && <div style={{ width: 1.5, flex: 1, background: '#e2e8f0', marginTop: 4 }} />}
-            </div>
+          </div>
             <div style={{ flex: 1, paddingBottom: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{step.title}</p>
                   <p style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>{step.timeframe}</p>
-                </div>
+        </div>
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 5, background: pc.bg, color: pc.text, border: `1px solid ${pc.border}`, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0, lineHeight: 1.3 }}>{step.priority} priority</span>
               </div>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Goal</p>
@@ -531,11 +531,11 @@ function RoadmapPhaseList({ steps, totalPhases }: { steps: RoadmapStep[]; totalP
 
 // ─── Small page footer ────────────────────────────────────────────────────────
 function PFooter({ page, total }: { page: number; total: number }) {
-  return (
+    return (
     <div style={{ position: 'absolute', bottom: '8mm', left: '18mm', right: '18mm', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid #f1f5f9' }}>
       <span style={{ fontSize: 9, color: '#0f172a', letterSpacing: '0.04em', fontWeight: 600 }}>ADMITra × KAREER Studio - Confidential Student Report</span>
       <span style={{ fontSize: 9, color: '#0f172a', fontWeight: 600 }}>Page {page} / {total}</span>
-    </div>
+          </div>
   );
 }
 
@@ -675,18 +675,18 @@ export default function StudyAbroadPremiumPrintReport({
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
 
       {showToolbar ? (
-        <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'linear-gradient(135deg,#6366f1,#9333ea)', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
-          <div style={{ color: 'white' }}>
-            <p style={{ fontWeight: 700, fontSize: 14 }}>Premium Readiness Report - {displayName}</p>
-            <p style={{ fontSize: 11, opacity: 0.75 }}>Scroll to preview all pages · Use Print to save as PDF</p>
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+      <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: 'linear-gradient(135deg,#6366f1,#9333ea)', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 24px rgba(99,102,241,0.35)' }}>
+        <div style={{ color: 'white' }}>
+          <p style={{ fontWeight: 700, fontSize: 14 }}>Premium Readiness Report - {displayName}</p>
+          <p style={{ fontSize: 11, opacity: 0.75 }}>Scroll to preview all pages · Use Print to save as PDF</p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
             {backHref ? (
               <button type="button" onClick={() => { window.location.href = backHref; }} style={{ padding: '8px 18px', borderRadius: 9, border: '1.5px solid rgba(255,255,255,0.35)', background: 'rgba(255,255,255,0.08)', color: 'white', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>← Back</button>
             ) : null}
             <button type="button" onClick={() => window.print()} style={{ padding: '8px 22px', borderRadius: 9, border: 'none', background: 'white', color: '#6366f1', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 12px rgba(0,0,0,0.18)', letterSpacing: '-0.01em' }}>🖨 Print / Save as PDF</button>
-          </div>
         </div>
+      </div>
       ) : null}
 
       <div style={{ background: '#f1f5f9' }}>
@@ -905,9 +905,9 @@ export default function StudyAbroadPremiumPrintReport({
               <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Recommended Action</p>
               <p style={{ fontSize: 11.5, color: '#78350f', lineHeight: 1.65 }}>
                 Prioritise all dimensions below 50% first, while sustaining dimensions above 80% through weekly maintenance. Schedule a counselling session with ADMITra / KAREER Studio to build a customised, score-threshold based action plan.
-              </p>
-            </div>
-          )}
+                    </p>
+                  </div>
+                )}
           <PFooter page={strengthFocusStartIndex + 1} total={totalPages} />
         </Page>
 
@@ -920,14 +920,14 @@ export default function StudyAbroadPremiumPrintReport({
               strengthNumberOffset={strengthsFirstPage.length}
               focusNumberOffset={focusFirstPage.length}
             />
-            <div style={{ marginTop: 18, background: '#fefce8', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 16px' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Recommended Action</p>
-              <p style={{ fontSize: 11.5, color: '#78350f', lineHeight: 1.65 }}>
-                Prioritise all dimensions below 50% first, while sustaining dimensions above 80% through weekly maintenance. Schedule a counselling session with ADMITra / KAREER Studioto build a customised, score-threshold based action plan.
-              </p>
-            </div>
+          <div style={{ marginTop: 18, background: '#fefce8', border: '1px solid #fde68a', borderRadius: 12, padding: '12px 16px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>Recommended Action</p>
+            <p style={{ fontSize: 11.5, color: '#78350f', lineHeight: 1.65 }}>
+              Prioritise all dimensions below 50% first, while sustaining dimensions above 80% through weekly maintenance. Schedule a counselling session with ADMITra / KAREER Studioto build a customised, score-threshold based action plan.
+            </p>
+          </div>
             <PFooter page={strengthFocusStartIndex + 2} total={totalPages} />
-          </Page>
+        </Page>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════
@@ -1109,7 +1109,7 @@ export default function StudyAbroadPremiumPrintReport({
             alt=""
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
           />
-        </div>
+      </div>
 
       </div>
     </div>

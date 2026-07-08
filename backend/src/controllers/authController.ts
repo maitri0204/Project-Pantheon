@@ -931,7 +931,9 @@ export const studentRegister = async (req: Request, res: Response): Promise<void
           state: body.state?.trim() || undefined,
           city: body.city?.trim() || undefined,
           role: selectedRole,
-          institutionName: body.institutionName?.trim() || organization.branding.companyName,
+          institutionName: selectedRole === "PARENT"
+            ? organization.branding?.companyName || organization.name
+            : body.institutionName?.trim() || organization.branding.companyName,
           otpHash: hashOtp(otp),
           otpExpiresAt: getOtpExpiry(5),
           otpAttempts: 0,

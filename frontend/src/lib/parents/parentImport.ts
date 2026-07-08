@@ -8,7 +8,6 @@ export const PARENT_IMPORT_HEADERS = [
   "Email",
   "Phone Code",
   "Phone",
-  "Institution Name",
   "Country",
   "State",
   "City",
@@ -23,7 +22,6 @@ export type ParentImportRow = {
   email: string;
   phoneCode: string;
   phone: string;
-  institutionName: string;
   country: string;
   state: string;
   city: string;
@@ -38,7 +36,6 @@ const SAMPLE_ROWS: Array<Record<(typeof PARENT_IMPORT_HEADERS)[number], string>>
     Email: "priya.mehta@example.com",
     "Phone Code": "+91",
     Phone: "9876543210",
-    "Institution Name": "Kareer Studio School",
     Country: "IN",
     State: "GJ",
     City: "Vadodara",
@@ -51,7 +48,6 @@ const SAMPLE_ROWS: Array<Record<(typeof PARENT_IMPORT_HEADERS)[number], string>>
     Email: "rajesh.shah@example.com",
     "Phone Code": "+91",
     Phone: "9123456780",
-    "Institution Name": "Kareer Studio School",
     Country: "IN",
     State: "GJ",
     City: "Vadodara",
@@ -68,7 +64,7 @@ const headerAliases: Record<string, keyof ParentImportRow | "ignore"> = {
   email: "email",
   "phone code": "phoneCode",
   phone: "phone",
-  "institution name": "institutionName",
+  "institution name": "ignore",
   country: "country",
   state: "state",
   city: "city",
@@ -110,7 +106,6 @@ export async function parseParentImportFile(file: File): Promise<ParentImportRow
       email: "",
       phoneCode: "+91",
       phone: "",
-      institutionName: "",
       country: "",
       state: "",
       city: "",

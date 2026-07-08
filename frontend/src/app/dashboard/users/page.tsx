@@ -300,29 +300,18 @@ export default function UsersPage() {
               </div>
 
               <div className="hidden lg:block">
-                <table className="w-full table-fixed text-sm">
-                  <colgroup>
-                    <col className="w-[13%]" />
-                    <col className="w-[17%]" />
-                    <col className="w-[13%]" />
-                    <col className="w-[7%]" />
-                    <col className="w-[6%]" />
-                    <col className="w-[7%]" />
-                    <col className="w-[7%]" />
-                    <col className="w-[10%]" />
-                    <col className="w-[20%]" />
-                  </colgroup>
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Email</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Organization</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Grade</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Division</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Completed</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Pending</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Added On</th>
-                      <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Action</th>
+                      <th className="min-w-[11rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
+                      <th className="min-w-[10rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Email</th>
+                      <th className="min-w-[8rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Organization</th>
+                      <th className="min-w-[5rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Grade</th>
+                      <th className="min-w-[4.5rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Division</th>
+                      <th className="min-w-[5.5rem] whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Completed</th>
+                      <th className="min-w-[5rem] whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Pending</th>
+                      <th className="min-w-[6.5rem] whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Added On</th>
+                      <th className="min-w-[11rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -331,31 +320,33 @@ export default function UsersPage() {
                       const orgName = user.organization?.name || "-";
 
                       return (
-                        <tr key={user._id} className="transition-colors hover:bg-gray-50">
+                        <tr key={user._id} className="align-top transition-colors hover:bg-gray-50">
                           <td className="px-3 py-3">
-                            <div className="flex min-w-0 items-center gap-2">
+                            <div className="flex min-w-[11rem] items-start gap-2">
                               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 text-xs font-bold text-white">
                                 {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                               </div>
-                              <span className="truncate font-medium text-black" title={fullName}>{fullName}</span>
+                              <span className="break-words font-medium leading-snug text-black">{fullName}</span>
                             </div>
                           </td>
                           <td className="px-3 py-3">
-                            <span className="block truncate text-black" title={user.email}>{user.email}</span>
+                            <span className="block break-all text-black" title={user.email}>{user.email}</span>
                           </td>
                           <td className="px-3 py-3">
-                            <span className="block truncate text-black" title={orgName}>{orgName}</span>
+                            <span className="block break-words text-black" title={orgName}>{orgName}</span>
                           </td>
-                          <td className="px-3 py-3 text-black">{user.grade || "-"}</td>
-                          <td className="px-3 py-3 text-black">{user.division || "-"}</td>
-                          <td className="px-3 py-3 text-black">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
-                          <td className="px-3 py-3 text-black">{user.testsPending ?? 0}</td>
-                          <td className="px-3 py-3 text-black">{formatDate(user.createdAt)}</td>
+                          <td className="px-3 py-3 text-black">
+                            <span className="block break-words leading-snug">{user.grade || "-"}</span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-3 text-black">{user.division || "-"}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-black">{user.testsCompleted ?? user.testsTaken ?? 0}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-black">{user.testsPending ?? 0}</td>
+                          <td className="whitespace-nowrap px-3 py-3 text-black">{formatDate(user.createdAt)}</td>
                           <td className="px-3 py-3">
-                            <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
-                                className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 xl:px-3 xl:py-2 xl:text-sm"
+                                className="whitespace-nowrap rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
                               >
                                 View Detail
                               </button>
@@ -363,7 +354,7 @@ export default function UsersPage() {
                                 <button
                                   onClick={() => void handleArchiveStudent(user._id)}
                                   disabled={archivingId === user._id}
-                                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 xl:px-3 xl:py-2 xl:text-sm"
+                                  className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                                 >
                                   {archivingId === user._id ? "..." : "Archive"}
                                 </button>

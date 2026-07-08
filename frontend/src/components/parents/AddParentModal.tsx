@@ -23,7 +23,6 @@ type FormState = {
   email: string;
   phoneCode: string;
   phone: string;
-  institutionName: string;
   country: string;
   state: string;
   city: string;
@@ -37,7 +36,6 @@ const emptyForm = (): FormState => ({
   email: "",
   phoneCode: "+91",
   phone: "",
-  institutionName: "",
   country: "",
   state: "",
   city: "",
@@ -170,12 +168,6 @@ export default function AddParentModal({ open, token, onClose, onSuccess }: AddP
                   required
                 />
               </div>
-            </FieldWrap>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
-            <FieldWrap label="Institution Name">
-              <input type="text" value={form.institutionName} onChange={(e) => setField("institutionName", e.target.value)} className={inputCls} required />
             </FieldWrap>
           </div>
 

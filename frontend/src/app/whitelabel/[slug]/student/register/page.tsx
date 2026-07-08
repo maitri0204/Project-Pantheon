@@ -141,6 +141,7 @@ export default function StudentRegisterPage() {
       if (f === "role" && v === "PARENT") {
         n.grade = "";
         n.division = "";
+        n.institutionName = "";
       }
       return n;
     });
@@ -150,7 +151,7 @@ export default function StudentRegisterPage() {
     try {
       const isParentRegistration = form.role === "PARENT";
       const resolvedGrade = form.grade === OTHER_GRADE_VALUE ? otherGrade.trim() : form.grade;
-      if (form.grade === OTHER_GRADE_VALUE && !resolvedGrade) {
+      if (!isParentRegistration && form.grade === OTHER_GRADE_VALUE && !resolvedGrade) {
         setError("Please enter your grade / level.");
         setSubmitting(false);
         return;
@@ -161,6 +162,7 @@ export default function StudentRegisterPage() {
         ...form,
         grade: isParentRegistration ? undefined : resolvedGrade || undefined,
         division: isParentRegistration ? undefined : form.division || undefined,
+        institutionName: isParentRegistration ? undefined : form.institutionName || undefined,
         captchaToken,
         captchaAnswer,
       };
@@ -369,58 +371,58 @@ export default function StudentRegisterPage() {
                   </FieldWrap>
                 </div>
 
-                <SectionDivider icon="🎓" label="Academic" />
+                {!isParent ? (
+                  <>
+                    <SectionDivider icon="🎓" label="Academic" />
 
-                <div className={isParent ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 gap-4 md:grid-cols-3"}>
-                  <FieldWrap label="Institution Name">
-                    <input type="text" value={form.institutionName} onChange={(e) => setField("institutionName", e.target.value)} className={inputCls} placeholder="Enter your institution name" required />
-                  </FieldWrap>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <FieldWrap label="Institution Name">
+                        <input type="text" value={form.institutionName} onChange={(e) => setField("institutionName", e.target.value)} className={inputCls} placeholder="Enter your institution name" required />
+                      </FieldWrap>
 
-                  {!isParent && (
-                    <FieldWrap label="Grade / Level" required={form.grade === OTHER_GRADE_VALUE}>
-                      <select
-                        value={form.grade}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setField("grade", value);
-                          if (value !== OTHER_GRADE_VALUE) {
-                            setOtherGrade("");
-                          }
-                        }}
-                        className={selectCls}
-                        style={ringStyle}
-                        required={form.grade !== OTHER_GRADE_VALUE}
-                      >
-                        <option value="">Select grade / level</option>
-                        {GRADE_OPTIONS.map((g)=><option key={g} value={g}>{g}</option>)}
-                      </select>
-                      {form.grade === OTHER_GRADE_VALUE && (
+                      <FieldWrap label="Grade / Level" required={form.grade === OTHER_GRADE_VALUE}>
+                        <select
+                          value={form.grade}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setField("grade", value);
+                            if (value !== OTHER_GRADE_VALUE) {
+                              setOtherGrade("");
+                            }
+                          }}
+                          className={selectCls}
+                          style={ringStyle}
+                          required={form.grade !== OTHER_GRADE_VALUE}
+                        >
+                          <option value="">Select grade / level</option>
+                          {GRADE_OPTIONS.map((g)=><option key={g} value={g}>{g}</option>)}
+                        </select>
+                        {form.grade === OTHER_GRADE_VALUE && (
+                          <input
+                            type="text"
+                            value={otherGrade}
+                            onChange={(e) => setOtherGrade(e.target.value)}
+                            className={`${inputCls} mt-2`}
+                            style={ringStyle}
+                            placeholder="e.g. B.Tech, B.Com 1st year"
+                            required
+                          />
+                        )}
+                      </FieldWrap>
+
+                      <FieldWrap label="Division">
                         <input
                           type="text"
-                          value={otherGrade}
-                          onChange={(e) => setOtherGrade(e.target.value)}
-                          className={`${inputCls} mt-2`}
+                          value={form.division}
+                          onChange={(e)=>setField("division",e.target.value.toUpperCase().slice(0,3))}
+                          className={inputCls}
                           style={ringStyle}
-                          placeholder="e.g. B.Tech, B.Com 1st year"
-                          required
+                          placeholder="A"
                         />
-                      )}
-                    </FieldWrap>
-                  )}
-
-                  {!isParent && (
-                    <FieldWrap label="Division">
-                      <input
-                        type="text"
-                        value={form.division}
-                        onChange={(e)=>setField("division",e.target.value.toUpperCase().slice(0,3))}
-                        className={inputCls}
-                        style={ringStyle}
-                        placeholder="A"
-                      />
-                    </FieldWrap>
-                  )}
-                </div>
+                      </FieldWrap>
+                    </div>
+                  </>
+                ) : null}
 
                 <SectionDivider icon="🌍" label="Location" />
 
