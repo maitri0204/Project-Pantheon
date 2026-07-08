@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BadgeInfo, Clock3, MapPin, PhoneCall, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, BadgeInfo, Mail, MapPin, PhoneCall, ShieldCheck } from "lucide-react";
 
 import { STUDENT_REGISTER_URL } from "@/lib/studentRegisterUrl";
 
@@ -108,31 +108,38 @@ export default function Footer() {
                 </ul>
               </div>
 
-              <div className="w-full max-w-xs space-y-4 lg:ml-auto">
+              <div className="w-full max-w-sm space-y-4 lg:ml-auto">
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Get in Touch</h3>
+                <div className="flex items-start gap-3">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                  <a href="mailto:hello@admitra.io" className="text-sm leading-6 text-slate-300 transition hover:text-white">
+                    hello@admitra.io
+                  </a>
+                </div>
+                <div className="flex items-start gap-3">
+                  <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
+                  <a href="tel:+917046673033" className="text-sm leading-6 text-slate-300 transition hover:text-white">
+                    +91 70466 73033
+                  </a>
+                </div>
                 <div className="flex items-start gap-3">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
                   <address className="text-sm not-italic leading-6 text-slate-300">
+                    <span className="font-semibold text-white">ADMITra Core Systems Pvt. Ltd.</span>
+                    <br />
                     303, Rajshree Center,
                     <br />
                     Near Kalaghoda,
                     <br />
                     Sayajigunj,
                     <br />
-                    Vadodara-390020
-                    <br />
-                    GJ, IN
+                    Vadodara-390020, GJ, IN
                   </address>
                 </div>
-                <div className="flex items-start gap-3">
-                  <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                  <div className="text-sm leading-6 text-slate-300">
-                    <p>+91 265 31 38 392</p>
-                    <p>+91 810 42 15 365</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-cyan-300" />
-                  <span className="text-sm text-slate-300">Mon - Sat: 10:00 AM - 7:00 PM</span>
+                <div className="text-sm leading-6 text-slate-300">
+                  <span className="font-semibold text-white">CIN Number:</span>
+                  {" "}
+                  U85490GJ2026PTC179267
                 </div>
               </div>
             </div>

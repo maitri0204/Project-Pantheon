@@ -139,7 +139,7 @@ export default function UsersPage() {
   const detailsBasePath = pathname || "/dashboard/users";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 min-w-0">
+    <div className="w-full min-w-0 space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-black sm:text-3xl">Students</h1>
@@ -239,7 +239,7 @@ export default function UsersPage() {
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
           {filtered.length === 0 ? (
             <p className="text-center text-black text-base py-16">No students found.</p>
           ) : (
@@ -299,8 +299,19 @@ export default function UsersPage() {
                 ))}
               </div>
 
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full min-w-[1000px] text-sm">
+              <div className="hidden lg:block">
+                <table className="w-full table-fixed text-sm">
+                  <colgroup>
+                    <col className="w-[13%]" />
+                    <col className="w-[17%]" />
+                    <col className="w-[13%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[6%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[20%]" />
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
@@ -341,10 +352,10 @@ export default function UsersPage() {
                           <td className="px-3 py-3 text-black">{user.testsPending ?? 0}</td>
                           <td className="px-3 py-3 text-black">{formatDate(user.createdAt)}</td>
                           <td className="px-3 py-3">
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
                               <button
                                 onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
-                                className="whitespace-nowrap rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                                className="rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 xl:px-3 xl:py-2 xl:text-sm"
                               >
                                 View Detail
                               </button>
@@ -352,7 +363,7 @@ export default function UsersPage() {
                                 <button
                                   onClick={() => void handleArchiveStudent(user._id)}
                                   disabled={archivingId === user._id}
-                                  className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 xl:px-3 xl:py-2 xl:text-sm"
                                 >
                                   {archivingId === user._id ? "..." : "Archive"}
                                 </button>
