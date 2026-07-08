@@ -14,6 +14,7 @@ import OrganizationCouponConfig from "../models/OrganizationCouponConfig";
 import OrganizationCouponUsage from "../models/OrganizationCouponUsage";
 import Question from "../models/Question";
 import User, { IUser } from "../models/User";
+import { aggregateStudentVisibleQuestionCounts } from "../services/assessmentStudentVisibleQuestionCount.service";
 import { AuthRequest } from "../types/auth";
 
 const RESILIENCE_ASSESSMENT_CODE = "RESILIENCE_TEST";
@@ -182,19 +183,30 @@ export const getSuperadminDashboard = async (_req: AuthRequest, res: Response): 
     assessments.map((assessment) => assessment.toObject() as unknown as { code: string; name: string })
   );
 
-  // Dynamically count questions for each assessment
-  const assessmentsWithCounts = await Promise.all(
+  const questionCountEntries = await Promise.all(
     dedupedAssessments.map(async (assessment) => {
       const count = await Question.countDocuments({
         assessmentCode: { $in: getAssessmentCodeAliases(assessment.code) },
         isActive: true,
       });
-      const release = buildAssessmentReleaseMeta(
-        (assessment as { releaseDate?: Date | null }).releaseDate,
-      );
-      return { ...assessment, questionCount: count, ...release };
-    })
+      return [normalizeAssessmentCode(assessment.code), count] as const;
+    }),
   );
+  const questionCounts = new Map(questionCountEntries);
+  const studentVisibleQuestionCounts = await aggregateStudentVisibleQuestionCounts(
+    dedupedAssessments,
+    questionCounts,
+  );
+
+  const assessmentsWithCounts = dedupedAssessments.map((assessment) => {
+    const canonicalCode = normalizeAssessmentCode(assessment.code);
+    const questionCount = questionCounts.get(canonicalCode) || 0;
+    const studentVisibleQuestionCount = studentVisibleQuestionCounts.get(canonicalCode) ?? questionCount;
+    const release = buildAssessmentReleaseMeta(
+      (assessment as { releaseDate?: Date | null }).releaseDate,
+    );
+    return { ...assessment, questionCount, studentVisibleQuestionCount, ...release };
+  });
 
   res.json({ assessments: assessmentsWithCounts, organizations, users, coupons });
 };
@@ -700,6 +712,149 @@ const isValidStudentEmail = (value?: string): boolean => {
 const isValidStudentPhone = (value?: string): boolean => {
   if (!value?.trim()) return false;
   return /^\d{10}$/.test(value.trim());
+};
+
+type ParentCreateInput = {
+  rowNumber?: number;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  gender?: string;
+  email?: string;
+  phoneCode?: string;
+  phone?: string;
+  institutionName?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+};
+
+const createParentForOrganization = async (
+  body: ParentCreateInput,
+  organization: IOrganization,
+): Promise<IUser> => {
+  const normalizedEmail = body.email!.toLowerCase().trim();
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw new Error("Email already registered. Please use a different email.");
+  }
+
+  return User.create({
+    firstName: body.firstName!.trim(),
+    middleName: body.middleName?.trim() || undefined,
+    lastName: body.lastName!.trim(),
+    gender: body.gender?.trim() || undefined,
+    email: normalizedEmail,
+    phone: body.phone!.trim(),
+    phoneCode: body.phoneCode?.trim() || "+91",
+    country: body.country?.trim() || undefined,
+    state: body.state?.trim() || undefined,
+    city: body.city?.trim() || undefined,
+    institutionName: body.institutionName?.trim() || organization.branding?.companyName || organization.name,
+    role: "PARENT",
+    organization: organization._id,
+    isVerified: true,
+    isActive: true,
+    otpPurpose: null,
+    otpAttempts: 0,
+  });
+};
+
+export const createParentBySuperadmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const body = req.body as ParentCreateInput;
+    const validationError = validateStudentCreateInput(body);
+    if (validationError) {
+      res.status(400).json({ message: validationError });
+      return;
+    }
+
+    const organization = await getKareerStudioOrganization();
+    const user = await createParentForOrganization(body, organization);
+    await user.populate("organization");
+
+    res.status(201).json({
+      message: "Parent added successfully under Kareer Studio.",
+      parent: {
+        _id: user._id.toString(),
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        organization: user.organization
+          ? {
+              name: (user.organization as { name?: string }).name,
+              slug: (user.organization as { slug?: string }).slug,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("already registered")) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
+    if (error instanceof Error && error.message.includes("Kareer Studio")) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+    console.error("Create parent by superadmin error:", error);
+    res.status(500).json({ message: "Failed to add parent" });
+  }
+};
+
+export const bulkCreateParentsBySuperadmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { parents } = req.body as { parents?: ParentCreateInput[] };
+    if (!Array.isArray(parents) || parents.length === 0) {
+      res.status(400).json({ message: "At least one parent row is required" });
+      return;
+    }
+
+    const organization = await getKareerStudioOrganization();
+    const created: Array<{ rowNumber?: number; email: string; firstName: string; lastName: string }> = [];
+    const failed: Array<{ rowNumber?: number; email?: string; message: string }> = [];
+
+    for (let index = 0; index < parents.length; index += 1) {
+      const row = parents[index];
+      const rowNumber = typeof row.rowNumber === "number" ? row.rowNumber : index + 2;
+      const validationError = validateStudentCreateInput(row);
+      if (validationError) {
+        failed.push({ rowNumber, email: row.email, message: validationError });
+        continue;
+      }
+
+      try {
+        const user = await createParentForOrganization(row, organization);
+        created.push({
+          rowNumber,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        });
+      } catch (error) {
+        failed.push({
+          rowNumber,
+          email: row.email,
+          message: error instanceof Error ? error.message : "Failed to add parent",
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: `Imported ${created.length} parent(s). ${failed.length} row(s) failed.`,
+      createdCount: created.length,
+      failedCount: failed.length,
+      created,
+      failed,
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Kareer Studio")) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
+    console.error("Bulk create parents by superadmin error:", error);
+    res.status(500).json({ message: "Failed to import parents" });
+  }
 };
 
 type StudentCreateInput = {

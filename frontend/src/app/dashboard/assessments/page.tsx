@@ -19,6 +19,7 @@ type Assessment = {
   currency: string;
   questionBankStatus: "linked" | "pending-import" | "imported";
   questionCount: number;
+  studentVisibleQuestionCount?: number;
   sourceProject: string;
   active: boolean;
   tags: string[];
@@ -43,6 +44,15 @@ const normalizeAssessmentCategoryForDisplay = (category: string, code: string) =
   if (normalizedCode === "METACOGNITION" || normalizedCode === "METACOGNITION_TEST") return "TEST";
   if (normalizedCode === "JOHARI_WINDOW" || normalizedCode === "JOHARI" || normalizedCode === "CLEAR") return "CLEAR";
   return category;
+};
+
+const formatQuestionCountLabel = (total: number, visible?: number) => {
+  if (!Number.isFinite(total)) return "-";
+  const studentVisible = Number.isFinite(visible) ? Number(visible) : total;
+  if (studentVisible !== total) {
+    return `${total.toLocaleString()} (${studentVisible.toLocaleString()})`;
+  }
+  return total.toLocaleString();
 };
 
 export default function AssessmentsPage() {
@@ -304,7 +314,9 @@ export default function AssessmentsPage() {
               <dl className="grid grid-cols-1 gap-x-5 gap-y-2 text-sm min-[400px]:grid-cols-2">
                 <div className="space-y-0.5">
                   <dt className="text-black">Questions</dt>
-                  <dd className="font-bold text-black tabular-nums text-base">{Number.isFinite(a.questionCount) ? a.questionCount.toLocaleString() : "-"}</dd>
+                  <dd className="font-bold text-black tabular-nums text-base" title="Total in bank (visible per attempt)">
+                    {formatQuestionCountLabel(a.questionCount, a.studentVisibleQuestionCount)}
+                  </dd>
                 </div>
                 <div className="space-y-0.5 text-right">
                   <dt className="text-black">Currency</dt>

@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { apiRequest, getStoredAuth } from "@/lib/api";
 import { getDashboardLoginPath } from "@/lib/dashboardAuth";
+import AddParentModal from "@/components/parents/AddParentModal";
+import ImportParentsModal from "@/components/parents/ImportParentsModal";
 
 type User = {
   _id: string;
@@ -45,36 +47,35 @@ export default function ParentsPage() {
   const [search, setSearch] = useState("");
   const [organizationFilter, setOrganizationFilter] = useState("ALL");
   const [currentRole, setCurrentRole] = useState<string>("");
-  const [showArchived, setShowArchived] = useState(false);
   const [archivingId, setArchivingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showAddParent, setShowAddParent] = useState(false);
+  const [showImportParents, setShowImportParents] = useState(false);
   const pathname = usePathname();
 
   const auth = useMemo(() => getStoredAuth(), []);
 
-  const loadParents = async (token: string, includeArchived = showArchived) => {
-    const query = includeArchived ? "?archiveView=archived" : "";
-    const res = await apiRequest<ParentsResponse>(`/platform/parents${query}`, {}, token);
+  const loadParents = async (token: string) => {
+    const res = await apiRequest<ParentsResponse>("/platform/parents", {}, token);
     setParents(res.parents);
     setError(null);
   };
 
-  const handleArchiveParent = async (parentId: string, archived: boolean) => {
+  const handleArchiveParent = async (parentId: string) => {
     if (!auth?.token) return;
-    const actionLabel = archived ? "archive" : "restore";
-    if (!window.confirm(`Are you sure you want to ${actionLabel} this parent?`)) return;
+    if (!window.confirm("Are you sure you want to archive this parent?")) return;
 
     setArchivingId(parentId);
     try {
       await apiRequest(`/superadmin/parents/${parentId}/archive`, {
         method: "PATCH",
-        body: JSON.stringify({ archived }),
+        body: JSON.stringify({ archived: true }),
       }, auth.token);
-      setSuccessMessage(archived ? "Parent archived successfully." : "Parent restored successfully.");
-      await loadParents(auth.token, showArchived);
+      setSuccessMessage("Parent archived successfully.");
+      await loadParents(auth.token);
     } catch (err) {
       setSuccessMessage(null);
-      window.alert(err instanceof Error ? err.message : `Failed to ${actionLabel} parent`);
+      window.alert(err instanceof Error ? err.message : "Failed to archive parent");
     } finally {
       setArchivingId(null);
     }
@@ -83,7 +84,7 @@ export default function ParentsPage() {
   useEffect(() => {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
-    loadParents(auth.token, showArchived)
+    loadParents(auth.token)
       .catch((err) => {
         const errorMsg = err instanceof Error ? err.message : "Failed to load parents";
         if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
@@ -94,7 +95,7 @@ export default function ParentsPage() {
       })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showArchived]);
+  }, []);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -117,7 +118,7 @@ export default function ParentsPage() {
   );
 
   const stats = useMemo(() => {
-    return filtered.reduce(
+    return parents.reduce(
       (acc, user) => {
         acc.parentCount += 1;
         acc.testsCompleted += user.testsCompleted ?? user.testsTaken ?? 0;
@@ -126,15 +127,35 @@ export default function ParentsPage() {
       },
       { parentCount: 0, testsCompleted: 0, testsPending: 0 }
     );
-  }, [filtered]);
+  }, [parents]);
 
   const detailsBasePath = pathname || "/dashboard/parents";
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 min-w-0">
-      <div>
-        <h1 className="text-2xl font-bold text-black sm:text-3xl">Parents</h1>
-        <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Parents from your organization." : "Parents registered across the platform."}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-black sm:text-3xl">Parents</h1>
+          <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Parents from your organization." : "Parents registered across the platform."}</p>
+        </div>
+        {currentRole === "SUPERADMIN" && auth?.token ? (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowImportParents(true)}
+              className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              Import from Excel
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddParent(true)}
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Add Parent
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {successMessage && (
@@ -143,9 +164,8 @@ export default function ParentsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px_180px]" : "lg:grid-cols-[minmax(0,1fr)]"}`}>
-        <div className="relative flex-1">
+      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_200px]" : "lg:grid-cols-[minmax(0,1fr)]"}`}>
+        <div className="relative flex-1 min-w-0">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -168,19 +188,8 @@ export default function ParentsPage() {
             ))}
           </select>
         ) : null}
-        {currentRole === "SUPERADMIN" ? (
-          <select
-            value={showArchived ? "ARCHIVED" : "ACTIVE"}
-            onChange={(e) => setShowArchived(e.target.value === "ARCHIVED")}
-            className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="ACTIVE">Active Parents</option>
-            <option value="ARCHIVED">Archived Parents</option>
-          </select>
-        ) : null}
       </div>
 
-      {/* Stats row */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <p className="text-sm text-black mb-1">Parents</p>
@@ -210,7 +219,7 @@ export default function ParentsPage() {
             <p className="text-center text-black text-base py-16">No parents found.</p>
           ) : (
             <>
-              <div className="grid gap-4 p-4 xl:hidden">
+              <div className="grid gap-4 p-4 lg:hidden">
                 {filtered.map((user) => (
                   <div key={user._id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -234,6 +243,14 @@ export default function ParentsPage() {
                         <p className="text-xs font-semibold uppercase tracking-wide text-black">Tests</p>
                         <p className="mt-1 text-black">{user.testsCompleted ?? user.testsTaken ?? 0} completed</p>
                       </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Pending</p>
+                        <p className="mt-1 text-black">{user.testsPending ?? 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-black">Added On</p>
+                        <p className="mt-1 text-black">{formatDate(user.createdAt)}</p>
+                      </div>
                     </div>
 
                     <div className="mt-4 flex flex-wrap justify-end gap-2">
@@ -245,11 +262,11 @@ export default function ParentsPage() {
                       </button>
                       {currentRole === "SUPERADMIN" ? (
                         <button
-                          onClick={() => void handleArchiveParent(user._id, user.isActive !== false)}
+                          onClick={() => void handleArchiveParent(user._id)}
                           disabled={archivingId === user._id}
                           className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                         >
-                          {archivingId === user._id ? "Saving..." : user.isActive === false ? "Restore" : "Archive"}
+                          {archivingId === user._id ? "Saving..." : "Archive"}
                         </button>
                       ) : null}
                     </div>
@@ -257,17 +274,8 @@ export default function ParentsPage() {
                 ))}
               </div>
 
-              <div className="hidden xl:block">
-                <table className="w-full table-fixed text-sm">
-                  <colgroup>
-                    <col className="w-[18%]" />
-                    <col className="w-[22%]" />
-                    <col className="w-[18%]" />
-                    <col className="w-[10%]" />
-                    <col className="w-[10%]" />
-                    <col className="w-[12%]" />
-                    <col className="w-[10%]" />
-                  </colgroup>
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
@@ -313,11 +321,11 @@ export default function ParentsPage() {
                               </button>
                               {currentRole === "SUPERADMIN" ? (
                                 <button
-                                  onClick={() => void handleArchiveParent(user._id, user.isActive !== false)}
+                                  onClick={() => void handleArchiveParent(user._id)}
                                   disabled={archivingId === user._id}
                                   className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                                 >
-                                  {archivingId === user._id ? "..." : user.isActive === false ? "Restore" : "Archive"}
+                                  {archivingId === user._id ? "..." : "Archive"}
                                 </button>
                               ) : null}
                             </div>
@@ -332,6 +340,28 @@ export default function ParentsPage() {
           )}
         </div>
       )}
+      {auth?.token ? (
+        <>
+          <AddParentModal
+            open={showAddParent}
+            token={auth.token}
+            onClose={() => setShowAddParent(false)}
+            onSuccess={async () => {
+              setSuccessMessage("Parent added successfully under Kareer Studio.");
+              await loadParents(auth.token);
+            }}
+          />
+          <ImportParentsModal
+            open={showImportParents}
+            token={auth.token}
+            onClose={() => setShowImportParents(false)}
+            onSuccess={async (message) => {
+              setSuccessMessage(message);
+              await loadParents(auth.token);
+            }}
+          />
+        </>
+      ) : null}
     </div>
   );
 }

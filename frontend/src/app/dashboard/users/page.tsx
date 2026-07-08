@@ -244,7 +244,7 @@ export default function UsersPage() {
             <p className="text-center text-black text-base py-16">No students found.</p>
           ) : (
             <>
-              <div className="grid gap-4 p-4 xl:hidden">
+              <div className="grid gap-4 p-4 lg:hidden">
                 {filtered.map((user) => (
                   <div key={user._id} className="rounded-2xl border border-gray-100 bg-slate-50 p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
@@ -299,19 +299,8 @@ export default function UsersPage() {
                 ))}
               </div>
 
-              <div className="hidden xl:block">
-                <table className="w-full table-fixed text-sm">
-                  <colgroup>
-                    <col className="w-[14%]" />
-                    <col className="w-[17%]" />
-                    <col className="w-[14%]" />
-                    <col className="w-[7%]" />
-                    <col className="w-[7%]" />
-                    <col className="w-[9%]" />
-                    <col className="w-[9%]" />
-                    <col className="w-[10%]" />
-                    <col className="w-[13%]" />
-                  </colgroup>
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full min-w-[1000px] text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
