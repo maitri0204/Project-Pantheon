@@ -5,7 +5,6 @@ import { apiRequest } from "@/lib/api";
 import {
   downloadStudentImportSample,
   parseStudentImportFile,
-  STUDENT_IMPORT_HEADERS,
   type StudentImportRow,
 } from "@/lib/students/studentImport";
 
@@ -129,12 +128,6 @@ export default function ImportStudentsModal({ open, token, onClose, onSuccess }:
                 onChange={(e) => void handleFileChange(e.target.files?.[0] ?? null)}
               />
             </label>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            <p className="font-semibold text-slate-900">Required columns</p>
-            <p className="mt-2 break-words">{STUDENT_IMPORT_HEADERS.join(", ")}</p>
-            <p className="mt-2 text-slate-600">Use country and state ISO codes (example: IN, GJ). Gender values: male, female, other, prefer_not_to_say.</p>
           </div>
 
           {fileName ? (

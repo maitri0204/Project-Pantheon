@@ -877,3 +877,87 @@ export const bulkCreateStudentsBySuperadmin = async (req: AuthRequest, res: Resp
     res.status(500).json({ message: "Failed to import students" });
   }
 };
+
+export const archiveStudentBySuperadmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const studentId = String(req.params.studentId || "");
+    const { archived } = req.body as { archived?: boolean };
+    if (typeof archived !== "boolean") {
+      res.status(400).json({ message: "archived boolean is required" });
+      return;
+    }
+
+    const student = await User.findOneAndUpdate(
+      { _id: studentId, role: "STUDENT" },
+      { $set: { isActive: !archived } },
+      { new: true },
+    ).populate("organization", "name slug");
+
+    if (!student) {
+      res.status(404).json({ message: "Student not found" });
+      return;
+    }
+
+    res.json({
+      message: archived ? "Student archived successfully." : "Student restored successfully.",
+      student: {
+        _id: student._id.toString(),
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        isActive: student.isActive,
+        organization: student.organization
+          ? {
+              name: (student.organization as { name?: string }).name,
+              slug: (student.organization as { slug?: string }).slug,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Archive student by superadmin error:", error);
+    res.status(500).json({ message: "Failed to update student archive status" });
+  }
+};
+
+export const archiveParentBySuperadmin = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const parentId = String(req.params.parentId || "");
+    const { archived } = req.body as { archived?: boolean };
+    if (typeof archived !== "boolean") {
+      res.status(400).json({ message: "archived boolean is required" });
+      return;
+    }
+
+    const parent = await User.findOneAndUpdate(
+      { _id: parentId, role: "PARENT" },
+      { $set: { isActive: !archived } },
+      { new: true },
+    ).populate("organization", "name slug");
+
+    if (!parent) {
+      res.status(404).json({ message: "Parent not found" });
+      return;
+    }
+
+    res.json({
+      message: archived ? "Parent archived successfully." : "Parent restored successfully.",
+      parent: {
+        _id: parent._id.toString(),
+        firstName: parent.firstName,
+        lastName: parent.lastName,
+        email: parent.email,
+        isActive: parent.isActive,
+        organization: parent.organization
+          ? {
+              name: (parent.organization as { name?: string }).name,
+              slug: (parent.organization as { slug?: string }).slug,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Archive parent by superadmin error:", error);
+    res.status(500).json({ message: "Failed to update parent archive status" });
+  }
+};

@@ -7,6 +7,8 @@ import {
   createQuestion,
   createStudentBySuperadmin,
   bulkCreateStudentsBySuperadmin,
+  archiveStudentBySuperadmin,
+  archiveParentBySuperadmin,
   deleteCoupon,
   deleteQuestion,
   getLedger,
@@ -28,6 +30,8 @@ router.use(requireAuth, requireRoles("SUPERADMIN"));
 router.get("/dashboard", getSuperadminDashboard);
 router.post("/students", createStudentBySuperadmin);
 router.post("/students/bulk", bulkCreateStudentsBySuperadmin);
+router.patch("/students/:studentId/archive", archiveStudentBySuperadmin);
+router.patch("/parents/:parentId/archive", archiveParentBySuperadmin);
 router.post("/organizations", createOrganization);
 router.get("/organizations/:organizationId/coupons", getOrganizationCouponDetails);
 router.post("/organizations/:organizationId/coupons", createOrganizationCouponConfig);

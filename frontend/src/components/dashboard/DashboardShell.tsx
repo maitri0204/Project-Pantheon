@@ -259,6 +259,7 @@ export default function DashboardShell({
 
     return filtered.map((item) => ({
       ...item,
+      label: userRole === "SUPERADMIN" && item.suffix === "/assessments" ? "Admin" : item.label,
       href: toHref(item.suffix),
     }));
   }, [basePath, userRole]);

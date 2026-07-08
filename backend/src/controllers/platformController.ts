@@ -877,8 +877,12 @@ export const listStudents = async (req: AuthRequest, res: Response): Promise<voi
   }
 
   const scope = req.user.role === "SUPERADMIN" ? {} : { organization: req.user.organization };
+  const includeArchived = req.user.role === "SUPERADMIN" && String(req.query.archiveView || "") === "archived";
+  const activeFilter = req.user.role === "SUPERADMIN"
+    ? (includeArchived ? { isActive: false } : { isActive: true })
+    : { isActive: true };
 
-  const students = await User.find({ role: "STUDENT", ...scope })
+  const students = await User.find({ role: "STUDENT", ...scope, ...activeFilter })
     .populate("organization", "name slug")
     .sort({ createdAt: -1 });
 
@@ -3892,8 +3896,12 @@ export const listParents = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const scope = req.user.role === "SUPERADMIN" ? {} : { organization: req.user.organization };
+    const includeArchived = req.user.role === "SUPERADMIN" && String(req.query.archiveView || "") === "archived";
+    const activeFilter = req.user.role === "SUPERADMIN"
+      ? (includeArchived ? { isActive: false } : { isActive: true })
+      : { isActive: true };
 
-    const parents = await User.find({ role: "PARENT", ...scope })
+    const parents = await User.find({ role: "PARENT", ...scope, ...activeFilter })
       .populate("organization", "name slug")
       .sort({ createdAt: -1 });
 

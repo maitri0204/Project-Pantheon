@@ -213,7 +213,7 @@ export default function AssessmentsPage() {
     <div className="mx-auto max-w-7xl space-y-5 min-w-0">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-black sm:text-3xl">Assessments</h1>
+        <h1 className="text-2xl font-bold text-black sm:text-3xl">{isOrgAdmin === true ? "Assessments" : "Admin"}</h1>
         <p className="text-black mt-1 text-base">
           {isOrgAdmin === true
             ? "View all available assessments. Pricing and configuration are read-only for organization users."

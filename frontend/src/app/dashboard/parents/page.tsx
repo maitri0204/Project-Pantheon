@@ -10,6 +10,7 @@ type User = {
   firstName: string;
   lastName: string;
   email: string;
+  isActive?: boolean;
   testsTaken?: number;
   testsCompleted?: number;
   testsPending?: number;
@@ -44,18 +45,45 @@ export default function ParentsPage() {
   const [search, setSearch] = useState("");
   const [organizationFilter, setOrganizationFilter] = useState("ALL");
   const [currentRole, setCurrentRole] = useState<string>("");
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const pathname = usePathname();
 
   const auth = useMemo(() => getStoredAuth(), []);
 
+  const loadParents = async (token: string, includeArchived = showArchived) => {
+    const query = includeArchived ? "?archiveView=archived" : "";
+    const res = await apiRequest<ParentsResponse>(`/platform/parents${query}`, {}, token);
+    setParents(res.parents);
+    setError(null);
+  };
+
+  const handleArchiveParent = async (parentId: string, archived: boolean) => {
+    if (!auth?.token) return;
+    const actionLabel = archived ? "archive" : "restore";
+    if (!window.confirm(`Are you sure you want to ${actionLabel} this parent?`)) return;
+
+    setArchivingId(parentId);
+    try {
+      await apiRequest(`/superadmin/parents/${parentId}/archive`, {
+        method: "PATCH",
+        body: JSON.stringify({ archived }),
+      }, auth.token);
+      setSuccessMessage(archived ? "Parent archived successfully." : "Parent restored successfully.");
+      await loadParents(auth.token, showArchived);
+    } catch (err) {
+      setSuccessMessage(null);
+      window.alert(err instanceof Error ? err.message : `Failed to ${actionLabel} parent`);
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
   useEffect(() => {
     if (!auth) { router.replace(getDashboardLoginPath()); return; }
     setCurrentRole(auth.user.role);
-    apiRequest<ParentsResponse>("/platform/parents", {}, auth.token)
-      .then((res) => {
-        setParents(res.parents);
-        setError(null);
-      })
+    loadParents(auth.token, showArchived)
       .catch((err) => {
         const errorMsg = err instanceof Error ? err.message : "Failed to load parents";
         if (errorMsg.includes("401") || errorMsg.includes("Unauthorized")) {
@@ -66,7 +94,13 @@ export default function ParentsPage() {
       })
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showArchived]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
 
   const filtered = parents.filter((u) => {
     const matchSearch =
@@ -103,8 +137,14 @@ export default function ParentsPage() {
         <p className="text-black mt-1 text-base">{currentRole === "ORG_ADMIN" ? "Parents from your organization." : "Parents registered across the platform."}</p>
       </div>
 
+      {successMessage && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {successMessage}
+        </div>
+      )}
+
       {/* Filters */}
-      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px]" : "lg:grid-cols-[minmax(0,1fr)]"}`}>
+      <div className={`grid grid-cols-1 gap-3 ${currentRole === "SUPERADMIN" ? "lg:grid-cols-[minmax(0,1fr)_200px_180px]" : "lg:grid-cols-[minmax(0,1fr)]"}`}>
         <div className="relative flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -126,6 +166,16 @@ export default function ParentsPage() {
             {organizations.map(([slug, name]) => (
               <option key={slug} value={slug}>{name}</option>
             ))}
+          </select>
+        ) : null}
+        {currentRole === "SUPERADMIN" ? (
+          <select
+            value={showArchived ? "ARCHIVED" : "ACTIVE"}
+            onChange={(e) => setShowArchived(e.target.value === "ARCHIVED")}
+            className="border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value="ACTIVE">Active Parents</option>
+            <option value="ARCHIVED">Archived Parents</option>
           </select>
         ) : null}
       </div>
@@ -186,13 +236,22 @@ export default function ParentsPage() {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex flex-wrap justify-end gap-2">
                       <button
                         onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
                         className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-700 hover:to-cyan-600"
                       >
                         View Detail
                       </button>
+                      {currentRole === "SUPERADMIN" ? (
+                        <button
+                          onClick={() => void handleArchiveParent(user._id, user.isActive !== false)}
+                          disabled={archivingId === user._id}
+                          className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                        >
+                          {archivingId === user._id ? "Saving..." : user.isActive === false ? "Restore" : "Archive"}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 ))}
@@ -245,12 +304,23 @@ export default function ParentsPage() {
                           <td className="px-3 py-3 text-black">{user.testsPending ?? 0}</td>
                           <td className="px-3 py-3 text-black">{formatDate(user.createdAt)}</td>
                           <td className="px-3 py-3">
-                            <button
-                              onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
-                              className="whitespace-nowrap rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
-                            >
-                              View Detail
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => router.push(`${detailsBasePath}/${user._id}`)}
+                                className="whitespace-nowrap rounded-lg bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                              >
+                                View Detail
+                              </button>
+                              {currentRole === "SUPERADMIN" ? (
+                                <button
+                                  onClick={() => void handleArchiveParent(user._id, user.isActive !== false)}
+                                  disabled={archivingId === user._id}
+                                  className="whitespace-nowrap rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                >
+                                  {archivingId === user._id ? "..." : user.isActive === false ? "Restore" : "Archive"}
+                                </button>
+                              ) : null}
+                            </div>
                           </td>
                         </tr>
                       );
