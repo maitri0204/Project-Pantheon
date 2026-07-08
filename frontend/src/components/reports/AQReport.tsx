@@ -27,6 +27,8 @@ import {
   Font,
 } from '@react-pdf/renderer';
 
+import { REPORT_BACK_COVER_IMAGE } from '@/lib/reports/reportCoverAssets';
+
 /* ─────────────────────────── Font Registration ───────────────────────────── */
 
 Font.register({
@@ -1029,7 +1031,7 @@ function CoverPage({ d }: { d: AQReportData }) {
 }
 
 function BackCoverPage({ d }: { d: AQReportData }) {
-  const backSrc = d.backCoverImageSrc ?? '/rq/back-cover.jpg';
+  const backSrc = d.backCoverImageSrc ?? REPORT_BACK_COVER_IMAGE;
   return (
     <Page size="A4" style={S.rqCoverPage}>
       <Image src={backSrc} style={S.rqCoverBg} />

@@ -1,5 +1,6 @@
 import { buildReportHtml } from "./buildReport";
 import { buildMetacognitionReportData } from "./buildMetacognitionReportData";
+import { embedPublicAssetsInHtml } from "../reportPdf/embedPublicAssetsInHtml";
 
 export const METACOGNITION_REPORT_FILENAME = "Thinking_Expression_Intelligence_Report.pdf";
 
@@ -13,5 +14,5 @@ export function buildMetacognitionReportHtml(input: {
   totalScore?: unknown;
 }): string {
   const data = buildMetacognitionReportData(input);
-  return buildReportHtml(data);
+  return embedPublicAssetsInHtml(buildReportHtml(data));
 }

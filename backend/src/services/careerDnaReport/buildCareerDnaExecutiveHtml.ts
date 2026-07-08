@@ -1,6 +1,7 @@
 import { buildReportHtml } from "./reportTemplate";
 import type { ReportData } from "./buildCareerDnaReportData";
+import { embedPublicAssetsInHtml } from "../reportPdf/embedPublicAssetsInHtml";
 
 export function buildCareerDnaExecutiveHtml(data: ReportData): string {
-  return buildReportHtml(data);
+  return embedPublicAssetsInHtml(buildReportHtml(data));
 }

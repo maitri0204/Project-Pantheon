@@ -1,4 +1,5 @@
 import { REPORT_BULLET_CSS, renderReportBullets } from "../reportBullets";
+import { REPORT_BACK_COVER_IMAGE } from "../reportPdf/reportCoverAssets";
 import type { reportData as RD } from "./reportData";
 import { careerFitTop10 } from "./careerIntelligenceData";
 import { careerIntelligenceModulePages } from "./careerIntelligencePages";
@@ -10,7 +11,7 @@ type ReportData = typeof RD;
 const COVER_SCALE_X = 794 / 595;
 const COVER_SCALE_Y = 1123 / 841;
 const COVER_IMAGE = "/career-dna/cover.jpg";
-const BACK_COVER_IMAGE = "/career-dna/back-cover.jpg";
+const BACK_COVER_IMAGE = REPORT_BACK_COVER_IMAGE;
 const COVER_SCORE_NUM_TOP = 524;
 const COVER_SCORE_LABEL_TOP = 564;
 const COVER_PATH_TEXT_TOP = 530;

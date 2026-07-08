@@ -13,9 +13,10 @@ import {
   fetchStudyAbroadPrintContext,
   type StudyAbroadPrintContext,
 } from "@/lib/studyAbroad/printReportData";
+import { REPORT_BACK_COVER_IMAGE } from "@/lib/reports/reportCoverAssets";
 
 const SA_COVER_IMAGE = "/study-abroad/cover.jpg";
-const SA_BACK_COVER_IMAGE = "/study-abroad/back-cover.jpg";
+const SA_BACK_COVER_IMAGE = REPORT_BACK_COVER_IMAGE;
 
 async function waitForStudyAbroadReportPages(
   mount: HTMLElement,

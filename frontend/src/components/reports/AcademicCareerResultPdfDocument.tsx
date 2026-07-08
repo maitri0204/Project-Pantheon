@@ -1,6 +1,8 @@
 import React from "react";
 import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
+import { REPORT_BACK_COVER_IMAGE } from "@/lib/reports/reportCoverAssets";
+
 export type AcademicCareerPdfReport = {
   resultId: string;
   grade: string;
@@ -918,7 +920,7 @@ export function AcademicCareerResultPdfDocument({ report }: { report: AcademicCa
       </Page>
 
       <Page size="A4" style={styles.backCoverPage}>
-        <Image src={report.backCoverImageSrc ?? "/academic-career/back-cover.jpg"} style={styles.backCoverBg} />
+        <Image src={report.backCoverImageSrc ?? REPORT_BACK_COVER_IMAGE} style={styles.backCoverBg} />
       </Page>
     </Document>
   );

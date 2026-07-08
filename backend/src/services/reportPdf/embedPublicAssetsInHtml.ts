@@ -1,6 +1,6 @@
 import { publicAssetToDataUrl } from "./resolvePublicReportAsset";
 
-const PUBLIC_ASSET_SRC_PATTERN = /src="(\/(?:career-dna|metacognition-test|clear-report)\/[^"]+)"/g;
+const PUBLIC_ASSET_SRC_PATTERN = /src="(\/(?:career-dna|metacognition-test|clear-report|reports)\/[^"]+)"/g;
 
 /** Inline cover/back-cover images so Puppeteer can render them without a browser origin. */
 export function embedPublicAssetsInHtml(html: string): string {

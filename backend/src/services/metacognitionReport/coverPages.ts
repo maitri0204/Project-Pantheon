@@ -1,10 +1,11 @@
 import type { AssessmentData } from "./types";
+import { REPORT_BACK_COVER_IMAGE } from "../reportPdf/reportCoverAssets";
 
 /** Cover overlay positions - same RQ/DNA layout scaled to 794×1123 capture canvas. */
 const COVER_SCALE_X = 794 / 595;
 const COVER_SCALE_Y = 1123 / 841;
 const COVER_IMAGE = "/metacognition-test/cover.jpg";
-const BACK_COVER_IMAGE = "/metacognition-test/back-cover.jpg";
+const BACK_COVER_IMAGE = REPORT_BACK_COVER_IMAGE;
 const COVER_NAME_TOP = 455;
 const COVER_SCORE_NUM_TOP = 524;
 const COVER_SCORE_LABEL_TOP = 564;

@@ -14,6 +14,7 @@ import {
   getTopAndBottomTopics,
   scoreToPercentage,
 } from '@/lib/studyAbroad/assessmentData';
+import { REPORT_BACK_COVER_IMAGE } from '@/lib/reports/reportCoverAssets';
 
 export const SA_PREMIUM_REPORT_ROOT = 'sa-premium-print-report';
 
@@ -23,7 +24,7 @@ const REPORT_PAGE_PADDING = '68px 68px 53px';
 const SA_COVER_SCALE_X = 794 / 595;
 const SA_COVER_SCALE_Y = 1123 / 841;
 const SA_COVER_IMAGE = '/study-abroad/cover.jpg';
-const SA_BACK_COVER_IMAGE = '/study-abroad/back-cover.jpg';
+const SA_BACK_COVER_IMAGE = REPORT_BACK_COVER_IMAGE;
 /** Nudge score/date up vs RQ base coords to match Study Abroad template placeholders. */
 const SA_COVER_SCORE_NUM_TOP = 526;
 const SA_COVER_SCORE_LABEL_TOP = 564;

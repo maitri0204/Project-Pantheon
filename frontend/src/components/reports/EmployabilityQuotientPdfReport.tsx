@@ -24,6 +24,8 @@ import {
   Image,
 } from '@react-pdf/renderer';
 
+import { REPORT_BACK_COVER_IMAGE } from '@/lib/reports/reportCoverAssets';
+
 /* ─────────────────────────── Font Registration ───────────────────────────── */
 
 Font.register({
@@ -52,8 +54,6 @@ export interface EQReportData {
   /** Data URL or absolute URL for back cover */
   backCoverImageSrc?: string;
 }
-
-const EQ_BACK_COVER_IMAGE = '/rq/back-cover.jpg';
 
 /* ─────────────────────────── Constants ───────────────────────────────────── */
 
@@ -1729,7 +1729,7 @@ function FinalSummaryPage({ d }: { d: EQReportData }) {
 }
 
 function BackCoverPage({ d }: { d: EQReportData }) {
-  const backSrc = d.backCoverImageSrc ?? EQ_BACK_COVER_IMAGE;
+  const backSrc = d.backCoverImageSrc ?? REPORT_BACK_COVER_IMAGE;
   return (
     <Page size="A4" style={S.backCoverPage}>
       <Image src={backSrc} style={S.backCoverBg} />

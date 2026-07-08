@@ -5,6 +5,8 @@ import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont, type RGB }
 import { STYLE_COLORS } from "./templateAssessmentData";
 import type { LitmusAssessmentData, LitmusStyleKey } from "./types";
 import { PAGE } from "./theme";
+import { resolvePublicReportAsset } from "../reportPdf/resolvePublicReportAsset";
+import { REPORT_BACK_COVER_IMAGE } from "../reportPdf/reportCoverAssets";
 
 /** Cover overlay layout - measured from LITMUS.jpg template (1414×2000 → A4). */
 const COVER_NAME_LEFT = 58;
@@ -173,7 +175,7 @@ export async function buildLitmusBackCoverPdf(): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([PAGE.w, PAGE.h]);
 
-  const backBytes = fs.readFileSync(resolveLitmusAsset("back-cover.jpg"));
+  const backBytes = fs.readFileSync(resolvePublicReportAsset(REPORT_BACK_COVER_IMAGE));
   const backImage = await pdf.embedJpg(backBytes);
   page.drawImage(backImage, { x: 0, y: 0, width: PAGE.w, height: PAGE.h });
 

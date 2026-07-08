@@ -19,6 +19,7 @@ import StudyAbroadReport, { type StudyAbroadEvaluation } from "./StudyAbroadRepo
 import EmployabilityQuotientReport, { type EmployabilityQuotientEvaluation } from "./EmployabilityQuotientReport";
 import CareerDnaReport, { type CareerDnaEvaluation } from "./CareerDnaReport";
 import { generateStudyAbroadReportForEmail } from "@/lib/reports/generateStudyAbroadReport";
+import { REPORT_BACK_COVER_IMAGE } from "@/lib/reports/reportCoverAssets";
 import { ALL_TOPICS as STUDY_ABROAD_TOPICS } from "@/lib/studyAbroad/assessmentData";
 import { normalizeDimensionScores } from "@/lib/employabilityQuotient/assessmentData";
 import {
@@ -259,7 +260,7 @@ async function generateRQReportBlob(
 
   const [coverImageSrc, backCoverImageSrc] = await Promise.all([
     loadPublicImageDataUrl("/rq/cover.jpg"),
-    loadPublicImageDataUrl("/rq/back-cover.jpg"),
+    loadPublicImageDataUrl(REPORT_BACK_COVER_IMAGE),
   ]);
 
   const generatedDate = report.submittedAt
@@ -526,7 +527,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
       import("@/components/reports/EmployabilityQuotientPdfReport"),
     ]);
 
-    const backCoverImageSrc = await loadPublicImageDataUrl("/rq/back-cover.jpg");
+    const backCoverImageSrc = await loadPublicImageDataUrl(REPORT_BACK_COVER_IMAGE);
 
     const overallScore = Number(evaluation.overallScore ?? 0);
     const dimensionScores = normalizeDimensionScores(
@@ -557,7 +558,7 @@ async function buildDetailedReportPdf(ctx: DetailedReportPdfContext): Promise<{ 
   }
 
       if (normalizedCode === "ACADEMIC_CAREER") {
-    const backCoverImageSrc = await loadPublicImageDataUrl("/academic-career/back-cover.jpg");
+    const backCoverImageSrc = await loadPublicImageDataUrl(REPORT_BACK_COVER_IMAGE);
     const blob = await generateAcademicCareerReport({
           studentName: reportStudentName,
           classGrade,
