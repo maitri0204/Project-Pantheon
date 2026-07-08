@@ -33,6 +33,8 @@ export type StudentImportRow = {
   city: string;
 };
 
+type StudentImportField = Exclude<keyof StudentImportRow, "rowNumber">;
+
 const SAMPLE_ROWS: Array<Record<(typeof STUDENT_IMPORT_HEADERS)[number], string>> = [
   {
     "First Name": "Aarav",
@@ -68,7 +70,7 @@ const SAMPLE_ROWS: Array<Record<(typeof STUDENT_IMPORT_HEADERS)[number], string>
 
 const normalizeHeader = (value: unknown) => String(value ?? "").trim().toLowerCase();
 
-const headerAliases: Record<string, keyof StudentImportRow | "ignore"> = {
+const headerAliases: Record<string, StudentImportField | "ignore"> = {
   "first name": "firstName",
   "middle name": "middleName",
   "last name": "lastName",

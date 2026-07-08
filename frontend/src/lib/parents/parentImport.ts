@@ -27,6 +27,8 @@ export type ParentImportRow = {
   city: string;
 };
 
+type ParentImportField = Exclude<keyof ParentImportRow, "rowNumber">;
+
 const SAMPLE_ROWS: Array<Record<(typeof PARENT_IMPORT_HEADERS)[number], string>> = [
   {
     "First Name": "Priya",
@@ -56,7 +58,7 @@ const SAMPLE_ROWS: Array<Record<(typeof PARENT_IMPORT_HEADERS)[number], string>>
 
 const normalizeHeader = (value: unknown) => String(value ?? "").trim().toLowerCase();
 
-const headerAliases: Record<string, keyof ParentImportRow | "ignore"> = {
+const headerAliases: Record<string, ParentImportField | "ignore"> = {
   "first name": "firstName",
   "middle name": "middleName",
   "last name": "lastName",
