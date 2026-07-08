@@ -239,7 +239,7 @@ export default function UsersPage() {
           <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
           {filtered.length === 0 ? (
             <p className="text-center text-black text-base py-16">No students found.</p>
           ) : (
@@ -299,8 +299,8 @@ export default function UsersPage() {
                 ))}
               </div>
 
-              <div className="hidden lg:block">
-                <table className="w-full text-sm">
+              <div className="hidden min-w-0 overflow-x-auto lg:block">
+                <table className="w-full min-w-[66rem] text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="min-w-[11rem] px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-black">Name</th>
