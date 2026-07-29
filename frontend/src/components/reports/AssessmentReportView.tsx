@@ -389,7 +389,7 @@ async function resolveRqAttemptsForReport(
   authToken: string | undefined,
   fetchPath: string
 ): Promise<RQAttemptItem[] | undefined> {
-  if (normalizedCode !== "RESILIENCE_TEST") {
+  if (!normalizedCode || normalizedCode !== "RESILIENCE_TEST") {
     return undefined;
   }
   if (Array.isArray(rqAttempts)) {
@@ -638,11 +638,11 @@ export default function AssessmentReportView({
     }
 
     const normalizedCode = normalizeAssessmentCode(String(report.assessmentCode || ""));
-    if (normalizedCode !== "RESILIENCE_TEST") {
+    if (!normalizedCode || normalizedCode !== "RESILIENCE_TEST") {
       return;
     }
 
-    apiRequest<{ attempts: RQAttemptItem[] }>(`/platform/student/assessments/${report.assessmentCode}/attempts`, {}, auth.token)
+    apiRequest<{ attempts: RQAttemptItem[] }>(`/platform/student/assessments/${normalizedCode}/attempts`, {}, auth.token)
       .then((res) => {
         setRQAttempts(res.attempts);
       })

@@ -2308,6 +2308,9 @@ export const listStudentResults = async (req: AuthRequest, res: Response): Promi
       .filter((attempt) => isAssessmentAccessibleForLearner(learnerRole, attempt.assessmentCode, req.user?.grade))
       .forEach((attempt) => {
         const canonicalCode = normalizeAssessmentCode(attempt.assessmentCode);
+        if (!canonicalCode) {
+          return;
+        }
         const existing = groupedResults.get(canonicalCode);
         if (existing) {
           existing.totalAttempts += 1;

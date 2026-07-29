@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import AttemptHistoryResultSummary from "@/components/assessment/AttemptHistoryResultSummary";
 import AssessmentReportView from "@/components/reports/AssessmentReportView";
@@ -13,6 +13,7 @@ import {
   formatAttemptHistoryResult,
   getAssessmentDisplayName,
   normalizeAssessmentCode,
+  resolveRouteAssessmentCode,
   type AttemptHistoryEvaluation,
 } from "@/lib/assessmentAccess";
 
@@ -49,6 +50,12 @@ function AssessmentAttemptHistory(props: {
   const fetchAttempts = async () => {
     if (!auth?.token) {
       router.replace(loginHref);
+      return;
+    }
+    if (!assessmentCode) {
+      setError("Assessment code is missing from this page URL.");
+      setAttempts([]);
+      setLoading(false);
       return;
     }
 
@@ -183,6 +190,12 @@ function AttemptHistoryOrRedirect(props: {
       setLoading(true);
       setError(null);
 
+      if (!props.assessmentCode) {
+        setError("Assessment code is missing from this page URL.");
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await apiRequest<AttemptHistoryResponse>(
           `/platform/student/assessments/${props.assessmentCode}/attempts`,
@@ -278,14 +291,26 @@ function AttemptHistoryOrRedirect(props: {
 }
 
 export default function StudentAssessmentResultPage() {
-  const params = useParams<{ slug?: string; code?: string }>();
+  const params = useParams<{ slug?: string; code?: string; rest?: string[] }>();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const slug = params?.slug || "";
-  const code = normalizeAssessmentCode(String(params?.code || ""));
+  const code = resolveRouteAssessmentCode(params, pathname);
   const attemptId = searchParams?.get("attemptId") || "";
 
   const attemptListHref = buildStudentResultPath(slug, code);
   const isMultiAttemptAssessment = allowsMultipleAttempts(code);
+
+  if (!code) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-slate-900">Assessment Report</h1>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+          Assessment code is missing from this page URL. Open the report from your results or assessments list.
+        </div>
+      </div>
+    );
+  }
 
   if (attemptId) {
     return (

@@ -51,16 +51,16 @@ function resolveCatchAllContent(rest: string[], slug: string): CatchAllContent |
     if (rest.length === 2 && rest[1] === "register") {
       return { type: "student-shell", element: <StudentRegisterPage /> };
     }
-    if (rest.length === 4 && rest[1] === "assessments" && rest[3] === "take") {
+    if (rest.length === 4 && rest[1] === "assessments" && rest[2] && rest[3] === "take") {
       return { type: "student-fullscreen", element: <StudentTakeAssessmentPage /> };
     }
-    if (rest.length === 4 && rest[1] === "assessments" && rest[3] === "result") {
+    if (rest.length === 4 && rest[1] === "assessments" && rest[2] && rest[3] === "result") {
       return { type: "student-shell", element: <StudentAssessmentResultPage /> };
     }
-    if (rest.length === 4 && rest[1] === "assessments" && rest[3] === "info") {
+    if (rest.length === 4 && rest[1] === "assessments" && rest[2] && rest[3] === "info") {
       return { type: "student-shell", element: <StudentAssessmentInfoPage /> };
     }
-    if (rest.length === 3 && rest[1] === "assessments") {
+    if (rest.length === 3 && rest[1] === "assessments" && rest[2]) {
       return { type: "student-shell", element: <StudentAssessmentAttemptListPage /> };
     }
     return null;

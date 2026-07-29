@@ -268,12 +268,47 @@ export function shouldShowAttemptList(assessmentCode: string): boolean {
   return allowsMultipleAttempts(assessmentCode);
 }
 
+type RouteAssessmentCodeParams = {
+  code?: string | string[];
+  rest?: string | string[];
+};
+
+/** Resolve assessment code from dynamic route params or catch-all `rest` segments. */
+export function resolveRouteAssessmentCode(
+  params: RouteAssessmentCodeParams,
+  pathname?: string | null,
+): string {
+  const rawCode = params.code;
+  if (typeof rawCode === "string" && rawCode.trim()) {
+    return normalizeAssessmentCode(rawCode);
+  }
+  if (Array.isArray(rawCode) && rawCode[0]?.trim()) {
+    return normalizeAssessmentCode(rawCode[0]);
+  }
+
+  const rest = params.rest;
+  const restParts = Array.isArray(rest) ? rest : typeof rest === "string" ? [rest] : [];
+  if (restParts[1] === "assessments" && restParts[2]?.trim()) {
+    return normalizeAssessmentCode(restParts[2]);
+  }
+
+  const match = pathname?.match(/\/student\/assessments\/([^/]+)(?:\/|$)/);
+  if (match?.[1]) {
+    return normalizeAssessmentCode(decodeURIComponent(match[1]));
+  }
+
+  return "";
+}
+
 export function buildStudentResultPath(
   slug: string,
   assessmentCode: string,
   options?: { attemptId?: string }
 ): string {
   const code = normalizeAssessmentCode(assessmentCode);
+  if (!code) {
+    return `/whitelabel/${slug}/student/results`;
+  }
   const base = `/whitelabel/${slug}/student/assessments/${code}/result`;
   if (options?.attemptId) {
     return `${base}?attemptId=${options.attemptId}`;
