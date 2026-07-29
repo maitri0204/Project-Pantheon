@@ -275,9 +275,17 @@ type RouteAssessmentCodeParams = {
 
 /** Resolve assessment code from dynamic route params or catch-all `rest` segments. */
 export function resolveRouteAssessmentCode(
-  params: RouteAssessmentCodeParams,
+  params: RouteAssessmentCodeParams | null | undefined,
   pathname?: string | null,
 ): string {
+  if (!params) {
+    const match = pathname?.match(/\/student\/assessments\/([^/]+)(?:\/|$)/);
+    if (match?.[1]) {
+      return normalizeAssessmentCode(decodeURIComponent(match[1]));
+    }
+    return "";
+  }
+
   const rawCode = params.code;
   if (typeof rawCode === "string" && rawCode.trim()) {
     return normalizeAssessmentCode(rawCode);
