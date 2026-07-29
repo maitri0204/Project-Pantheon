@@ -127,7 +127,7 @@ export default function Footer() {
                   <address className="text-sm not-italic leading-6 text-slate-300">
                     <span className="font-semibold text-white">ADMITra Core Systems Pvt. Ltd.</span>
                     <br />
-                    303, Rajshree Center,
+                    413, Rajshree Center,
                     <br />
                     Near Kalaghoda,
                     <br />
