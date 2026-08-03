@@ -247,7 +247,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setTextColor(...accentBlue);
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text("BILL TO", margin + 6, y + 8);
+  doc.text("BILLED TO", margin + 6, y + 8);
 
   doc.setTextColor(...navy);
   doc.setFontSize(10);
@@ -276,7 +276,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setTextColor(...accentBlue);
   doc.setFontSize(8);
   doc.setFont("helvetica", "bold");
-  doc.text("BILL BY", billByX + 6, y + 8);
+  doc.text("BILLED BY", billByX + 6, y + 8);
 
   doc.setTextColor(...navy);
   doc.setFontSize(10);
