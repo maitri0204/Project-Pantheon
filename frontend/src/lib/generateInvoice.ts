@@ -206,7 +206,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setTextColor(26, 35, 75);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text("PROFORMA INVOICE", margin, 20);
+  doc.text("INVOICE", margin, 20);
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
@@ -522,14 +522,10 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
     console.warn("generatePantheonInvoice: failed to add signature image", err);
   }
 
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...navy);
-  doc.text("Authorized Signatory", sigX, sigStartY + 22, { align: "right" });
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...lightGray);
-  doc.text(ADMITRA_BILLING.companyName, sigX, sigStartY + 27, { align: "right" });
+  doc.text("Authorized Signatory", sigX, sigStartY + 27, { align: "right" });
 
   // Footer
   doc.setFillColor(26, 35, 75);
@@ -549,6 +545,6 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
     { align: "center" }
   );
 
-  const fileName = `Proforma_Invoice_${invoiceNo.replace(/\//g, "_")}.pdf`;
+  const fileName = `Invoice_${invoiceNo.replace(/\//g, "_")}.pdf`;
   doc.save(fileName);
 }

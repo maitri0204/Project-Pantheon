@@ -132,7 +132,7 @@ export default function StudentInvoicesPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">My Invoices</h1>
-        <p className="mt-1 text-sm text-gray-500">Download proforma invoices for your completed payments.</p>
+        <p className="mt-1 text-sm text-gray-500">Download invoices for your completed payments.</p>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
