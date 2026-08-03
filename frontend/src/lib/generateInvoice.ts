@@ -71,6 +71,17 @@ export interface PantheonInvoiceData {
   organization?: PantheonInvoiceOrg;
 }
 
+const ADMITRA_BILLING = {
+  companyName: "ADMITra Core Systems Pvt. Ltd.",
+  address: "413, Rajshree Center, Near Kalaghoda, Sayajigunj, Vadodara-390020, GJ, IN",
+  state: "GJ",
+  country: "IN",
+  email: "hello@admitra.io",
+  phone: "+91 70466 73033",
+  panNumber: "ABFCA9663A",
+  gstNumber: "24ABFCA9663A1ZU",
+} as const;
+
 const toDataUrl = async (url: string): Promise<string | null> => {
   try {
     const normalized = String(url || "").trim();
@@ -157,7 +168,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   const invoiceNo = invoice.invoiceNo;
   const assessmentName = invoice.description;
   const billedToState = normalizeState(user.state);
-  const billedByState = normalizeState(organization?.state);
+  const billedByState = normalizeState(ADMITRA_BILLING.state);
   const isSameState = Boolean(billedToState && billedByState && billedToState === billedByState);
   const gstAmount = invoice.gstAmount || 0;
   const gstApplicable = gstAmount > 0;
@@ -217,17 +228,6 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   }
 
   let signatureSource = SIGNATURE_IMG;
-  if (organization?.signatureUrl) {
-    const normalizedSignature = organization.signatureUrl.trim();
-    if (normalizedSignature.startsWith("data:image")) {
-      signatureSource = normalizedSignature;
-    } else {
-      const dataUrl = await toDataUrl(normalizedSignature);
-      if (dataUrl) {
-        signatureSource = dataUrl;
-      }
-    }
-  }
 
   try {
     doc.addImage(logoSource, "PNG", W - margin - 50, 14, 50, 17);
@@ -240,7 +240,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
 
   // Bill To / Bill By
   const colW = contentW / 2 - 5;
-  const billBoxH = 58;
+  const billBoxH = 66;
 
   doc.setFillColor(245, 247, 250);
   doc.roundedRect(margin, y, colW, billBoxH, 3, 3, "F");
@@ -280,22 +280,21 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
 
   doc.setTextColor(...navy);
   doc.setFontSize(10);
-  doc.text(organization?.companyName || organization?.name || "Organization", billByX + 6, y + 16);
+  doc.text(ADMITRA_BILLING.companyName, billByX + 6, y + 16);
 
   doc.setTextColor(...darkGray);
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  const addressLines = doc.splitTextToSize(organization?.officeAddress || "-", colW - 12).slice(0, 2);
+  const addressLines = doc.splitTextToSize(ADMITRA_BILLING.address, colW - 12).slice(0, 3);
   const detailStartY = y + 23;
   addressLines.forEach((line: string, index: number) => {
     doc.text(String(line), billByX + 6, detailStartY + index * 6);
   });
 
   const afterAddressY = detailStartY + Math.max(addressLines.length, 1) * 6;
-  doc.text(`${organization?.state || "-"}, ${organization?.country || "-"}`, billByX + 6, afterAddressY);
-  doc.text(`${organization?.contactEmail || "-"} | ${formatBillByPhone(organization?.phone)}`, billByX + 6, afterAddressY + 6);
-  doc.text(`PAN: ${organization?.panNumber || "-"}`, billByX + 6, afterAddressY + 12);
-  doc.text(`GST: ${organization?.gstNumber || "-"}`, billByX + 6, afterAddressY + 18);
+  doc.text(`${ADMITRA_BILLING.email} | ${formatBillByPhone(ADMITRA_BILLING.phone)}`, billByX + 6, afterAddressY);
+  doc.text(`PAN: ${ADMITRA_BILLING.panNumber}`, billByX + 6, afterAddressY + 6);
+  doc.text(`GST: ${ADMITRA_BILLING.gstNumber}`, billByX + 6, afterAddressY + 12);
 
   y += billBoxH + 8;
 
@@ -514,7 +513,7 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setTextColor(...navy);
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.text(`For ${organization?.companyName || organization?.name || "Organization"}`, sigX, sigStartY, { align: "right" });
+  doc.text(`For ${ADMITRA_BILLING.companyName}`, sigX, sigStartY, { align: "right" });
 
   try {
     doc.addImage(signatureSource, "PNG", sigX - 26, sigStartY + 2, 32, 16);
@@ -526,16 +525,11 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...navy);
-  doc.text(
-    `${organization?.signatoryFirstName || ""} ${organization?.signatoryLastName || ""}`.trim() || user.name,
-    sigX,
-    sigStartY + 22,
-    { align: "right" }
-  );
+  doc.text("Authorized Signatory", sigX, sigStartY + 22, { align: "right" });
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...lightGray);
-  doc.text("Authorized Signatory", sigX, sigStartY + 27, { align: "right" });
+  doc.text(ADMITRA_BILLING.companyName, sigX, sigStartY + 27, { align: "right" });
 
   // Footer
   doc.setFillColor(26, 35, 75);
@@ -544,9 +538,9 @@ export async function generatePantheonInvoice({ invoice, user, organization }: P
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
 
-  const footerAddress = (organization?.officeAddress || "-").replace(/\s+/g, " ").trim();
-  const footerEmail = organization?.contactEmail || "-";
-  const footerPhone = formatBillByPhone(organization?.phone);
+  const footerAddress = ADMITRA_BILLING.address.replace(/\s+/g, " ").trim();
+  const footerEmail = ADMITRA_BILLING.email;
+  const footerPhone = formatBillByPhone(ADMITRA_BILLING.phone);
   const footerText = `${footerAddress} | ${footerEmail} | ${footerPhone}`;
 
   doc.text(
